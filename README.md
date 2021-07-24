@@ -22,6 +22,8 @@ An acceleration-based jigglebone system with soft-body/squash-and-stretch physic
 
 ## Usage
 
+This unity repository actually comes with a fully working project, with a working model in an example scene. If anything below doesn't make sense, download the project!
+
 1. Use the included AmplifyShader node to add the vertex deformations to whatever shader you want. (URP, HDRP, Standard, whatever!).
 
 ![amplify node setup](amplifySetup.png)

@@ -1,5 +1,7 @@
 # Unity Jiggle Physics
 
+[![openupm](https://img.shields.io/npm/v/com.naelstrof.jigglephysics?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.naelstrof.jigglephysics/)
+
 An acceleration-based jigglebone system with soft-body/squash-and-stretch physics for SkinnedMeshRenderers in Unity.
 
 ## Features
@@ -39,6 +41,8 @@ This unity repository actually comes with a fully working project, with a workin
 4. Add JiggleBones for the primary movement.
 
 ## Installation
+
+You can install Jiggle Physics with OpenUPM by checking out the badge above. Otherwise...
 
 Simply add `https://github.com/naelstrof/UnityJigglePhysics.git#upm` as a package using the package manager.
 

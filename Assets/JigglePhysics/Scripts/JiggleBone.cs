@@ -10,7 +10,7 @@ namespace JigglePhysics {
             LateUpdate,
         }
 
-        public bool cullOffscreen = true;
+        public bool cullOffscreen = false;
         public List<Renderer> targetRenderers;
         public UpdateType updateMode = UpdateType.LateUpdate;
         public Transform root;
@@ -110,7 +110,7 @@ namespace JigglePhysics {
             }
             public void Friction(JiggleBone jiggle, float dt) {
                 float speed = velocity.magnitude;
-                if (speed < Mathf.Epsilon) {
+                if (speed < Mathf.Epsilon || speed == 0f) {
                     return;
                 }
                 float drop = jiggle.friction.Evaluate(chainPosition) * speed * dt;
@@ -186,6 +186,10 @@ namespace JigglePhysics {
             lastRootPosition = root.position;
         }
         public void RecalculateAcceleration(float dt) {
+            // Don't recalculate if time isn't moving.
+            if (dt < Mathf.Epsilon || dt == 0f) {
+                return;
+            }
             positionDiff = (root.position - lastRootPosition);
             lastRootPosition = root.position;
             Vector3 velocityGuess = positionDiff / dt;
@@ -210,7 +214,7 @@ namespace JigglePhysics {
                     return;
                 }
             }
-            if (!isActiveAndEnabled || dt == 0 || Mathf.Approximately(active, 0f)) {
+            if (!isActiveAndEnabled || dt < Mathf.Epsilon || dt == 0 || Mathf.Approximately(active, 0f)) {
                 return;
             }
             // Velocity update
@@ -262,7 +266,7 @@ namespace JigglePhysics {
             }
         }
         public void LateUpdate() {
-            if (updateMode != UpdateType.LateUpdate) {
+            if (updateMode != UpdateType.LateUpdate || Time.deltaTime == 0f) {
                 return;
             }
             RecalculateAcceleration(Time.deltaTime);
@@ -279,7 +283,7 @@ namespace JigglePhysics {
             }
         }
         public void FixedUpdate() {
-            if (updateMode != UpdateType.FixedUpdate) {
+            if (updateMode != UpdateType.FixedUpdate || Time.deltaTime == 0f) {
                 return;
             }
             RecalculateAcceleration(Time.deltaTime);
@@ -289,7 +293,7 @@ namespace JigglePhysics {
             }
         }
         public void Update() {
-            if (updateMode != UpdateType.Update) {
+            if (updateMode != UpdateType.Update || Time.deltaTime == 0f) {
                 return;
             }
             RecalculateAcceleration(Time.deltaTime);

@@ -526,6 +526,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   frictionMultiplier: 16
+  maximumAcceleration: 1
   rotateRoot: 1
   accelerationBased: 1
   maxStretch: 1.1
@@ -1989,7 +1990,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad81d0e4bb086504a8c900ce29a95cc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cullOffscreen: 1
+  cullOffscreen: 0
   targetRenderers:
   - {fileID: 7452297451520482250}
   - {fileID: 5330333750980878102}
@@ -2000,57 +2001,62 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 2.9890668
-      inSlope: 0.18865088
-      outSlope: 0.18865088
+      value: 1.0045085
+      inSlope: 0.09531154
+      outSlope: 0.09531154
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.08752126
+      outWeight: 0.093272164
     - serializedVersion: 3
-      time: 0.99871826
-      value: 1.0035095
-      inSlope: -6.2430487
-      outSlope: -6.2430487
+      time: 1
+      value: 0.8103172
+      inSlope: -0.47577494
+      outSlope: -0.47577494
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.04461211
+      inWeight: 0.14129287
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  elasticityMultiplier: 0
+  elasticityMultiplier: 3
   friction:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 10
-      inSlope: 23.146091
-      outSlope: 23.146091
+      value: 0.5234299
+      inSlope: 1.5485295
+      outSlope: 1.5485295
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.099378645
+      outWeight: 0.11620794
     - serializedVersion: 3
-      time: 1
-      value: 20
-      inSlope: -0.01195521
-      outSlope: -0.01195521
+      time: 1.0015259
+      value: 0.989666
+      inSlope: -0.01636105
+      outSlope: -0.01636105
       tangentMode: 0
       weightedMode: 0
-      inWeight: 1
+      inWeight: 0.9984733
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  frictionMultiplier: 0
+  frictionMultiplier: 16
+  maximumAcceleration: 1
   rotateRoot: 1
   accelerationBased: 1
   maxStretch: 1.1
   maxSquish: 0.1
-  gravity: {x: 0, y: -3, z: 0}
-  excludedTransforms: []
+  gravity: {x: 0, y: -6, z: 0}
+  excludedTransforms:
+  - {fileID: 2644428201597599799}
+  - {fileID: 6682366459221574745}
+  - {fileID: 5155765182323016960}
+  - {fileID: 3503151327203273011}
 --- !u!1 &5664433795354512687
 GameObject:
   m_ObjectHideFlags: 0
@@ -2432,6 +2438,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   frictionMultiplier: 16
+  maximumAcceleration: 1
   rotateRoot: 1
   accelerationBased: 1
   maxStretch: 1.1
@@ -3460,6 +3467,7 @@ MonoBehaviour:
     amplitude: 2
     elastic: 3
     friction: 4
+    maximumAcceleration: 1
     gravity: {x: 0, y: 30, z: 0}
     colorMask: {r: 1, g: 0, b: 0, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}
@@ -3471,6 +3479,7 @@ MonoBehaviour:
     amplitude: 2
     elastic: 3
     friction: 4
+    maximumAcceleration: 1
     gravity: {x: 0, y: 30, z: 0}
     colorMask: {r: 0, g: 1, b: 0, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}
@@ -3482,6 +3491,7 @@ MonoBehaviour:
     amplitude: 3.5
     elastic: 3
     friction: 5
+    maximumAcceleration: 1
     gravity: {x: 0, y: 20, z: 0}
     colorMask: {r: 0, g: 0, b: 1, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}
@@ -3493,6 +3503,7 @@ MonoBehaviour:
     amplitude: 3
     elastic: 3
     friction: 5
+    maximumAcceleration: 1
     gravity: {x: 0, y: 9, z: 0}
     colorMask: {r: 1, g: 0, b: 0, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}
@@ -3504,6 +3515,7 @@ MonoBehaviour:
     amplitude: 3
     elastic: 3
     friction: 5
+    maximumAcceleration: 1
     gravity: {x: 0, y: 9, z: 0}
     colorMask: {r: 0, g: 1, b: 0, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}

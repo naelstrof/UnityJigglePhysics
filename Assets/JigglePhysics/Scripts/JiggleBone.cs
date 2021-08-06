@@ -15,7 +15,9 @@ namespace JigglePhysics {
         public UpdateType updateMode = UpdateType.LateUpdate;
         public Transform root;
         public AnimationCurve elasticity;
+        public float elasticityMultiplier;
         public AnimationCurve friction;
+        public float frictionMultiplier;
         public bool rotateRoot = true;
 
         private float internalActive = 1f;
@@ -113,7 +115,7 @@ namespace JigglePhysics {
                 if (speed < Mathf.Epsilon || speed == 0f) {
                     return;
                 }
-                float drop = jiggle.friction.Evaluate(chainPosition) * speed * dt;
+                float drop = jiggle.friction.Evaluate(chainPosition) * jiggle.frictionMultiplier * speed * dt;
                 float newSpeed = speed - drop;
                 if (newSpeed < 0) {
                     newSpeed = 0;
@@ -130,7 +132,7 @@ namespace JigglePhysics {
                 }
                 // Undo the rotation adjustment of our parent (so it's back to a neutral rotation), then use our localStartPos to figure out where we *should* accelerate towards.
                 Vector3 wantedPos = (Quaternion.Inverse(parent.rotationAdjust) * parent.self.TransformVector(localStartPos) + parent.self.position) - position;
-                Vector3 force = wantedPos * jiggle.elasticity.Evaluate(chainPosition);
+                Vector3 force = wantedPos * jiggle.elasticity.Evaluate(chainPosition) * jiggle.elasticityMultiplier;
 
                 velocity += force * 100f * dt;
                 //parent.velocity -= force * 50f * dt;

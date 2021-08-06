@@ -481,49 +481,51 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 6
-      inSlope: 0.26135716
-      outSlope: 0.26135716
+      value: 1.0045085
+      inSlope: 0.09531154
+      outSlope: 0.09531154
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.0372191
+      outWeight: 0.093272164
     - serializedVersion: 3
       time: 1
-      value: 5
-      inSlope: -3.353672
-      outSlope: -3.353672
+      value: 0.8103172
+      inSlope: -0.47577494
+      outSlope: -0.47577494
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.040028095
+      inWeight: 0.14129287
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  elasticityMultiplier: 6
   friction:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 8
-      inSlope: 22.425707
-      outSlope: 22.425707
+      value: 0.5234299
+      inSlope: 1.5485295
+      outSlope: 1.5485295
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.040828265
+      outWeight: 0.11620794
     - serializedVersion: 3
-      time: 1
-      value: 16
-      inSlope: -0.28433374
-      outSlope: -0.28433374
+      time: 1.0015259
+      value: 0.989666
+      inSlope: -0.01636105
+      outSlope: -0.01636105
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.07189107
+      inWeight: 0.9984733
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  frictionMultiplier: 16
   rotateRoot: 1
   accelerationBased: 1
   maxStretch: 1.1
@@ -2017,6 +2019,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  elasticityMultiplier: 0
   friction:
     serializedVersion: 2
     m_Curve:
@@ -2041,6 +2044,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  frictionMultiplier: 0
   rotateRoot: 1
   accelerationBased: 1
   maxStretch: 1.1
@@ -2383,49 +2387,51 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 6
-      inSlope: 0.26135716
-      outSlope: 0.26135716
+      value: 1.0045085
+      inSlope: 0.09531154
+      outSlope: 0.09531154
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.0372191
+      outWeight: 0.093272164
     - serializedVersion: 3
       time: 1
-      value: 5
-      inSlope: -3.353672
-      outSlope: -3.353672
+      value: 0.8103172
+      inSlope: -0.47577494
+      outSlope: -0.47577494
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.040028095
+      inWeight: 0.14129287
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  elasticityMultiplier: 6
   friction:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 8
-      inSlope: 22.425707
-      outSlope: 22.425707
+      value: 0.5234299
+      inSlope: 1.5485295
+      outSlope: 1.5485295
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.040828265
+      outWeight: 0.11620794
     - serializedVersion: 3
-      time: 1
-      value: 16
-      inSlope: -0.28433374
-      outSlope: -0.28433374
+      time: 1.0015259
+      value: 0.989666
+      inSlope: -0.01636105
+      outSlope: -0.01636105
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.07189107
+      inWeight: 0.9984733
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  frictionMultiplier: 16
   rotateRoot: 1
   accelerationBased: 1
   maxStretch: 1.1

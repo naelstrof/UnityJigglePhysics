@@ -199,21 +199,16 @@ namespace JigglePhysics {
             lastRootPosition = root.position;
             Vector3 velocityGuess = positionDiff / dt;
             accelerationGuess = (velocityGuess - lastVelocityGuess);
-            // SINWAVE BASED MAXIMUM ACCELLERATION APPROACH
-            //accelerationGuess = accelerationGuess.normalized * Mathf.Sin(Mathf.Clamp(accelerationGuess.magnitude*(Mathf.PI/2f), -1f, 1f)*(0.5f/maximumAcceleration))*maximumAcceleration;
             // ACCELLERATION DEBT
             accelerationGuess += accelerationDebt;
+            accelerationDebt = Vector3.zero;
             if (accelerationGuess.magnitude > maximumAcceleration * Time.deltaTime)
             {
                 accelerationDebt = accelerationGuess.normalized * (accelerationGuess.magnitude - maximumAcceleration * Time.deltaTime);
                 accelerationGuess = accelerationGuess.normalized * maximumAcceleration * Time.deltaTime;
             }
-            else
-            {
-                accelerationDebt = Vector3.zero;
-            }
 
-            accelerationDebt = accelerationDebt * 0.5f;
+            accelerationDebt = Vector3.MoveTowards(accelerationDebt, Vector3.zero, Time.deltaTime);
             lastVelocityGuess = velocityGuess;
             if (accelerationBased) {
                 foreach (VirtualBone b in bones) {

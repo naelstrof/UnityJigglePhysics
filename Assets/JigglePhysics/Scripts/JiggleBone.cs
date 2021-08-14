@@ -18,11 +18,12 @@ namespace JigglePhysics {
         public float elasticityMultiplier;
         public AnimationCurve friction;
         public float frictionMultiplier;
-        //public float maximumAcceleration=1f;
-        //public float accelerationMultiplier=1f;
+        public float accelerationMultiplier=1f;
+        public float maximumAcceleration=100f;
         public bool rotateRoot = true;
 
         private float internalActive = 1f;
+        private Vector3 accelerationDebt = Vector3.zero;
         public float active {
             get {
                 return internalActive;
@@ -143,20 +144,20 @@ namespace JigglePhysics {
                 if (parent != null) {
                     float d = Vector3.Distance(position, parent.position);
                     float wantedDistance = parent.self.TransformVector(localStartPos).magnitude;
-                    float bounciness = 0.1f;
+                    //float bounciness = 0.1f;
                     if (d > wantedDistance * j.maxStretch) {
                         // Bounce with some velocity loss!
-                        Vector3 normal = (parent.position - position).normalized;
-                        if (Vector3.Dot(velocity, normal) < 0f) {
-                            velocity = Vector3.Lerp(Vector3.ProjectOnPlane(velocity, normal), Vector3.Reflect(velocity, normal), bounciness);
-                        }
+                        //Vector3 normal = (parent.position - position).normalized;
+                        //if (Vector3.Dot(velocity, normal) < 0f) {
+                            //velocity = Vector3.Lerp(Vector3.ProjectOnPlane(velocity, normal), Vector3.Reflect(velocity, normal), bounciness);
+                        //}
                         position = parent.position + (position - parent.position).normalized * wantedDistance * j.maxStretch;
                     } else if (d < wantedDistance * (1f - j.maxSquish)) {
                         Vector3 normal = (position - parent.position).normalized;
                         // Bounce with some velocity loss!
-                        if (Vector3.Dot(velocity, normal) < 0f) {
-                            velocity = Vector3.Lerp(Vector3.ProjectOnPlane(velocity, normal), Vector3.Reflect(velocity, normal), bounciness);
-                        }
+                        //if (Vector3.Dot(velocity, normal) < 0f) {
+                            //velocity = Vector3.Lerp(Vector3.ProjectOnPlane(velocity, normal), Vector3.Reflect(velocity, normal), bounciness);
+                        //}
                         position = parent.position + (position - parent.position).normalized * wantedDistance * (1f - j.maxSquish);
                     }
                 }
@@ -200,10 +201,23 @@ namespace JigglePhysics {
             accelerationGuess = (velocityGuess - lastVelocityGuess);
             // SINWAVE BASED MAXIMUM ACCELLERATION APPROACH
             //accelerationGuess = accelerationGuess.normalized * Mathf.Sin(Mathf.Clamp(accelerationGuess.magnitude*(Mathf.PI/2f), -1f, 1f)*(0.5f/maximumAcceleration))*maximumAcceleration;
+            // ACCELLERATION DEBT
+            accelerationGuess += accelerationDebt;
+            if (accelerationGuess.magnitude > maximumAcceleration * Time.deltaTime)
+            {
+                accelerationDebt = accelerationGuess.normalized * (accelerationGuess.magnitude - maximumAcceleration * Time.deltaTime);
+                accelerationGuess = accelerationGuess.normalized * maximumAcceleration * Time.deltaTime;
+            }
+            else
+            {
+                accelerationDebt = Vector3.zero;
+            }
+
+            accelerationDebt = accelerationDebt * 0.5f;
             lastVelocityGuess = velocityGuess;
             if (accelerationBased) {
                 foreach (VirtualBone b in bones) {
-                    b.velocity -= accelerationGuess;
+                    b.velocity -= accelerationGuess * accelerationMultiplier;
                     b.position += positionDiff;
                 }
             }

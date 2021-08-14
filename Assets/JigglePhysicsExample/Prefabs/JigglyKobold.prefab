@@ -526,8 +526,8 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   frictionMultiplier: 16
-  maximumAcceleration: 1
   accelerationMultiplier: 1
+  maximumAcceleration: 1
   rotateRoot: 1
   accelerationBased: 1
   maxStretch: 1.1
@@ -2002,21 +2002,21 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1.0045085
-      inSlope: 0.09531154
-      outSlope: 0.09531154
-      tangentMode: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 34
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.093272164
+      outWeight: 0
     - serializedVersion: 3
       time: 1
-      value: 0.8103172
-      inSlope: -0.47577494
-      outSlope: -0.47577494
-      tangentMode: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 34
       weightedMode: 0
-      inWeight: 0.14129287
+      inWeight: 0
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
@@ -2027,28 +2027,28 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0.5234299
-      inSlope: 1.5485295
-      outSlope: 1.5485295
-      tangentMode: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 34
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.11620794
+      outWeight: 0
     - serializedVersion: 3
-      time: 1.0015259
-      value: 0.989666
-      inSlope: -0.01636105
-      outSlope: -0.01636105
-      tangentMode: 0
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 34
       weightedMode: 0
-      inWeight: 0.9984733
+      inWeight: 0
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  frictionMultiplier: 10
-  maximumAcceleration: 1e+11
-  accelerationMultiplier: 1
+  frictionMultiplier: 4
+  accelerationMultiplier: 10
+  maximumAcceleration: 100
   rotateRoot: 1
   accelerationBased: 1
   maxStretch: 1.1
@@ -2440,8 +2440,8 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   frictionMultiplier: 16
-  maximumAcceleration: 1
   accelerationMultiplier: 1
+  maximumAcceleration: 1
   rotateRoot: 1
   accelerationBased: 1
   maxStretch: 1.1
@@ -3470,7 +3470,6 @@ MonoBehaviour:
     amplitude: 2
     elastic: 3
     friction: 4
-    maximumAcceleration: 1
     gravity: {x: 0, y: 30, z: 0}
     colorMask: {r: 1, g: 0, b: 0, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}
@@ -3482,7 +3481,6 @@ MonoBehaviour:
     amplitude: 2
     elastic: 3
     friction: 4
-    maximumAcceleration: 1
     gravity: {x: 0, y: 30, z: 0}
     colorMask: {r: 0, g: 1, b: 0, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}
@@ -3494,7 +3492,6 @@ MonoBehaviour:
     amplitude: 3.5
     elastic: 3
     friction: 5
-    maximumAcceleration: 1
     gravity: {x: 0, y: 20, z: 0}
     colorMask: {r: 0, g: 0, b: 1, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}
@@ -3506,7 +3503,6 @@ MonoBehaviour:
     amplitude: 3
     elastic: 3
     friction: 5
-    maximumAcceleration: 1
     gravity: {x: 0, y: 9, z: 0}
     colorMask: {r: 1, g: 0, b: 0, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}
@@ -3518,7 +3514,6 @@ MonoBehaviour:
     amplitude: 3
     elastic: 3
     friction: 5
-    maximumAcceleration: 1
     gravity: {x: 0, y: 9, z: 0}
     colorMask: {r: 0, g: 1, b: 0, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}

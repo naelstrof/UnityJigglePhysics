@@ -1,7 +1,7 @@
 {
     "name": "com.naelstrof.jigglephysics",
     "displayName": "Jiggle Physics",
-    "version": "1.1.6",
+    "version": "1.1.7",
     "unity": "2020.3",
     "description": "Soft-body squash-and-stretch physics for SkinnedMeshRenderers."
 }

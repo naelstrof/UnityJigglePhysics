@@ -19,7 +19,7 @@ namespace JigglePhysics {
         public AnimationCurve friction;
         public float frictionMultiplier;
         public float accelerationMultiplier=1f;
-        public float maximumAcceleration=1f;
+        public float maximumAcceleration=100f;
         public bool rotateRoot = true;
 
         private float internalActive = 1f;
@@ -203,19 +203,21 @@ namespace JigglePhysics {
             //accelerationGuess = accelerationGuess.normalized * Mathf.Sin(Mathf.Clamp(accelerationGuess.magnitude*(Mathf.PI/2f), -1f, 1f)*(0.5f/maximumAcceleration))*maximumAcceleration;
             // ACCELLERATION DEBT
             accelerationGuess += accelerationDebt;
-            if (accelerationGuess.magnitude > maximumAcceleration)
+            if (accelerationGuess.magnitude > maximumAcceleration * Time.deltaTime)
             {
-                accelerationDebt = accelerationGuess.normalized * (accelerationGuess.magnitude - maximumAcceleration);
-                accelerationGuess = accelerationGuess.normalized * maximumAcceleration;
+                accelerationDebt = accelerationGuess.normalized * (accelerationGuess.magnitude - maximumAcceleration * Time.deltaTime);
+                accelerationGuess = accelerationGuess.normalized * maximumAcceleration * Time.deltaTime;
             }
             else
             {
                 accelerationDebt = Vector3.zero;
             }
+
+            accelerationDebt = accelerationDebt * 0.5f;
             lastVelocityGuess = velocityGuess;
             if (accelerationBased) {
                 foreach (VirtualBone b in bones) {
-                    b.velocity -= accelerationGuess;
+                    b.velocity -= accelerationGuess * accelerationMultiplier;
                     b.position += positionDiff;
                 }
             }

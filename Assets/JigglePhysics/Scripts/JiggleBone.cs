@@ -18,11 +18,12 @@ namespace JigglePhysics {
         public float elasticityMultiplier;
         public AnimationCurve friction;
         public float frictionMultiplier;
-        //public float maximumAcceleration=1f;
-        //public float accelerationMultiplier=1f;
+        public float accelerationMultiplier=1f;
+        public float maximumAcceleration=1f;
         public bool rotateRoot = true;
 
         private float internalActive = 1f;
+        private Vector3 accelerationDebt = Vector3.zero;
         public float active {
             get {
                 return internalActive;
@@ -200,6 +201,17 @@ namespace JigglePhysics {
             accelerationGuess = (velocityGuess - lastVelocityGuess);
             // SINWAVE BASED MAXIMUM ACCELLERATION APPROACH
             //accelerationGuess = accelerationGuess.normalized * Mathf.Sin(Mathf.Clamp(accelerationGuess.magnitude*(Mathf.PI/2f), -1f, 1f)*(0.5f/maximumAcceleration))*maximumAcceleration;
+            // ACCELLERATION DEBT
+            accelerationGuess += accelerationDebt;
+            if (accelerationGuess.magnitude > maximumAcceleration)
+            {
+                accelerationDebt = accelerationGuess.normalized * (accelerationGuess.magnitude - maximumAcceleration);
+                accelerationGuess = accelerationGuess.normalized * maximumAcceleration;
+            }
+            else
+            {
+                accelerationDebt = Vector3.zero;
+            }
             lastVelocityGuess = velocityGuess;
             if (accelerationBased) {
                 foreach (VirtualBone b in bones) {

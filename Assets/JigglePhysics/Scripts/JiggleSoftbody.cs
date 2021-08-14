@@ -20,7 +20,7 @@ namespace JigglePhysics {
             public float amplitude;
             public float elastic;
             public float friction;
-            public float maximumAcceleration=1f;
+            //public float maximumAcceleration=1f;
             public Vector3 gravity;
             public Color colorMask;
             [HideInInspector]
@@ -51,7 +51,7 @@ namespace JigglePhysics {
                 Vector3 velocityGuess = (origin.position - lastPosition)/dt;
                 Vector3 newVelocity = (velocityGuess-lastVelocityGuess);
                 // SINWAVE BASED MAXIMUM ACCELLERATION APPROACH
-                newVelocity = newVelocity.normalized * Mathf.Sin(Mathf.Clamp(newVelocity.magnitude*(Mathf.PI/2f), -1f, 1f)*(0.5f/maximumAcceleration))*maximumAcceleration;
+                //newVelocity = newVelocity.normalized * Mathf.Sin(Mathf.Clamp(newVelocity.magnitude*(Mathf.PI/2f), -1f, 1f)*(0.5f/maximumAcceleration))*maximumAcceleration;
                 velocity += newVelocity;
                 lastVelocityGuess = velocityGuess;
             }

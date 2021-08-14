@@ -527,6 +527,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   frictionMultiplier: 16
   maximumAcceleration: 1
+  accelerationMultiplier: 1
   rotateRoot: 1
   accelerationBased: 1
   maxStretch: 1.1
@@ -2020,7 +2021,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  elasticityMultiplier: 3
+  elasticityMultiplier: 1
   friction:
     serializedVersion: 2
     m_Curve:
@@ -2045,8 +2046,9 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  frictionMultiplier: 16
-  maximumAcceleration: 1
+  frictionMultiplier: 10
+  maximumAcceleration: 1e+11
+  accelerationMultiplier: 1
   rotateRoot: 1
   accelerationBased: 1
   maxStretch: 1.1
@@ -2439,6 +2441,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   frictionMultiplier: 16
   maximumAcceleration: 1
+  accelerationMultiplier: 1
   rotateRoot: 1
   accelerationBased: 1
   maxStretch: 1.1

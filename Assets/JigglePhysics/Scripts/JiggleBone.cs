@@ -143,20 +143,20 @@ namespace JigglePhysics {
                 if (parent != null) {
                     float d = Vector3.Distance(position, parent.position);
                     float wantedDistance = parent.self.TransformVector(localStartPos).magnitude;
-                    float bounciness = 0.1f;
+                    //float bounciness = 0.1f;
                     if (d > wantedDistance * j.maxStretch) {
                         // Bounce with some velocity loss!
-                        Vector3 normal = (parent.position - position).normalized;
-                        if (Vector3.Dot(velocity, normal) < 0f) {
-                            velocity = Vector3.Lerp(Vector3.ProjectOnPlane(velocity, normal), Vector3.Reflect(velocity, normal), bounciness);
-                        }
+                        //Vector3 normal = (parent.position - position).normalized;
+                        //if (Vector3.Dot(velocity, normal) < 0f) {
+                            //velocity = Vector3.Lerp(Vector3.ProjectOnPlane(velocity, normal), Vector3.Reflect(velocity, normal), bounciness);
+                        //}
                         position = parent.position + (position - parent.position).normalized * wantedDistance * j.maxStretch;
                     } else if (d < wantedDistance * (1f - j.maxSquish)) {
                         Vector3 normal = (position - parent.position).normalized;
                         // Bounce with some velocity loss!
-                        if (Vector3.Dot(velocity, normal) < 0f) {
-                            velocity = Vector3.Lerp(Vector3.ProjectOnPlane(velocity, normal), Vector3.Reflect(velocity, normal), bounciness);
-                        }
+                        //if (Vector3.Dot(velocity, normal) < 0f) {
+                            //velocity = Vector3.Lerp(Vector3.ProjectOnPlane(velocity, normal), Vector3.Reflect(velocity, normal), bounciness);
+                        //}
                         position = parent.position + (position - parent.position).normalized * wantedDistance * (1f - j.maxSquish);
                     }
                 }

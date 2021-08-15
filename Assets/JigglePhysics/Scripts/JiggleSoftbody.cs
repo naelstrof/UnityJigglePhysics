@@ -68,6 +68,9 @@ namespace JigglePhysics {
                 packTarget[index * 3 + 2].w = amplitude * scale;
             }
             public void Draw() {
+                if (origin == null) {
+                    return;
+                }
                 Gizmos.color = new Color(colorMask.r, colorMask.g, colorMask.b, Mathf.Clamp(colorMask.r + colorMask.g + colorMask.b + colorMask.a, 0f, 0.5f));
                 Gizmos.DrawSphere(origin.position, origin.lossyScale.y*radius);
             }
@@ -175,7 +178,7 @@ namespace JigglePhysics {
                 return;
             }
             foreach (SoftbodyZone zone in zones) {
-                zone.Draw();
+                zone?.Draw();
             }
         }
         public Vector3 TransformPoint(Vector3 wpos, Color color) {
@@ -187,6 +190,23 @@ namespace JigglePhysics {
                 offset -= zone.virtualPos * targetRenderers[0].rootBone.lossyScale.x * effect * zone.amplitude;
             }
             return wpos + offset;
+        }
+        public void OnValidate() {
+            if (zones == null) {
+                return;
+            }
+            foreach(SoftbodyZone zone in zones) {
+                if (zone == null) {
+                    continue;
+                }
+                // If we were just created, do some okay defaults
+                if (zone.friction == 0f && zone.radius == 0f && zone.amplitude == 0f && zone.elastic == 0f) {
+                    zone.radius = 0.5f;
+                    zone.amplitude = 1f;
+                    zone.elastic = 4f;
+                    zone.friction = 5f;
+                }
+            }
         }
     }
 }

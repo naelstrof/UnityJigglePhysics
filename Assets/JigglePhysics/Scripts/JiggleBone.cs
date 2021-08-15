@@ -15,10 +15,10 @@ namespace JigglePhysics {
         public UpdateType updateMode = UpdateType.LateUpdate;
         public Transform root;
         public AnimationCurve elasticity;
-        public float elasticityMultiplier;
+        public float elasticityMultiplier = 1f;
         public AnimationCurve friction;
-        public float frictionMultiplier;
-        public float accelerationMultiplier=1f;
+        public float frictionMultiplier = 1f;
+        public float accelerationMultiplier = 1f;
         public float maximumAcceleration=100f;
         public bool rotateRoot = true;
 
@@ -355,6 +355,18 @@ namespace JigglePhysics {
                 }
             }
             return false;
+        }
+        public void OnValidate() {
+            // If we just were created, fill default values
+            if (friction == null && elasticity == null && root == null) {
+                friction = new AnimationCurve();
+                elasticity = new AnimationCurve();
+                friction.AddKey(0f,1f);
+                friction.AddKey(1f,1f);
+                elasticity.AddKey(0f,1f);
+                elasticity.AddKey(1f,1f);
+                root = transform;
+            }
         }
     }
 }

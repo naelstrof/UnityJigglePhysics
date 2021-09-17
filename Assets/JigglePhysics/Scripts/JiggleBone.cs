@@ -182,11 +182,12 @@ namespace JigglePhysics {
             BuildVirtualBoneTree(bones, root, root, depth);
         }
 
-        public void Awake() {
+        public void OnEnable() {
             if (bones == null) {
                 Regenerate();
             }
         }
+
         public void Start() {
             lastRootPosition = root.position;
         }

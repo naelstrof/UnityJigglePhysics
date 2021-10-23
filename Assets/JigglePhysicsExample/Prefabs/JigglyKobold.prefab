@@ -3470,23 +3470,29 @@ MonoBehaviour:
     amplitude: 2
     elastic: 3
     friction: 4
-    gravity: {x: 0, y: 30, z: 0}
+    gravity: {x: 0, y: -30, z: 0}
     colorMask: {r: 1, g: 0, b: 0, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}
     lastVelocityGuess: {x: 0, y: 0, z: 0}
     velocity: {x: 0, y: 0, z: 0}
     virtualPos: {x: 0, y: 0, z: 0}
+    jiggleEvent:
+      m_PersistentCalls:
+        m_Calls: []
   - origin: {fileID: 8887449293578775514}
     radius: 0.25
     amplitude: 2
     elastic: 3
     friction: 4
-    gravity: {x: 0, y: 30, z: 0}
+    gravity: {x: 0, y: -30, z: 0}
     colorMask: {r: 0, g: 1, b: 0, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}
     lastVelocityGuess: {x: 0, y: 0, z: 0}
     velocity: {x: 0, y: 0, z: 0}
     virtualPos: {x: 0, y: 0, z: 0}
+    jiggleEvent:
+      m_PersistentCalls:
+        m_Calls: []
   - origin: {fileID: 8197358249053959768}
     radius: 0.5
     amplitude: 3.5
@@ -3498,6 +3504,9 @@ MonoBehaviour:
     lastVelocityGuess: {x: 0, y: 0, z: 0}
     velocity: {x: 0, y: 0, z: 0}
     virtualPos: {x: 0, y: 0, z: 0}
+    jiggleEvent:
+      m_PersistentCalls:
+        m_Calls: []
   - origin: {fileID: 8424650258899061604}
     radius: 0.3
     amplitude: 3
@@ -3509,6 +3518,9 @@ MonoBehaviour:
     lastVelocityGuess: {x: 0, y: 0, z: 0}
     velocity: {x: 0, y: 0, z: 0}
     virtualPos: {x: 0, y: 0, z: 0}
+    jiggleEvent:
+      m_PersistentCalls:
+        m_Calls: []
   - origin: {fileID: 3333062064093237365}
     radius: 0.3
     amplitude: 3
@@ -3520,6 +3532,9 @@ MonoBehaviour:
     lastVelocityGuess: {x: 0, y: 0, z: 0}
     velocity: {x: 0, y: 0, z: 0}
     virtualPos: {x: 0, y: 0, z: 0}
+    jiggleEvent:
+      m_PersistentCalls:
+        m_Calls: []
 --- !u!1 &9125386716202120455
 GameObject:
   m_ObjectHideFlags: 0

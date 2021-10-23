@@ -162,7 +162,6 @@ namespace JigglePhysics {
                 zone.Friction(dt);
                 zone.Gravity(dt, transform.lossyScale.x);
                 zone.Acceleration(dt);
-                zone.jiggleEvent.Invoke(zone.virtualPos);
             }
         }
         public void SendData() {
@@ -176,6 +175,9 @@ namespace JigglePhysics {
                 }
                 GetBlock(r).SetVectorArray("_SoftbodyArray", vectorsToSend);
                 r.SetPropertyBlock(GetBlock(r));
+            }
+            foreach (SoftbodyZone zone in zones) {
+                zone.jiggleEvent.Invoke(zone.virtualPos);
             }
         }
         public void OnDrawGizmosSelected() {

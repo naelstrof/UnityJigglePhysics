@@ -60,15 +60,15 @@ namespace JigglePhysics {
                 lastVelocityGuess = velocityGuess;
             }
             public void Acceleration(float dt) {
-                velocity -= virtualPos * elastic * dt * 100f;
-                virtualPos += velocity * dt;
+                velocity += virtualPos * elastic * dt * 100f;
+                virtualPos -= velocity * dt;
                 lastPosition = origin.position;
             }
             public void Pack(ref Vector4[] packTarget, SkinnedMeshRenderer r, int index, float scale) {
                 packTarget[index * 3] = colorMask;
                 packTarget[index * 3 + 1] = r.rootBone.InverseTransformPoint(origin.position)*scale;
                 packTarget[index * 3 + 1].w = origin.lossyScale.y*radius;
-                packTarget[index * 3 + 2] = -r.rootBone.InverseTransformVector(virtualPos);
+                packTarget[index * 3 + 2] = r.rootBone.InverseTransformVector(virtualPos);
                 packTarget[index * 3 + 2].w = amplitude * scale;
             }
             public void Draw() {
@@ -192,7 +192,7 @@ namespace JigglePhysics {
                 float mask = Mathf.Clamp01(Vector4.Dot(color, zone.colorMask));
                 float dist = Vector3.Distance(targetRenderers[0].rootBone.InverseTransformPoint(wpos), targetRenderers[0].rootBone.InverseTransformPoint(zone.origin.position)) / (zone.radius*zone.origin.lossyScale.x);
                 float effect = Mathf.Clamp01(1f - dist * dist) * mask;
-                offset -= zone.virtualPos * targetRenderers[0].rootBone.lossyScale.x * effect * zone.amplitude;
+                offset += zone.virtualPos * targetRenderers[0].rootBone.lossyScale.x * effect * zone.amplitude;
             }
             return wpos + offset;
         }

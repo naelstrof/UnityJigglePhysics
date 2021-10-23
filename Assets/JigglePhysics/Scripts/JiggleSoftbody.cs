@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace JigglePhysics {
     public class JiggleSoftbody : MonoBehaviour {
@@ -15,6 +16,8 @@ namespace JigglePhysics {
         public float randomization = 0.1f;
         [System.Serializable]
         public class SoftbodyZone {
+            [System.Serializable]
+            public class UnityEventVector3 : UnityEvent<Vector3> {}
             public Transform origin;
             public float radius;
             public float amplitude;
@@ -31,6 +34,7 @@ namespace JigglePhysics {
             public Vector3 velocity;
             [HideInInspector]
             public Vector3 virtualPos;
+            public UnityEventVector3 jiggleEvent;
             public void Friction(float dt) {
                 float speed = velocity.magnitude;
                 if (speed<Mathf.Epsilon) {
@@ -158,6 +162,7 @@ namespace JigglePhysics {
                 zone.Friction(dt);
                 zone.Gravity(dt, transform.lossyScale.x);
                 zone.Acceleration(dt);
+                zone.jiggleEvent.Invoke(zone.virtualPos);
             }
         }
         public void SendData() {

@@ -49,7 +49,7 @@ namespace JigglePhysics {
                 velocity *= newSpeed;
             }
             public void Gravity(float dt, float scale) {
-                velocity += gravity * dt * scale;
+                velocity -= gravity * dt * scale;
             }
             public void CalculateAcceleration(float dt) {
                 Vector3 velocityGuess = (origin.position - lastPosition)/dt;

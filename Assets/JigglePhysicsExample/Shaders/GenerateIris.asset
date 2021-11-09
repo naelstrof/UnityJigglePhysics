@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78b2425a2284af743826c689403a4924, type: 3}
+  m_Name: GenerateIris
+  m_EditorClassIdentifier: 
+  m_functionInfo: "// Made with Amplify Shader Editor\n// Available at the Unity Asset
+    Store - http://u3d.as/y3X \n/*ASEBEGIN\nVersion=17101\n12;35;1120;968;3325.05;684.076;1.861248;True;False\nNode;AmplifyShaderEditor.LengthOpNode;19;-1534.407,-192.2851;Inherit;False;1;0;FLOAT2;0,0;False;1;FLOAT;0\nNode;AmplifyShaderEditor.NegateNode;20;-800.0726,-556.3832;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0\nNode;AmplifyShaderEditor.SimpleMultiplyOpNode;16;-1128.748,-555.1591;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;6.283;False;1;FLOAT;0\nNode;AmplifyShaderEditor.CosOpNode;18;-966.7476,-555.1591;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0\nNode;AmplifyShaderEditor.SimpleAddOpNode;21;-629.4984,-559.4853;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;1;False;1;FLOAT;0\nNode;AmplifyShaderEditor.FunctionInput;25;-1672.943,-296.2001;Inherit;False;IrisSize;1;1;False;1;0;FLOAT;0;False;1;FLOAT;0\nNode;AmplifyShaderEditor.FunctionInput;24;-2129.556,-17.87258;Inherit;False;IrisBlend;1;2;False;1;0;FLOAT;0;False;1;FLOAT;0\nNode;AmplifyShaderEditor.SmoothstepOpNode;22;-789.1985,-249.6042;Inherit;False;3;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;0.5;False;1;FLOAT;0\nNode;AmplifyShaderEditor.SimpleMultiplyOpNode;23;-455.182,-556.0612;Inherit;False;2;2;0;FLOAT;0;False;1;FLOAT;0.5;False;1;FLOAT;0\nNode;AmplifyShaderEditor.SmoothstepOpNode;12;-1227.612,-113.0222;Inherit;False;3;0;FLOAT;0;False;1;FLOAT;0;False;2;FLOAT;0.45;False;1;FLOAT;0\nNode;AmplifyShaderEditor.SimpleDivideOpNode;4;-1920.635,-50.6042;Inherit;False;2;0;FLOAT;1;False;1;FLOAT;0;False;1;FLOAT;0\nNode;AmplifyShaderEditor.SimpleAddOpNode;5;-1834.166,171.3357;Inherit;False;2;2;0;FLOAT2;0,0;False;1;FLOAT2;-0.5,-0.5;False;1;FLOAT2;0\nNode;AmplifyShaderEditor.SimpleAddOpNode;3;-1989.643,194.3179;Inherit;False;2;2;0;FLOAT2;0,0;False;1;FLOAT2;0,0;False;1;FLOAT2;0\nNode;AmplifyShaderEditor.SimpleMultiplyOpNode;6;-1691.659,169.3277;Inherit;False;2;2;0;FLOAT2;0,0;False;1;FLOAT;5;False;1;FLOAT2;0\nNode;AmplifyShaderEditor.SimpleSubtractOpNode;10;-1415.116,-329.4162;Inherit;False;2;0;FLOAT;0.45;False;1;FLOAT;0;False;1;FLOAT;0\nNode;AmplifyShaderEditor.LengthOpNode;11;-1534.75,-99.0793;Inherit;False;1;0;FLOAT2;0,0;False;1;FLOAT;0\nNode;AmplifyShaderEditor.SimpleAddOpNode;7;-1533.087,169.3308;Inherit;False;2;2;0;FLOAT2;0,0;False;1;FLOAT2;0.5,0.5;False;1;FLOAT2;0\nNode;AmplifyShaderEditor.SaturateNode;9;-1396.599,175.3477;Inherit;False;1;0;FLOAT2;0,0;False;1;FLOAT2;0\nNode;AmplifyShaderEditor.FunctionInput;31;-2182.244,181.4045;Inherit;False;UV;2;0;False;1;0;FLOAT2;0,0;False;1;FLOAT2;0\nNode;AmplifyShaderEditor.FunctionOutput;29;46.77356,141.2042;Inherit;False;False;IrisUV;1;False;1;0;FLOAT2;0,0;False;1;FLOAT2;0\nNode;AmplifyShaderEditor.FunctionOutput;0;37.44247,-198.6083;Inherit;False;True;IrisRing;3;False;1;0;FLOAT;0;False;1;FLOAT;0\nNode;AmplifyShaderEditor.FunctionOutput;27;-0.1665039,-109.7174;Inherit;False;False;SceleraBloodRatio;2;False;1;0;FLOAT;0;False;1;FLOAT;0\nNode;AmplifyShaderEditor.FunctionOutput;30;37.32048,239.4194;Inherit;False;False;IrisBlend;0;False;1;0;FLOAT;0;False;1;FLOAT;0\nWireConnection;19;0;5;0\nWireConnection;20;0;18;0\nWireConnection;16;0;12;0\nWireConnection;18;0;16;0\nWireConnection;21;0;20;0\nWireConnection;22;0;19;0\nWireConnection;23;0;21;0\nWireConnection;12;0;11;0\nWireConnection;12;1;10;0\nWireConnection;4;1;24;0\nWireConnection;5;0;3;0\nWireConnection;3;0;31;0\nWireConnection;6;0;5;0\nWireConnection;6;1;4;0\nWireConnection;10;1;25;0\nWireConnection;11;0;6;0\nWireConnection;7;0;6;0\nWireConnection;9;0;7;0\nWireConnection;29;0;9;0\nWireConnection;0;0;23;0\nWireConnection;27;0;22;0\nWireConnection;30;0;12;0\nASEEND*/\n//CHKSM=50131510AAC9B142F254AE05CE33267E300093F3"
+  m_functionName: 
+  m_description: 
+  m_additionalIncludes:
+    m_additionalIncludes: []
+    m_outsideIncludes: []
+  m_additionalPragmas:
+    m_additionalPragmas: []
+    m_outsidePragmas: []
+  m_additionalDirectives:
+    m_validData: 0
+    m_isDirty: 0
+    m_moduleName: ' Additional Directives'
+    m_independentModule: 1
+    m_additionalDirectives: []
+    m_shaderFunctionDirectives: []
+    m_nativeDirectives: []
+    m_nativeDirectivesIndex: -1
+    m_nativeDirectivesFoldout: 0
+    m_directivesSaveItems: []
+  m_nodeCategory: 3
+  m_customNodeCategory: 
+  m_previewPosition: 0
+  m_hidden: 0

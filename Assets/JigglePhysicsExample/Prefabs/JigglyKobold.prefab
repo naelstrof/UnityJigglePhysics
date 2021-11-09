@@ -3467,7 +3467,7 @@ MonoBehaviour:
   zones:
   - origin: {fileID: 7912904831010786695}
     radius: 0.25
-    amplitude: 2
+    amplitude: 4
     elastic: 3
     friction: 4
     gravity: {x: 0, y: -30, z: 0}
@@ -3481,7 +3481,7 @@ MonoBehaviour:
         m_Calls: []
   - origin: {fileID: 8887449293578775514}
     radius: 0.25
-    amplitude: 2
+    amplitude: 4
     elastic: 3
     friction: 4
     gravity: {x: 0, y: -30, z: 0}
@@ -3498,7 +3498,7 @@ MonoBehaviour:
     amplitude: 3.5
     elastic: 3
     friction: 5
-    gravity: {x: 0, y: 20, z: 0}
+    gravity: {x: 0, y: -20, z: 0}
     colorMask: {r: 0, g: 0, b: 1, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}
     lastVelocityGuess: {x: 0, y: 0, z: 0}
@@ -3509,10 +3509,10 @@ MonoBehaviour:
         m_Calls: []
   - origin: {fileID: 8424650258899061604}
     radius: 0.3
-    amplitude: 3
+    amplitude: 4
     elastic: 3
     friction: 5
-    gravity: {x: 0, y: 9, z: 0}
+    gravity: {x: 0, y: -9, z: 0}
     colorMask: {r: 1, g: 0, b: 0, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}
     lastVelocityGuess: {x: 0, y: 0, z: 0}
@@ -3523,10 +3523,10 @@ MonoBehaviour:
         m_Calls: []
   - origin: {fileID: 3333062064093237365}
     radius: 0.3
-    amplitude: 3
+    amplitude: 4
     elastic: 3
     friction: 5
-    gravity: {x: 0, y: 9, z: 0}
+    gravity: {x: 0, y: -9, z: 0}
     colorMask: {r: 0, g: 1, b: 0, a: 0}
     lastPosition: {x: 0, y: 0, z: 0}
     lastVelocityGuess: {x: 0, y: 0, z: 0}

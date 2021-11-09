@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Kobold
-  m_Shader: {fileID: 4800000, guid: 61d8283c2ff76fd4b8951019cb7ffb68, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 40c275dd7760b5040873ff02fe2d56e2, type: 3}
   m_ShaderKeywords: _EMISSION _METALLICGLOSSMAP _NORMALMAP
   m_LightmapFlags: 2
   m_EnableInstancingVariants: 0
@@ -19,6 +19,18 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - Texture2D_34824435846f4ed4b949083ef78956a1:
+        m_Texture: {fileID: 2800000, guid: e604d44ad233cc04885cf4d8d69671c6, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - Texture2D_919f5ed94e1844ab9d41ea7745e93471:
+        m_Texture: {fileID: 2800000, guid: 0c0b372920fd1d24ab789377696bf628, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - Texture2D_c1f6edb186df4e178199060760e9c151:
+        m_Texture: {fileID: 2800000, guid: 4b6937e068dc59545bb1225b88f63b5f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _BumpMap:
         m_Texture: {fileID: 2800000, guid: 4b6937e068dc59545bb1225b88f63b5f, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -56,6 +68,18 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}

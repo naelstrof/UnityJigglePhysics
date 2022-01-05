@@ -19,6 +19,7 @@ namespace JigglePhysics {
             [System.Serializable]
             public class UnityEventVector3 : UnityEvent<Vector3> {}
             public Transform origin;
+            public Vector3 offset;
             public float radius;
             public float amplitude;
             public float elastic;
@@ -52,7 +53,7 @@ namespace JigglePhysics {
                 velocity -= gravity * dt * scale;
             }
             public void CalculateAcceleration(float dt) {
-                Vector3 velocityGuess = (origin.position - lastPosition)/dt;
+                Vector3 velocityGuess = (origin.TransformPoint(offset) - lastPosition)/dt;
                 Vector3 newVelocity = (velocityGuess-lastVelocityGuess);
                 // SINWAVE BASED MAXIMUM ACCELLERATION APPROACH
                 //newVelocity = newVelocity.normalized * Mathf.Sin(Mathf.Clamp(newVelocity.magnitude*(Mathf.PI/2f), -1f, 1f)*(0.5f/maximumAcceleration))*maximumAcceleration;
@@ -62,11 +63,11 @@ namespace JigglePhysics {
             public void Acceleration(float dt) {
                 velocity += virtualPos * elastic * dt * 100f;
                 virtualPos -= velocity * dt;
-                lastPosition = origin.position;
+                lastPosition = origin.TransformPoint(offset);
             }
             public void Pack(ref Vector4[] packTarget, SkinnedMeshRenderer r, int index, float scale) {
                 packTarget[index * 3] = colorMask;
-                packTarget[index * 3 + 1] = r.rootBone.InverseTransformPoint(origin.position)*scale;
+                packTarget[index * 3 + 1] = r.rootBone.InverseTransformPoint(origin.TransformPoint(offset))*scale;
                 packTarget[index * 3 + 1].w = origin.lossyScale.y*radius;
                 packTarget[index * 3 + 2] = r.rootBone.InverseTransformVector(virtualPos);
                 packTarget[index * 3 + 2].w = amplitude * scale;
@@ -76,7 +77,7 @@ namespace JigglePhysics {
                     return;
                 }
                 Gizmos.color = new Color(colorMask.r, colorMask.g, colorMask.b, Mathf.Clamp(colorMask.r + colorMask.g + colorMask.b + colorMask.a, 0f, 0.5f));
-                Gizmos.DrawSphere(origin.position, origin.lossyScale.y*radius);
+                Gizmos.DrawSphere(origin.TransformPoint(offset), origin.lossyScale.y*radius);
             }
         }
         private Vector4[] vectorsToSend;
@@ -107,7 +108,7 @@ namespace JigglePhysics {
                 blockCache.Add(r, block);
             }
             foreach( SoftbodyZone zone in zones) {
-                zone.lastPosition = zone.origin.position;
+                zone.lastPosition = zone.origin.TransformPoint(zone.offset);
             }
         }
         public void LateUpdate() {

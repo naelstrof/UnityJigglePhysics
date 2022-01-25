@@ -13,16 +13,16 @@ MonoBehaviour:
   m_Name: JigglePhysicsSoftbody
   m_EditorClassIdentifier: 
   m_functionInfo: "// Made with Amplify Shader Editor\n// Available at the Unity
-    Asset Store - http://u3d.as/y3X \n/*ASEBEGIN\nVersion=18900\n115;129;1173;877;1187.728;390.4097;1;True;True\nNode;AmplifyShaderEditor.PosVertexDataNode;5;-886.0357,510.3132;Inherit;False;0;0;5;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4\nNode;AmplifyShaderEditor.FunctionInput;7;-753.4412,209.7766;Inherit;False;Vertex
-    Color;4;1;False;1;0;FLOAT4;0,0,0,0;False;1;FLOAT4;0\nNode;AmplifyShaderEditor.FunctionInput;6;-679.4412,481.7766;Inherit;False;Vertex
-    Position;3;0;False;1;0;FLOAT3;0,0,0;False;1;FLOAT3;0\nNode;AmplifyShaderEditor.GlobalArrayNode;1;-795.8239,-151.495;Inherit;False;_SoftbodyArray;0;24;2;False;False;0;1;True;Object;1;4;0;INT;0;False;2;INT;0;False;1;INT;0;False;3;INT;0;False;1;FLOAT4;0\nNode;AmplifyShaderEditor.VertexColorNode;4;-992.0357,206.3132;Inherit;False;0;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4\nNode;AmplifyShaderEditor.CustomExpressionNode;3;-415.5984,15.12003;Inherit;False;float3
-    vertexOffset = float3(0,0,0)@$for(int i=0@i<8@i++) {$  float4 colorMask = _SoftbodyArray[i*3]@$ 
-    float4 zonePosRadius = _SoftbodyArray[i*3+1]@$  float4 zoneVelocityAmp = _SoftbodyArray[i*3+2]@$ 
-    if (zoneVelocityAmp.w > 0) {$    float mask = saturate(dot(colorMask,vertexColor))@$   
-    float dist = distance(zonePosRadius.xyz, vertexPos.xyz)/zonePosRadius.w@$   
-    float effect = saturate(1-dist*dist)*mask@$    //return zoneVelocityAmp.xyz *
-    effect * zoneVelocityAmp.w@$    vertexOffset += zoneVelocityAmp.xyz * effect
-    * zoneVelocityAmp.w@$  }$}$return vertexOffset@;3;False;2;True;vertexColor;FLOAT4;0,0,0,0;In;;Inherit;False;True;vertexPos;FLOAT3;0,0,0;In;;Inherit;False;GetSoftbodyOffset;True;False;0;2;0;FLOAT4;0,0,0,0;False;1;FLOAT3;0,0,0;False;1;FLOAT3;0\nNode;AmplifyShaderEditor.FunctionOutput;0;0,0;Inherit;False;True;-1;Output;0;False;1;0;FLOAT3;0,0,0;False;1;FLOAT3;0\nWireConnection;7;0;4;0\nWireConnection;6;0;5;0\nWireConnection;3;0;7;0\nWireConnection;3;1;6;0\nWireConnection;0;0;3;0\nASEEND*/\n//CHKSM=40AD661D39663F75DBCFE2687360CAD22AB24917"
+    Asset Store - http://u3d.as/y3X \n/*ASEBEGIN\nVersion=18934\n99;121;2138;950;2296.597;619.37;1.52992;True;True\nNode;AmplifyShaderEditor.PosVertexDataNode;5;-886.0357,510.3132;Inherit;False;0;0;5;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4\nNode;AmplifyShaderEditor.FunctionInput;6;-679.4412,481.7766;Inherit;False;Vertex
+    Position;3;0;False;1;0;FLOAT3;0,0,0;False;1;FLOAT3;0\nNode;AmplifyShaderEditor.VertexColorNode;4;-992.0357,206.3132;Inherit;False;0;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4\nNode;AmplifyShaderEditor.GlobalArrayNode;9;-870.7115,-324.0958;Inherit;False;_JiggleInfos;0;16;2;False;False;0;1;True;Object;9;4;0;INT;0;False;2;INT;0;False;1;INT;0;False;3;INT;0;False;1;FLOAT4;0\nNode;AmplifyShaderEditor.FunctionInput;7;-753.4412,209.7766;Inherit;False;Vertex
+    Color;4;1;False;1;0;FLOAT4;0,0,0,0;False;1;FLOAT4;0\nNode;AmplifyShaderEditor.CustomExpressionNode;3;-415.5984,15.12003;Inherit;False;float3
+    vertexOffset = float3(0,0,0)@$for(int i=0@i<8@i++) {$    float4 targetPosePositionRadius
+    = _JiggleInfos[i*2]@$    float4 verletPositionBlend = _JiggleInfos[i*2+1]@$$   
+    float3 movement = (verletPositionBlend.xyz - targetPosePositionRadius.xyz)@$   
+    float dist = distance(vertexPosition, targetPosePositionRadius.xyz)@$    float
+    multi = 1-smoothstep(0,targetPosePositionRadius.w,dist)@$    vertexOffset +=
+    movement * multi * verletPositionBlend.w * max(max(vertexColor.r, vertexColor.g),
+    vertexColor.b)@$}$return vertexOffset@;3;Create;2;True;vertexColor;FLOAT4;0,0,0,0;In;;Inherit;False;True;vertexPosition;FLOAT3;0,0,0;In;;Inherit;False;GetSoftbodyOffset;True;False;0;;False;2;0;FLOAT4;0,0,0,0;False;1;FLOAT3;0,0,0;False;1;FLOAT3;0\nNode;AmplifyShaderEditor.FunctionOutput;0;0,0;Inherit;False;True;-1;Output;0;False;1;0;FLOAT3;0,0,0;False;1;FLOAT3;0\nWireConnection;6;0;5;0\nWireConnection;7;0;4;0\nWireConnection;3;0;7;0\nWireConnection;3;1;6;0\nWireConnection;0;0;3;0\nASEEND*/\n//CHKSM=D9A695A2B1789483317C745B072F221366E120A8"
   m_functionName: 
   m_description: 
   m_additionalIncludes:
@@ -33,7 +33,7 @@ MonoBehaviour:
     m_outsidePragmas: []
   m_additionalDirectives:
     m_validData: 0
-    m_isDirty: 0
+    m_isDirty: 1
     m_moduleName: ' Additional Directives'
     m_independentModule: 1
     m_customEdited: 0
@@ -47,3 +47,4 @@ MonoBehaviour:
   m_customNodeCategory: 
   m_previewPosition: 0
   m_hidden: 0
+  m_url: 

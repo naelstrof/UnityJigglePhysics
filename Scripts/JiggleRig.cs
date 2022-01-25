@@ -20,6 +20,9 @@ public class JiggleRig : MonoBehaviour {
     [Range(0f,1f)] [SerializeField]
     float blend = 1f;
 
+    [Range(0f,1f)] [SerializeField]
+    float elasticity = 0.5f;
+
     private List<SimulatedPoint> simulatedPoints;
 
     private void Awake() {
@@ -54,10 +57,10 @@ public class JiggleRig : MonoBehaviour {
                 simulatedPoint.SnapTo(transform);
             } else {
                 simulatedPoint.StepPhysics(Time.deltaTime, gravityMultiplier, friction, inertness);
-                simulatedPoint.ConstrainAngle();
+                simulatedPoint.ConstrainAngle(elasticity*elasticity);
                 simulatedPoint.ConstrainLength();
             }
-            simulatedPoint.DebugDraw(Color.black, false);
+            //simulatedPoint.DebugDraw(Color.black, false);
         }
 
     }
@@ -68,7 +71,7 @@ public class JiggleRig : MonoBehaviour {
         // Create an extra purely virtual point if we have no children.
         if (currentTransform.childCount == 0) {
             if (currentSimulatedPoint.parent == null) {
-                throw new UnityException("Can't have a singular jiggle bone. That doesn't even make sense!");
+                throw new UnityException("Can't have a singular jiggle bone with no parents. That doesn't even make sense!");
             }
             Vector3 projectedForward = (currentTransform.position - parentSimulatedPoint.transform.position).normalized;
             simulatedPoints.Add(new SimulatedPoint(null, currentSimulatedPoint, currentTransform.position + projectedForward*parentSimulatedPoint.lengthToParent));

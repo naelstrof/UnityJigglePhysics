@@ -16,4 +16,5 @@ MonoBehaviour:
   friction: 0.166
   inertness: 0.281
   blend: 1
-  elasticity: 0.177
+  angleElasticity: 0.3
+  lengthElasticity: 0.1

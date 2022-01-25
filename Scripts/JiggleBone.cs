@@ -9,6 +9,7 @@ public class JiggleBone {
     public JiggleBone child;
     public Quaternion boneRotationChangeCheck;
     public Quaternion lastValidPoseBoneRotation;
+    private Vector3 lastValidPoseBoneLocalPosition;
     public Quaternion cachedBoneRotation;
     public Vector3 targetAnimatedBonePosition;
     public Vector3 position;
@@ -43,8 +44,8 @@ public class JiggleBone {
             return;
         }
         Vector3 newPosition = NextPhysicsPosition(Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction, jiggleSettings.inertness);
-        newPosition = ConstrainAngle(newPosition, jiggleSettings.elasticity*jiggleSettings.elasticity);
-        newPosition = ConstrainLength(newPosition);
+        newPosition = ConstrainAngle(newPosition, jiggleSettings.angleElasticity*jiggleSettings.angleElasticity);
+        newPosition = ConstrainLength(newPosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity);
         SetNewPosition(newPosition);
     }
 
@@ -59,12 +60,13 @@ public class JiggleBone {
         targetAnimatedBonePosition = transform.position;
         cachedBoneRotation = transform.rotation;
         lastValidPoseBoneRotation = transform.localRotation;
+        lastValidPoseBoneLocalPosition = transform.localPosition;
     }
     
-    public Vector3 ConstrainLength(Vector3 newPosition) {
+    public Vector3 ConstrainLength(Vector3 newPosition, float elasticity) {
         Vector3 diff = newPosition - parent.position;
         Vector3 dir = diff.normalized;
-        return parent.position + dir * lengthToParent;
+        return Vector3.Lerp(newPosition, parent.position + dir * lengthToParent, elasticity);
     }
 
     public Vector3 ConstrainAngle(Vector3 newPosition, float elasticity) {
@@ -110,6 +112,7 @@ public class JiggleBone {
         // If bone is not animated, return to last unadulterated pose
         if (transform != null && boneRotationChangeCheck == transform.localRotation) {
             transform.localRotation = lastValidPoseBoneRotation;
+            transform.localPosition = lastValidPoseBoneLocalPosition;
         }
         CacheAnimationPosition();
     }
@@ -122,6 +125,9 @@ public class JiggleBone {
             Quaternion animPoseToPhysicsPose = Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector);
             animPoseToPhysicsPose = Quaternion.Lerp(Quaternion.identity, animPoseToPhysicsPose, blend);
             transform.rotation = animPoseToPhysicsPose * cachedBoneRotation;
+            if (parent != null) {
+                transform.position = interpolatedPosition;
+            }
         }
         if (transform != null) {
             boneRotationChangeCheck = transform.localRotation;

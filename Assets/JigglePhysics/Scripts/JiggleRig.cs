@@ -5,18 +5,27 @@ using UnityEngine;
 
 public class JiggleRig : MonoBehaviour {
 
-    private Transform rootTransform;
     private List<SimulatedPoint> simulatedPoints;
 
     private void Awake() {
         simulatedPoints = new List<SimulatedPoint>();
         CreateSimulatedPoints(transform, null);
     }
+    private void Update() {
+        foreach (SimulatedPoint simulatedPoint in simulatedPoints) {
+            simulatedPoint.DebugDraw(Color.green, true);
+        }
+    }
 
     private void FixedUpdate() {
         foreach (SimulatedPoint simulatedPoint in simulatedPoints) {
-            simulatedPoint.StepPhysics(Time.deltaTime);
-            simulatedPoint.DebugDraw();
+            if (simulatedPoint.parent == null) {
+                simulatedPoint.SnapTo(transform);
+            } else {
+                simulatedPoint.StepPhysics(Time.deltaTime);
+                simulatedPoint.ConstrainLength();
+            }
+            simulatedPoint.DebugDraw(Color.black, false);
         }
     }
 

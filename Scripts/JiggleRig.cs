@@ -7,22 +7,8 @@ public class JiggleRig : MonoBehaviour {
 
     [SerializeField]
     private List<Transform> ignoredTransforms;
-
-    [Range(0f,1f)] [SerializeField]
-    float gravityMultiplier = 1f;
-
-    [Range(0f,1f)] [SerializeField]
-    float friction = 0.5f;
-
-    [Range(0f,1f)] [SerializeField]
-    float inertness = 0.5f;
-
-    [Range(0f,1f)] [SerializeField]
-    float blend = 1f;
-
-    [Range(0f,1f)] [SerializeField]
-    float elasticity = 0.5f;
-
+    [SerializeField]
+    private JiggleSettings jiggleSettings;
     private List<SimulatedPoint> simulatedPoints;
 
     private void Awake() {
@@ -42,7 +28,7 @@ public class JiggleRig : MonoBehaviour {
                 Vector3 cachedAnimatedVector = simulatedPoint.child.cachedAnimatedPosition - simulatedPoint.cachedAnimatedPosition;
                 Vector3 simulatedVector = simulatedPoint.child.interpolatedPosition - simulatedPoint.interpolatedPosition;
                 Quaternion animPoseToPhysicsPose = Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector);
-                animPoseToPhysicsPose = Quaternion.Lerp(Quaternion.identity, animPoseToPhysicsPose, blend);
+                animPoseToPhysicsPose = Quaternion.Lerp(Quaternion.identity, animPoseToPhysicsPose, jiggleSettings.blend);
                 simulatedPoint.transform.rotation = animPoseToPhysicsPose * simulatedPoint.cachedBoneRotation;
             }
             if (simulatedPoint.transform != null) {
@@ -56,8 +42,8 @@ public class JiggleRig : MonoBehaviour {
             if (simulatedPoint.parent == null) {
                 simulatedPoint.SnapTo(transform);
             } else {
-                simulatedPoint.StepPhysics(Time.deltaTime, gravityMultiplier, friction, inertness);
-                simulatedPoint.ConstrainAngle(elasticity*elasticity);
+                simulatedPoint.StepPhysics(Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction, jiggleSettings.inertness);
+                simulatedPoint.ConstrainAngle(jiggleSettings.elasticity*jiggleSettings.elasticity);
                 simulatedPoint.ConstrainLength();
             }
             //simulatedPoint.DebugDraw(Color.black, false);

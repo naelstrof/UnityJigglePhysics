@@ -2804,6 +2804,7 @@ GameObject:
   - component: {fileID: 8521064559583617395}
   - component: {fileID: 2351103058955156233}
   - component: {fileID: 8199469904439248558}
+  - component: {fileID: 1516469374}
   m_Layer: 0
   m_Name: JigglyKobold
   m_TagString: Untagged
@@ -2870,6 +2871,31 @@ LODGroup:
     renderers:
     - renderer: {fileID: 5330333750980878102}
   m_Enabled: 1
+--- !u!114 &1516469374
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9010356771295247305}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a63eef503a567ef4eaf3898b5732b105, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  jiggleZones:
+  - target: {fileID: 248483120761695556}
+    radius: 0.18
+    jiggleSettings: {fileID: 11400000, guid: 8eb96e7b2ba1cb04cbef0fb538c30892, type: 2}
+  - target: {fileID: 5784178075552197034}
+    radius: 0.18
+    jiggleSettings: {fileID: 11400000, guid: 8eb96e7b2ba1cb04cbef0fb538c30892, type: 2}
+  - target: {fileID: 8197358249053959768}
+    radius: 0.34
+    jiggleSettings: {fileID: 11400000, guid: 8eb96e7b2ba1cb04cbef0fb538c30892, type: 2}
+  targetSkins:
+  - {fileID: 7452297451520482250}
+  - {fileID: 5330333750980878102}
 --- !u!1 &9125386716202120455
 GameObject:
   m_ObjectHideFlags: 0

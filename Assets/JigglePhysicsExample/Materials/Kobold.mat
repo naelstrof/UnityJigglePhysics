@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Kobold
-  m_Shader: {fileID: -6465566751694194690, guid: 40c275dd7760b5040873ff02fe2d56e2, type: 3}
+  m_Shader: {fileID: 4800000, guid: 61d8283c2ff76fd4b8951019cb7ffb68, type: 3}
   m_ShaderKeywords: _EMISSION _METALLICGLOSSMAP _NORMALMAP
   m_LightmapFlags: 2
   m_EnableInstancingVariants: 0

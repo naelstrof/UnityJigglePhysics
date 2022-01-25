@@ -6,6 +6,8 @@ public class SimulatedPoint {
 
     public SimulatedPoint parent;
     public SimulatedPoint child;
+    public Quaternion cachedLocalBoneRotation;
+    public Quaternion cachedInitialLocalBoneRotation;
     public Quaternion cachedBoneRotation;
     public Vector3 cachedAnimatedPosition;
     public Vector3 position;
@@ -37,6 +39,7 @@ public class SimulatedPoint {
     public void CacheAnimationPosition() {
         cachedAnimatedPosition = transform.position;
         cachedBoneRotation = transform.rotation;
+        cachedInitialLocalBoneRotation = transform.localRotation;
     }
     
     public void SnapTo(Transform t) {
@@ -54,8 +57,8 @@ public class SimulatedPoint {
         Vector3 parentParentPosition;
         Vector3 poseParentParent;
         if (parent.parent == null) {
-            parentParentPosition = parent.position + (parent.position - position);
             poseParentParent = parent.cachedAnimatedPosition + (parent.cachedAnimatedPosition - cachedAnimatedPosition);
+            parentParentPosition = poseParentParent;
         } else {
             parentParentPosition = parent.parent.position;
             poseParentParent = parent.parent.cachedAnimatedPosition;
@@ -68,9 +71,9 @@ public class SimulatedPoint {
         position = Vector3.Lerp(position, parentParentPosition + constraintTarget, 0.1f);
     }
 
-    public void StepPhysics(float deltaTime) {
+    public void StepPhysics(float deltaTime, float gravityMultiplier) {
         float squaredDeltaTime = deltaTime * deltaTime;
-        Vector3 newPosition = position + (position - previousPosition) + Physics.gravity * squaredDeltaTime;
+        Vector3 newPosition = position + (position - previousPosition) + Physics.gravity * squaredDeltaTime * gravityMultiplier;
         previousPosition = position;
         position = newPosition;
     }

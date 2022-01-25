@@ -60,7 +60,7 @@ public class SimulatedPoint {
         position = parent.position + dir * lengthToParent;
     }
 
-    public void ConstrainAngle() {
+    public void ConstrainAngle(float elasticity) {
         Vector3 parentParentPosition;
         Vector3 poseParentParent;
         if (parent.parent == null) {
@@ -75,7 +75,7 @@ public class SimulatedPoint {
         Quaternion TargetPoseToPose = Quaternion.FromToRotation(parentAimTargetPose, parentAim);
         Vector3 currentPose = cachedAnimatedPosition - poseParentParent;
         Vector3 constraintTarget = TargetPoseToPose * currentPose;
-        position = Vector3.Lerp(position, parentParentPosition + constraintTarget, 0.1f);
+        position = Vector3.Lerp(position, parentParentPosition + constraintTarget, elasticity);
     }
 
     public void StepPhysics(float deltaTime, float gravityMultiplier, float friction, float inertness) {

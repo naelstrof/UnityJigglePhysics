@@ -475,7 +475,10 @@ MonoBehaviour:
   - {fileID: 6682366459221574745}
   - {fileID: 3503151327203273011}
   gravityMultiplier: 1
-  dampenAmount: 1
+  friction: 0.5
+  inertness: 0.5
+  blend: 1
+  elasticity: 0.5
 --- !u!1 &1444663199134164428
 GameObject:
   m_ObjectHideFlags: 0
@@ -1686,7 +1689,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ignoredTransforms: []
   gravityMultiplier: 1
-  dampenAmount: 1
+  friction: 0.5
+  inertness: 0.5
+  blend: 1
+  elasticity: 0.5
 --- !u!1 &5664433795354512687
 GameObject:
   m_ObjectHideFlags: 0
@@ -2017,7 +2023,10 @@ MonoBehaviour:
   - {fileID: 9046240371238109359}
   - {fileID: 1724048758613649194}
   gravityMultiplier: 1
-  dampenAmount: 1
+  friction: 0.5
+  inertness: 0.5
+  blend: 1
+  elasticity: 0.5
 --- !u!1 &6663738809834999277
 GameObject:
   m_ObjectHideFlags: 0
@@ -2409,7 +2418,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ignoredTransforms: []
   gravityMultiplier: 1
-  dampenAmount: 0.25
+  friction: 0.5
+  inertness: 0.5
+  blend: 1
+  elasticity: 0.5
 --- !u!1 &8624934603947805863
 GameObject:
   m_ObjectHideFlags: 0

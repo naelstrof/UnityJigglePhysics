@@ -37,6 +37,13 @@ public class SimulatedPoint {
     }
 
     public void CacheAnimationPosition() {
+        // Purely virtual particles need to reconstruct their desired position.
+        if (transform == null) {
+            // parent.parent is guaranteed to exist here, unless someone's trying to jiggle a single bone entirely by itself (which throws an exception).
+            Vector3 projectedForward = (parent.transform.position - parent.parent.transform.position).normalized;
+            cachedAnimatedPosition = parent.transform.position+projectedForward*lengthToParent;
+            return;
+        }
         cachedAnimatedPosition = transform.position;
         cachedBoneRotation = transform.rotation;
         cachedInitialLocalBoneRotation = transform.localRotation;

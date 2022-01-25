@@ -28,7 +28,7 @@ public class JiggleRig : MonoBehaviour {
     }
     private void LateUpdate() {
         foreach (SimulatedPoint simulatedPoint in simulatedPoints) {
-            if (simulatedPoint.cachedLocalBoneRotation == simulatedPoint.transform.localRotation) {
+            if (simulatedPoint.transform != null && simulatedPoint.cachedLocalBoneRotation == simulatedPoint.transform.localRotation) {
                 simulatedPoint.transform.localRotation = simulatedPoint.cachedInitialLocalBoneRotation;
             }
             simulatedPoint.CacheAnimationPosition();
@@ -42,7 +42,9 @@ public class JiggleRig : MonoBehaviour {
                 animPoseToPhysicsPose = Quaternion.Lerp(Quaternion.identity, animPoseToPhysicsPose, blend);
                 simulatedPoint.transform.rotation = animPoseToPhysicsPose * simulatedPoint.cachedBoneRotation;
             }
-            simulatedPoint.cachedLocalBoneRotation = simulatedPoint.transform.localRotation;
+            if (simulatedPoint.transform != null) {
+                simulatedPoint.cachedLocalBoneRotation = simulatedPoint.transform.localRotation;
+            }
         }
     }
 
@@ -63,6 +65,15 @@ public class JiggleRig : MonoBehaviour {
     private void CreateSimulatedPoints(Transform currentTransform, SimulatedPoint parentSimulatedPoint) {
         SimulatedPoint currentSimulatedPoint = new SimulatedPoint(currentTransform, parentSimulatedPoint, currentTransform.position);
         simulatedPoints.Add(currentSimulatedPoint);
+        // Create an extra purely virtual point if we have no children.
+        if (currentTransform.childCount == 0) {
+            if (currentSimulatedPoint.parent == null) {
+                throw new UnityException("Can't have a singular jiggle bone. That doesn't even make sense!");
+            }
+            Vector3 projectedForward = (currentTransform.position - parentSimulatedPoint.transform.position).normalized;
+            simulatedPoints.Add(new SimulatedPoint(null, currentSimulatedPoint, currentTransform.position + projectedForward*parentSimulatedPoint.lengthToParent));
+            return;
+        }
         for (int i = 0; i < currentTransform.childCount; i++) {
             if (ignoredTransforms.Contains(currentTransform.GetChild(i))) {
                 continue;

@@ -435,7 +435,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2750688567730260255}
-  - component: {fileID: 8199469902633847765}
   m_Layer: 0
   m_Name: BaseBreast.R
   m_TagString: Untagged
@@ -458,86 +457,6 @@ Transform:
   m_Father: {fileID: 4847037771068930038}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8199469902633847765
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1390590045568283912}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad81d0e4bb086504a8c900ce29a95cc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cullOffscreen: 1
-  targetRenderers:
-  - {fileID: 7452297451520482250}
-  - {fileID: 5330333750980878102}
-  updateMode: 2
-  root: {fileID: 2750688567730260255}
-  elasticity:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1.0045085
-      inSlope: 0.09531154
-      outSlope: 0.09531154
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.093272164
-    - serializedVersion: 3
-      time: 1
-      value: 0.8103172
-      inSlope: -0.47577494
-      outSlope: -0.47577494
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.14129287
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  elasticityMultiplier: 6
-  friction:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0.5234299
-      inSlope: 1.5485295
-      outSlope: 1.5485295
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.11620794
-    - serializedVersion: 3
-      time: 1.0015259
-      value: 0.989666
-      inSlope: -0.01636105
-      outSlope: -0.01636105
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.9984733
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  frictionMultiplier: 16
-  accelerationMultiplier: 1
-  maximumAcceleration: 1
-  rotateRoot: 1
-  accelerationBased: 1
-  maxStretch: 1.1
-  maxSquish: 0.1
-  gravity: {x: 0, y: -6, z: 0}
-  excludedTransforms:
-  - {fileID: 2644428201597599799}
-  - {fileID: 6682366459221574745}
-  - {fileID: 5155765182323016960}
-  - {fileID: 3503151327203273011}
 --- !u!1 &1444663199134164428
 GameObject:
   m_ObjectHideFlags: 0
@@ -1733,7 +1652,6 @@ GameObject:
   - component: {fileID: 2519900636369378495}
   - component: {fileID: 2132976984931647093}
   - component: {fileID: 3248337690074066642}
-  - component: {fileID: 7838647173317866550}
   - component: {fileID: 4345502726431365340}
   m_Layer: 0
   m_Name: SinCube
@@ -1818,33 +1736,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &7838647173317866550
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5519779629132136918}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 16cdbfeee1170154294c197a206d4cbc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  outputTransform: {fileID: 2338564433379187011}
-  targetRenderer: {fileID: 7452297451520482250}
-  basisTransform: {fileID: 248483120761695556}
-  softbodyPhysics: {fileID: 8199469904439248559}
-  softbodySurfaceColor: {r: 0.21176472, g: 0, b: 0, a: 0}
-  blendshapePairs:
-  - approximateTransform: {fileID: 9046240371238109359}
-    blendshapeName: FlatChestLeftRight
-    blendshapeID: 0
-  - approximateTransform: {fileID: 1718477820591895899}
-    blendshapeName: BiggerBreastLeftRight
-    blendshapeID: 0
-  - approximateTransform: {fileID: 1724048758613649194}
-    blendshapeName: AntiGravityLeftRight
-    blendshapeID: 0
 --- !u!114 &4345502726431365340
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1956,7 +1847,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9025877290093989458}
-  - component: {fileID: 8199469904174757478}
   m_Layer: 0
   m_Name: Tail
   m_TagString: Untagged
@@ -1979,86 +1869,6 @@ Transform:
   m_Father: {fileID: 4766473574349541950}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8199469904174757478
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5651662084608718315}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad81d0e4bb086504a8c900ce29a95cc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cullOffscreen: 0
-  targetRenderers:
-  - {fileID: 7452297451520482250}
-  - {fileID: 5330333750980878102}
-  updateMode: 2
-  root: {fileID: 9025877290093989458}
-  elasticity:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  elasticityMultiplier: 1
-  friction:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 34
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  frictionMultiplier: 4
-  accelerationMultiplier: 10
-  maximumAcceleration: 100
-  rotateRoot: 1
-  accelerationBased: 1
-  maxStretch: 1.1
-  maxSquish: 0.1
-  gravity: {x: 0, y: -6, z: 0}
-  excludedTransforms:
-  - {fileID: 2644428201597599799}
-  - {fileID: 6682366459221574745}
-  - {fileID: 5155765182323016960}
-  - {fileID: 3503151327203273011}
 --- !u!1 &5664433795354512687
 GameObject:
   m_ObjectHideFlags: 0
@@ -2349,7 +2159,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9137130835870465155}
-  - component: {fileID: 8199469904179612915}
   m_Layer: 0
   m_Name: BaseBreast.L
   m_TagString: Untagged
@@ -2372,86 +2181,6 @@ Transform:
   m_Father: {fileID: 4847037771068930038}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8199469904179612915
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6202365367592545478}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad81d0e4bb086504a8c900ce29a95cc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cullOffscreen: 1
-  targetRenderers:
-  - {fileID: 7452297451520482250}
-  - {fileID: 5330333750980878102}
-  updateMode: 2
-  root: {fileID: 9137130835870465155}
-  elasticity:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1.0045085
-      inSlope: 0.09531154
-      outSlope: 0.09531154
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.093272164
-    - serializedVersion: 3
-      time: 1
-      value: 0.8103172
-      inSlope: -0.47577494
-      outSlope: -0.47577494
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.14129287
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  elasticityMultiplier: 6
-  friction:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0.5234299
-      inSlope: 1.5485295
-      outSlope: 1.5485295
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.11620794
-    - serializedVersion: 3
-      time: 1.0015259
-      value: 0.989666
-      inSlope: -0.01636105
-      outSlope: -0.01636105
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.9984733
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  frictionMultiplier: 16
-  accelerationMultiplier: 1
-  maximumAcceleration: 1
-  rotateRoot: 1
-  accelerationBased: 1
-  maxStretch: 1.1
-  maxSquish: 0.1
-  gravity: {x: 0, y: -6, z: 0}
-  excludedTransforms:
-  - {fileID: 1718477820591895899}
-  - {fileID: 9046240371238109359}
-  - {fileID: 2338564433379187011}
-  - {fileID: 1724048758613649194}
 --- !u!1 &6663738809834999277
 GameObject:
   m_ObjectHideFlags: 0
@@ -3244,7 +2973,6 @@ GameObject:
   - component: {fileID: 1270207700919858562}
   - component: {fileID: 3805293244342617431}
   - component: {fileID: 5436223338825089946}
-  - component: {fileID: 3766173993016400167}
   - component: {fileID: 1324521599273866120}
   m_Layer: 0
   m_Name: SinCube
@@ -3329,33 +3057,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &3766173993016400167
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9002717103271806716}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 16cdbfeee1170154294c197a206d4cbc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  outputTransform: {fileID: 5155765182323016960}
-  targetRenderer: {fileID: 7452297451520482250}
-  basisTransform: {fileID: 5784178075552197034}
-  softbodyPhysics: {fileID: 8199469904439248559}
-  softbodySurfaceColor: {r: 0, g: 0.21176472, b: 0, a: 0}
-  blendshapePairs:
-  - approximateTransform: {fileID: 6682366459221574745}
-    blendshapeName: FlatChestLeftRight
-    blendshapeID: 0
-  - approximateTransform: {fileID: 2644428201597599799}
-    blendshapeName: BiggerBreastLeftRight
-    blendshapeID: 0
-  - approximateTransform: {fileID: 3503151327203273011}
-    blendshapeName: AntiGravityLeftRight
-    blendshapeID: 0
 --- !u!114 &1324521599273866120
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3379,7 +3080,6 @@ GameObject:
   - component: {fileID: 8521064559583617395}
   - component: {fileID: 2351103058955156233}
   - component: {fileID: 8199469904439248558}
-  - component: {fileID: 8199469904439248559}
   m_Layer: 0
   m_Name: JigglyKobold
   m_TagString: Untagged
@@ -3446,95 +3146,6 @@ LODGroup:
     renderers:
     - renderer: {fileID: 5330333750980878102}
   m_Enabled: 1
---- !u!114 &8199469904439248559
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9010356771295247305}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8e81cfbc61bafbb45a3ca4060b22c905, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cullOffscreen: 1
-  updateMode: 2
-  randomization: 0.1
-  targetRenderers:
-  - {fileID: 7452297451520482250}
-  - {fileID: 5330333750980878102}
-  zones:
-  - origin: {fileID: 7912904831010786695}
-    radius: 0.25
-    amplitude: 4
-    elastic: 3
-    friction: 4
-    gravity: {x: 0, y: -30, z: 0}
-    colorMask: {r: 1, g: 0, b: 0, a: 0}
-    lastPosition: {x: 0, y: 0, z: 0}
-    lastVelocityGuess: {x: 0, y: 0, z: 0}
-    velocity: {x: 0, y: 0, z: 0}
-    virtualPos: {x: 0, y: 0, z: 0}
-    jiggleEvent:
-      m_PersistentCalls:
-        m_Calls: []
-  - origin: {fileID: 8887449293578775514}
-    radius: 0.25
-    amplitude: 4
-    elastic: 3
-    friction: 4
-    gravity: {x: 0, y: -30, z: 0}
-    colorMask: {r: 0, g: 1, b: 0, a: 0}
-    lastPosition: {x: 0, y: 0, z: 0}
-    lastVelocityGuess: {x: 0, y: 0, z: 0}
-    velocity: {x: 0, y: 0, z: 0}
-    virtualPos: {x: 0, y: 0, z: 0}
-    jiggleEvent:
-      m_PersistentCalls:
-        m_Calls: []
-  - origin: {fileID: 8197358249053959768}
-    radius: 0.5
-    amplitude: 3.5
-    elastic: 3
-    friction: 5
-    gravity: {x: 0, y: -20, z: 0}
-    colorMask: {r: 0, g: 0, b: 1, a: 0}
-    lastPosition: {x: 0, y: 0, z: 0}
-    lastVelocityGuess: {x: 0, y: 0, z: 0}
-    velocity: {x: 0, y: 0, z: 0}
-    virtualPos: {x: 0, y: 0, z: 0}
-    jiggleEvent:
-      m_PersistentCalls:
-        m_Calls: []
-  - origin: {fileID: 8424650258899061604}
-    radius: 0.3
-    amplitude: 4
-    elastic: 3
-    friction: 5
-    gravity: {x: 0, y: -9, z: 0}
-    colorMask: {r: 1, g: 0, b: 0, a: 0}
-    lastPosition: {x: 0, y: 0, z: 0}
-    lastVelocityGuess: {x: 0, y: 0, z: 0}
-    velocity: {x: 0, y: 0, z: 0}
-    virtualPos: {x: 0, y: 0, z: 0}
-    jiggleEvent:
-      m_PersistentCalls:
-        m_Calls: []
-  - origin: {fileID: 3333062064093237365}
-    radius: 0.3
-    amplitude: 4
-    elastic: 3
-    friction: 5
-    gravity: {x: 0, y: -9, z: 0}
-    colorMask: {r: 0, g: 1, b: 0, a: 0}
-    lastPosition: {x: 0, y: 0, z: 0}
-    lastVelocityGuess: {x: 0, y: 0, z: 0}
-    velocity: {x: 0, y: 0, z: 0}
-    virtualPos: {x: 0, y: 0, z: 0}
-    jiggleEvent:
-      m_PersistentCalls:
-        m_Calls: []
 --- !u!1 &9125386716202120455
 GameObject:
   m_ObjectHideFlags: 0

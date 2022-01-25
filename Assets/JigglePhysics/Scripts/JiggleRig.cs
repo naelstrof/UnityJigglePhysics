@@ -14,6 +14,12 @@ public class JiggleRig : MonoBehaviour {
     [Range(0f,1f)] [SerializeField]
     float friction = 0.5f;
 
+    [Range(0f,1f)] [SerializeField]
+    float inertness = 0.5f;
+
+    [Range(0f,1f)] [SerializeField]
+    float blend = 1f;
+
     private List<SimulatedPoint> simulatedPoints;
 
     private void Awake() {
@@ -33,6 +39,7 @@ public class JiggleRig : MonoBehaviour {
                 Vector3 cachedAnimatedVector = simulatedPoint.child.cachedAnimatedPosition - simulatedPoint.cachedAnimatedPosition;
                 Vector3 simulatedVector = simulatedPoint.child.interpolatedPosition - simulatedPoint.interpolatedPosition;
                 Quaternion animPoseToPhysicsPose = Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector);
+                animPoseToPhysicsPose = Quaternion.Lerp(Quaternion.identity, animPoseToPhysicsPose, blend);
                 simulatedPoint.transform.rotation = animPoseToPhysicsPose * simulatedPoint.cachedBoneRotation;
             }
             simulatedPoint.cachedLocalBoneRotation = simulatedPoint.transform.localRotation;
@@ -44,7 +51,7 @@ public class JiggleRig : MonoBehaviour {
             if (simulatedPoint.parent == null) {
                 simulatedPoint.SnapTo(transform);
             } else {
-                simulatedPoint.StepPhysics(Time.deltaTime, gravityMultiplier, friction);
+                simulatedPoint.StepPhysics(Time.deltaTime, gravityMultiplier, friction, inertness);
                 simulatedPoint.ConstrainAngle();
                 simulatedPoint.ConstrainLength();
             }

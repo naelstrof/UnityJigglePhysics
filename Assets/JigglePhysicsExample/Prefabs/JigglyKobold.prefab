@@ -474,6 +474,8 @@ MonoBehaviour:
   - {fileID: 2644428201597599799}
   - {fileID: 6682366459221574745}
   - {fileID: 3503151327203273011}
+  gravityMultiplier: 1
+  dampenAmount: 1
 --- !u!1 &1444663199134164428
 GameObject:
   m_ObjectHideFlags: 0
@@ -1683,6 +1685,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ignoredTransforms: []
+  gravityMultiplier: 1
+  dampenAmount: 1
 --- !u!1 &5664433795354512687
 GameObject:
   m_ObjectHideFlags: 0
@@ -2012,6 +2016,8 @@ MonoBehaviour:
   - {fileID: 1718477820591895899}
   - {fileID: 9046240371238109359}
   - {fileID: 1724048758613649194}
+  gravityMultiplier: 1
+  dampenAmount: 1
 --- !u!1 &6663738809834999277
 GameObject:
   m_ObjectHideFlags: 0
@@ -2366,6 +2372,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5981060172702988257}
+  - component: {fileID: 4374774842829377141}
   m_Layer: 0
   m_Name: Arm.L
   m_TagString: Untagged
@@ -2388,6 +2395,21 @@ Transform:
   m_Father: {fileID: 4702127866786333954}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4374774842829377141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8608444138041914093}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d76f24409a39604ca3986f91ce6d28a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ignoredTransforms: []
+  gravityMultiplier: 1
+  dampenAmount: 0.25
 --- !u!1 &8624934603947805863
 GameObject:
   m_ObjectHideFlags: 0

@@ -3159,7 +3159,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8343c89047352f4d97b4fac918908aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetLookat: {fileID: 3742407836283665401}
+  targetLookat: {fileID: 2037741462}
   distance: 3
 --- !u!114 &963194230
 MonoBehaviour:

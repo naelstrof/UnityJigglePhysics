@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gravityMultiplier: 0.244
   friction: 0.04
-  inertness: 0.308
+  inertness: 0.176
   blend: 0.502
   elasticity: 0.374

@@ -9,65 +9,45 @@ public class JiggleRig : MonoBehaviour {
     private List<Transform> ignoredTransforms;
     [SerializeField]
     private JiggleSettings jiggleSettings;
-    private List<SimulatedPoint> simulatedPoints;
+    private List<JiggleBone> simulatedPoints;
 
     private void Awake() {
-        simulatedPoints = new List<SimulatedPoint>();
+        simulatedPoints = new List<JiggleBone>();
         CreateSimulatedPoints(transform, null);
     }
     private void LateUpdate() {
-        foreach (SimulatedPoint simulatedPoint in simulatedPoints) {
-            if (simulatedPoint.transform != null && simulatedPoint.cachedLocalBoneRotation == simulatedPoint.transform.localRotation) {
-                simulatedPoint.transform.localRotation = simulatedPoint.cachedInitialLocalBoneRotation;
-            }
-            simulatedPoint.CacheAnimationPosition();
+        foreach (JiggleBone simulatedPoint in simulatedPoints) {
+            simulatedPoint.PrepareBone();
         }
-        foreach (SimulatedPoint simulatedPoint in simulatedPoints) {
-            simulatedPoint.DebugDraw(Color.green, true);
-            if (simulatedPoint.child != null) {
-                Vector3 cachedAnimatedVector = simulatedPoint.child.cachedAnimatedPosition - simulatedPoint.cachedAnimatedPosition;
-                Vector3 simulatedVector = simulatedPoint.child.interpolatedPosition - simulatedPoint.interpolatedPosition;
-                Quaternion animPoseToPhysicsPose = Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector);
-                animPoseToPhysicsPose = Quaternion.Lerp(Quaternion.identity, animPoseToPhysicsPose, jiggleSettings.blend);
-                simulatedPoint.transform.rotation = animPoseToPhysicsPose * simulatedPoint.cachedBoneRotation;
-            }
-            if (simulatedPoint.transform != null) {
-                simulatedPoint.cachedLocalBoneRotation = simulatedPoint.transform.localRotation;
-            }
+        foreach (JiggleBone simulatedPoint in simulatedPoints) {
+            simulatedPoint.PoseBone(jiggleSettings.blend);
         }
     }
 
     private void FixedUpdate() {
-        foreach (SimulatedPoint simulatedPoint in simulatedPoints) {
-            if (simulatedPoint.parent == null) {
-                simulatedPoint.SnapTo(transform);
-            } else {
-                simulatedPoint.StepPhysics(Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction, jiggleSettings.inertness);
-                simulatedPoint.ConstrainAngle(jiggleSettings.elasticity*jiggleSettings.elasticity);
-                simulatedPoint.ConstrainLength();
-            }
+        foreach (JiggleBone simulatedPoint in simulatedPoints) { 
+            simulatedPoint.Simulate(jiggleSettings);
             //simulatedPoint.DebugDraw(Color.black, false);
         }
-
     }
 
-    private void CreateSimulatedPoints(Transform currentTransform, SimulatedPoint parentSimulatedPoint) {
-        SimulatedPoint currentSimulatedPoint = new SimulatedPoint(currentTransform, parentSimulatedPoint, currentTransform.position);
-        simulatedPoints.Add(currentSimulatedPoint);
+    private void CreateSimulatedPoints(Transform currentTransform, JiggleBone parentJiggleBone) {
+        JiggleBone newJiggleBone = new JiggleBone(currentTransform, parentJiggleBone, currentTransform.position);
+        simulatedPoints.Add(newJiggleBone);
         // Create an extra purely virtual point if we have no children.
         if (currentTransform.childCount == 0) {
-            if (currentSimulatedPoint.parent == null) {
+            if (newJiggleBone.parent == null) {
                 throw new UnityException("Can't have a singular jiggle bone with no parents. That doesn't even make sense!");
             }
-            Vector3 projectedForward = (currentTransform.position - parentSimulatedPoint.transform.position).normalized;
-            simulatedPoints.Add(new SimulatedPoint(null, currentSimulatedPoint, currentTransform.position + projectedForward*parentSimulatedPoint.lengthToParent));
+            Vector3 projectedForward = (currentTransform.position - parentJiggleBone.transform.position).normalized;
+            simulatedPoints.Add(new JiggleBone(null, newJiggleBone, currentTransform.position + projectedForward*parentJiggleBone.lengthToParent));
             return;
         }
         for (int i = 0; i < currentTransform.childCount; i++) {
             if (ignoredTransforms.Contains(currentTransform.GetChild(i))) {
                 continue;
             }
-            CreateSimulatedPoints(currentTransform.GetChild(i), currentSimulatedPoint);
+            CreateSimulatedPoints(currentTransform.GetChild(i), newJiggleBone);
         }
     }
 

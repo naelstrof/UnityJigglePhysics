@@ -11,6 +11,9 @@ public class JiggleRig : MonoBehaviour {
     [Range(0f,1f)] [SerializeField]
     float gravityMultiplier = 1f;
 
+    [Range(0f,1f)] [SerializeField]
+    float friction = 0.5f;
+
     private List<SimulatedPoint> simulatedPoints;
 
     private void Awake() {
@@ -41,7 +44,7 @@ public class JiggleRig : MonoBehaviour {
             if (simulatedPoint.parent == null) {
                 simulatedPoint.SnapTo(transform);
             } else {
-                simulatedPoint.StepPhysics(Time.deltaTime, gravityMultiplier);
+                simulatedPoint.StepPhysics(Time.deltaTime, gravityMultiplier, friction);
                 simulatedPoint.ConstrainAngle();
                 simulatedPoint.ConstrainLength();
             }

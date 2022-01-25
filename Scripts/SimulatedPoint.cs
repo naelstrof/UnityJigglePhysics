@@ -71,9 +71,9 @@ public class SimulatedPoint {
         position = Vector3.Lerp(position, parentParentPosition + constraintTarget, 0.1f);
     }
 
-    public void StepPhysics(float deltaTime, float gravityMultiplier) {
+    public void StepPhysics(float deltaTime, float gravityMultiplier, float friction) {
         float squaredDeltaTime = deltaTime * deltaTime;
-        Vector3 newPosition = position + (position - previousPosition) + Physics.gravity * squaredDeltaTime * gravityMultiplier;
+        Vector3 newPosition = position + (position - previousPosition)*(1f-friction) + Physics.gravity * squaredDeltaTime * gravityMultiplier;
         previousPosition = position;
         position = newPosition;
     }

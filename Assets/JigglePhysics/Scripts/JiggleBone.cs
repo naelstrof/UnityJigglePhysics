@@ -9,7 +9,6 @@ public class JiggleBone {
     public Quaternion boneRotationChangeCheck;
     public Quaternion lastValidPoseBoneRotation;
     private Vector3 lastValidPoseBoneLocalPosition;
-    public Quaternion cachedBoneRotation;
     public Vector3 targetAnimatedBonePosition;
     public Vector3 position;
     public Transform transform;
@@ -58,7 +57,6 @@ public class JiggleBone {
             return;
         }
         targetAnimatedBonePosition = transform.position;
-        cachedBoneRotation = transform.rotation;
         lastValidPoseBoneRotation = transform.localRotation;
         lastValidPoseBoneLocalPosition = transform.localPosition;
     }
@@ -122,14 +120,22 @@ public class JiggleBone {
     public void PoseBone(float blend) {
         DebugDraw(Color.green, true);
         if (child != null) {
-            Vector3 cachedAnimatedVector = child.targetAnimatedBonePosition - targetAnimatedBonePosition;
-            Vector3 simulatedVector = child.interpolatedPosition - interpolatedPosition;
-            Quaternion animPoseToPhysicsPose = Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector);
-            animPoseToPhysicsPose = Quaternion.Lerp(Quaternion.identity, animPoseToPhysicsPose, blend);
-            transform.rotation = animPoseToPhysicsPose * cachedBoneRotation;
+            float cachedDistance = Vector3.Distance(transform.position, interpolatedPosition);
+
+            Vector3 interpolatedPositionBlend = Vector3.Lerp(targetAnimatedBonePosition, interpolatedPosition, blend);
+            Vector3 interpolatedChildPositionBlend = Vector3.Lerp(child.targetAnimatedBonePosition, child.interpolatedPosition, blend);
+
             if (parent != null) {
-                transform.position = interpolatedPosition;
+                transform.position = interpolatedPositionBlend;
             }
+            Vector3 childPosition = interpolatedChildPositionBlend;
+            if (child.transform != null) {
+                childPosition = child.transform.position;
+            }
+            Vector3 cachedAnimatedVector = childPosition - transform.position;
+            Vector3 simulatedVector = interpolatedChildPositionBlend - interpolatedPositionBlend;
+            Quaternion animPoseToPhysicsPose = Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector);
+            transform.rotation = animPoseToPhysicsPose * transform.rotation;
         }
         if (transform != null) {
             boneRotationChangeCheck = transform.localRotation;

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Spine
   m_EditorClassIdentifier: 
   gravityMultiplier: 1
-  friction: 0.5
-  inertness: 0
-  blend: 1
+  friction: 0.4
+  inertness: 0.1
+  blend: 0.5
   angleElasticity: 0.5
   lengthElasticity: 0.5

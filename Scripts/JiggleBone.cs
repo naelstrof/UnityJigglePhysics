@@ -118,7 +118,6 @@ public class JiggleBone {
     }
 
     public void PoseBone(float blend) {
-        DebugDraw(Color.green, true);
         if (child != null) {
             float cachedDistance = Vector3.Distance(transform.position, interpolatedPosition);
 

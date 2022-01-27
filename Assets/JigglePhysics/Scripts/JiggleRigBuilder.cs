@@ -14,6 +14,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         public List<JiggleBone> simulatedPoints;
     }
     public List<JiggleRig> jiggleRigs;
+    [SerializeField] private bool debugDraw;
 
     private void Awake() {
         foreach(JiggleRig rig in jiggleRigs) {
@@ -28,7 +29,10 @@ public class JiggleRigBuilder : MonoBehaviour {
             }
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
                 simulatedPoint.PoseBone(rig.jiggleSettings.blend);
-                //simulatedPoint.DebugDraw(Color.green, true);
+                if (debugDraw) {
+                    simulatedPoint.DebugDraw(Color.green, true);
+                    simulatedPoint.DebugDraw(Color.black, false);
+                }
             }
         }
     }

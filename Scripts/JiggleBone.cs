@@ -46,13 +46,12 @@ public class JiggleBone {
             SetNewPosition(transform.position);
             return;
         }
-        Vector3 parentSpaceVelocity = parent.transform.TransformVector(
+        Vector3 localSpaceVelocity = parent.transform.TransformVector(
             parent.transform.InverseTransformPoint(position) - 
             parent.transform.InverseTransformPoint(previousPosition));
-        parentSpaceVelocity -= parent.position - parent.previousPosition;
-        Debug.DrawLine(position, position + parentSpaceVelocity, Color.cyan);
-        Vector3 newPosition = JiggleBone.NextPhysicsPosition(position, previousPosition, parentSpaceVelocity, Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction, jiggleSettings.airFriction);
-        newPosition = ConstrainInertia(newPosition, jiggleSettings.inertness);
+        localSpaceVelocity -= parent.position - parent.previousPosition;
+        Debug.DrawLine(position, position + localSpaceVelocity, Color.cyan);
+        Vector3 newPosition = JiggleBone.NextPhysicsPosition(position, previousPosition, localSpaceVelocity, Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction, jiggleSettings.airFriction);
         newPosition = ConstrainAngle(newPosition, jiggleSettings.angleElasticity*jiggleSettings.angleElasticity);
         newPosition = ConstrainLength(newPosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity);
         SetNewPosition(newPosition);
@@ -101,14 +100,10 @@ public class JiggleBone {
         position = newPosition;
     }
 
-    public static Vector3 NextPhysicsPosition(Vector3 newPosition, Vector3 previousPosition, Vector3 parentSpaceVelocity, float deltaTime, float gravityMultiplier, float friction, float airFriction) {
+    public static Vector3 NextPhysicsPosition(Vector3 newPosition, Vector3 previousPosition, Vector3 localSpaceVelocity, float deltaTime, float gravityMultiplier, float friction, float airFriction) {
         float squaredDeltaTime = deltaTime * deltaTime;
-        Vector3 vel = newPosition - previousPosition - parentSpaceVelocity;
-        return newPosition + vel * (1f - airFriction) + parentSpaceVelocity * (1f - friction) + Physics.gravity * gravityMultiplier * squaredDeltaTime;
-    }
-    public Vector3 ConstrainInertia(Vector3 newPosition, float inertness) {
-        newPosition += (parent.position - parent.previousPosition) * 0.5f * inertness;
-        return newPosition;
+        Vector3 vel = newPosition - previousPosition - localSpaceVelocity;
+        return newPosition + vel * (1f - airFriction) + localSpaceVelocity * (1f - friction) + Physics.gravity * gravityMultiplier * squaredDeltaTime;
     }
 
     public void DebugDraw(Color color, bool interpolated) {

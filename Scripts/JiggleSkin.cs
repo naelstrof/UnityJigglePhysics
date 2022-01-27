@@ -15,6 +15,8 @@ public class JiggleSkin : MonoBehaviour {
     private List<JiggleZone> jiggleZones;
     [SerializeField]
     private List<SkinnedMeshRenderer> targetSkins;
+    [SerializeField]
+    private bool debug = false;
     private List<Material> targetMaterials;
     private List<Vector4> packedVectors;
     private int jiggleInfoNameID;
@@ -48,12 +50,15 @@ public class JiggleSkin : MonoBehaviour {
         }
 
         // Debug draw stuff
-        foreach( JiggleZone zone in jiggleZones) {
-            zone.simulatedPoint.DebugDraw(Color.blue, true);
+        if (debug) {
+            foreach( JiggleZone zone in jiggleZones) {
+                zone.simulatedPoint.DebugDraw(Color.blue, true);
+            }
         }
     }
     private void FixedUpdate() {
         foreach( JiggleZone zone in jiggleZones) {
+            zone.simulatedPoint.PrepareSimulate();
             zone.simulatedPoint.Simulate(zone.jiggleSettings);
         }
     }

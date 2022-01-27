@@ -28,6 +28,7 @@ public class JiggleRigBuilder : MonoBehaviour {
             }
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
                 simulatedPoint.PoseBone(rig.jiggleSettings.blend);
+                //simulatedPoint.DebugDraw(Color.green, true);
             }
         }
     }
@@ -36,7 +37,6 @@ public class JiggleRigBuilder : MonoBehaviour {
         foreach(JiggleRig rig in jiggleRigs) {
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) { 
                 simulatedPoint.Simulate(rig.jiggleSettings);
-                //simulatedPoint.DebugDraw(Color.black, false);
             }
         }
     }

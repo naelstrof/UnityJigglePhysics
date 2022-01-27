@@ -13,6 +13,7 @@ public class JiggleBone {
     public Vector3 position;
     public Transform transform;
     public Vector3 previousPosition;
+    public Vector3 previousLocalPosition;
     public float lengthToParent;
     
     public Vector3 interpolatedPosition {
@@ -35,6 +36,7 @@ public class JiggleBone {
             lengthToParent = 0;
             return;
         }
+        previousLocalPosition = parent.transform.InverseTransformPoint(previousPosition);
         this.parent.child = this;
         lengthToParent = Vector3.Distance(parent.position, position);
     }
@@ -44,7 +46,12 @@ public class JiggleBone {
             SetNewPosition(transform.position);
             return;
         }
-        Vector3 newPosition = JiggleBone.NextPhysicsPosition(position, previousPosition, (root.position-root.previousPosition),Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction, jiggleSettings.airFriction);
+        Vector3 parentSpaceVelocity = parent.transform.TransformVector(
+            parent.transform.InverseTransformPoint(position) - 
+            parent.transform.InverseTransformPoint(previousPosition));
+        parentSpaceVelocity -= parent.position - parent.previousPosition;
+        Debug.DrawLine(position, position + parentSpaceVelocity, Color.cyan);
+        Vector3 newPosition = JiggleBone.NextPhysicsPosition(position, previousPosition, parentSpaceVelocity, Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction, jiggleSettings.airFriction);
         newPosition = ConstrainInertia(newPosition, jiggleSettings.inertness);
         newPosition = ConstrainAngle(newPosition, jiggleSettings.angleElasticity*jiggleSettings.angleElasticity);
         newPosition = ConstrainLength(newPosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity);
@@ -90,13 +97,14 @@ public class JiggleBone {
 
     public void SetNewPosition(Vector3 newPosition) {
         previousPosition = position;
+        if (parent!=null) previousLocalPosition = parent.transform.InverseTransformPoint(previousPosition);
         position = newPosition;
     }
 
-    public static Vector3 NextPhysicsPosition(Vector3 newPosition, Vector3 previousPosition, Vector3 parentVel, float deltaTime, float gravityMultiplier, float friction, float airFriction) {
+    public static Vector3 NextPhysicsPosition(Vector3 newPosition, Vector3 previousPosition, Vector3 parentSpaceVelocity, float deltaTime, float gravityMultiplier, float friction, float airFriction) {
         float squaredDeltaTime = deltaTime * deltaTime;
-        Vector3 vel = (newPosition - previousPosition) - parentVel;
-        return newPosition + vel*(1f-friction) + parentVel + Physics.gravity * squaredDeltaTime * gravityMultiplier - parentVel*airFriction;
+        Vector3 vel = newPosition - previousPosition - parentSpaceVelocity;
+        return newPosition + vel * (1f - airFriction) + parentSpaceVelocity * (1f - friction) + Physics.gravity * gravityMultiplier * squaredDeltaTime;
     }
     public Vector3 ConstrainInertia(Vector3 newPosition, float inertness) {
         newPosition += (parent.position - parent.previousPosition) * 0.5f * inertness;

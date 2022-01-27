@@ -19,7 +19,7 @@ public class JigglePoint {
         previousPosition = position;
     }
     public void Simulate(JiggleSettings jiggleSettings) {
-        Vector3 newPosition = JiggleBone.NextPhysicsPosition(position, previousPosition, Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction);
+        Vector3 newPosition = JiggleBone.NextPhysicsPosition(position, previousPosition, Vector3.zero, Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction, jiggleSettings.airFriction);
         newPosition = ConstrainSpring(newPosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity);
         SetNewPosition(newPosition);
     }

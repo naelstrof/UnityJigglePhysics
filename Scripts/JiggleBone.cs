@@ -20,6 +20,9 @@ public class JiggleBone {
             // extrapolation, because interpolation is delayed by fixedDeltaTime
             float timeSinceLastUpdate = Time.time-Time.fixedTime;
             return Vector3.Lerp(position, position+(position-previousPosition), timeSinceLastUpdate/Time.fixedDeltaTime);
+
+            // Interpolation
+            //return Vector3.Lerp(previousPosition, position, timeSinceLastUpdate/Time.fixedDeltaTime);
         }
     }
     
@@ -36,12 +39,12 @@ public class JiggleBone {
         lengthToParent = Vector3.Distance(parent.position, position);
     }
 
-    public void Simulate(JiggleSettings jiggleSettings) {
+    public void Simulate(JiggleSettings jiggleSettings, JiggleBone root) {
         if (parent == null) {
             SetNewPosition(transform.position);
             return;
         }
-        Vector3 newPosition = JiggleBone.NextPhysicsPosition(position, previousPosition, Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction);
+        Vector3 newPosition = JiggleBone.NextPhysicsPosition(position, previousPosition, (root.position-root.previousPosition),Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction, jiggleSettings.airFriction);
         newPosition = ConstrainInertia(newPosition, jiggleSettings.inertness);
         newPosition = ConstrainAngle(newPosition, jiggleSettings.angleElasticity*jiggleSettings.angleElasticity);
         newPosition = ConstrainLength(newPosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity);
@@ -90,9 +93,10 @@ public class JiggleBone {
         position = newPosition;
     }
 
-    public static Vector3 NextPhysicsPosition(Vector3 newPosition, Vector3 previousPosition, float deltaTime, float gravityMultiplier, float friction) {
+    public static Vector3 NextPhysicsPosition(Vector3 newPosition, Vector3 previousPosition, Vector3 parentVel, float deltaTime, float gravityMultiplier, float friction, float airFriction) {
         float squaredDeltaTime = deltaTime * deltaTime;
-        return newPosition + (newPosition - previousPosition)*(1f-friction) + Physics.gravity * squaredDeltaTime * gravityMultiplier;
+        Vector3 vel = (newPosition - previousPosition) - parentVel*(1f-airFriction);
+        return newPosition + vel*(1f-friction) + parentVel*(1f-airFriction) + Physics.gravity * squaredDeltaTime * gravityMultiplier;
     }
     public Vector3 ConstrainInertia(Vector3 newPosition, float inertness) {
         newPosition += (parent.position - parent.previousPosition) * 0.5f * inertness;

@@ -32,8 +32,12 @@ public class JiggleBone {
         this.parent = parent;
         this.position = position;
         previousPosition = position;
+        if (transform != null) {
+            lastValidPoseBoneRotation = transform.localRotation;
+            lastValidPoseBoneLocalPosition = transform.localPosition;
+        }
         if (parent == null) {
-            lengthToParent = 0;
+            lengthToParent = 0.1f;
             return;
         }
         previousLocalPosition = parent.transform.InverseTransformPoint(previousPosition);
@@ -118,6 +122,7 @@ public class JiggleBone {
     public void PrepareBone() {
         // If bone is not animated, return to last unadulterated pose
         if (transform != null && boneRotationChangeCheck == transform.localRotation) {
+            //Debug.DrawLine(transform.position, transform.position+lastValidPoseBoneRotation * Vector3.up, Color.magenta);
             transform.localRotation = lastValidPoseBoneRotation;
             transform.localPosition = lastValidPoseBoneLocalPosition;
         }
@@ -147,6 +152,7 @@ public class JiggleBone {
         }
         if (transform != null) {
             boneRotationChangeCheck = transform.localRotation;
+            //Debug.DrawLine(transform.position, transform.position+boneRotationChangeCheck * Vector3.up, Color.blue);
         }
     }
 }

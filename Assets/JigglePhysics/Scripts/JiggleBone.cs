@@ -95,8 +95,8 @@ public class JiggleBone {
 
     public static Vector3 NextPhysicsPosition(Vector3 newPosition, Vector3 previousPosition, Vector3 parentVel, float deltaTime, float gravityMultiplier, float friction, float airFriction) {
         float squaredDeltaTime = deltaTime * deltaTime;
-        Vector3 vel = (newPosition - previousPosition) - parentVel*(1f-airFriction);
-        return newPosition + vel*(1f-friction) + parentVel*(1f-airFriction) + Physics.gravity * squaredDeltaTime * gravityMultiplier;
+        Vector3 vel = (newPosition - previousPosition) - parentVel;
+        return newPosition + vel*(1f-friction) + parentVel + Physics.gravity * squaredDeltaTime * gravityMultiplier - parentVel*airFriction;
     }
     public Vector3 ConstrainInertia(Vector3 newPosition, float inertness) {
         newPosition += (parent.position - parent.previousPosition) * 0.5f * inertness;

@@ -8,6 +8,7 @@ public class JiggleSettings : ScriptableObject {
     
     [Range(0f,1f)] [SerializeField] public float gravityMultiplier = 1f;
     [Range(0f,1f)] [SerializeField] public float friction = 0.5f;
+    [Range(0f,1f)] [SerializeField] public float airFriction = 0.5f;
     [Range(0f,1f)] [SerializeField] public float inertness = 0.5f;
     [Range(0f,1f)] [SerializeField] public float blend = 1f;
     [Range(0f,1f)] [SerializeField] public float angleElasticity = 0.5f;

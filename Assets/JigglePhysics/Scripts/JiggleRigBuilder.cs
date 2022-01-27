@@ -40,7 +40,7 @@ public class JiggleRigBuilder : MonoBehaviour {
     private void FixedUpdate() {
         foreach(JiggleRig rig in jiggleRigs) {
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) { 
-                simulatedPoint.Simulate(rig.jiggleSettings);
+                simulatedPoint.Simulate(rig.jiggleSettings, rig.simulatedPoints[0]);
             }
         }
     }

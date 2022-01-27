@@ -1200,7 +1200,7 @@ MonoBehaviour:
         m_MethodName: SetNewTarget
         m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 1585955259}
+          m_ObjectArgument: {fileID: 1807720416}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Transform, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
@@ -2189,11 +2189,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4976334266501568043, guid: 7c5ee48ea23371346973bc786bf4037e, type: 3}
   m_PrefabInstance: {fileID: 1585955257}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1585955259 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8073750820639604910, guid: 7c5ee48ea23371346973bc786bf4037e, type: 3}
-  m_PrefabInstance: {fileID: 1585955257}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1745525352
 GameObject:
   m_ObjectHideFlags: 0
@@ -2272,6 +2267,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1745525352}
   m_CullTransparentMesh: 1
+--- !u!4 &1807720416 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8172468452580975974, guid: 7c5ee48ea23371346973bc786bf4037e, type: 3}
+  m_PrefabInstance: {fileID: 1585955257}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1939609595
 GameObject:
   m_ObjectHideFlags: 0

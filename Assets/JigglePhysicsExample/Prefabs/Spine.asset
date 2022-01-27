@@ -12,9 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0997643438057254c98e228266a7890f, type: 3}
   m_Name: Spine
   m_EditorClassIdentifier: 
-  gravityMultiplier: 1
-  friction: 0.4
+  gravityMultiplier: 0.038
+  friction: 0.5
+  airFriction: 0
   inertness: 0.1
-  blend: 0.5
-  angleElasticity: 0.5
-  lengthElasticity: 0.5
+  blend: 1
+  angleElasticity: 0.767
+  lengthElasticity: 1

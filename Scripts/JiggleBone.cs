@@ -17,9 +17,9 @@ public class JiggleBone {
     
     public Vector3 interpolatedPosition {
         get {
-            // interpolation, delayed by fixedDeltaTime
+            // extrapolation, because interpolation is delayed by fixedDeltaTime
             float timeSinceLastUpdate = Time.time-Time.fixedTime;
-            return Vector3.Lerp(previousPosition, position, timeSinceLastUpdate/Time.fixedDeltaTime);
+            return Vector3.Lerp(position, position+(position-previousPosition), timeSinceLastUpdate/Time.fixedDeltaTime);
         }
     }
     
@@ -53,7 +53,7 @@ public class JiggleBone {
         if (transform == null) {
             // parent.parent is guaranteed to exist here, unless someone's trying to jiggle a single bone entirely by itself (which throws an exception).
             Vector3 projectedForward = (parent.transform.position - parent.parent.transform.position).normalized;
-            targetAnimatedBonePosition = parent.transform.position+projectedForward*lengthToParent;
+            targetAnimatedBonePosition = parent.transform.TransformPoint(parent.parent.transform.InverseTransformPoint(parent.transform.position));
             return;
         }
         targetAnimatedBonePosition = transform.position;
@@ -127,8 +127,10 @@ public class JiggleBone {
             if (parent != null) {
                 transform.position = interpolatedPositionBlend;
             }
-            Vector3 childPosition = interpolatedChildPositionBlend;
-            if (child.transform != null) {
+            Vector3 childPosition;
+            if (child.transform == null) {
+                childPosition = transform.TransformPoint(parent.transform.InverseTransformPoint(transform.position));
+            } else {
                 childPosition = child.transform.position;
             }
             Vector3 cachedAnimatedVector = childPosition - transform.position;

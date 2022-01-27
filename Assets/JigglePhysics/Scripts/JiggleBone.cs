@@ -1,373 +1,143 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace JigglePhysics {
-    public class JiggleBone : MonoBehaviour {
-        public enum UpdateType {
-            FixedUpdate,
-            Update,
-            LateUpdate,
+// Uses Verlet to resolve constraints easily 
+public class JiggleBone {
+    public JiggleBone parent;
+    public JiggleBone child;
+    public Quaternion boneRotationChangeCheck;
+    public Quaternion lastValidPoseBoneRotation;
+    private Vector3 lastValidPoseBoneLocalPosition;
+    public Vector3 targetAnimatedBonePosition;
+    public Vector3 position;
+    public Transform transform;
+    public Vector3 previousPosition;
+    public float lengthToParent;
+    
+    public Vector3 interpolatedPosition {
+        get {
+            // interpolation, delayed by fixedDeltaTime
+            float timeSinceLastUpdate = Time.time-Time.fixedTime;
+            return Vector3.Lerp(previousPosition, position, timeSinceLastUpdate/Time.fixedDeltaTime);
         }
+    }
+    
+    public JiggleBone(Transform transform, JiggleBone parent, Vector3 position) {
+        this.transform = transform;
+        this.parent = parent;
+        this.position = position;
+        previousPosition = position;
+        if (parent == null) {
+            lengthToParent = 0;
+            return;
+        }
+        this.parent.child = this;
+        lengthToParent = Vector3.Distance(parent.position, position);
+    }
 
-        public bool cullOffscreen = false;
-        public List<Renderer> targetRenderers;
-        public UpdateType updateMode = UpdateType.LateUpdate;
-        public Transform root;
-        public AnimationCurve elasticity;
-        public float elasticityMultiplier = 1f;
-        public AnimationCurve friction;
-        public float frictionMultiplier = 1f;
-        public float accelerationMultiplier = 1f;
-        public float maximumAcceleration=100f;
-        public bool rotateRoot = true;
+    public void Simulate(JiggleSettings jiggleSettings) {
+        if (parent == null) {
+            SetNewPosition(transform.position);
+            return;
+        }
+        Vector3 newPosition = JiggleBone.NextPhysicsPosition(position, previousPosition, Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction);
+        newPosition = ConstrainInertia(newPosition, jiggleSettings.inertness);
+        newPosition = ConstrainAngle(newPosition, jiggleSettings.angleElasticity*jiggleSettings.angleElasticity);
+        newPosition = ConstrainLength(newPosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity);
+        SetNewPosition(newPosition);
+    }
 
-        private float internalActive = 1f;
-        private Vector3 accelerationDebt = Vector3.zero;
-        public float active {
-            get {
-                return internalActive;
-            }
-            set {
-                if (bones != null && Mathf.Approximately(value, 0f)) {
-                    for (int i = 0; i < bones.Count; i++) {
-                        VirtualBone b = bones[i];
-                        // Purely virtual particle!
-                        if (b.self == null) {
-                            continue;
-                        }
-                        b.self.localPosition = b.localStartPos;
-                        b.self.localRotation = b.localStartRot;
-                    }
-                }
-                internalActive = Mathf.Clamp01(value);
-            }
+    public void CacheAnimationPosition() {
+        // Purely virtual particles need to reconstruct their desired position.
+        if (transform == null) {
+            // parent.parent is guaranteed to exist here, unless someone's trying to jiggle a single bone entirely by itself (which throws an exception).
+            Vector3 projectedForward = (parent.transform.position - parent.parent.transform.position).normalized;
+            targetAnimatedBonePosition = parent.transform.position+projectedForward*lengthToParent;
+            return;
         }
-        public bool accelerationBased = true;
-        [Range(1, 4f)]
-        public float maxStretch = 1.1f;
-        [Range(0, 1f)]
-        public float maxSquish = 0.1f;
-        public Vector3 gravity;
-        public List<Transform> excludedTransforms;
-        private int depth;
-        private List<VirtualBone> bones;
-        private List<VirtualBone> previousFrameBones;
-        private Vector3 lastRootPosition;
-        private Vector3 lastVelocityGuess;
-        private Vector3 positionDiff;
-        private Vector3 accelerationGuess;
-        public static int GetRootDistance(Transform root, Transform t) {
-            int a = 0;
-            Transform findRoot = t;
-            while (findRoot != root && (findRoot.parent != root || findRoot.parent == null)) {
-                a++;
-                findRoot = findRoot.parent;
-            }
-            return a;
-        }
-        public void BuildVirtualBoneTree(List<VirtualBone> list, Transform root, Transform t, int depth, VirtualBone parent = null) {
-            if (parent == null) {
-                parent = new VirtualBone(t, null, root, (float)GetRootDistance(root, t) / (float)depth);
-                list.Add(parent);
-            }
-            for (int i = 0; i < t.childCount; i++) {
-                if (excludedTransforms.Contains(t.GetChild(i))) {
-                    continue;
-                }
-                VirtualBone child = new VirtualBone(t.GetChild(i), parent, root, (float)GetRootDistance(root, t.GetChild(i)) / (float)depth);
-                list.Add(child);
-                BuildVirtualBoneTree(list, root, t.GetChild(i), depth, child);
-            }
-            if (t.childCount == 0) {
-                VirtualBone child = new VirtualBone(null, parent, root, 1f);
-                list.Add(child);
-            }
-        }
-        public static int GetDeepestChild(Transform t, int currentDepth = 0) {
-            if (t.childCount == 0) {
-                return currentDepth;
-            }
-            int max = 0;
-            for (int i = 0; i < t.childCount; i++) {
-                max = Mathf.Max(GetDeepestChild(t.GetChild(i), currentDepth + 1), max);
-            }
-            return max;
-        }
-        public class VirtualBone {
-            float endExtensionDistance = 0.25f;
-            public VirtualBone(Transform s, VirtualBone parent, Transform root, float chainPos) {
-                self = s;
-                if (self != null) {
-                    position = self.position;
-                    localStartPos = s.localPosition;
-                    localStartRot = s.localRotation;
-                } else {
-                    position = root.position + root.up * endExtensionDistance;
-                    localStartPos = Vector3.up * endExtensionDistance;
-                }
-                this.parent = parent;
-                if (parent != null) {
-                    parent.children.Add(this);
-                }
-                chainPosition = chainPos;
-                children = new List<VirtualBone>();
-            }
-            public void Friction(JiggleBone jiggle, float dt) {
-                float speed = velocity.magnitude;
-                if (speed < Mathf.Epsilon || speed == 0f) {
-                    return;
-                }
-                float drop = jiggle.friction.Evaluate(chainPosition) * jiggle.frictionMultiplier * speed * dt;
-                float newSpeed = speed - drop;
-                if (newSpeed < 0) {
-                    newSpeed = 0;
-                }
-                newSpeed /= speed;
-                velocity *= newSpeed;
-            }
-            public void Gravity(JiggleBone jiggle, float dt) {
-                velocity += jiggle.gravity * dt;
-            }
-            public void Acceleration(JiggleBone jiggle, float dt) {
-                if (parent == null) {
-                    return;
-                }
-                // Undo the rotation adjustment of our parent (so it's back to a neutral rotation), then use our localStartPos to figure out where we *should* accelerate towards.
-                Vector3 wantedPos = (Quaternion.Inverse(parent.rotationAdjust) * parent.self.TransformVector(localStartPos) + parent.self.position) - position;
-                Vector3 force = wantedPos * jiggle.elasticity.Evaluate(chainPosition) * jiggle.elasticityMultiplier;
+        targetAnimatedBonePosition = transform.position;
+        lastValidPoseBoneRotation = transform.localRotation;
+        lastValidPoseBoneLocalPosition = transform.localPosition;
+    }
+    
+    public Vector3 ConstrainLength(Vector3 newPosition, float elasticity) {
+        Vector3 diff = newPosition - parent.position;
+        Vector3 dir = diff.normalized;
+        return Vector3.Lerp(newPosition, parent.position + dir * lengthToParent, elasticity);
+    }
 
-                velocity += force * 100f * dt;
-                //parent.velocity -= force * 50f * dt;
-            }
-            public void Projection(JiggleBone j) {
-                if (parent != null) {
-                    float d = Vector3.Distance(position, parent.position);
-                    float wantedDistance = parent.self.TransformVector(localStartPos).magnitude;
-                    //float bounciness = 0.1f;
-                    if (d > wantedDistance * j.maxStretch) {
-                        // Bounce with some velocity loss!
-                        //Vector3 normal = (parent.position - position).normalized;
-                        //if (Vector3.Dot(velocity, normal) < 0f) {
-                            //velocity = Vector3.Lerp(Vector3.ProjectOnPlane(velocity, normal), Vector3.Reflect(velocity, normal), bounciness);
-                        //}
-                        position = parent.position + (position - parent.position).normalized * wantedDistance * j.maxStretch;
-                    } else if (d < wantedDistance * (1f - j.maxSquish)) {
-                        Vector3 normal = (position - parent.position).normalized;
-                        // Bounce with some velocity loss!
-                        //if (Vector3.Dot(velocity, normal) < 0f) {
-                            //velocity = Vector3.Lerp(Vector3.ProjectOnPlane(velocity, normal), Vector3.Reflect(velocity, normal), bounciness);
-                        //}
-                        position = parent.position + (position - parent.position).normalized * wantedDistance * (1f - j.maxSquish);
-                    }
-                }
-            }
-            public void SetPos(JiggleBone j, float dt) {
-                position += velocity * dt;
-            }
-            public VirtualBone parent;
-            public List<VirtualBone> children;
-            public Transform self;
-            public float chainPosition;
-            public Quaternion localStartRot;
-            public Vector3 localStartPos;
-            public Quaternion rotationAdjust;
+    public Vector3 ConstrainAngle(Vector3 newPosition, float elasticity) {
+        Vector3 parentParentPosition;
+        Vector3 poseParentParent;
+        if (parent.parent == null) {
+            poseParentParent = parent.targetAnimatedBonePosition + (parent.targetAnimatedBonePosition - targetAnimatedBonePosition);
+            parentParentPosition = poseParentParent;
+        } else {
+            parentParentPosition = parent.parent.position;
+            poseParentParent = parent.parent.targetAnimatedBonePosition;
+        }
+        Vector3 parentAimTargetPose = parent.targetAnimatedBonePosition - poseParentParent;
+        Vector3 parentAim = parent.position - parentParentPosition;
+        Quaternion TargetPoseToPose = Quaternion.FromToRotation(parentAimTargetPose, parentAim);
+        Vector3 currentPose = targetAnimatedBonePosition - poseParentParent;
+        Vector3 constraintTarget = TargetPoseToPose * currentPose;
+        return Vector3.Lerp(newPosition, parentParentPosition + constraintTarget, elasticity);
+    }
 
-            public Vector3 velocity;
-            public Vector3 position;
-        }
-        public void Regenerate() {
-            depth = GetDeepestChild(root);
-            bones = new List<VirtualBone>();
-            BuildVirtualBoneTree(bones, root, root, depth);
-        }
+    public void SetNewPosition(Vector3 newPosition) {
+        previousPosition = position;
+        position = newPosition;
+    }
 
-        public void OnEnable() {
-            if (bones == null) {
-                Regenerate();
-            }
-        }
+    public static Vector3 NextPhysicsPosition(Vector3 newPosition, Vector3 previousPosition, float deltaTime, float gravityMultiplier, float friction) {
+        float squaredDeltaTime = deltaTime * deltaTime;
+        return newPosition + (newPosition - previousPosition)*(1f-friction) + Physics.gravity * squaredDeltaTime * gravityMultiplier;
+    }
+    public Vector3 ConstrainInertia(Vector3 newPosition, float inertness) {
+        newPosition += (parent.position - parent.previousPosition) * 0.5f * inertness;
+        return newPosition;
+    }
 
-        public void Start() {
-            lastRootPosition = root.position;
+    public void DebugDraw(Color color, bool interpolated) {
+        if (parent == null) return;
+        if (interpolated) {
+            Debug.DrawLine(interpolatedPosition, parent.interpolatedPosition, color);
+        } else {
+            Debug.DrawLine(position, parent.position, color);
         }
-        public void RecalculateAcceleration(float dt) {
-            // Don't recalculate if time isn't moving.
-            if (dt < Mathf.Epsilon || dt == 0f) {
-                return;
-            }
-            positionDiff = (root.position - lastRootPosition);
-            lastRootPosition = root.position;
-            Vector3 velocityGuess = positionDiff / dt;
-            accelerationGuess = (velocityGuess - lastVelocityGuess);
-            // ACCELLERATION DEBT
-            accelerationGuess += accelerationDebt;
-            accelerationDebt = Vector3.zero;
-            if (accelerationGuess.magnitude > maximumAcceleration * Time.deltaTime)
-            {
-                accelerationDebt = accelerationGuess.normalized * (accelerationGuess.magnitude - maximumAcceleration * Time.deltaTime);
-                accelerationGuess = accelerationGuess.normalized * maximumAcceleration * Time.deltaTime;
-            }
+    }
 
-            accelerationDebt = Vector3.MoveTowards(accelerationDebt, Vector3.zero, Time.deltaTime);
-            lastVelocityGuess = velocityGuess;
-            if (accelerationBased) {
-                foreach (VirtualBone b in bones) {
-                    b.velocity -= accelerationGuess * accelerationMultiplier;
-                    b.position += positionDiff;
-                }
-            }
+    public void PrepareBone() {
+        // If bone is not animated, return to last unadulterated pose
+        if (transform != null && boneRotationChangeCheck == transform.localRotation) {
+            transform.localRotation = lastValidPoseBoneRotation;
+            transform.localPosition = lastValidPoseBoneLocalPosition;
         }
-        public void Process(float dt) {
-            if (cullOffscreen) {
-                bool shouldCull = true;
-                foreach(Renderer r in targetRenderers) {
-                    if (r == null || r.isVisible) {
-                        shouldCull = false;
-                    }
-                }
-                if (shouldCull) {
-                    return;
-                }
-            }
-            if (!isActiveAndEnabled || dt < Mathf.Epsilon || dt == 0 || Mathf.Approximately(active, 0f)) {
-                return;
-            }
-            // Velocity update
-            foreach (VirtualBone b in bones) {
-                if (float.IsNaN(b.position.x + b.position.y + b.position.z)) {
-                    if (b.self != null) {
-                        b.position = b.self.position;
-                    } else {
-                        b.position = Vector3.zero;
-                    }
-                    b.velocity = Vector3.zero;
-                }
-                // Make sure the root bone is pinned.
-                if (b.parent == null) {
-                    b.position = b.self.position;
-                    continue;
-                }
-                b.Friction(this, dt);
-                b.Gravity(this, dt);
-                b.Acceleration(this, dt);
-            }
-            // Add velocity to position (then project it to make sure it doesn't stretch too much).
-            foreach (VirtualBone b in bones) {
-                b.SetPos(this, dt);
-            }
-            // Transforms update, have to set our positions carefully down the chain since each rotation breaks all the positions of the children bones.
-            for (int i = 0; i < bones.Count; i++) {
-                VirtualBone b = bones[i];
-                // Purely virtual particle!
-                if (b.self == null) {
-                    continue;
-                }
-                if (b.parent == null) {
-                    b.position = b.self.position;
-                } else {
-                    Vector3 wantedPosition = Vector3.Lerp(b.self.parent.TransformPoint(b.localStartPos), b.position, active);
-                    b.self.position = Vector3.Lerp(b.self.position, wantedPosition, active);
-                }
+        CacheAnimationPosition();
+    }
 
-                if (b.children.Count <= 0) {
-                    continue;
-                }
-                if (b.self == root && !rotateRoot) {
-                    continue;
-                }
-                b.self.localRotation = b.localStartRot;
-                b.rotationAdjust = Quaternion.Lerp(Quaternion.identity, Quaternion.FromToRotation(b.self.TransformDirection(b.children[0].localStartPos.normalized), (b.children[0].position - b.self.position).normalized), active);
-                b.self.rotation = b.rotationAdjust * b.self.rotation;
+    public void PoseBone(float blend) {
+        if (child != null) {
+            float cachedDistance = Vector3.Distance(transform.position, interpolatedPosition);
+
+            Vector3 interpolatedPositionBlend = Vector3.Lerp(targetAnimatedBonePosition, interpolatedPosition, blend);
+            Vector3 interpolatedChildPositionBlend = Vector3.Lerp(child.targetAnimatedBonePosition, child.interpolatedPosition, blend);
+
+            if (parent != null) {
+                transform.position = interpolatedPositionBlend;
             }
+            Vector3 childPosition = interpolatedChildPositionBlend;
+            if (child.transform != null) {
+                childPosition = child.transform.position;
+            }
+            Vector3 cachedAnimatedVector = childPosition - transform.position;
+            Vector3 simulatedVector = interpolatedChildPositionBlend - interpolatedPositionBlend;
+            Quaternion animPoseToPhysicsPose = Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector);
+            transform.rotation = animPoseToPhysicsPose * transform.rotation;
         }
-        public void LateUpdate() {
-            if (updateMode != UpdateType.LateUpdate || Time.deltaTime == 0f) {
-                return;
-            }
-            RecalculateAcceleration(Time.deltaTime);
-            float timeToPass = Mathf.Min(Time.deltaTime, Time.maximumDeltaTime);
-            while (timeToPass > Time.fixedDeltaTime) {
-                Process(Time.fixedDeltaTime);
-                timeToPass -= Time.fixedDeltaTime;
-            }
-            if (timeToPass > 0f) {
-                Process(timeToPass);
-            }
-            foreach (VirtualBone b in bones) {
-                b.Projection(this);
-            }
-        }
-        public void FixedUpdate() {
-            if (updateMode != UpdateType.FixedUpdate || Time.deltaTime == 0f) {
-                return;
-            }
-            RecalculateAcceleration(Time.deltaTime);
-            Process(Time.deltaTime);
-            foreach (VirtualBone b in bones) {
-                b.Projection(this);
-            }
-        }
-        public void Update() {
-            if (updateMode != UpdateType.Update || Time.deltaTime == 0f) {
-                return;
-            }
-            RecalculateAcceleration(Time.deltaTime);
-            float timeToPass = Mathf.Min(Time.deltaTime, Time.maximumDeltaTime);
-            while (timeToPass > Time.fixedDeltaTime) {
-                Process(Time.fixedDeltaTime);
-                timeToPass -= Time.fixedDeltaTime;
-            }
-            if (timeToPass > 0f) {
-                Process(timeToPass);
-            }
-            foreach (VirtualBone b in bones) {
-                b.Projection(this);
-            }
-        }
-        //public void PrepareForChange() {
-            //previousFrameBones = new List<VirtualBone>();
-            //BuildVirtualBoneTree(previousFrameBones, root, root, depth);
-        //}
-        //public void ApplyChanges() {
-            //List<VirtualBone> currentTree = new List<VirtualBone>();
-            //BuildVirtualBoneTree(currentTree, root, root, depth);
-    //
-            //for (int i = 0; i < bones.Count; i++) {
-                //bones[i].localStartPos += currentTree[i].localStartPos - previousFrameBones[i].localStartPos;
-                //bones[i].localStartRot = (Quaternion.Inverse(previousFrameBones[i].localStartRot) * currentTree[i].localStartRot) * bones[i].localStartRot;
-            //}
-        //}
-        public VirtualBone GetVirtualBone(Transform t) {
-            foreach( VirtualBone b in bones) {
-                if (b.self == t) {
-                    return b;
-                }
-            }
-            return null;
-        }
-        public bool IsSimulatingBone(Transform t) {
-            if (bones == null) {
-                Regenerate();
-            }
-            foreach( VirtualBone b in bones) {
-                if (b.self == t) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        public void OnValidate() {
-            // If we just were created, fill default values
-            if (friction == null && elasticity == null && root == null) {
-                friction = new AnimationCurve();
-                elasticity = new AnimationCurve();
-                friction.AddKey(0f,1f);
-                friction.AddKey(1f,1f);
-                elasticity.AddKey(0f,1f);
-                elasticity.AddKey(1f,1f);
-                root = transform;
-            }
+        if (transform != null) {
+            boneRotationChangeCheck = transform.localRotation;
         }
     }
 }

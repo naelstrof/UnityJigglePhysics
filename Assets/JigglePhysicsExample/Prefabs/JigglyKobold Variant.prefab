@@ -88,6 +88,7 @@ MonoBehaviour:
   - rootTransform: {fileID: 5624363881663674634}
     jiggleSettings: {fileID: 11400000, guid: b7fce8dfda721b548a5b989dc918b2a8, type: 2}
     ignoredTransforms: []
+  debugDraw: 1
 --- !u!1001 &4793453824101806528
 PrefabInstance:
   m_ObjectHideFlags: 0

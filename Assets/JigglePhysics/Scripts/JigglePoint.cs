@@ -6,6 +6,8 @@ public class JigglePoint {
     public Vector3 position;
     public Transform transform;
     public Vector3 previousPosition;
+    private Vector3 parentPosition;
+    private Vector3 parentPreviousPosition;
     public Vector3 interpolatedPosition {
         get {
             // interpolation, delayed by fixedDeltaTime
@@ -17,9 +19,19 @@ public class JigglePoint {
         this.transform = transform;
         this.position = transform.position;
         previousPosition = position;
+        parentPreviousPosition = position;
+        parentPosition = position;
+    }
+    public void PrepareSimulate() {
+        parentPreviousPosition = parentPosition;
+        parentPosition = transform.position;
     }
     public void Simulate(JiggleSettings jiggleSettings) {
-        Vector3 newPosition = JiggleBone.NextPhysicsPosition(position, previousPosition, Vector3.zero, Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction, jiggleSettings.airFriction);
+        Vector3 localSpaceVelocity = transform.TransformVector(
+            transform.InverseTransformPoint(position) - 
+            transform.InverseTransformPoint(previousPosition));
+        localSpaceVelocity -= parentPosition - parentPreviousPosition;
+        Vector3 newPosition = JiggleBone.NextPhysicsPosition(position, previousPosition, localSpaceVelocity, Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction, jiggleSettings.airFriction);
         newPosition = ConstrainSpring(newPosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity);
         SetNewPosition(newPosition);
     }

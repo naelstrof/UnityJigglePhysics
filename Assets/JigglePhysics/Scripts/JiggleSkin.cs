@@ -13,7 +13,7 @@ public class JiggleSkin : MonoBehaviour {
     }
     public List<JiggleZone> jiggleZones;
     [SerializeField]
-    private List<SkinnedMeshRenderer> targetSkins;
+    public List<SkinnedMeshRenderer> targetSkins;
     [SerializeField]
     private bool debug = false;
     private List<Material> targetMaterials;
@@ -33,7 +33,7 @@ public class JiggleSkin : MonoBehaviour {
         foreach( JiggleZone zone in jiggleZones) {
             Vector3 targetPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.target.position);
             Vector3 verletPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.simulatedPoint.interpolatedPosition);
-            packedVectors.Add(new Vector4(targetPointSkinSpace.x, targetPointSkinSpace.y, targetPointSkinSpace.z, zone.radius));
+            packedVectors.Add(new Vector4(targetPointSkinSpace.x, targetPointSkinSpace.y, targetPointSkinSpace.z, zone.radius*zone.target.lossyScale.x));
             packedVectors.Add(new Vector4(verletPointSkinSpace.x, verletPointSkinSpace.y, verletPointSkinSpace.z, zone.jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Blend)));
         }
         for(int i=packedVectors.Count;i<16;i++) {
@@ -78,7 +78,20 @@ public class JiggleSkin : MonoBehaviour {
             if (zone.target == null) {
                 continue;
             }
-            Gizmos.DrawWireSphere(zone.target.position, zone.radius);
+            Gizmos.DrawWireSphere(zone.target.position, zone.radius*zone.target.lossyScale.x);
         }
+    }
+    // CPU version of the skin transformation, untested, can be useful in reconstructing the deformation on the cpu.
+    public Vector3 ApplyJiggle(Vector3 toPoint, float blend) {
+        Vector3 result = toPoint;
+        foreach( JiggleZone zone in jiggleZones) {
+            Vector3 targetPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.target.position);
+            Vector3 verletPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.simulatedPoint.interpolatedPosition);
+            Vector3 diff = verletPointSkinSpace - targetPointSkinSpace;
+            float dist = Vector3.Distance(targetPointSkinSpace, targetSkins[0].rootBone.InverseTransformPoint(toPoint));
+            float multi = 1f-Mathf.SmoothStep(0,zone.radius*zone.target.lossyScale.x,dist);
+            result += targetSkins[0].rootBone.TransformVector(diff) * zone.jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.Blend) * blend;
+        }
+        return result;
     }
 }

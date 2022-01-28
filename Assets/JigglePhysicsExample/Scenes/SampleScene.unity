@@ -2182,6 +2182,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: JigglyKobold (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 8853287330680812428, guid: 7c5ee48ea23371346973bc786bf4037e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7c5ee48ea23371346973bc786bf4037e, type: 3}
 --- !u!4 &1585955258 stripped
@@ -2359,6 +2363,18 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4976334266501568043, guid: 7c5ee48ea23371346973bc786bf4037e, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4976334266501568043, guid: 7c5ee48ea23371346973bc786bf4037e, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4976334266501568043, guid: 7c5ee48ea23371346973bc786bf4037e, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4976334266501568043, guid: 7c5ee48ea23371346973bc786bf4037e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.42803717
       objectReference: {fileID: 0}
@@ -2401,6 +2417,10 @@ PrefabInstance:
     - target: {fileID: 5639822895407320209, guid: 7c5ee48ea23371346973bc786bf4037e, type: 3}
       propertyPath: m_Name
       value: JigglyKobold
+      objectReference: {fileID: 0}
+    - target: {fileID: 6063107029057514642, guid: 7c5ee48ea23371346973bc786bf4037e, type: 3}
+      propertyPath: m_BlendShapeWeights.Array.data[33]
+      value: 100
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7c5ee48ea23371346973bc786bf4037e, type: 3}

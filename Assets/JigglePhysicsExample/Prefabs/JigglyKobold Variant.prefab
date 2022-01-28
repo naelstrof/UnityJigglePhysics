@@ -54,6 +54,75 @@ MonoBehaviour:
   targetSkins:
   - {fileID: 6063107029057514642}
   - {fileID: 8842462702081501262}
+  debug: 0
+--- !u!114 &4420610126336681069
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5639822895407320209}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 569189b4d0473b74fb0eb5b055737a16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  flatCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: -0.09464931
+      outSlope: -0.09464931
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.3592909
+    - serializedVersion: 3
+      time: 0.3
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.1991101
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  bigCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.6
+      value: 0
+      inSlope: 0.07107621
+      outSlope: 0.07107621
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.34371513
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.09151126
+      outSlope: 0.09151126
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.26696342
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  boobSize: 0.5
+  blendshapeFlat: FlatChestLeftRight
+  blendshapeBig: BiggerBreastLeftRight
+  targetRenderers:
+  - {fileID: 6063107029057514642}
+  - {fileID: 8842462702081501262}
+  rigTarget: {fileID: 8347783157461644077}
+  boobBlend: {fileID: 11400000, guid: 8b578db838e4ae94686e97a6fba235d0, type: 2}
 --- !u!114 &8347783157461644077
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -80,10 +149,10 @@ MonoBehaviour:
     - {fileID: 5585033780245777371}
     - {fileID: 1541341690957315655}
   - rootTransform: {fileID: 5585033780245777371}
-    jiggleSettings: {fileID: 11400000, guid: c687471fef6d91f4698974cb238ef1ed, type: 2}
+    jiggleSettings: {fileID: 11400000, guid: 8b578db838e4ae94686e97a6fba235d0, type: 2}
     ignoredTransforms: []
   - rootTransform: {fileID: 1541341690957315655}
-    jiggleSettings: {fileID: 11400000, guid: c687471fef6d91f4698974cb238ef1ed, type: 2}
+    jiggleSettings: {fileID: 11400000, guid: 8b578db838e4ae94686e97a6fba235d0, type: 2}
     ignoredTransforms: []
   - rootTransform: {fileID: 5624363881663674634}
     jiggleSettings: {fileID: 11400000, guid: b7fce8dfda721b548a5b989dc918b2a8, type: 2}

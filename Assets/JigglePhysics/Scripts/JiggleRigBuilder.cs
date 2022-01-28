@@ -7,7 +7,7 @@ public class JiggleRigBuilder : MonoBehaviour {
     [System.Serializable]
     public class JiggleRig {
         public Transform rootTransform;
-        public JiggleSettings jiggleSettings;
+        public JiggleSettingsBase jiggleSettings;
         public List<Transform> ignoredTransforms;
 
         [HideInInspector]
@@ -28,7 +28,7 @@ public class JiggleRigBuilder : MonoBehaviour {
                 simulatedPoint.PrepareBone();
             }
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
-                simulatedPoint.PoseBone(rig.jiggleSettings.blend);
+                simulatedPoint.PoseBone(rig.jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Blend));
                 if (debugDraw) {
                     simulatedPoint.DebugDraw(Color.green, true);
                     simulatedPoint.DebugDraw(Color.black, false);

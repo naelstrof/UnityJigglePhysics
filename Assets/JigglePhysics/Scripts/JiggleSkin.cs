@@ -7,12 +7,11 @@ public class JiggleSkin : MonoBehaviour {
     public class JiggleZone {
         public Transform target;
         public float radius;
-        public JiggleSettings jiggleSettings;
+        public JiggleSettingsBase jiggleSettings;
         [HideInInspector]
         public JigglePoint simulatedPoint;
     }
-    [SerializeField]
-    private List<JiggleZone> jiggleZones;
+    public List<JiggleZone> jiggleZones;
     [SerializeField]
     private List<SkinnedMeshRenderer> targetSkins;
     [SerializeField]
@@ -35,7 +34,7 @@ public class JiggleSkin : MonoBehaviour {
             Vector3 targetPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.target.position);
             Vector3 verletPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.simulatedPoint.interpolatedPosition);
             packedVectors.Add(new Vector4(targetPointSkinSpace.x, targetPointSkinSpace.y, targetPointSkinSpace.z, zone.radius));
-            packedVectors.Add(new Vector4(verletPointSkinSpace.x, verletPointSkinSpace.y, verletPointSkinSpace.z, zone.jiggleSettings.blend));
+            packedVectors.Add(new Vector4(verletPointSkinSpace.x, verletPointSkinSpace.y, verletPointSkinSpace.z, zone.jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Blend)));
         }
         for(int i=packedVectors.Count;i<16;i++) {
             packedVectors.Add(Vector4.zero);

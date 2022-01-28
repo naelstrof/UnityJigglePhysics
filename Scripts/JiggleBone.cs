@@ -41,7 +41,7 @@ public class JiggleBone {
         lengthToParent = Vector3.Distance(parent.position, position);
     }
 
-    public void Simulate(JiggleSettings jiggleSettings, JiggleBone root) {
+    public void Simulate(JiggleSettingsBase jiggleSettings, JiggleBone root) {
         if (parent == null) {
             SetNewPosition(transform.position);
             return;
@@ -51,9 +51,14 @@ public class JiggleBone {
             parent.transform.InverseTransformPoint(previousPosition));
         localSpaceVelocity -= parent.position - parent.previousPosition;
         Debug.DrawLine(position, position + localSpaceVelocity, Color.cyan);
-        Vector3 newPosition = JiggleBone.NextPhysicsPosition(position, previousPosition, localSpaceVelocity, Time.deltaTime, jiggleSettings.gravityMultiplier, jiggleSettings.friction, jiggleSettings.airFriction);
-        newPosition = ConstrainAngle(newPosition, jiggleSettings.angleElasticity*jiggleSettings.angleElasticity);
-        newPosition = ConstrainLength(newPosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity);
+        Vector3 newPosition = JiggleBone.NextPhysicsPosition(
+            position, previousPosition, localSpaceVelocity, Time.deltaTime,
+            jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Gravity),
+            jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Friction),
+            jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AirFriction)
+        );
+        newPosition = ConstrainAngle(newPosition, jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AngleElasticity)*jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AngleElasticity));
+        newPosition = ConstrainLength(newPosition, jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.LengthElasticity)*jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.LengthElasticity));
         SetNewPosition(newPosition);
     }
 
@@ -63,11 +68,15 @@ public class JiggleBone {
             // parent.parent is guaranteed to exist here, unless someone's trying to jiggle a single bone entirely by itself (which throws an exception).
             Vector3 projectedForward = (parent.transform.position - parent.parent.transform.position).normalized;
             targetAnimatedBonePosition = parent.transform.TransformPoint(parent.parent.transform.InverseTransformPoint(parent.transform.position));
+            lengthToParent = Vector3.Distance(targetAnimatedBonePosition, parent.transform.position);
             return;
         }
         targetAnimatedBonePosition = transform.position;
         lastValidPoseBoneRotation = transform.localRotation;
         lastValidPoseBoneLocalPosition = transform.localPosition;
+        if (parent != null) {
+            lengthToParent = Vector3.Distance(targetAnimatedBonePosition, parent.transform.position);
+        }
     }
     
     public Vector3 ConstrainLength(Vector3 newPosition, float elasticity) {

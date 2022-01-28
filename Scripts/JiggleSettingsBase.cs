@@ -1,0 +1,17 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class JiggleSettingsBase : ScriptableObject {
+    public enum JiggleSettingParameter {
+        Gravity = 0,
+        Friction,
+        AirFriction,
+        Blend,
+        AngleElasticity,
+        LengthElasticity,
+    }
+    public virtual float GetParameter(JiggleSettingParameter parameter) {
+        return 0f;
+    }
+}

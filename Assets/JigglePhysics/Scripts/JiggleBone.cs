@@ -15,8 +15,9 @@ public class JiggleBone {
     public Vector3 previousPosition;
     public Vector3 previousLocalPosition;
     public float lengthToParent;
-    
-    public Vector3 interpolatedPosition {
+    private Vector3 cachedInterpolatedPosition;
+
+    /*public Vector3 interpolatedPosition {
         get {
             // extrapolation, because interpolation is delayed by fixedDeltaTime
             float timeSinceLastUpdate = Time.time-Time.fixedTime;
@@ -25,7 +26,7 @@ public class JiggleBone {
             // Interpolation
             //return Vector3.Lerp(previousPosition, position, timeSinceLastUpdate/Time.fixedDeltaTime);
         }
-    }
+    }*/
     
     public JiggleBone(Transform transform, JiggleBone parent, Vector3 position) {
         this.transform = transform;
@@ -50,11 +51,8 @@ public class JiggleBone {
             SetNewPosition(transform.position);
             return;
         }
-        Vector3 localSpaceVelocity = parent.transform.TransformVector(
-            parent.transform.InverseTransformPoint(position) - 
-            parent.transform.InverseTransformPoint(previousPosition));
-        localSpaceVelocity -= parent.position - parent.previousPosition;
-        Debug.DrawLine(position, position + localSpaceVelocity, Color.cyan);
+        Vector3 localSpaceVelocity = (position-previousPosition) - (parent.position-parent.previousPosition);
+        //Debug.DrawLine(position, position + localSpaceVelocity, Color.cyan);
         Vector3 newPosition = JiggleBone.NextPhysicsPosition(
             position, previousPosition, localSpaceVelocity, Time.deltaTime,
             jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Gravity),
@@ -69,10 +67,11 @@ public class JiggleBone {
     public void CacheAnimationPosition() {
         // Purely virtual particles need to reconstruct their desired position.
         if (transform == null) {
+            Vector3 parentTransformPosition = parent.transform.position;
             // parent.parent is guaranteed to exist here, unless someone's trying to jiggle a single bone entirely by itself (which throws an exception).
-            Vector3 projectedForward = (parent.transform.position - parent.parent.transform.position).normalized;
-            targetAnimatedBonePosition = parent.transform.TransformPoint(parent.parent.transform.InverseTransformPoint(parent.transform.position));
-            lengthToParent = Vector3.Distance(targetAnimatedBonePosition, parent.transform.position);
+            Vector3 projectedForward = (parentTransformPosition - parent.parent.transform.position).normalized;
+            targetAnimatedBonePosition = parent.transform.TransformPoint(parent.parent.transform.InverseTransformPoint(parentTransformPosition));
+            lengthToParent = Vector3.Distance(targetAnimatedBonePosition, parentTransformPosition);
             return;
         }
         targetAnimatedBonePosition = transform.position;
@@ -122,13 +121,20 @@ public class JiggleBone {
     public void DebugDraw(Color color, bool interpolated) {
         if (parent == null) return;
         if (interpolated) {
-            Debug.DrawLine(interpolatedPosition, parent.interpolatedPosition, color);
+            Debug.DrawLine(cachedInterpolatedPosition, parent.cachedInterpolatedPosition, color);
         } else {
             Debug.DrawLine(position, parent.position, color);
         }
     }
 
     public void PrepareBone() {
+        // extrapolation, because interpolation is delayed by fixedDeltaTime and causes really bad stretching on fast moving objects
+        // it also causes a bit of jitter when it incorrectly guesses the velocity.
+        float timeSinceLastUpdate = Time.time-Time.fixedTime;
+        cachedInterpolatedPosition = Vector3.Lerp(position, position+(position-previousPosition), timeSinceLastUpdate/Time.fixedDeltaTime);
+        // Interpolation looks perfect, but is delayed by fixedDeltaTime, causing stretching on fast objects.
+        //cachedInterpolatedPosition = Vector3.Lerp(previousPosition, position, timeSinceLastUpdate/Time.fixedDeltaTime);
+
         // If bone is not animated, return to last unadulterated pose
         if (transform != null && boneRotationChangeCheck == transform.localRotation) {
             //Debug.DrawLine(transform.position, transform.position+lastValidPoseBoneRotation * Vector3.up, Color.magenta);
@@ -140,10 +146,10 @@ public class JiggleBone {
 
     public void PoseBone(float blend) {
         if (child != null) {
-            float cachedDistance = Vector3.Distance(transform.position, interpolatedPosition);
+            float cachedDistance = Vector3.Distance(transform.position, cachedInterpolatedPosition);
 
-            Vector3 interpolatedPositionBlend = Vector3.Lerp(targetAnimatedBonePosition, interpolatedPosition, blend);
-            Vector3 interpolatedChildPositionBlend = Vector3.Lerp(child.targetAnimatedBonePosition, child.interpolatedPosition, blend);
+            Vector3 interpolatedPositionBlend = Vector3.Lerp(targetAnimatedBonePosition, cachedInterpolatedPosition, blend);
+            Vector3 interpolatedChildPositionBlend = Vector3.Lerp(child.targetAnimatedBonePosition, child.cachedInterpolatedPosition, blend);
 
             if (parent != null) {
                 transform.position = interpolatedPositionBlend;

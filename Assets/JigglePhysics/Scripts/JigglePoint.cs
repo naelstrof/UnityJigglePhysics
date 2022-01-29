@@ -27,10 +27,7 @@ public class JigglePoint {
         parentPosition = transform.position;
     }
     public void Simulate(JiggleSettingsBase jiggleSettings) {
-        Vector3 localSpaceVelocity = transform.TransformVector(
-            transform.InverseTransformPoint(position) - 
-            transform.InverseTransformPoint(previousPosition));
-        localSpaceVelocity -= parentPosition - parentPreviousPosition;
+        Vector3 localSpaceVelocity = (position-previousPosition) - (parentPosition-parentPreviousPosition);
         Vector3 newPosition = JiggleBone.NextPhysicsPosition(
             position, previousPosition, localSpaceVelocity, Time.deltaTime,
             jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Gravity),

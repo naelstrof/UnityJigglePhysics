@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+namespace JigglePhysics {
+
 // Uses Verlet to resolve constraints easily 
 public class JiggleBone {
     public JiggleBone parent;
@@ -17,6 +19,7 @@ public class JiggleBone {
     public float lengthToParent;
     private Vector3 cachedInterpolatedPosition;
 
+    // Optimized out, faster to cache once during PrepareBone and reuse.
     /*public Vector3 interpolatedPosition {
         get {
             // extrapolation, because interpolation is delayed by fixedDeltaTime
@@ -121,17 +124,21 @@ public class JiggleBone {
     public void DebugDraw(Color color, bool interpolated) {
         if (parent == null) return;
         if (interpolated) {
-            Debug.DrawLine(cachedInterpolatedPosition, parent.cachedInterpolatedPosition, color);
+            Debug.DrawLine(cachedInterpolatedPosition, parent.cachedInterpolatedPosition, color, Time.deltaTime, false);
         } else {
-            Debug.DrawLine(position, parent.position, color);
+            Debug.DrawLine(position, parent.position, color, Time.deltaTime, false);
         }
     }
 
-    public void PrepareBone() {
+    public void PrepareBone(bool interpolate) {
         // extrapolation, because interpolation is delayed by fixedDeltaTime and causes really bad stretching on fast moving objects
         // it also causes a bit of jitter when it incorrectly guesses the velocity.
-        float timeSinceLastUpdate = Time.time-Time.fixedTime;
-        cachedInterpolatedPosition = Vector3.Lerp(position, position+(position-previousPosition), timeSinceLastUpdate/Time.fixedDeltaTime);
+        if (interpolate) {
+            float timeSinceLastUpdate = Time.time-Time.fixedTime;
+            cachedInterpolatedPosition = Vector3.Lerp(position, position+(position-previousPosition), timeSinceLastUpdate/Time.fixedDeltaTime);
+        } else {
+            cachedInterpolatedPosition  = position;
+        }
         // Interpolation looks perfect, but is delayed by fixedDeltaTime, causing stretching on fast objects.
         //cachedInterpolatedPosition = Vector3.Lerp(previousPosition, position, timeSinceLastUpdate/Time.fixedDeltaTime);
 
@@ -170,4 +177,6 @@ public class JiggleBone {
             //Debug.DrawLine(transform.position, transform.position+boneRotationChangeCheck * Vector3.up, Color.blue);
         }
     }
+}
+
 }

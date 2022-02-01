@@ -2,20 +2,28 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+namespace JigglePhysics {
+
 public class JiggleSkin : MonoBehaviour {
     [System.Serializable]
     public class JiggleZone {
+        [Tooltip("The transform from which the zone effects, this is used as the 'center'.")]
         public Transform target;
+        [Tooltip("How large of a radius the zone should effect, in target-space meters. (Scaling the target will effect the radius.)")]
         public float radius;
+        [Tooltip("The settings that the skin should update with, create them using the Create->JigglePhysics->Settings menu option.")]
         public JiggleSettingsBase jiggleSettings;
         [HideInInspector]
         public JigglePoint simulatedPoint;
     }
+    [SerializeField] [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
+    private bool interpolate = true;
     public List<JiggleZone> jiggleZones;
-    [SerializeField]
+    [SerializeField] [Tooltip("The list of skins to send the deformation data too, they should have JiggleSkin-compatible materials!")]
     public List<SkinnedMeshRenderer> targetSkins;
-    [SerializeField]
-    private bool debug = false;
+    [SerializeField] [Tooltip("Draws some simple lines to show what the simulation is doing. Generally this should be disabled.")]
+    private bool debugDraw = false;
+
     private List<Material> targetMaterials;
     private List<Vector4> packedVectors;
     private int jiggleInfoNameID;
@@ -32,7 +40,7 @@ public class JiggleSkin : MonoBehaviour {
         packedVectors.Clear();
         foreach( JiggleZone zone in jiggleZones) {
             Vector3 targetPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.target.position);
-            Vector3 verletPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.simulatedPoint.interpolatedPosition);
+            Vector3 verletPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(interpolate ? zone.simulatedPoint.interpolatedPosition : zone.simulatedPoint.position);
             packedVectors.Add(new Vector4(targetPointSkinSpace.x, targetPointSkinSpace.y, targetPointSkinSpace.z, zone.radius*zone.target.lossyScale.x));
             packedVectors.Add(new Vector4(verletPointSkinSpace.x, verletPointSkinSpace.y, verletPointSkinSpace.z, zone.jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Blend)));
         }
@@ -49,9 +57,9 @@ public class JiggleSkin : MonoBehaviour {
         }
 
         // Debug draw stuff
-        if (debug) {
+        if (debugDraw) {
             foreach( JiggleZone zone in jiggleZones) {
-                zone.simulatedPoint.DebugDraw(Color.blue, true);
+                zone.simulatedPoint.DebugDraw(Color.red, true);
             }
         }
     }
@@ -94,4 +102,6 @@ public class JiggleSkin : MonoBehaviour {
         }
         return result;
     }
+}
+
 }

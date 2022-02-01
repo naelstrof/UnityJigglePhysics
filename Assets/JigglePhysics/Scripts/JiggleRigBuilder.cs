@@ -3,17 +3,25 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+namespace JigglePhysics {
+
 public class JiggleRigBuilder : MonoBehaviour {
     [System.Serializable]
     public class JiggleRig {
+        [Tooltip("The root bone from which an individual JiggleRig will be constructed. The JiggleRig encompasses all children of the specified root.")]
         public Transform rootTransform;
+        [Tooltip("The settings that the rig should update with, create them using the Create->JigglePhysics->Settings menu option.")]
         public JiggleSettingsBase jiggleSettings;
+        [Tooltip("The list of transforms to ignore during the jiggle. Each bone listed will also ignore all the children of the specified bone.")]
         public List<Transform> ignoredTransforms;
 
         [HideInInspector]
         public List<JiggleBone> simulatedPoints;
     }
+    [SerializeField] [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
+    private bool interpolate = true;
     public List<JiggleRig> jiggleRigs;
+    [Tooltip("Draws some simple lines to show what the simulation is doing. Generally this should be disabled.")]
     [SerializeField] private bool debugDraw;
 
     private void Awake() {
@@ -25,13 +33,13 @@ public class JiggleRigBuilder : MonoBehaviour {
     private void LateUpdate() {
         foreach(JiggleRig rig in jiggleRigs) {
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
-                simulatedPoint.PrepareBone();
+                simulatedPoint.PrepareBone(interpolate);
             }
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
                 simulatedPoint.PoseBone(rig.jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Blend));
                 if (debugDraw) {
-                    simulatedPoint.DebugDraw(Color.green, true);
-                    simulatedPoint.DebugDraw(Color.black, false);
+                    simulatedPoint.DebugDraw(Color.red, true);
+                    //simulatedPoint.DebugDraw(Color.black, false);
                 }
             }
         }
@@ -64,4 +72,6 @@ public class JiggleRigBuilder : MonoBehaviour {
             CreateSimulatedPoints(rig,currentTransform.GetChild(i), newJiggleBone);
         }
     }
+}
+
 }

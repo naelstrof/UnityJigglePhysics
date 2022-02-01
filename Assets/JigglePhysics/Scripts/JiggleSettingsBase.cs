@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+namespace JigglePhysics {
 public class JiggleSettingsBase : ScriptableObject {
     public enum JiggleSettingParameter {
         Gravity = 0,
@@ -14,4 +15,6 @@ public class JiggleSettingsBase : ScriptableObject {
     public virtual float GetParameter(JiggleSettingParameter parameter) {
         return 0f;
     }
+}
+
 }

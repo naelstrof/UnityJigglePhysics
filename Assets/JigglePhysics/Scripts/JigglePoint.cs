@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+namespace JigglePhysics {
 public class JigglePoint {
     public Vector3 position;
     public Transform transform;
@@ -10,9 +11,11 @@ public class JigglePoint {
     private Vector3 parentPreviousPosition;
     public Vector3 interpolatedPosition {
         get {
-            // interpolation, delayed by fixedDeltaTime
             float timeSinceLastUpdate = Time.time-Time.fixedTime;
-            return Vector3.Lerp(previousPosition, position, timeSinceLastUpdate/Time.fixedDeltaTime);
+            // interpolation, delayed by fixedDeltaTime
+            // return Vector3.Lerp(previousPosition, position, timeSinceLastUpdate/Time.fixedDeltaTime);
+            // extrapolation
+            return Vector3.Lerp(position, position+(position-previousPosition), timeSinceLastUpdate/Time.fixedDeltaTime);
         }
     }
     public JigglePoint(Transform transform) {
@@ -50,9 +53,11 @@ public class JigglePoint {
     }
     public void DebugDraw(Color color, bool interpolated) {
         if (interpolated) {
-            Debug.DrawLine(interpolatedPosition, transform.position, color);
+            Debug.DrawLine(interpolatedPosition, transform.position, color, Time.deltaTime, false);
         } else {
-            Debug.DrawLine(position, transform.position, color);
+            Debug.DrawLine(position, transform.position, color, Time.deltaTime, false);
         }
     }
+}
+
 }

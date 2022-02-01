@@ -216,8 +216,8 @@
     ],
     "m_VertexContext": {
         "m_Position": {
-            "x": 0.0,
-            "y": 0.0
+            "x": -9.5367431640625e-7,
+            "y": -0.00000667572021484375
         },
         "m_Blocks": [
             {
@@ -429,6 +429,21 @@
     },
     "m_Labels": [],
     "m_Space": 0
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
+    "m_ObjectId": "15a1b6360b944daa8f53231e80484189",
+    "m_Id": 1,
+    "m_DisplayName": "blend",
+    "m_SlotType": 0,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "blend",
+    "m_StageCapability": 3,
+    "m_Value": 0.0,
+    "m_DefaultValue": 0.0,
+    "m_Labels": []
 }
 
 {
@@ -1391,31 +1406,6 @@
 
 {
     "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector4MaterialSlot",
-    "m_ObjectId": "c96f690c710c41ea990c069f94ee3d91",
-    "m_Id": 1,
-    "m_DisplayName": "vertexColor",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "vertexColor",
-    "m_StageCapability": 3,
-    "m_Value": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0,
-        "w": 0.0
-    },
-    "m_DefaultValue": {
-        "x": 0.0,
-        "y": 0.0,
-        "z": 0.0,
-        "w": 0.0
-    },
-    "m_Labels": []
-}
-
-{
-    "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.SampleTexture2DNode",
     "m_ObjectId": "cc3e8fd652f2490e84acd414e6e9a626",
     "m_Group": {
@@ -1514,10 +1504,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -423.0000305175781,
-            "y": -13.000000953674317,
+            "x": -423.0,
+            "y": -16.00002098083496,
             "width": 282.0,
-            "height": 118.0
+            "height": 118.00000762939453
         }
     },
     "m_Slots": [
@@ -1525,7 +1515,7 @@
             "m_Id": "da9a164aa2534e0cb07ea8ebfc9b3a71"
         },
         {
-            "m_Id": "c96f690c710c41ea990c069f94ee3d91"
+            "m_Id": "15a1b6360b944daa8f53231e80484189"
         },
         {
             "m_Id": "02d7765d211e438c8b45fc0f9a893271"

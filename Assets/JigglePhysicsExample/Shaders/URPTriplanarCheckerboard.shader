@@ -6,6 +6,8 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 	{
 		[HideInInspector] _AlphaCutoff("Alpha Cutoff ", Range(0, 1)) = 0.5
 		[HideInInspector] _EmissionColor("Emission Color", Color) = (1,1,1,1)
+		[ASEBegin]_Color("Color", Color) = (0.5,0.5,0.5,1)
+		[ASEEnd]_Frequency("Frequency", Range( 0 , 1)) = 0
 
 		//_TransmissionShadow( "Transmission Shadow", Range( 0, 1 ) ) = 0.5
 		//_TransStrength( "Trans Strength", Range( 0, 50 ) ) = 1
@@ -31,6 +33,7 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 		Tags { "RenderPipeline"="UniversalPipeline" "RenderType"="Opaque" "Queue"="Geometry" }
 		Cull Back
 		AlphaToMask Off
+		
 		HLSLINCLUDE
 		#pragma target 2.0
 
@@ -162,7 +165,7 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			#pragma multi_compile _ LOD_FADE_CROSSFADE
 			#pragma multi_compile_fog
 			#define ASE_FOG 1
-			#define ASE_SRP_VERSION 100501
+			#define ASE_SRP_VERSION 100600
 
 			
 			#pragma multi_compile _ _SCREEN_SPACE_OCCLUSION
@@ -233,7 +236,9 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-						#ifdef _TRANSMISSION_ASE
+			float4 _Color;
+			float _Frequency;
+			#ifdef _TRANSMISSION_ASE
 				float _TransmissionShadow;
 			#endif
 			#ifdef _TRANSLUCENCY_ASE
@@ -449,34 +454,33 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 	
 				WorldViewDirection = SafeNormalize( WorldViewDirection );
 
-				float4 color7_g5 = IsGammaSpace() ? float4(0.2,0.2,0.2,0) : float4(0.03310476,0.03310476,0.03310476,0);
-				float4 color8_g5 = IsGammaSpace() ? float4(0.6980392,0.6980392,0.6980392,0) : float4(0.4452012,0.4452012,0.4452012,0);
-				float2 FinalUV13_g5 = ( float2( 1,1 ) * ( 0.5 + (WorldPosition).xz ) );
-				float2 temp_cast_0 = (0.5).xx;
-				float2 temp_cast_1 = (1.0).xx;
-				float4 appendResult16_g5 = (float4(ddx( FinalUV13_g5 ) , ddy( FinalUV13_g5 )));
-				float4 UVDerivatives17_g5 = appendResult16_g5;
-				float4 break28_g5 = UVDerivatives17_g5;
-				float2 appendResult19_g5 = (float2(break28_g5.x , break28_g5.z));
-				float2 appendResult20_g5 = (float2(break28_g5.x , break28_g5.z));
-				float dotResult24_g5 = dot( appendResult19_g5 , appendResult20_g5 );
-				float2 appendResult21_g5 = (float2(break28_g5.y , break28_g5.w));
-				float2 appendResult22_g5 = (float2(break28_g5.y , break28_g5.w));
-				float dotResult23_g5 = dot( appendResult21_g5 , appendResult22_g5 );
-				float2 appendResult25_g5 = (float2(dotResult24_g5 , dotResult23_g5));
-				float2 derivativesLength29_g5 = sqrt( appendResult25_g5 );
-				float2 temp_cast_2 = (-1.0).xx;
-				float2 temp_cast_3 = (1.0).xx;
-				float2 clampResult57_g5 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g5 + 0.25 ) ) - temp_cast_0 ) ) * 4.0 ) - temp_cast_1 ) * ( 0.35 / derivativesLength29_g5 ) ) , temp_cast_2 , temp_cast_3 );
-				float2 break71_g5 = clampResult57_g5;
-				float2 break55_g5 = derivativesLength29_g5;
-				float4 lerpResult73_g5 = lerp( color7_g5 , color8_g5 , saturate( ( 0.5 + ( 0.5 * break71_g5.x * break71_g5.y * sqrt( saturate( ( 1.1 - max( break55_g5.x , break55_g5.y ) ) ) ) ) ) ));
+				float4 temp_output_49_0 = ( _Color * 0.9 );
+				float2 temp_cast_0 = (_Frequency).xx;
+				float2 FinalUV13_g9 = ( temp_cast_0 * ( 0.5 + (WorldPosition).xz ) );
+				float2 temp_cast_1 = (0.5).xx;
+				float2 temp_cast_2 = (1.0).xx;
+				float4 appendResult16_g9 = (float4(ddx( FinalUV13_g9 ) , ddy( FinalUV13_g9 )));
+				float4 UVDerivatives17_g9 = appendResult16_g9;
+				float4 break28_g9 = UVDerivatives17_g9;
+				float2 appendResult19_g9 = (float2(break28_g9.x , break28_g9.z));
+				float2 appendResult20_g9 = (float2(break28_g9.x , break28_g9.z));
+				float dotResult24_g9 = dot( appendResult19_g9 , appendResult20_g9 );
+				float2 appendResult21_g9 = (float2(break28_g9.y , break28_g9.w));
+				float2 appendResult22_g9 = (float2(break28_g9.y , break28_g9.w));
+				float dotResult23_g9 = dot( appendResult21_g9 , appendResult22_g9 );
+				float2 appendResult25_g9 = (float2(dotResult24_g9 , dotResult23_g9));
+				float2 derivativesLength29_g9 = sqrt( appendResult25_g9 );
+				float2 temp_cast_3 = (-1.0).xx;
+				float2 temp_cast_4 = (1.0).xx;
+				float2 clampResult57_g9 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g9 + 0.25 ) ) - temp_cast_1 ) ) * 4.0 ) - temp_cast_2 ) * ( 0.35 / derivativesLength29_g9 ) ) , temp_cast_3 , temp_cast_4 );
+				float2 break71_g9 = clampResult57_g9;
+				float2 break55_g9 = derivativesLength29_g9;
+				float4 lerpResult73_g9 = lerp( _Color , temp_output_49_0 , saturate( ( 0.5 + ( 0.5 * break71_g9.x * break71_g9.y * sqrt( saturate( ( 1.1 - max( break55_g9.x , break55_g9.y ) ) ) ) ) ) ));
 				float dotResult16 = dot( WorldNormal , float3( 0,1,0 ) );
-				float4 color7_g7 = IsGammaSpace() ? float4(0.2,0.2,0.2,0) : float4(0.03310476,0.03310476,0.03310476,0);
-				float4 color8_g7 = IsGammaSpace() ? float4(0.6980392,0.6980392,0.6980392,0) : float4(0.4452012,0.4452012,0.4452012,0);
-				float2 FinalUV13_g7 = ( float2( 1,1 ) * ( 0.5 + (WorldPosition).zy ) );
-				float2 temp_cast_4 = (0.5).xx;
-				float2 temp_cast_5 = (1.0).xx;
+				float2 temp_cast_5 = (_Frequency).xx;
+				float2 FinalUV13_g7 = ( temp_cast_5 * ( 0.5 + (WorldPosition).zy ) );
+				float2 temp_cast_6 = (0.5).xx;
+				float2 temp_cast_7 = (1.0).xx;
 				float4 appendResult16_g7 = (float4(ddx( FinalUV13_g7 ) , ddy( FinalUV13_g7 )));
 				float4 UVDerivatives17_g7 = appendResult16_g7;
 				float4 break28_g7 = UVDerivatives17_g7;
@@ -488,38 +492,37 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 				float dotResult23_g7 = dot( appendResult21_g7 , appendResult22_g7 );
 				float2 appendResult25_g7 = (float2(dotResult24_g7 , dotResult23_g7));
 				float2 derivativesLength29_g7 = sqrt( appendResult25_g7 );
-				float2 temp_cast_6 = (-1.0).xx;
-				float2 temp_cast_7 = (1.0).xx;
-				float2 clampResult57_g7 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g7 + 0.25 ) ) - temp_cast_4 ) ) * 4.0 ) - temp_cast_5 ) * ( 0.35 / derivativesLength29_g7 ) ) , temp_cast_6 , temp_cast_7 );
+				float2 temp_cast_8 = (-1.0).xx;
+				float2 temp_cast_9 = (1.0).xx;
+				float2 clampResult57_g7 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g7 + 0.25 ) ) - temp_cast_6 ) ) * 4.0 ) - temp_cast_7 ) * ( 0.35 / derivativesLength29_g7 ) ) , temp_cast_8 , temp_cast_9 );
 				float2 break71_g7 = clampResult57_g7;
 				float2 break55_g7 = derivativesLength29_g7;
-				float4 lerpResult73_g7 = lerp( color7_g7 , color8_g7 , saturate( ( 0.5 + ( 0.5 * break71_g7.x * break71_g7.y * sqrt( saturate( ( 1.1 - max( break55_g7.x , break55_g7.y ) ) ) ) ) ) ));
+				float4 lerpResult73_g7 = lerp( _Color , temp_output_49_0 , saturate( ( 0.5 + ( 0.5 * break71_g7.x * break71_g7.y * sqrt( saturate( ( 1.1 - max( break55_g7.x , break55_g7.y ) ) ) ) ) ) ));
 				float dotResult21 = dot( WorldNormal , float3( 1,0,0 ) );
-				float4 color7_g6 = IsGammaSpace() ? float4(0.2,0.2,0.2,0) : float4(0.03310476,0.03310476,0.03310476,0);
-				float4 color8_g6 = IsGammaSpace() ? float4(0.6980392,0.6980392,0.6980392,0) : float4(0.4452012,0.4452012,0.4452012,0);
-				float2 FinalUV13_g6 = ( float2( 1,1 ) * ( 0.5 + (WorldPosition).xy ) );
-				float2 temp_cast_8 = (0.5).xx;
-				float2 temp_cast_9 = (1.0).xx;
-				float4 appendResult16_g6 = (float4(ddx( FinalUV13_g6 ) , ddy( FinalUV13_g6 )));
-				float4 UVDerivatives17_g6 = appendResult16_g6;
-				float4 break28_g6 = UVDerivatives17_g6;
-				float2 appendResult19_g6 = (float2(break28_g6.x , break28_g6.z));
-				float2 appendResult20_g6 = (float2(break28_g6.x , break28_g6.z));
-				float dotResult24_g6 = dot( appendResult19_g6 , appendResult20_g6 );
-				float2 appendResult21_g6 = (float2(break28_g6.y , break28_g6.w));
-				float2 appendResult22_g6 = (float2(break28_g6.y , break28_g6.w));
-				float dotResult23_g6 = dot( appendResult21_g6 , appendResult22_g6 );
-				float2 appendResult25_g6 = (float2(dotResult24_g6 , dotResult23_g6));
-				float2 derivativesLength29_g6 = sqrt( appendResult25_g6 );
-				float2 temp_cast_10 = (-1.0).xx;
-				float2 temp_cast_11 = (1.0).xx;
-				float2 clampResult57_g6 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g6 + 0.25 ) ) - temp_cast_8 ) ) * 4.0 ) - temp_cast_9 ) * ( 0.35 / derivativesLength29_g6 ) ) , temp_cast_10 , temp_cast_11 );
-				float2 break71_g6 = clampResult57_g6;
-				float2 break55_g6 = derivativesLength29_g6;
-				float4 lerpResult73_g6 = lerp( color7_g6 , color8_g6 , saturate( ( 0.5 + ( 0.5 * break71_g6.x * break71_g6.y * sqrt( saturate( ( 1.1 - max( break55_g6.x , break55_g6.y ) ) ) ) ) ) ));
+				float2 temp_cast_10 = (_Frequency).xx;
+				float2 FinalUV13_g8 = ( temp_cast_10 * ( 0.5 + (WorldPosition).xy ) );
+				float2 temp_cast_11 = (0.5).xx;
+				float2 temp_cast_12 = (1.0).xx;
+				float4 appendResult16_g8 = (float4(ddx( FinalUV13_g8 ) , ddy( FinalUV13_g8 )));
+				float4 UVDerivatives17_g8 = appendResult16_g8;
+				float4 break28_g8 = UVDerivatives17_g8;
+				float2 appendResult19_g8 = (float2(break28_g8.x , break28_g8.z));
+				float2 appendResult20_g8 = (float2(break28_g8.x , break28_g8.z));
+				float dotResult24_g8 = dot( appendResult19_g8 , appendResult20_g8 );
+				float2 appendResult21_g8 = (float2(break28_g8.y , break28_g8.w));
+				float2 appendResult22_g8 = (float2(break28_g8.y , break28_g8.w));
+				float dotResult23_g8 = dot( appendResult21_g8 , appendResult22_g8 );
+				float2 appendResult25_g8 = (float2(dotResult24_g8 , dotResult23_g8));
+				float2 derivativesLength29_g8 = sqrt( appendResult25_g8 );
+				float2 temp_cast_13 = (-1.0).xx;
+				float2 temp_cast_14 = (1.0).xx;
+				float2 clampResult57_g8 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g8 + 0.25 ) ) - temp_cast_11 ) ) * 4.0 ) - temp_cast_12 ) * ( 0.35 / derivativesLength29_g8 ) ) , temp_cast_13 , temp_cast_14 );
+				float2 break71_g8 = clampResult57_g8;
+				float2 break55_g8 = derivativesLength29_g8;
+				float4 lerpResult73_g8 = lerp( _Color , temp_output_49_0 , saturate( ( 0.5 + ( 0.5 * break71_g8.x * break71_g8.y * sqrt( saturate( ( 1.1 - max( break55_g8.x , break55_g8.y ) ) ) ) ) ) ));
 				float dotResult31 = dot( WorldNormal , float3( 0,0,1 ) );
 				
-				float3 Albedo = saturate( ( ( lerpResult73_g5 * abs( dotResult16 ) ) + ( lerpResult73_g7 * abs( dotResult21 ) ) + ( lerpResult73_g6 * abs( dotResult31 ) ) ) ).rgb;
+				float3 Albedo = saturate( ( ( lerpResult73_g9 * abs( dotResult16 ) ) + ( lerpResult73_g7 * abs( dotResult21 ) ) + ( lerpResult73_g8 * abs( dotResult31 ) ) ) ).rgb;
 				float3 Normal = float3(0, 0, 1);
 				float3 Emission = 0;
 				float3 Specular = 0.5;
@@ -690,6 +693,7 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			ZWrite On
 			ZTest LEqual
 			AlphaToMask Off
+			ColorMask 0
 
 			HLSLPROGRAM
 			
@@ -698,12 +702,14 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			#pragma multi_compile _ LOD_FADE_CROSSFADE
 			#pragma multi_compile_fog
 			#define ASE_FOG 1
-			#define ASE_SRP_VERSION 100501
+			#define ASE_SRP_VERSION 100600
 
 			
 			#pragma vertex vert
 			#pragma fragment frag
-
+#if ASE_SRP_VERSION >= 110000
+			#pragma multi_compile _ _CASTING_PUNCTUAL_LIGHT_SHADOW
+#endif
 			#define SHADERPASS_SHADOWCASTER
 
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
@@ -736,7 +742,9 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-						#ifdef _TRANSMISSION_ASE
+			float4 _Color;
+			float _Frequency;
+			#ifdef _TRANSMISSION_ASE
 				float _TransmissionShadow;
 			#endif
 			#ifdef _TRANSLUCENCY_ASE
@@ -760,7 +768,9 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 
 			
 			float3 _LightDirection;
-
+#if ASE_SRP_VERSION >= 110000 
+			float3 _LightPosition;
+#endif
 			VertexOutput VertexFunction( VertexInput v )
 			{
 				VertexOutput o;
@@ -789,13 +799,27 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 				#endif
 				float3 normalWS = TransformObjectToWorldDir(v.ase_normal);
 
-				float4 clipPos = TransformWorldToHClip( ApplyShadowBias( positionWS, normalWS, _LightDirection ) );
+		#if ASE_SRP_VERSION >= 110000 
+			#if _CASTING_PUNCTUAL_LIGHT_SHADOW
+				float3 lightDirectionWS = normalize(_LightPosition - positionWS);
+			#else
+				float3 lightDirectionWS = _LightDirection;
+			#endif
+				float4 clipPos = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, lightDirectionWS));
+			#if UNITY_REVERSED_Z
+				clipPos.z = min(clipPos.z, UNITY_NEAR_CLIP_VALUE);
+			#else
+				clipPos.z = max(clipPos.z, UNITY_NEAR_CLIP_VALUE);
+			#endif
+		#else
+				float4 clipPos = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
+			#if UNITY_REVERSED_Z
+				clipPos.z = min(clipPos.z, clipPos.w * UNITY_NEAR_CLIP_VALUE);
+			#else
+				clipPos.z = max(clipPos.z, clipPos.w * UNITY_NEAR_CLIP_VALUE);
+			#endif
+		#endif
 
-				#if UNITY_REVERSED_Z
-					clipPos.z = min(clipPos.z, clipPos.w * UNITY_NEAR_CLIP_VALUE);
-				#else
-					clipPos.z = max(clipPos.z, clipPos.w * UNITY_NEAR_CLIP_VALUE);
-				#endif
 				#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR) && defined(ASE_NEEDS_FRAG_SHADOWCOORDS)
 					VertexPositionInputs vertexInput = (VertexPositionInputs)0;
 					vertexInput.positionWS = positionWS;
@@ -959,7 +983,7 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			#pragma multi_compile _ LOD_FADE_CROSSFADE
 			#pragma multi_compile_fog
 			#define ASE_FOG 1
-			#define ASE_SRP_VERSION 100501
+			#define ASE_SRP_VERSION 100600
 
 			
 			#pragma vertex vert
@@ -997,7 +1021,9 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-						#ifdef _TRANSMISSION_ASE
+			float4 _Color;
+			float _Frequency;
+			#ifdef _TRANSMISSION_ASE
 				float _TransmissionShadow;
 			#endif
 			#ifdef _TRANSLUCENCY_ASE
@@ -1203,7 +1229,7 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			#pragma multi_compile _ LOD_FADE_CROSSFADE
 			#pragma multi_compile_fog
 			#define ASE_FOG 1
-			#define ASE_SRP_VERSION 100501
+			#define ASE_SRP_VERSION 100600
 
 			
 			#pragma vertex vert
@@ -1247,7 +1273,9 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-						#ifdef _TRANSMISSION_ASE
+			float4 _Color;
+			float _Frequency;
+			#ifdef _TRANSMISSION_ASE
 				float _TransmissionShadow;
 			#endif
 			#ifdef _TRANSLUCENCY_ASE
@@ -1416,35 +1444,34 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 					#endif
 				#endif
 
-				float4 color7_g5 = IsGammaSpace() ? float4(0.2,0.2,0.2,0) : float4(0.03310476,0.03310476,0.03310476,0);
-				float4 color8_g5 = IsGammaSpace() ? float4(0.6980392,0.6980392,0.6980392,0) : float4(0.4452012,0.4452012,0.4452012,0);
-				float2 FinalUV13_g5 = ( float2( 1,1 ) * ( 0.5 + (WorldPosition).xz ) );
-				float2 temp_cast_0 = (0.5).xx;
-				float2 temp_cast_1 = (1.0).xx;
-				float4 appendResult16_g5 = (float4(ddx( FinalUV13_g5 ) , ddy( FinalUV13_g5 )));
-				float4 UVDerivatives17_g5 = appendResult16_g5;
-				float4 break28_g5 = UVDerivatives17_g5;
-				float2 appendResult19_g5 = (float2(break28_g5.x , break28_g5.z));
-				float2 appendResult20_g5 = (float2(break28_g5.x , break28_g5.z));
-				float dotResult24_g5 = dot( appendResult19_g5 , appendResult20_g5 );
-				float2 appendResult21_g5 = (float2(break28_g5.y , break28_g5.w));
-				float2 appendResult22_g5 = (float2(break28_g5.y , break28_g5.w));
-				float dotResult23_g5 = dot( appendResult21_g5 , appendResult22_g5 );
-				float2 appendResult25_g5 = (float2(dotResult24_g5 , dotResult23_g5));
-				float2 derivativesLength29_g5 = sqrt( appendResult25_g5 );
-				float2 temp_cast_2 = (-1.0).xx;
-				float2 temp_cast_3 = (1.0).xx;
-				float2 clampResult57_g5 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g5 + 0.25 ) ) - temp_cast_0 ) ) * 4.0 ) - temp_cast_1 ) * ( 0.35 / derivativesLength29_g5 ) ) , temp_cast_2 , temp_cast_3 );
-				float2 break71_g5 = clampResult57_g5;
-				float2 break55_g5 = derivativesLength29_g5;
-				float4 lerpResult73_g5 = lerp( color7_g5 , color8_g5 , saturate( ( 0.5 + ( 0.5 * break71_g5.x * break71_g5.y * sqrt( saturate( ( 1.1 - max( break55_g5.x , break55_g5.y ) ) ) ) ) ) ));
+				float4 temp_output_49_0 = ( _Color * 0.9 );
+				float2 temp_cast_0 = (_Frequency).xx;
+				float2 FinalUV13_g9 = ( temp_cast_0 * ( 0.5 + (WorldPosition).xz ) );
+				float2 temp_cast_1 = (0.5).xx;
+				float2 temp_cast_2 = (1.0).xx;
+				float4 appendResult16_g9 = (float4(ddx( FinalUV13_g9 ) , ddy( FinalUV13_g9 )));
+				float4 UVDerivatives17_g9 = appendResult16_g9;
+				float4 break28_g9 = UVDerivatives17_g9;
+				float2 appendResult19_g9 = (float2(break28_g9.x , break28_g9.z));
+				float2 appendResult20_g9 = (float2(break28_g9.x , break28_g9.z));
+				float dotResult24_g9 = dot( appendResult19_g9 , appendResult20_g9 );
+				float2 appendResult21_g9 = (float2(break28_g9.y , break28_g9.w));
+				float2 appendResult22_g9 = (float2(break28_g9.y , break28_g9.w));
+				float dotResult23_g9 = dot( appendResult21_g9 , appendResult22_g9 );
+				float2 appendResult25_g9 = (float2(dotResult24_g9 , dotResult23_g9));
+				float2 derivativesLength29_g9 = sqrt( appendResult25_g9 );
+				float2 temp_cast_3 = (-1.0).xx;
+				float2 temp_cast_4 = (1.0).xx;
+				float2 clampResult57_g9 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g9 + 0.25 ) ) - temp_cast_1 ) ) * 4.0 ) - temp_cast_2 ) * ( 0.35 / derivativesLength29_g9 ) ) , temp_cast_3 , temp_cast_4 );
+				float2 break71_g9 = clampResult57_g9;
+				float2 break55_g9 = derivativesLength29_g9;
+				float4 lerpResult73_g9 = lerp( _Color , temp_output_49_0 , saturate( ( 0.5 + ( 0.5 * break71_g9.x * break71_g9.y * sqrt( saturate( ( 1.1 - max( break55_g9.x , break55_g9.y ) ) ) ) ) ) ));
 				float3 ase_worldNormal = IN.ase_texcoord2.xyz;
 				float dotResult16 = dot( ase_worldNormal , float3( 0,1,0 ) );
-				float4 color7_g7 = IsGammaSpace() ? float4(0.2,0.2,0.2,0) : float4(0.03310476,0.03310476,0.03310476,0);
-				float4 color8_g7 = IsGammaSpace() ? float4(0.6980392,0.6980392,0.6980392,0) : float4(0.4452012,0.4452012,0.4452012,0);
-				float2 FinalUV13_g7 = ( float2( 1,1 ) * ( 0.5 + (WorldPosition).zy ) );
-				float2 temp_cast_4 = (0.5).xx;
-				float2 temp_cast_5 = (1.0).xx;
+				float2 temp_cast_5 = (_Frequency).xx;
+				float2 FinalUV13_g7 = ( temp_cast_5 * ( 0.5 + (WorldPosition).zy ) );
+				float2 temp_cast_6 = (0.5).xx;
+				float2 temp_cast_7 = (1.0).xx;
 				float4 appendResult16_g7 = (float4(ddx( FinalUV13_g7 ) , ddy( FinalUV13_g7 )));
 				float4 UVDerivatives17_g7 = appendResult16_g7;
 				float4 break28_g7 = UVDerivatives17_g7;
@@ -1456,39 +1483,38 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 				float dotResult23_g7 = dot( appendResult21_g7 , appendResult22_g7 );
 				float2 appendResult25_g7 = (float2(dotResult24_g7 , dotResult23_g7));
 				float2 derivativesLength29_g7 = sqrt( appendResult25_g7 );
-				float2 temp_cast_6 = (-1.0).xx;
-				float2 temp_cast_7 = (1.0).xx;
-				float2 clampResult57_g7 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g7 + 0.25 ) ) - temp_cast_4 ) ) * 4.0 ) - temp_cast_5 ) * ( 0.35 / derivativesLength29_g7 ) ) , temp_cast_6 , temp_cast_7 );
+				float2 temp_cast_8 = (-1.0).xx;
+				float2 temp_cast_9 = (1.0).xx;
+				float2 clampResult57_g7 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g7 + 0.25 ) ) - temp_cast_6 ) ) * 4.0 ) - temp_cast_7 ) * ( 0.35 / derivativesLength29_g7 ) ) , temp_cast_8 , temp_cast_9 );
 				float2 break71_g7 = clampResult57_g7;
 				float2 break55_g7 = derivativesLength29_g7;
-				float4 lerpResult73_g7 = lerp( color7_g7 , color8_g7 , saturate( ( 0.5 + ( 0.5 * break71_g7.x * break71_g7.y * sqrt( saturate( ( 1.1 - max( break55_g7.x , break55_g7.y ) ) ) ) ) ) ));
+				float4 lerpResult73_g7 = lerp( _Color , temp_output_49_0 , saturate( ( 0.5 + ( 0.5 * break71_g7.x * break71_g7.y * sqrt( saturate( ( 1.1 - max( break55_g7.x , break55_g7.y ) ) ) ) ) ) ));
 				float dotResult21 = dot( ase_worldNormal , float3( 1,0,0 ) );
-				float4 color7_g6 = IsGammaSpace() ? float4(0.2,0.2,0.2,0) : float4(0.03310476,0.03310476,0.03310476,0);
-				float4 color8_g6 = IsGammaSpace() ? float4(0.6980392,0.6980392,0.6980392,0) : float4(0.4452012,0.4452012,0.4452012,0);
-				float2 FinalUV13_g6 = ( float2( 1,1 ) * ( 0.5 + (WorldPosition).xy ) );
-				float2 temp_cast_8 = (0.5).xx;
-				float2 temp_cast_9 = (1.0).xx;
-				float4 appendResult16_g6 = (float4(ddx( FinalUV13_g6 ) , ddy( FinalUV13_g6 )));
-				float4 UVDerivatives17_g6 = appendResult16_g6;
-				float4 break28_g6 = UVDerivatives17_g6;
-				float2 appendResult19_g6 = (float2(break28_g6.x , break28_g6.z));
-				float2 appendResult20_g6 = (float2(break28_g6.x , break28_g6.z));
-				float dotResult24_g6 = dot( appendResult19_g6 , appendResult20_g6 );
-				float2 appendResult21_g6 = (float2(break28_g6.y , break28_g6.w));
-				float2 appendResult22_g6 = (float2(break28_g6.y , break28_g6.w));
-				float dotResult23_g6 = dot( appendResult21_g6 , appendResult22_g6 );
-				float2 appendResult25_g6 = (float2(dotResult24_g6 , dotResult23_g6));
-				float2 derivativesLength29_g6 = sqrt( appendResult25_g6 );
-				float2 temp_cast_10 = (-1.0).xx;
-				float2 temp_cast_11 = (1.0).xx;
-				float2 clampResult57_g6 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g6 + 0.25 ) ) - temp_cast_8 ) ) * 4.0 ) - temp_cast_9 ) * ( 0.35 / derivativesLength29_g6 ) ) , temp_cast_10 , temp_cast_11 );
-				float2 break71_g6 = clampResult57_g6;
-				float2 break55_g6 = derivativesLength29_g6;
-				float4 lerpResult73_g6 = lerp( color7_g6 , color8_g6 , saturate( ( 0.5 + ( 0.5 * break71_g6.x * break71_g6.y * sqrt( saturate( ( 1.1 - max( break55_g6.x , break55_g6.y ) ) ) ) ) ) ));
+				float2 temp_cast_10 = (_Frequency).xx;
+				float2 FinalUV13_g8 = ( temp_cast_10 * ( 0.5 + (WorldPosition).xy ) );
+				float2 temp_cast_11 = (0.5).xx;
+				float2 temp_cast_12 = (1.0).xx;
+				float4 appendResult16_g8 = (float4(ddx( FinalUV13_g8 ) , ddy( FinalUV13_g8 )));
+				float4 UVDerivatives17_g8 = appendResult16_g8;
+				float4 break28_g8 = UVDerivatives17_g8;
+				float2 appendResult19_g8 = (float2(break28_g8.x , break28_g8.z));
+				float2 appendResult20_g8 = (float2(break28_g8.x , break28_g8.z));
+				float dotResult24_g8 = dot( appendResult19_g8 , appendResult20_g8 );
+				float2 appendResult21_g8 = (float2(break28_g8.y , break28_g8.w));
+				float2 appendResult22_g8 = (float2(break28_g8.y , break28_g8.w));
+				float dotResult23_g8 = dot( appendResult21_g8 , appendResult22_g8 );
+				float2 appendResult25_g8 = (float2(dotResult24_g8 , dotResult23_g8));
+				float2 derivativesLength29_g8 = sqrt( appendResult25_g8 );
+				float2 temp_cast_13 = (-1.0).xx;
+				float2 temp_cast_14 = (1.0).xx;
+				float2 clampResult57_g8 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g8 + 0.25 ) ) - temp_cast_11 ) ) * 4.0 ) - temp_cast_12 ) * ( 0.35 / derivativesLength29_g8 ) ) , temp_cast_13 , temp_cast_14 );
+				float2 break71_g8 = clampResult57_g8;
+				float2 break55_g8 = derivativesLength29_g8;
+				float4 lerpResult73_g8 = lerp( _Color , temp_output_49_0 , saturate( ( 0.5 + ( 0.5 * break71_g8.x * break71_g8.y * sqrt( saturate( ( 1.1 - max( break55_g8.x , break55_g8.y ) ) ) ) ) ) ));
 				float dotResult31 = dot( ase_worldNormal , float3( 0,0,1 ) );
 				
 				
-				float3 Albedo = saturate( ( ( lerpResult73_g5 * abs( dotResult16 ) ) + ( lerpResult73_g7 * abs( dotResult21 ) ) + ( lerpResult73_g6 * abs( dotResult31 ) ) ) ).rgb;
+				float3 Albedo = saturate( ( ( lerpResult73_g9 * abs( dotResult16 ) ) + ( lerpResult73_g7 * abs( dotResult21 ) ) + ( lerpResult73_g8 * abs( dotResult31 ) ) ) ).rgb;
 				float3 Emission = 0;
 				float Alpha = 1;
 				float AlphaClipThreshold = 0.5;
@@ -1526,7 +1552,7 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			#pragma multi_compile _ LOD_FADE_CROSSFADE
 			#pragma multi_compile_fog
 			#define ASE_FOG 1
-			#define ASE_SRP_VERSION 100501
+			#define ASE_SRP_VERSION 100600
 
 			
 			#pragma vertex vert
@@ -1569,7 +1595,9 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-						#ifdef _TRANSMISSION_ASE
+			float4 _Color;
+			float _Frequency;
+			#ifdef _TRANSMISSION_ASE
 				float _TransmissionShadow;
 			#endif
 			#ifdef _TRANSLUCENCY_ASE
@@ -1735,35 +1763,34 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 					#endif
 				#endif
 
-				float4 color7_g5 = IsGammaSpace() ? float4(0.2,0.2,0.2,0) : float4(0.03310476,0.03310476,0.03310476,0);
-				float4 color8_g5 = IsGammaSpace() ? float4(0.6980392,0.6980392,0.6980392,0) : float4(0.4452012,0.4452012,0.4452012,0);
-				float2 FinalUV13_g5 = ( float2( 1,1 ) * ( 0.5 + (WorldPosition).xz ) );
-				float2 temp_cast_0 = (0.5).xx;
-				float2 temp_cast_1 = (1.0).xx;
-				float4 appendResult16_g5 = (float4(ddx( FinalUV13_g5 ) , ddy( FinalUV13_g5 )));
-				float4 UVDerivatives17_g5 = appendResult16_g5;
-				float4 break28_g5 = UVDerivatives17_g5;
-				float2 appendResult19_g5 = (float2(break28_g5.x , break28_g5.z));
-				float2 appendResult20_g5 = (float2(break28_g5.x , break28_g5.z));
-				float dotResult24_g5 = dot( appendResult19_g5 , appendResult20_g5 );
-				float2 appendResult21_g5 = (float2(break28_g5.y , break28_g5.w));
-				float2 appendResult22_g5 = (float2(break28_g5.y , break28_g5.w));
-				float dotResult23_g5 = dot( appendResult21_g5 , appendResult22_g5 );
-				float2 appendResult25_g5 = (float2(dotResult24_g5 , dotResult23_g5));
-				float2 derivativesLength29_g5 = sqrt( appendResult25_g5 );
-				float2 temp_cast_2 = (-1.0).xx;
-				float2 temp_cast_3 = (1.0).xx;
-				float2 clampResult57_g5 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g5 + 0.25 ) ) - temp_cast_0 ) ) * 4.0 ) - temp_cast_1 ) * ( 0.35 / derivativesLength29_g5 ) ) , temp_cast_2 , temp_cast_3 );
-				float2 break71_g5 = clampResult57_g5;
-				float2 break55_g5 = derivativesLength29_g5;
-				float4 lerpResult73_g5 = lerp( color7_g5 , color8_g5 , saturate( ( 0.5 + ( 0.5 * break71_g5.x * break71_g5.y * sqrt( saturate( ( 1.1 - max( break55_g5.x , break55_g5.y ) ) ) ) ) ) ));
+				float4 temp_output_49_0 = ( _Color * 0.9 );
+				float2 temp_cast_0 = (_Frequency).xx;
+				float2 FinalUV13_g9 = ( temp_cast_0 * ( 0.5 + (WorldPosition).xz ) );
+				float2 temp_cast_1 = (0.5).xx;
+				float2 temp_cast_2 = (1.0).xx;
+				float4 appendResult16_g9 = (float4(ddx( FinalUV13_g9 ) , ddy( FinalUV13_g9 )));
+				float4 UVDerivatives17_g9 = appendResult16_g9;
+				float4 break28_g9 = UVDerivatives17_g9;
+				float2 appendResult19_g9 = (float2(break28_g9.x , break28_g9.z));
+				float2 appendResult20_g9 = (float2(break28_g9.x , break28_g9.z));
+				float dotResult24_g9 = dot( appendResult19_g9 , appendResult20_g9 );
+				float2 appendResult21_g9 = (float2(break28_g9.y , break28_g9.w));
+				float2 appendResult22_g9 = (float2(break28_g9.y , break28_g9.w));
+				float dotResult23_g9 = dot( appendResult21_g9 , appendResult22_g9 );
+				float2 appendResult25_g9 = (float2(dotResult24_g9 , dotResult23_g9));
+				float2 derivativesLength29_g9 = sqrt( appendResult25_g9 );
+				float2 temp_cast_3 = (-1.0).xx;
+				float2 temp_cast_4 = (1.0).xx;
+				float2 clampResult57_g9 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g9 + 0.25 ) ) - temp_cast_1 ) ) * 4.0 ) - temp_cast_2 ) * ( 0.35 / derivativesLength29_g9 ) ) , temp_cast_3 , temp_cast_4 );
+				float2 break71_g9 = clampResult57_g9;
+				float2 break55_g9 = derivativesLength29_g9;
+				float4 lerpResult73_g9 = lerp( _Color , temp_output_49_0 , saturate( ( 0.5 + ( 0.5 * break71_g9.x * break71_g9.y * sqrt( saturate( ( 1.1 - max( break55_g9.x , break55_g9.y ) ) ) ) ) ) ));
 				float3 ase_worldNormal = IN.ase_texcoord2.xyz;
 				float dotResult16 = dot( ase_worldNormal , float3( 0,1,0 ) );
-				float4 color7_g7 = IsGammaSpace() ? float4(0.2,0.2,0.2,0) : float4(0.03310476,0.03310476,0.03310476,0);
-				float4 color8_g7 = IsGammaSpace() ? float4(0.6980392,0.6980392,0.6980392,0) : float4(0.4452012,0.4452012,0.4452012,0);
-				float2 FinalUV13_g7 = ( float2( 1,1 ) * ( 0.5 + (WorldPosition).zy ) );
-				float2 temp_cast_4 = (0.5).xx;
-				float2 temp_cast_5 = (1.0).xx;
+				float2 temp_cast_5 = (_Frequency).xx;
+				float2 FinalUV13_g7 = ( temp_cast_5 * ( 0.5 + (WorldPosition).zy ) );
+				float2 temp_cast_6 = (0.5).xx;
+				float2 temp_cast_7 = (1.0).xx;
 				float4 appendResult16_g7 = (float4(ddx( FinalUV13_g7 ) , ddy( FinalUV13_g7 )));
 				float4 UVDerivatives17_g7 = appendResult16_g7;
 				float4 break28_g7 = UVDerivatives17_g7;
@@ -1775,39 +1802,38 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 				float dotResult23_g7 = dot( appendResult21_g7 , appendResult22_g7 );
 				float2 appendResult25_g7 = (float2(dotResult24_g7 , dotResult23_g7));
 				float2 derivativesLength29_g7 = sqrt( appendResult25_g7 );
-				float2 temp_cast_6 = (-1.0).xx;
-				float2 temp_cast_7 = (1.0).xx;
-				float2 clampResult57_g7 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g7 + 0.25 ) ) - temp_cast_4 ) ) * 4.0 ) - temp_cast_5 ) * ( 0.35 / derivativesLength29_g7 ) ) , temp_cast_6 , temp_cast_7 );
+				float2 temp_cast_8 = (-1.0).xx;
+				float2 temp_cast_9 = (1.0).xx;
+				float2 clampResult57_g7 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g7 + 0.25 ) ) - temp_cast_6 ) ) * 4.0 ) - temp_cast_7 ) * ( 0.35 / derivativesLength29_g7 ) ) , temp_cast_8 , temp_cast_9 );
 				float2 break71_g7 = clampResult57_g7;
 				float2 break55_g7 = derivativesLength29_g7;
-				float4 lerpResult73_g7 = lerp( color7_g7 , color8_g7 , saturate( ( 0.5 + ( 0.5 * break71_g7.x * break71_g7.y * sqrt( saturate( ( 1.1 - max( break55_g7.x , break55_g7.y ) ) ) ) ) ) ));
+				float4 lerpResult73_g7 = lerp( _Color , temp_output_49_0 , saturate( ( 0.5 + ( 0.5 * break71_g7.x * break71_g7.y * sqrt( saturate( ( 1.1 - max( break55_g7.x , break55_g7.y ) ) ) ) ) ) ));
 				float dotResult21 = dot( ase_worldNormal , float3( 1,0,0 ) );
-				float4 color7_g6 = IsGammaSpace() ? float4(0.2,0.2,0.2,0) : float4(0.03310476,0.03310476,0.03310476,0);
-				float4 color8_g6 = IsGammaSpace() ? float4(0.6980392,0.6980392,0.6980392,0) : float4(0.4452012,0.4452012,0.4452012,0);
-				float2 FinalUV13_g6 = ( float2( 1,1 ) * ( 0.5 + (WorldPosition).xy ) );
-				float2 temp_cast_8 = (0.5).xx;
-				float2 temp_cast_9 = (1.0).xx;
-				float4 appendResult16_g6 = (float4(ddx( FinalUV13_g6 ) , ddy( FinalUV13_g6 )));
-				float4 UVDerivatives17_g6 = appendResult16_g6;
-				float4 break28_g6 = UVDerivatives17_g6;
-				float2 appendResult19_g6 = (float2(break28_g6.x , break28_g6.z));
-				float2 appendResult20_g6 = (float2(break28_g6.x , break28_g6.z));
-				float dotResult24_g6 = dot( appendResult19_g6 , appendResult20_g6 );
-				float2 appendResult21_g6 = (float2(break28_g6.y , break28_g6.w));
-				float2 appendResult22_g6 = (float2(break28_g6.y , break28_g6.w));
-				float dotResult23_g6 = dot( appendResult21_g6 , appendResult22_g6 );
-				float2 appendResult25_g6 = (float2(dotResult24_g6 , dotResult23_g6));
-				float2 derivativesLength29_g6 = sqrt( appendResult25_g6 );
-				float2 temp_cast_10 = (-1.0).xx;
-				float2 temp_cast_11 = (1.0).xx;
-				float2 clampResult57_g6 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g6 + 0.25 ) ) - temp_cast_8 ) ) * 4.0 ) - temp_cast_9 ) * ( 0.35 / derivativesLength29_g6 ) ) , temp_cast_10 , temp_cast_11 );
-				float2 break71_g6 = clampResult57_g6;
-				float2 break55_g6 = derivativesLength29_g6;
-				float4 lerpResult73_g6 = lerp( color7_g6 , color8_g6 , saturate( ( 0.5 + ( 0.5 * break71_g6.x * break71_g6.y * sqrt( saturate( ( 1.1 - max( break55_g6.x , break55_g6.y ) ) ) ) ) ) ));
+				float2 temp_cast_10 = (_Frequency).xx;
+				float2 FinalUV13_g8 = ( temp_cast_10 * ( 0.5 + (WorldPosition).xy ) );
+				float2 temp_cast_11 = (0.5).xx;
+				float2 temp_cast_12 = (1.0).xx;
+				float4 appendResult16_g8 = (float4(ddx( FinalUV13_g8 ) , ddy( FinalUV13_g8 )));
+				float4 UVDerivatives17_g8 = appendResult16_g8;
+				float4 break28_g8 = UVDerivatives17_g8;
+				float2 appendResult19_g8 = (float2(break28_g8.x , break28_g8.z));
+				float2 appendResult20_g8 = (float2(break28_g8.x , break28_g8.z));
+				float dotResult24_g8 = dot( appendResult19_g8 , appendResult20_g8 );
+				float2 appendResult21_g8 = (float2(break28_g8.y , break28_g8.w));
+				float2 appendResult22_g8 = (float2(break28_g8.y , break28_g8.w));
+				float dotResult23_g8 = dot( appendResult21_g8 , appendResult22_g8 );
+				float2 appendResult25_g8 = (float2(dotResult24_g8 , dotResult23_g8));
+				float2 derivativesLength29_g8 = sqrt( appendResult25_g8 );
+				float2 temp_cast_13 = (-1.0).xx;
+				float2 temp_cast_14 = (1.0).xx;
+				float2 clampResult57_g8 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g8 + 0.25 ) ) - temp_cast_11 ) ) * 4.0 ) - temp_cast_12 ) * ( 0.35 / derivativesLength29_g8 ) ) , temp_cast_13 , temp_cast_14 );
+				float2 break71_g8 = clampResult57_g8;
+				float2 break55_g8 = derivativesLength29_g8;
+				float4 lerpResult73_g8 = lerp( _Color , temp_output_49_0 , saturate( ( 0.5 + ( 0.5 * break71_g8.x * break71_g8.y * sqrt( saturate( ( 1.1 - max( break55_g8.x , break55_g8.y ) ) ) ) ) ) ));
 				float dotResult31 = dot( ase_worldNormal , float3( 0,0,1 ) );
 				
 				
-				float3 Albedo = saturate( ( ( lerpResult73_g5 * abs( dotResult16 ) ) + ( lerpResult73_g7 * abs( dotResult21 ) ) + ( lerpResult73_g6 * abs( dotResult31 ) ) ) ).rgb;
+				float3 Albedo = saturate( ( ( lerpResult73_g9 * abs( dotResult16 ) ) + ( lerpResult73_g7 * abs( dotResult21 ) ) + ( lerpResult73_g8 * abs( dotResult31 ) ) ) ).rgb;
 				float Alpha = 1;
 				float AlphaClipThreshold = 0.5;
 
@@ -1841,7 +1867,7 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			#pragma multi_compile _ LOD_FADE_CROSSFADE
 			#pragma multi_compile_fog
 			#define ASE_FOG 1
-			#define ASE_SRP_VERSION 100501
+			#define ASE_SRP_VERSION 100600
 
 			
 			#pragma vertex vert
@@ -1880,7 +1906,9 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-						#ifdef _TRANSMISSION_ASE
+			float4 _Color;
+			float _Frequency;
+			#ifdef _TRANSMISSION_ASE
 				float _TransmissionShadow;
 			#endif
 			#ifdef _TRANSLUCENCY_ASE
@@ -2095,7 +2123,7 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			#pragma multi_compile _ LOD_FADE_CROSSFADE
 			#pragma multi_compile_fog
 			#define ASE_FOG 1
-			#define ASE_SRP_VERSION 100501
+			#define ASE_SRP_VERSION 100600
 
 			
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS
@@ -2164,7 +2192,9 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 			};
 
 			CBUFFER_START(UnityPerMaterial)
-						#ifdef _TRANSMISSION_ASE
+			float4 _Color;
+			float _Frequency;
+			#ifdef _TRANSMISSION_ASE
 				float _TransmissionShadow;
 			#endif
 			#ifdef _TRANSLUCENCY_ASE
@@ -2379,34 +2409,33 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 	
 				WorldViewDirection = SafeNormalize( WorldViewDirection );
 
-				float4 color7_g5 = IsGammaSpace() ? float4(0.2,0.2,0.2,0) : float4(0.03310476,0.03310476,0.03310476,0);
-				float4 color8_g5 = IsGammaSpace() ? float4(0.6980392,0.6980392,0.6980392,0) : float4(0.4452012,0.4452012,0.4452012,0);
-				float2 FinalUV13_g5 = ( float2( 1,1 ) * ( 0.5 + (WorldPosition).xz ) );
-				float2 temp_cast_0 = (0.5).xx;
-				float2 temp_cast_1 = (1.0).xx;
-				float4 appendResult16_g5 = (float4(ddx( FinalUV13_g5 ) , ddy( FinalUV13_g5 )));
-				float4 UVDerivatives17_g5 = appendResult16_g5;
-				float4 break28_g5 = UVDerivatives17_g5;
-				float2 appendResult19_g5 = (float2(break28_g5.x , break28_g5.z));
-				float2 appendResult20_g5 = (float2(break28_g5.x , break28_g5.z));
-				float dotResult24_g5 = dot( appendResult19_g5 , appendResult20_g5 );
-				float2 appendResult21_g5 = (float2(break28_g5.y , break28_g5.w));
-				float2 appendResult22_g5 = (float2(break28_g5.y , break28_g5.w));
-				float dotResult23_g5 = dot( appendResult21_g5 , appendResult22_g5 );
-				float2 appendResult25_g5 = (float2(dotResult24_g5 , dotResult23_g5));
-				float2 derivativesLength29_g5 = sqrt( appendResult25_g5 );
-				float2 temp_cast_2 = (-1.0).xx;
-				float2 temp_cast_3 = (1.0).xx;
-				float2 clampResult57_g5 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g5 + 0.25 ) ) - temp_cast_0 ) ) * 4.0 ) - temp_cast_1 ) * ( 0.35 / derivativesLength29_g5 ) ) , temp_cast_2 , temp_cast_3 );
-				float2 break71_g5 = clampResult57_g5;
-				float2 break55_g5 = derivativesLength29_g5;
-				float4 lerpResult73_g5 = lerp( color7_g5 , color8_g5 , saturate( ( 0.5 + ( 0.5 * break71_g5.x * break71_g5.y * sqrt( saturate( ( 1.1 - max( break55_g5.x , break55_g5.y ) ) ) ) ) ) ));
+				float4 temp_output_49_0 = ( _Color * 0.9 );
+				float2 temp_cast_0 = (_Frequency).xx;
+				float2 FinalUV13_g9 = ( temp_cast_0 * ( 0.5 + (WorldPosition).xz ) );
+				float2 temp_cast_1 = (0.5).xx;
+				float2 temp_cast_2 = (1.0).xx;
+				float4 appendResult16_g9 = (float4(ddx( FinalUV13_g9 ) , ddy( FinalUV13_g9 )));
+				float4 UVDerivatives17_g9 = appendResult16_g9;
+				float4 break28_g9 = UVDerivatives17_g9;
+				float2 appendResult19_g9 = (float2(break28_g9.x , break28_g9.z));
+				float2 appendResult20_g9 = (float2(break28_g9.x , break28_g9.z));
+				float dotResult24_g9 = dot( appendResult19_g9 , appendResult20_g9 );
+				float2 appendResult21_g9 = (float2(break28_g9.y , break28_g9.w));
+				float2 appendResult22_g9 = (float2(break28_g9.y , break28_g9.w));
+				float dotResult23_g9 = dot( appendResult21_g9 , appendResult22_g9 );
+				float2 appendResult25_g9 = (float2(dotResult24_g9 , dotResult23_g9));
+				float2 derivativesLength29_g9 = sqrt( appendResult25_g9 );
+				float2 temp_cast_3 = (-1.0).xx;
+				float2 temp_cast_4 = (1.0).xx;
+				float2 clampResult57_g9 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g9 + 0.25 ) ) - temp_cast_1 ) ) * 4.0 ) - temp_cast_2 ) * ( 0.35 / derivativesLength29_g9 ) ) , temp_cast_3 , temp_cast_4 );
+				float2 break71_g9 = clampResult57_g9;
+				float2 break55_g9 = derivativesLength29_g9;
+				float4 lerpResult73_g9 = lerp( _Color , temp_output_49_0 , saturate( ( 0.5 + ( 0.5 * break71_g9.x * break71_g9.y * sqrt( saturate( ( 1.1 - max( break55_g9.x , break55_g9.y ) ) ) ) ) ) ));
 				float dotResult16 = dot( WorldNormal , float3( 0,1,0 ) );
-				float4 color7_g7 = IsGammaSpace() ? float4(0.2,0.2,0.2,0) : float4(0.03310476,0.03310476,0.03310476,0);
-				float4 color8_g7 = IsGammaSpace() ? float4(0.6980392,0.6980392,0.6980392,0) : float4(0.4452012,0.4452012,0.4452012,0);
-				float2 FinalUV13_g7 = ( float2( 1,1 ) * ( 0.5 + (WorldPosition).zy ) );
-				float2 temp_cast_4 = (0.5).xx;
-				float2 temp_cast_5 = (1.0).xx;
+				float2 temp_cast_5 = (_Frequency).xx;
+				float2 FinalUV13_g7 = ( temp_cast_5 * ( 0.5 + (WorldPosition).zy ) );
+				float2 temp_cast_6 = (0.5).xx;
+				float2 temp_cast_7 = (1.0).xx;
 				float4 appendResult16_g7 = (float4(ddx( FinalUV13_g7 ) , ddy( FinalUV13_g7 )));
 				float4 UVDerivatives17_g7 = appendResult16_g7;
 				float4 break28_g7 = UVDerivatives17_g7;
@@ -2418,38 +2447,37 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 				float dotResult23_g7 = dot( appendResult21_g7 , appendResult22_g7 );
 				float2 appendResult25_g7 = (float2(dotResult24_g7 , dotResult23_g7));
 				float2 derivativesLength29_g7 = sqrt( appendResult25_g7 );
-				float2 temp_cast_6 = (-1.0).xx;
-				float2 temp_cast_7 = (1.0).xx;
-				float2 clampResult57_g7 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g7 + 0.25 ) ) - temp_cast_4 ) ) * 4.0 ) - temp_cast_5 ) * ( 0.35 / derivativesLength29_g7 ) ) , temp_cast_6 , temp_cast_7 );
+				float2 temp_cast_8 = (-1.0).xx;
+				float2 temp_cast_9 = (1.0).xx;
+				float2 clampResult57_g7 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g7 + 0.25 ) ) - temp_cast_6 ) ) * 4.0 ) - temp_cast_7 ) * ( 0.35 / derivativesLength29_g7 ) ) , temp_cast_8 , temp_cast_9 );
 				float2 break71_g7 = clampResult57_g7;
 				float2 break55_g7 = derivativesLength29_g7;
-				float4 lerpResult73_g7 = lerp( color7_g7 , color8_g7 , saturate( ( 0.5 + ( 0.5 * break71_g7.x * break71_g7.y * sqrt( saturate( ( 1.1 - max( break55_g7.x , break55_g7.y ) ) ) ) ) ) ));
+				float4 lerpResult73_g7 = lerp( _Color , temp_output_49_0 , saturate( ( 0.5 + ( 0.5 * break71_g7.x * break71_g7.y * sqrt( saturate( ( 1.1 - max( break55_g7.x , break55_g7.y ) ) ) ) ) ) ));
 				float dotResult21 = dot( WorldNormal , float3( 1,0,0 ) );
-				float4 color7_g6 = IsGammaSpace() ? float4(0.2,0.2,0.2,0) : float4(0.03310476,0.03310476,0.03310476,0);
-				float4 color8_g6 = IsGammaSpace() ? float4(0.6980392,0.6980392,0.6980392,0) : float4(0.4452012,0.4452012,0.4452012,0);
-				float2 FinalUV13_g6 = ( float2( 1,1 ) * ( 0.5 + (WorldPosition).xy ) );
-				float2 temp_cast_8 = (0.5).xx;
-				float2 temp_cast_9 = (1.0).xx;
-				float4 appendResult16_g6 = (float4(ddx( FinalUV13_g6 ) , ddy( FinalUV13_g6 )));
-				float4 UVDerivatives17_g6 = appendResult16_g6;
-				float4 break28_g6 = UVDerivatives17_g6;
-				float2 appendResult19_g6 = (float2(break28_g6.x , break28_g6.z));
-				float2 appendResult20_g6 = (float2(break28_g6.x , break28_g6.z));
-				float dotResult24_g6 = dot( appendResult19_g6 , appendResult20_g6 );
-				float2 appendResult21_g6 = (float2(break28_g6.y , break28_g6.w));
-				float2 appendResult22_g6 = (float2(break28_g6.y , break28_g6.w));
-				float dotResult23_g6 = dot( appendResult21_g6 , appendResult22_g6 );
-				float2 appendResult25_g6 = (float2(dotResult24_g6 , dotResult23_g6));
-				float2 derivativesLength29_g6 = sqrt( appendResult25_g6 );
-				float2 temp_cast_10 = (-1.0).xx;
-				float2 temp_cast_11 = (1.0).xx;
-				float2 clampResult57_g6 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g6 + 0.25 ) ) - temp_cast_8 ) ) * 4.0 ) - temp_cast_9 ) * ( 0.35 / derivativesLength29_g6 ) ) , temp_cast_10 , temp_cast_11 );
-				float2 break71_g6 = clampResult57_g6;
-				float2 break55_g6 = derivativesLength29_g6;
-				float4 lerpResult73_g6 = lerp( color7_g6 , color8_g6 , saturate( ( 0.5 + ( 0.5 * break71_g6.x * break71_g6.y * sqrt( saturate( ( 1.1 - max( break55_g6.x , break55_g6.y ) ) ) ) ) ) ));
+				float2 temp_cast_10 = (_Frequency).xx;
+				float2 FinalUV13_g8 = ( temp_cast_10 * ( 0.5 + (WorldPosition).xy ) );
+				float2 temp_cast_11 = (0.5).xx;
+				float2 temp_cast_12 = (1.0).xx;
+				float4 appendResult16_g8 = (float4(ddx( FinalUV13_g8 ) , ddy( FinalUV13_g8 )));
+				float4 UVDerivatives17_g8 = appendResult16_g8;
+				float4 break28_g8 = UVDerivatives17_g8;
+				float2 appendResult19_g8 = (float2(break28_g8.x , break28_g8.z));
+				float2 appendResult20_g8 = (float2(break28_g8.x , break28_g8.z));
+				float dotResult24_g8 = dot( appendResult19_g8 , appendResult20_g8 );
+				float2 appendResult21_g8 = (float2(break28_g8.y , break28_g8.w));
+				float2 appendResult22_g8 = (float2(break28_g8.y , break28_g8.w));
+				float dotResult23_g8 = dot( appendResult21_g8 , appendResult22_g8 );
+				float2 appendResult25_g8 = (float2(dotResult24_g8 , dotResult23_g8));
+				float2 derivativesLength29_g8 = sqrt( appendResult25_g8 );
+				float2 temp_cast_13 = (-1.0).xx;
+				float2 temp_cast_14 = (1.0).xx;
+				float2 clampResult57_g8 = clamp( ( ( ( abs( ( frac( ( FinalUV13_g8 + 0.25 ) ) - temp_cast_11 ) ) * 4.0 ) - temp_cast_12 ) * ( 0.35 / derivativesLength29_g8 ) ) , temp_cast_13 , temp_cast_14 );
+				float2 break71_g8 = clampResult57_g8;
+				float2 break55_g8 = derivativesLength29_g8;
+				float4 lerpResult73_g8 = lerp( _Color , temp_output_49_0 , saturate( ( 0.5 + ( 0.5 * break71_g8.x * break71_g8.y * sqrt( saturate( ( 1.1 - max( break55_g8.x , break55_g8.y ) ) ) ) ) ) ));
 				float dotResult31 = dot( WorldNormal , float3( 0,0,1 ) );
 				
-				float3 Albedo = saturate( ( ( lerpResult73_g5 * abs( dotResult16 ) ) + ( lerpResult73_g7 * abs( dotResult21 ) ) + ( lerpResult73_g6 * abs( dotResult31 ) ) ) ).rgb;
+				float3 Albedo = saturate( ( ( lerpResult73_g9 * abs( dotResult16 ) ) + ( lerpResult73_g7 * abs( dotResult21 ) ) + ( lerpResult73_g8 * abs( dotResult31 ) ) ) ).rgb;
 				float3 Normal = float3(0, 0, 1);
 				float3 Emission = 0;
 				float3 Specular = 0.5;
@@ -2604,63 +2632,78 @@ Shader "UnityJigglePhysicsExample/URP/TriplanarChecker"
 		}
 		
 	}
-	/*ase_lod*/
+	
 	CustomEditor "UnityEditor.ShaderGraph.PBRMasterGUI"
 	Fallback "Hidden/InternalErrorShader"
 	
 }
 /*ASEBEGIN
-Version=18912
-25;189;1671;781;2896.023;701.4756;2.432278;True;True
+Version=18934
+232;475;2138;914;2385.097;710.007;1;True;True
 Node;AmplifyShaderEditor.WorldPosInputsNode;3;-1572.942,-225.8824;Inherit;False;0;4;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3
+Node;AmplifyShaderEditor.ColorNode;47;-1631.049,-650.5576;Inherit;False;Property;_Color;Color;0;0;Create;True;0;0;0;False;0;False;0.5,0.5,0.5,1;0.5,0.5,0.5,1;True;0;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
+Node;AmplifyShaderEditor.RangedFloatNode;50;-1654.344,-438.1281;Inherit;False;Constant;_Float11;Float 11;1;0;Create;True;0;0;0;False;0;False;0.9;0;0;0;0;1;FLOAT;0
 Node;AmplifyShaderEditor.WorldNormalVector;9;-1366.103,355.8436;Inherit;False;False;1;0;FLOAT3;0,0,1;False;4;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3
 Node;AmplifyShaderEditor.SwizzleNode;15;-1342.801,-309.7083;Inherit;False;FLOAT2;0;2;2;3;1;0;FLOAT3;0,0,0;False;1;FLOAT2;0
-Node;AmplifyShaderEditor.SwizzleNode;27;-1341.534,-187.1434;Inherit;False;FLOAT2;2;1;2;3;1;0;FLOAT3;0,0,0;False;1;FLOAT2;0
-Node;AmplifyShaderEditor.SwizzleNode;20;-1342.931,-51.64333;Inherit;False;FLOAT2;0;1;2;3;1;0;FLOAT3;0,0,0;False;1;FLOAT2;0
-Node;AmplifyShaderEditor.DotProductOpNode;31;-1132.196,614.3189;Inherit;False;2;0;FLOAT3;0,0,0;False;1;FLOAT3;0,0,1;False;1;FLOAT;0
-Node;AmplifyShaderEditor.DotProductOpNode;21;-1112.609,492.03;Inherit;False;2;0;FLOAT3;0,0,0;False;1;FLOAT3;1,0,0;False;1;FLOAT;0
+Node;AmplifyShaderEditor.SimpleMultiplyOpNode;49;-1335.344,-639.1281;Inherit;False;2;2;0;COLOR;0,0,0,0;False;1;FLOAT;0;False;1;COLOR;0
 Node;AmplifyShaderEditor.DotProductOpNode;16;-1119.609,359.0301;Inherit;False;2;0;FLOAT3;0,0,0;False;1;FLOAT3;0,1,0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.AbsOpNode;22;-949.6089,483.03;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.FunctionNode;30;-1098.072,35.26633;Inherit;False;Checkerboard;-1;;6;43dad715d66e03a4c8ad5f9564018081;0;4;1;FLOAT2;0,0;False;2;COLOR;0,0,0,0;False;3;COLOR;0,0,0,0;False;4;FLOAT2;0,0;False;1;COLOR;0
-Node;AmplifyShaderEditor.FunctionNode;29;-1100.594,-181.5717;Inherit;False;Checkerboard;-1;;7;43dad715d66e03a4c8ad5f9564018081;0;4;1;FLOAT2;0,0;False;2;COLOR;0,0,0,0;False;3;COLOR;0,0,0,0;False;4;FLOAT2;0,0;False;1;COLOR;0
-Node;AmplifyShaderEditor.AbsOpNode;17;-960.6089,344.0302;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
+Node;AmplifyShaderEditor.RangedFloatNode;51;-1975.097,-242.007;Inherit;False;Property;_Frequency;Frequency;1;0;Create;True;0;0;0;False;0;False;0;0.5;0;1;0;1;FLOAT;0
+Node;AmplifyShaderEditor.DotProductOpNode;31;-1132.196,614.3189;Inherit;False;2;0;FLOAT3;0,0,0;False;1;FLOAT3;0,0,1;False;1;FLOAT;0
+Node;AmplifyShaderEditor.SwizzleNode;20;-1342.931,-51.64333;Inherit;False;FLOAT2;0;1;2;3;1;0;FLOAT3;0,0,0;False;1;FLOAT2;0
+Node;AmplifyShaderEditor.SwizzleNode;27;-1341.534,-187.1434;Inherit;False;FLOAT2;2;1;2;3;1;0;FLOAT3;0,0,0;False;1;FLOAT2;0
+Node;AmplifyShaderEditor.DotProductOpNode;21;-1112.609,492.03;Inherit;False;2;0;FLOAT3;0,0,0;False;1;FLOAT3;1,0,0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.AbsOpNode;32;-958.1967,612.3188;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
-Node;AmplifyShaderEditor.FunctionNode;2;-1096.022,-411.5119;Inherit;False;Checkerboard;-1;;5;43dad715d66e03a4c8ad5f9564018081;0;4;1;FLOAT2;0,0;False;2;COLOR;0,0,0,0;False;3;COLOR;0,0,0,0;False;4;FLOAT2;0,0;False;1;COLOR;0
+Node;AmplifyShaderEditor.AbsOpNode;17;-960.6089,344.0302;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
+Node;AmplifyShaderEditor.FunctionNode;2;-1096.022,-411.5119;Inherit;False;Checkerboard;-1;;9;43dad715d66e03a4c8ad5f9564018081;0;4;1;FLOAT2;0,0;False;2;COLOR;0,0,0,0;False;3;COLOR;0,0,0,0;False;4;FLOAT2;0,0;False;1;COLOR;0
+Node;AmplifyShaderEditor.FunctionNode;30;-1098.072,35.26633;Inherit;False;Checkerboard;-1;;8;43dad715d66e03a4c8ad5f9564018081;0;4;1;FLOAT2;0,0;False;2;COLOR;0,0,0,0;False;3;COLOR;0,0,0,0;False;4;FLOAT2;0,0;False;1;COLOR;0
+Node;AmplifyShaderEditor.FunctionNode;29;-1100.594,-181.5717;Inherit;False;Checkerboard;-1;;7;43dad715d66e03a4c8ad5f9564018081;0;4;1;FLOAT2;0,0;False;2;COLOR;0,0,0,0;False;3;COLOR;0,0,0,0;False;4;FLOAT2;0,0;False;1;COLOR;0
+Node;AmplifyShaderEditor.AbsOpNode;22;-949.6089,483.03;Inherit;False;1;0;FLOAT;0;False;1;FLOAT;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode;34;-782.6528,-394.7073;Inherit;False;2;2;0;COLOR;0,0,0,0;False;1;FLOAT;0;False;1;COLOR;0
-Node;AmplifyShaderEditor.SimpleMultiplyOpNode;36;-771.9108,38.61564;Inherit;False;2;2;0;COLOR;0,0,0,0;False;1;FLOAT;0;False;1;COLOR;0
 Node;AmplifyShaderEditor.SimpleMultiplyOpNode;35;-772.8691,-158.9568;Inherit;False;2;2;0;COLOR;0,0,0,0;False;1;FLOAT;0;False;1;COLOR;0
+Node;AmplifyShaderEditor.SimpleMultiplyOpNode;36;-771.9108,38.61564;Inherit;False;2;2;0;COLOR;0,0,0,0;False;1;FLOAT;0;False;1;COLOR;0
 Node;AmplifyShaderEditor.SimpleAddOpNode;37;-492.041,-189.834;Inherit;False;3;3;0;COLOR;0,0,0,0;False;1;COLOR;0,0,0,0;False;2;COLOR;0,0,0,0;False;1;COLOR;0
 Node;AmplifyShaderEditor.SaturateNode;38;-247.7069,21.37286;Inherit;False;1;0;COLOR;0,0,0,0;False;1;COLOR;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;44;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;Universal2D;0;5;Universal2D;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;True;1;1;False;-1;0;False;-1;1;1;False;-1;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;True;True;True;True;0;False;-1;False;False;False;False;False;False;False;False;False;True;1;False;-1;True;3;False;-1;True;True;0;False;-1;0;False;-1;True;1;LightMode=Universal2D;False;False;0;Hidden/InternalErrorShader;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;45;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;DepthNormals;0;6;DepthNormals;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;True;1;1;False;-1;0;False;-1;0;1;False;-1;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;False;-1;True;3;False;-1;False;True;1;LightMode=DepthNormals;False;False;0;Hidden/InternalErrorShader;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;39;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;ExtraPrePass;0;0;ExtraPrePass;5;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;True;1;1;False;-1;0;False;-1;0;1;False;-1;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;True;True;True;True;0;False;-1;False;False;False;False;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;False;True;1;False;-1;True;3;False;-1;True;True;0;False;-1;0;False;-1;True;0;False;False;0;Hidden/InternalErrorShader;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;40;0,0;Float;False;True;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;2;UnityJigglePhysicsExample/URP/TriplanarChecker;94348b07e5e8bab40bd6c8a1e3df54cd;True;Forward;0;1;Forward;18;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;True;1;1;False;-1;0;False;-1;1;1;False;-1;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;True;True;True;True;0;False;-1;False;False;False;False;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;False;True;1;False;-1;True;3;False;-1;True;True;0;False;-1;0;False;-1;True;1;LightMode=UniversalForward;False;False;0;Hidden/InternalErrorShader;0;0;Standard;38;Workflow;1;Surface;0;  Refraction Model;0;  Blend;0;Two Sided;1;Fragment Normal Space,InvertActionOnDeselection;0;Transmission;0;  Transmission Shadow;0.5,False,-1;Translucency;0;  Translucency Strength;1,False,-1;  Normal Distortion;0.5,False,-1;  Scattering;2,False,-1;  Direct;0.9,False,-1;  Ambient;0.1,False,-1;  Shadow;0.5,False,-1;Cast Shadows;1;  Use Shadow Threshold;0;Receive Shadows;1;GPU Instancing;1;LOD CrossFade;1;Built-in Fog;1;_FinalColorxAlpha;0;Meta Pass;1;Override Baked GI;0;Extra Pre Pass;0;DOTS Instancing;0;Tessellation;0;  Phong;0;  Strength;0.5,False,-1;  Type;0;  Tess;16,False,-1;  Min;10,False,-1;  Max;25,False,-1;  Edge Length;16,False,-1;  Max Displacement;25,False,-1;Write Depth;0;  Early Z;0;Vertex Position,InvertActionOnDeselection;1;0;8;False;True;True;True;True;True;True;True;False;;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;41;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;ShadowCaster;0;2;ShadowCaster;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;False;-1;True;3;False;-1;False;True;1;LightMode=ShadowCaster;False;False;0;Hidden/InternalErrorShader;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;42;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;DepthOnly;0;3;DepthOnly;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;False;False;True;False;False;False;False;0;False;-1;False;False;False;False;False;False;False;False;False;True;1;False;-1;False;False;True;1;LightMode=DepthOnly;False;False;0;Hidden/InternalErrorShader;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;43;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;Meta;0;4;Meta;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;2;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;LightMode=Meta;False;False;0;Hidden/InternalErrorShader;0;0;Standard;0;False;0
-Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;46;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;GBuffer;0;7;GBuffer;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;True;1;1;False;-1;0;False;-1;1;1;False;-1;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;True;True;True;True;0;False;-1;False;False;False;False;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;False;True;1;False;-1;True;3;False;-1;True;True;0;False;-1;0;False;-1;True;1;LightMode=UniversalGBuffer;False;False;0;Hidden/InternalErrorShader;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;42;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;DepthOnly;0;3;DepthOnly;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;False;False;True;False;False;False;False;0;False;-1;False;False;False;False;False;False;False;False;False;True;1;False;-1;False;False;True;1;LightMode=DepthOnly;False;False;0;Hidden/InternalErrorShader;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;43;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;Meta;0;4;Meta;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;2;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;LightMode=Meta;False;False;0;Hidden/InternalErrorShader;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;46;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;GBuffer;0;7;GBuffer;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;True;1;1;False;-1;0;False;-1;1;1;False;-1;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;True;True;True;True;0;False;-1;False;False;False;False;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;False;True;1;False;-1;True;3;False;-1;True;True;0;False;-1;0;False;-1;True;1;LightMode=UniversalGBuffer;False;False;0;Hidden/InternalErrorShader;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;44;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;Universal2D;0;5;Universal2D;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;True;1;1;False;-1;0;False;-1;1;1;False;-1;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;True;True;True;True;0;False;-1;False;False;False;False;False;False;False;False;False;True;1;False;-1;True;3;False;-1;True;True;0;False;-1;0;False;-1;True;1;LightMode=Universal2D;False;False;0;Hidden/InternalErrorShader;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;45;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;DepthNormals;0;6;DepthNormals;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;True;1;1;False;-1;0;False;-1;0;1;False;-1;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;1;False;-1;True;3;False;-1;False;True;1;LightMode=DepthNormals;False;False;0;Hidden/InternalErrorShader;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;39;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;ExtraPrePass;0;0;ExtraPrePass;5;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;True;1;1;False;-1;0;False;-1;0;1;False;-1;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;True;True;True;True;0;False;-1;False;False;False;False;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;False;True;1;False;-1;True;3;False;-1;True;True;0;False;-1;0;False;-1;True;0;False;False;0;Hidden/InternalErrorShader;0;0;Standard;0;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;40;0,0;Float;False;True;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;2;UnityJigglePhysicsExample/URP/TriplanarChecker;94348b07e5e8bab40bd6c8a1e3df54cd;True;Forward;0;1;Forward;18;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;True;1;1;False;-1;0;False;-1;1;1;False;-1;0;False;-1;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;True;True;True;True;0;False;-1;False;False;False;False;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;False;True;1;False;-1;True;3;False;-1;True;True;0;False;-1;0;False;-1;True;1;LightMode=UniversalForward;False;False;0;Hidden/InternalErrorShader;0;0;Standard;38;Workflow;1;0;Surface;0;0;  Refraction Model;0;0;  Blend;0;0;Two Sided;1;0;Fragment Normal Space,InvertActionOnDeselection;0;0;Transmission;0;0;  Transmission Shadow;0.5,False,-1;0;Translucency;0;0;  Translucency Strength;1,False,-1;0;  Normal Distortion;0.5,False,-1;0;  Scattering;2,False,-1;0;  Direct;0.9,False,-1;0;  Ambient;0.1,False,-1;0;  Shadow;0.5,False,-1;0;Cast Shadows;1;0;  Use Shadow Threshold;0;0;Receive Shadows;1;0;GPU Instancing;1;0;LOD CrossFade;1;0;Built-in Fog;1;0;_FinalColorxAlpha;0;0;Meta Pass;1;0;Override Baked GI;0;0;Extra Pre Pass;0;0;DOTS Instancing;0;0;Tessellation;0;0;  Phong;0;0;  Strength;0.5,False,-1;0;  Type;0;0;  Tess;16,False,-1;0;  Min;10,False,-1;0;  Max;25,False,-1;0;  Edge Length;16,False,-1;0;  Max Displacement;25,False,-1;0;Write Depth;0;0;  Early Z;0;0;Vertex Position,InvertActionOnDeselection;1;0;0;8;False;True;True;True;True;True;True;True;False;;False;0
+Node;AmplifyShaderEditor.TemplateMultiPassMasterNode;41;0,0;Float;False;False;-1;2;UnityEditor.ShaderGraph.PBRMasterGUI;0;1;New Amplify Shader;94348b07e5e8bab40bd6c8a1e3df54cd;True;ShadowCaster;0;2;ShadowCaster;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;True;0;False;-1;False;False;False;False;False;False;False;False;False;True;False;255;False;-1;255;False;-1;255;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;7;False;-1;1;False;-1;1;False;-1;1;False;-1;False;False;False;False;True;3;RenderPipeline=UniversalPipeline;RenderType=Opaque=RenderType;Queue=Geometry=Queue=0;True;0;True;17;d3d9;d3d11;glcore;gles;gles3;metal;vulkan;xbox360;xboxone;xboxseries;ps4;playstation;psp2;n3ds;wiiu;switch;nomrt;0;False;False;False;False;False;False;False;False;False;False;False;False;True;0;False;-1;False;False;False;True;False;False;False;False;0;False;-1;False;False;False;False;False;False;False;False;False;True;1;False;-1;True;3;False;-1;False;True;1;LightMode=ShadowCaster;False;False;0;Hidden/InternalErrorShader;0;0;Standard;0;False;0
 WireConnection;15;0;3;0
-WireConnection;27;0;3;0
-WireConnection;20;0;3;0
-WireConnection;31;0;9;0
-WireConnection;21;0;9;0
+WireConnection;49;0;47;0
+WireConnection;49;1;50;0
 WireConnection;16;0;9;0
-WireConnection;22;0;21;0
-WireConnection;30;1;20;0
-WireConnection;29;1;27;0
-WireConnection;17;0;16;0
+WireConnection;31;0;9;0
+WireConnection;20;0;3;0
+WireConnection;27;0;3;0
+WireConnection;21;0;9;0
 WireConnection;32;0;31;0
+WireConnection;17;0;16;0
 WireConnection;2;1;15;0
+WireConnection;2;2;47;0
+WireConnection;2;3;49;0
+WireConnection;2;4;51;0
+WireConnection;30;1;20;0
+WireConnection;30;2;47;0
+WireConnection;30;3;49;0
+WireConnection;30;4;51;0
+WireConnection;29;1;27;0
+WireConnection;29;2;47;0
+WireConnection;29;3;49;0
+WireConnection;29;4;51;0
+WireConnection;22;0;21;0
 WireConnection;34;0;2;0
 WireConnection;34;1;17;0
-WireConnection;36;0;30;0
-WireConnection;36;1;32;0
 WireConnection;35;0;29;0
 WireConnection;35;1;22;0
+WireConnection;36;0;30;0
+WireConnection;36;1;32;0
 WireConnection;37;0;34;0
 WireConnection;37;1;35;0
 WireConnection;37;2;36;0
 WireConnection;38;0;37;0
 WireConnection;40;0;38;0
 ASEEND*/
-//CHKSM=5CC9B340CB0A428215D42CCB1718D4EFFB157753
+//CHKSM=5650C31FCEF5BEA81EBBB017CAF288F819016F34

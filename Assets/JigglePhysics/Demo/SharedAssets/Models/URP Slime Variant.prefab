@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &422292633
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1457149274378260073}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a63eef503a567ef4eaf3898b5732b105, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interpolate: 1
+  jiggleZones:
+  - target: {fileID: 2266160706564429011}
+    radius: 2
+    jiggleSettings: {fileID: 11400000, guid: 8113d3f4602dc8a44826cbd8c5d35a6f, type: 2}
+  targetSkins:
+  - {fileID: 2802855380206639223}
+  debugDraw: 0
+--- !u!135 &5929570657323695729
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5128504645381406365}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.80311394
+  m_Center: {x: 0, y: 0.7479472, z: 0}
+--- !u!1001 &1799676623260611384
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: a7801a69ff6ba684d8f6bbb22058906a, type: 3}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a7801a69ff6ba684d8f6bbb22058906a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a7801a69ff6ba684d8f6bbb22058906a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: a7801a69ff6ba684d8f6bbb22058906a, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -4747917413154575537, guid: a7801a69ff6ba684d8f6bbb22058906a, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 06c6dd2e61dc49b4e9c37d0e3548cbdc, type: 2}
+    - target: {fileID: 919132149155446097, guid: a7801a69ff6ba684d8f6bbb22058906a, type: 3}
+      propertyPath: m_Name
+      value: URP Slime Variant
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a7801a69ff6ba684d8f6bbb22058906a, type: 3}
+--- !u!1 &1457149274378260073 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: a7801a69ff6ba684d8f6bbb22058906a, type: 3}
+  m_PrefabInstance: {fileID: 1799676623260611384}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2266160706564429011 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a7801a69ff6ba684d8f6bbb22058906a, type: 3}
+  m_PrefabInstance: {fileID: 1799676623260611384}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &5128504645381406365 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6905609870639353253, guid: a7801a69ff6ba684d8f6bbb22058906a, type: 3}
+  m_PrefabInstance: {fileID: 1799676623260611384}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &2802855380206639223 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -4747917413154575537, guid: a7801a69ff6ba684d8f6bbb22058906a, type: 3}
+  m_PrefabInstance: {fileID: 1799676623260611384}
+  m_PrefabAsset: {fileID: 0}

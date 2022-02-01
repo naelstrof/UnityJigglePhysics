@@ -1,37 +1,12 @@
 # Unity JigglePhysics
 
-[![openupm](https://img.shields.io/npm/v/com.naelstrof.jigglephysics?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.naelstrof.jigglephysics/)
-
 A relativistic squash-and-stretch jigglebone physics solution for characters in Unity.
 
-[Video demo on youtube.](https://www.youtube.com/watch?v=WHCv2lXbbTk)
-
-## Features
-
-* Supports per-bone squash and stretch, as well as per-vertex squash and stretch.
-
-![SquishyDemo](https://github.com/naelstrof/UnityJigglePhysics/raw/main/squashNstretch.gif)
-
-* Realistically relativistic! Elevators, trains, and vehicles won't leave jigglebones permanently trailing behind.
-
-![RelativisticDemo](https://github.com/naelstrof/UnityJigglePhysics/raw/main/relativistic.gif)
-
-* Works seamlessly on physics objects without jitter, with no configuration!
-
-* Supports animated skeletons, JigglePhysics uses it as a target reference pose.
-
-* Realtime rig scaling support, freely change character proportions on the fly.
-
-![ProportionDemo](https://github.com/naelstrof/UnityJigglePhysics/raw/main/proportion.gif)
-
-* ScriptableObject-based configuration, share settings across projects and prefabs.
-
-![ScriptableObjectDemo](https://github.com/naelstrof/UnityJigglePhysics/raw/main/ScriptableObjectExample.png)
-
+[A video demo can be found on youtube.](https://www.youtube.com/watch?v=WHCv2lXbbTk)
 
 ## Usage
 
-A unity repository full of examples can be found here: https://github.com/naelstrof/UnityJigglePhysics. If anything below doesn't make sense, download the examples!
+A scene full of examples can be found within the scene `Demo.unity`. If anything below doesn't make sense, try out the examples!
 
 ## How to Jiggle a Rig
 
@@ -77,19 +52,6 @@ With ShaderGraph, you must use a CustomFunction node, and use the hlsl file foun
 
 ![A jiggly blob](https://github.com/naelstrof/UnityJigglePhysics/raw/main/SlimeGuyJiggle.gif)
 
+## Need more help?
 
-## Installation
-
-You can install Jiggle Physics with OpenUPM by checking out the badge above. Otherwise...
-
-Simply add `https://github.com/naelstrof/UnityJigglePhysics.git#upm` as a package using the package manager.
-
-Or if that doesn't work, add it to the manifest.json like so.
-
-```
-{
-  "dependencies": {
-    "com.naelstrof.jigglephysics": "https://github.com/naelstrof/UnityJigglePhysics.git#upm",
-  }
-}
-```
+Check the asset store page on places to contact us! We'd love to help.

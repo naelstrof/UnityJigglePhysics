@@ -37,7 +37,7 @@ A unity repository full of examples can be found here: https://github.com/naelst
 
 1. Have a cool model attached to a bunch of transforms. SkinnedMeshRenderers look best!
 
-![A model of a purple lady](https://github.com/naelstrof/UnityJigglePhysics/raw/main/model_exmaple.png)
+![A model of a purple lady](https://github.com/naelstrof/UnityJigglePhysics/raw/main/model_example.png)
 
 2. Create a JiggleRigBuilder Monobehaviour on the object, and select the root bones you want to jiggle by adding them to the list of JiggleRigs.
 

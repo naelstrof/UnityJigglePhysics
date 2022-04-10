@@ -59,7 +59,14 @@ public class JiggleRigBuilder : MonoBehaviour {
         // Create an extra purely virtual point if we have no children.
         if (currentTransform.childCount == 0) {
             if (newJiggleBone.parent == null) {
-                throw new UnityException("Can't have a singular jiggle bone with no parents. That doesn't even make sense!");
+                if (newJiggleBone.transform.parent == null) {
+                    throw new UnityException("Can't have a singular jiggle bone with no parents. That doesn't even make sense!");
+                } else {
+                    float lengthToParent = Vector3.Distance(currentTransform.position, newJiggleBone.transform.parent.position);
+                    Vector3 projectedForwardReal = (currentTransform.position - newJiggleBone.transform.parent.position).normalized;
+                    rig.simulatedPoints.Add(new JiggleBone(null, newJiggleBone, currentTransform.position + projectedForwardReal*lengthToParent));
+                    return;
+                }
             }
             Vector3 projectedForward = (currentTransform.position - parentJiggleBone.transform.position).normalized;
             rig.simulatedPoints.Add(new JiggleBone(null, newJiggleBone, currentTransform.position + projectedForward*parentJiggleBone.lengthToParent));

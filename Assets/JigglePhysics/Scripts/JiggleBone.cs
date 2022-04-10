@@ -72,10 +72,16 @@ public class JiggleBone {
         // Purely virtual particles need to reconstruct their desired position.
         if (transform == null) {
             Vector3 parentTransformPosition = parent.transform.position;
-            // parent.parent is guaranteed to exist here, unless someone's trying to jiggle a single bone entirely by itself (which throws an exception).
-            Vector3 projectedForward = (parentTransformPosition - parent.parent.transform.position).normalized;
-            targetAnimatedBonePosition = parent.transform.TransformPoint(parent.parent.transform.InverseTransformPoint(parentTransformPosition));
-            lengthToParent = Vector3.Distance(targetAnimatedBonePosition, parentTransformPosition);
+            if (parent.parent != null) {
+                Vector3 projectedForward = (parentTransformPosition - parent.parent.transform.position).normalized;
+                targetAnimatedBonePosition = parent.transform.TransformPoint(parent.parent.transform.InverseTransformPoint(parentTransformPosition));
+                lengthToParent = Vector3.Distance(targetAnimatedBonePosition, parentTransformPosition);
+            } else {
+                // parent.transform.parent is guaranteed to exist here, unless the user is jiggling a single bone by itself (which throws an exception).
+                Vector3 projectedForward = (parentTransformPosition - parent.transform.parent.position).normalized;
+                targetAnimatedBonePosition = parent.transform.TransformPoint(parent.transform.parent.InverseTransformPoint(parentTransformPosition));
+                lengthToParent = Vector3.Distance(targetAnimatedBonePosition, parentTransformPosition);
+            }
             return;
         }
         targetAnimatedBonePosition = transform.position;
@@ -167,7 +173,11 @@ public class JiggleBone {
             }
             Vector3 childPosition;
             if (child.transform == null) {
-                childPosition = transform.TransformPoint(parent.transform.InverseTransformPoint(transform.position));
+                if (parent != null) { // If we have a proper jigglebone parent...
+                    childPosition = transform.TransformPoint(parent.transform.InverseTransformPoint(transform.position));
+                } else { // Otherwise we guess with the parent transform
+                    childPosition = transform.TransformPoint(transform.parent.InverseTransformPoint(transform.position));
+                }
             } else {
                 childPosition = child.transform.position;
             }

@@ -17,6 +17,8 @@ public class JiggleSettings : JiggleSettingsBase {
     private float blend = 1f;
     [Range(0f,1f)] [SerializeField] [Tooltip("How much angular force to apply in order to push the jiggled object back to rest.")]
     private float angleElasticity = 0.5f;
+    [Range(0f,1f)] [SerializeField] [Tooltip("How much to allow free bone motion before engaging elasticity.")]
+    private float elasticitySoften = 0.5f;
     [Range(0f,1f)] [SerializeField] [Tooltip("How much linear force to apply in order to keep the jiggled object at the correct length. Squash and stretch!")]
     private float lengthElasticity = 0.5f;
     public override float GetParameter(JiggleSettingParameter parameter) {
@@ -26,6 +28,7 @@ public class JiggleSettings : JiggleSettingsBase {
             case JiggleSettingParameter.AirFriction: return airFriction;
             case JiggleSettingParameter.Blend: return blend;
             case JiggleSettingParameter.AngleElasticity: return angleElasticity;
+            case JiggleSettingParameter.ElasticitySoften: return elasticitySoften;
             case JiggleSettingParameter.LengthElasticity: return lengthElasticity;
             default: throw new UnityException("Invalid Jiggle Setting Parameter:"+parameter);
         }

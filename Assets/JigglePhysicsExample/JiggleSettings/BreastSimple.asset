@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: BreastSimple
   m_EditorClassIdentifier: 
   gravityMultiplier: 0
-  friction: 0.03
+  friction: 0.1
   airFriction: 0
-  blend: 0.51
-  angleElasticity: 0.222
+  blend: 0.5
+  angleElasticity: 0.5
+  elasticitySoften: 0.5
   lengthElasticity: 1

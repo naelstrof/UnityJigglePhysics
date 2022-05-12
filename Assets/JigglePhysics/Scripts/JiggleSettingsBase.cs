@@ -10,6 +10,7 @@ public class JiggleSettingsBase : ScriptableObject {
         AirFriction,
         Blend,
         AngleElasticity,
+        ElasticitySoften,
         LengthElasticity,
     }
     public virtual float GetParameter(JiggleSettingParameter parameter) {

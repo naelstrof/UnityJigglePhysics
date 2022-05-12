@@ -16,5 +16,6 @@ MonoBehaviour:
   friction: 0
   airFriction: 0
   blend: 1
-  angleElasticity: 0.294
+  angleElasticity: 0.3
+  elasticitySoften: 0.5
   lengthElasticity: 0.297

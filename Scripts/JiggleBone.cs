@@ -62,7 +62,7 @@ public class JiggleBone {
             jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Friction),
             jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AirFriction)
         );
-        newPosition = ConstrainAngle(newPosition, jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AngleElasticity)*jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AngleElasticity));
+        newPosition = ConstrainAngle(newPosition, jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AngleElasticity)*jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AngleElasticity), jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.ElasticitySoften));
         newPosition = ConstrainLength(newPosition, jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.LengthElasticity)*jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.LengthElasticity));
         SetNewPosition(newPosition);
     }
@@ -91,7 +91,7 @@ public class JiggleBone {
         return Vector3.Lerp(newPosition, parent.position + dir * lengthToParent, elasticity);
     }
 
-    public Vector3 ConstrainAngle(Vector3 newPosition, float elasticity) {
+    public Vector3 ConstrainAngle(Vector3 newPosition, float elasticity, float elasticitySoften) {
         Vector3 parentParentPosition;
         Vector3 poseParentParent;
         if (parent.parent == null) {
@@ -106,7 +106,11 @@ public class JiggleBone {
         Quaternion TargetPoseToPose = Quaternion.FromToRotation(parentAimTargetPose, parentAim);
         Vector3 currentPose = targetAnimatedBonePosition - poseParentParent;
         Vector3 constraintTarget = TargetPoseToPose * currentPose;
-        return Vector3.Lerp(newPosition, parentParentPosition + constraintTarget, elasticity);
+        float error = Vector3.Distance(newPosition, parentParentPosition + constraintTarget);
+        error /= lengthToParent;
+        error = Mathf.Clamp01(error);
+        error = Mathf.Pow(error, elasticitySoften * 2f);
+        return Vector3.Lerp(newPosition, parentParentPosition + constraintTarget, elasticity * error);
     }
 
     public void SetNewPosition(Vector3 newPosition) {

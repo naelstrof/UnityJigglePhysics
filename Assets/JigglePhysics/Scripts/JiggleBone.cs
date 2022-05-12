@@ -8,14 +8,15 @@ namespace JigglePhysics {
 public class JiggleBone {
     public JiggleBone parent;
     public JiggleBone child;
-    public Quaternion boneRotationChangeCheck;
+    private Quaternion boneRotationChangeCheck;
+    private Vector3 bonePositionChangeCheck;
     public Quaternion lastValidPoseBoneRotation;
     private Vector3 lastValidPoseBoneLocalPosition;
     public Vector3 targetAnimatedBonePosition;
     public Vector3 position;
     public Transform transform;
     public Vector3 previousPosition;
-    public Vector3 previousLocalPosition;
+    //public Vector3 previousLocalPosition;
     public float lengthToParent;
     private Vector3 cachedInterpolatedPosition;
 
@@ -44,7 +45,7 @@ public class JiggleBone {
             lengthToParent = 0.1f;
             return;
         }
-        previousLocalPosition = parent.transform.InverseTransformPoint(previousPosition);
+        //previousLocalPosition = parent.transform.InverseTransformPoint(previousPosition);
         this.parent.child = this;
         lengthToParent = Vector3.Distance(parent.position, position);
     }
@@ -71,10 +72,16 @@ public class JiggleBone {
         // Purely virtual particles need to reconstruct their desired position.
         if (transform == null) {
             Vector3 parentTransformPosition = parent.transform.position;
-            // parent.parent is guaranteed to exist here, unless someone's trying to jiggle a single bone entirely by itself (which throws an exception).
-            Vector3 projectedForward = (parentTransformPosition - parent.parent.transform.position).normalized;
-            targetAnimatedBonePosition = parent.transform.TransformPoint(parent.parent.transform.InverseTransformPoint(parentTransformPosition));
-            lengthToParent = Vector3.Distance(targetAnimatedBonePosition, parentTransformPosition);
+            if (parent.parent != null) {
+                Vector3 projectedForward = (parentTransformPosition - parent.parent.transform.position).normalized;
+                targetAnimatedBonePosition = parent.transform.TransformPoint(parent.parent.transform.InverseTransformPoint(parentTransformPosition));
+                lengthToParent = Vector3.Distance(targetAnimatedBonePosition, parentTransformPosition);
+            } else {
+                // parent.transform.parent is guaranteed to exist here, unless the user is jiggling a single bone by itself (which throws an exception).
+                Vector3 projectedForward = (parentTransformPosition - parent.transform.parent.position).normalized;
+                targetAnimatedBonePosition = parent.transform.TransformPoint(parent.transform.parent.InverseTransformPoint(parentTransformPosition));
+                lengthToParent = Vector3.Distance(targetAnimatedBonePosition, parentTransformPosition);
+            }
             return;
         }
         targetAnimatedBonePosition = transform.position;
@@ -115,7 +122,7 @@ public class JiggleBone {
 
     public void SetNewPosition(Vector3 newPosition) {
         previousPosition = position;
-        if (parent!=null) previousLocalPosition = parent.transform.InverseTransformPoint(previousPosition);
+        //if (parent!=null) previousLocalPosition = parent.transform.InverseTransformPoint(previousPosition);
         position = newPosition;
     }
 
@@ -147,10 +154,13 @@ public class JiggleBone {
         //cachedInterpolatedPosition = Vector3.Lerp(previousPosition, position, timeSinceLastUpdate/Time.fixedDeltaTime);
 
         // If bone is not animated, return to last unadulterated pose
-        if (transform != null && boneRotationChangeCheck == transform.localRotation) {
-            //Debug.DrawLine(transform.position, transform.position+lastValidPoseBoneRotation * Vector3.up, Color.magenta);
-            transform.localRotation = lastValidPoseBoneRotation;
-            transform.localPosition = lastValidPoseBoneLocalPosition;
+        if (transform != null) {
+            if (boneRotationChangeCheck == transform.localRotation) {
+                transform.localRotation = lastValidPoseBoneRotation;
+            }
+            if (bonePositionChangeCheck == transform.localPosition) {
+                transform.localPosition = lastValidPoseBoneLocalPosition;
+            }
         }
         CacheAnimationPosition();
     }
@@ -167,7 +177,11 @@ public class JiggleBone {
             }
             Vector3 childPosition;
             if (child.transform == null) {
-                childPosition = transform.TransformPoint(parent.transform.InverseTransformPoint(transform.position));
+                if (parent != null) { // If we have a proper jigglebone parent...
+                    childPosition = transform.TransformPoint(parent.transform.InverseTransformPoint(transform.position));
+                } else { // Otherwise we guess with the parent transform
+                    childPosition = transform.TransformPoint(transform.parent.InverseTransformPoint(transform.position));
+                }
             } else {
                 childPosition = child.transform.position;
             }
@@ -178,6 +192,7 @@ public class JiggleBone {
         }
         if (transform != null) {
             boneRotationChangeCheck = transform.localRotation;
+            bonePositionChangeCheck = transform.localPosition;
             //Debug.DrawLine(transform.position, transform.position+boneRotationChangeCheck * Vector3.up, Color.blue);
         }
     }

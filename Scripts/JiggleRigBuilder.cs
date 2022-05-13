@@ -33,12 +33,13 @@ public class JiggleRigBuilder : MonoBehaviour {
     private void LateUpdate() {
         foreach(JiggleRig rig in jiggleRigs) {
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
-                simulatedPoint.PrepareBone(interpolate);
+                simulatedPoint.PrepareInterpolation(interpolate);
+                simulatedPoint.PrepareBone();
             }
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
                 simulatedPoint.PoseBone(rig.jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Blend));
                 if (debugDraw) {
-                    simulatedPoint.DebugDraw(Color.red, true);
+                    simulatedPoint.DebugDraw(Color.red, Color.blue, true);
                     //simulatedPoint.DebugDraw(Color.black, false);
                 }
             }
@@ -47,6 +48,9 @@ public class JiggleRigBuilder : MonoBehaviour {
 
     private void FixedUpdate() {
         foreach(JiggleRig rig in jiggleRigs) {
+            foreach (JiggleBone simulatedPoint in rig.simulatedPoints) { 
+                simulatedPoint.PrepareBone();
+            }
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) { 
                 simulatedPoint.Simulate(rig.jiggleSettings, rig.simulatedPoints[0]);
             }

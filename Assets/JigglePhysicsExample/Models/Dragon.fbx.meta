@@ -99,7 +99,17 @@ ModelImporter:
   - first:
       74: 7034989612646073551
     second: Armature|TurnAround
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Body
+    second: {fileID: 2100000, guid: 4e0993a786220c24ea25039b371c5a19, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Eye
+    second: {fileID: 2100000, guid: ed968b5c33e7950468689bb03784e56c, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -112,12 +122,7 @@ ModelImporter:
     optimizeGameObjects: 0
     motionNodeName: 
     rigImportErrors: 
-    rigImportWarnings: "Avatar Rig Configuration mis-match. Bone length in configuration
-      does not match position in animation file:\n\t'LegUpper.L' : position error
-      = 56.660095 mm\n\t'LegLower.L' : position error = 133.296616 mm\n\t'Foot.L'
-      : position error = 120.259949 mm\n\t'LegUpper.R' : position error = 56.660130
-      mm\n\t'LegLower.R' : position error = 133.296677 mm\n\t'Foot.R' : position
-      error = 120.259697 mm\n"
+    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 

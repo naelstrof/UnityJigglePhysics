@@ -52,7 +52,7 @@ public class JiggleBone {
 
     public void Simulate(JiggleSettingsBase jiggleSettings, JiggleBone root) {
         if (parent == null) {
-            SetNewPosition(transform.position);
+            SetNewPosition(targetAnimatedBonePosition);
             return;
         }
         Vector3 localSpaceVelocity = (position-previousPosition) - (parent.position-parent.previousPosition);
@@ -132,16 +132,17 @@ public class JiggleBone {
         return newPosition + vel * (1f - airFriction) + localSpaceVelocity * (1f - friction) + Physics.gravity * gravityMultiplier * squaredDeltaTime;
     }
 
-    public void DebugDraw(Color color, bool interpolated) {
+    public void DebugDraw(Color simulateColor, Color targetColor, bool interpolated) {
         if (parent == null) return;
         if (interpolated) {
-            Debug.DrawLine(cachedInterpolatedPosition, parent.cachedInterpolatedPosition, color, Time.deltaTime, false);
+            Debug.DrawLine(cachedInterpolatedPosition, parent.cachedInterpolatedPosition, simulateColor, 0, false);
         } else {
-            Debug.DrawLine(position, parent.position, color, Time.deltaTime, false);
+            Debug.DrawLine(position, parent.position, simulateColor, 0, false);
         }
-    }
 
-    public void PrepareBone(bool interpolate) {
+        Debug.DrawLine(targetAnimatedBonePosition, parent.targetAnimatedBonePosition, targetColor, 0, false);
+    }
+    public void PrepareInterpolation(bool interpolate) {
         // extrapolation, because interpolation is delayed by fixedDeltaTime and causes really bad stretching on fast moving objects
         // it also causes a bit of jitter when it incorrectly guesses the velocity.
         if (interpolate) {
@@ -152,7 +153,9 @@ public class JiggleBone {
         }
         // Interpolation looks perfect, but is delayed by fixedDeltaTime, causing stretching on fast objects.
         //cachedInterpolatedPosition = Vector3.Lerp(previousPosition, position, timeSinceLastUpdate/Time.fixedDeltaTime);
+    }
 
+    public void PrepareBone() {
         // If bone is not animated, return to last unadulterated pose
         if (transform != null) {
             if (boneRotationChangeCheck == transform.localRotation) {

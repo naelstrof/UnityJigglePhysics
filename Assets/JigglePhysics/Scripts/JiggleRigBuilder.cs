@@ -18,9 +18,11 @@ public class JiggleRigBuilder : MonoBehaviour {
         [HideInInspector]
         public List<JiggleBone> simulatedPoints;
     }
-    [SerializeField] [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
-    private bool interpolate = true;
+    [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
+    public bool interpolate = true;
     public List<JiggleRig> jiggleRigs;
+    [Tooltip("An air force that is applied to the entire rig, this is useful to plug in some wind volumes from external sources.")]
+    public Vector3 wind;
     [Tooltip("Draws some simple lines to show what the simulation is doing. Generally this should be disabled.")]
     [SerializeField] private bool debugDraw;
 
@@ -52,7 +54,7 @@ public class JiggleRigBuilder : MonoBehaviour {
                 simulatedPoint.PrepareBone();
             }
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) { 
-                simulatedPoint.Simulate(rig.jiggleSettings, rig.simulatedPoints[0]);
+                simulatedPoint.Simulate(rig.jiggleSettings, wind, rig.simulatedPoints[0]);
             }
         }
     }

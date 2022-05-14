@@ -16,11 +16,13 @@ public class JiggleSkin : MonoBehaviour {
         [HideInInspector]
         public JigglePoint simulatedPoint;
     }
-    [SerializeField] [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
-    private bool interpolate = true;
+    [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
+    public bool interpolate = true;
     public List<JiggleZone> jiggleZones;
     [SerializeField] [Tooltip("The list of skins to send the deformation data too, they should have JiggleSkin-compatible materials!")]
     public List<SkinnedMeshRenderer> targetSkins;
+    [Tooltip("An air force that is applied to the entire rig, this is useful to plug in some wind volumes from external sources.")]
+    public Vector3 wind;
     [SerializeField] [Tooltip("Draws some simple lines to show what the simulation is doing. Generally this should be disabled.")]
     private bool debugDraw = false;
 
@@ -66,7 +68,7 @@ public class JiggleSkin : MonoBehaviour {
     private void FixedUpdate() {
         foreach( JiggleZone zone in jiggleZones) {
             zone.simulatedPoint.PrepareSimulate();
-            zone.simulatedPoint.Simulate(zone.jiggleSettings);
+            zone.simulatedPoint.Simulate(zone.jiggleSettings, wind);
         }
     }
     void OnValidate() {

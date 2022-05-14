@@ -29,7 +29,7 @@ public class JigglePoint {
         parentPreviousPosition = parentPosition;
         parentPosition = transform.position;
     }
-    public void Simulate(JiggleSettingsBase jiggleSettings) {
+    public void Simulate(JiggleSettingsBase jiggleSettings, Vector3 force) {
         Vector3 localSpaceVelocity = (position-previousPosition) - (parentPosition-parentPreviousPosition);
         Vector3 newPosition = JiggleBone.NextPhysicsPosition(
             position, previousPosition, localSpaceVelocity, Time.deltaTime,
@@ -37,6 +37,7 @@ public class JigglePoint {
             jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Friction),
             jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AirFriction)
         );
+        newPosition += force * Time.deltaTime * jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AirFriction);
         newPosition = ConstrainSpring(newPosition, jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.LengthElasticity)*jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.LengthElasticity));
         SetNewPosition(newPosition);
     }

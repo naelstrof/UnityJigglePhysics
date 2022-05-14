@@ -50,7 +50,7 @@ public class JiggleBone {
         lengthToParent = Vector3.Distance(parent.position, position);
     }
 
-    public void Simulate(JiggleSettingsBase jiggleSettings, JiggleBone root) {
+    public void Simulate(JiggleSettingsBase jiggleSettings, Vector3 wind, JiggleBone root) {
         if (parent == null) {
             SetNewPosition(targetAnimatedBonePosition);
             return;
@@ -63,6 +63,7 @@ public class JiggleBone {
             jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Friction),
             jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AirFriction)
         );
+        newPosition += wind * Time.deltaTime * jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AirFriction);
         newPosition = ConstrainAngle(newPosition, jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AngleElasticity)*jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AngleElasticity), jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.ElasticitySoften));
         newPosition = ConstrainLength(newPosition, jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.LengthElasticity)*jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.LengthElasticity));
         SetNewPosition(newPosition);

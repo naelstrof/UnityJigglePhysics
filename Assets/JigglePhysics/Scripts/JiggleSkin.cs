@@ -61,13 +61,15 @@ public class JiggleSkin : MonoBehaviour {
         // Debug draw stuff
         if (debugDraw) {
             foreach( JiggleZone zone in jiggleZones) {
-                zone.simulatedPoint.DebugDraw(Color.red, true);
+                zone.simulatedPoint.DebugDraw(Color.red, interpolate);
             }
         }
     }
     private void FixedUpdate() {
-        foreach( JiggleZone zone in jiggleZones) {
+        foreach (JiggleZone zone in jiggleZones) {
             zone.simulatedPoint.PrepareSimulate();
+        }
+        foreach( JiggleZone zone in jiggleZones) {
             zone.simulatedPoint.Simulate(zone.jiggleSettings, wind);
         }
     }

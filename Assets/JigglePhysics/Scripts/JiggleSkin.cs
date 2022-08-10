@@ -25,11 +25,13 @@ public class JiggleSkin : MonoBehaviour {
     public Vector3 wind;
     [SerializeField] [Tooltip("Draws some simple lines to show what the simulation is doing. Generally this should be disabled.")]
     private bool debugDraw = false;
+    private float accumulation;
 
     private List<Material> targetMaterials;
     private List<Vector4> packedVectors;
     private int jiggleInfoNameID;
     void Start() {
+        accumulation = 0f;
         foreach( JiggleZone zone in jiggleZones) {
             zone.simulatedPoint = new JigglePoint(zone.target);
         }
@@ -38,11 +40,40 @@ public class JiggleSkin : MonoBehaviour {
         packedVectors = new List<Vector4>();
     }
     private void LateUpdate() {
+        foreach (JiggleZone zone in jiggleZones) {
+            zone.simulatedPoint.PrepareSimulate();
+        }
+        
+        accumulation = Mathf.Min(accumulation+Time.deltaTime, Time.fixedDeltaTime*4f);
+        while (accumulation > Time.fixedDeltaTime) {
+            accumulation -= Time.fixedDeltaTime;
+            float time = Time.time - accumulation;
+            foreach( JiggleZone zone in jiggleZones) {
+                zone.simulatedPoint.Simulate(zone.jiggleSettings, wind, time);
+            }
+        }
+        
+        foreach( JiggleZone zone in jiggleZones) {
+            zone.simulatedPoint.DeriveFinalSolvePosition();
+        }
+
+        if (interpolate) {
+            UpdateMesh();
+        }
+
+        // Debug draw stuff
+        if (debugDraw) {
+            foreach( JiggleZone zone in jiggleZones) {
+                zone.simulatedPoint.DebugDraw(Color.red);
+            }
+        }
+    }
+    private void UpdateMesh() {
         // Pack the data
         packedVectors.Clear();
         foreach( JiggleZone zone in jiggleZones) {
             Vector3 targetPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.target.position);
-            Vector3 verletPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(interpolate ? zone.simulatedPoint.interpolatedPosition : zone.simulatedPoint.position);
+            Vector3 verletPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.simulatedPoint.extrapolatedPosition);
             packedVectors.Add(new Vector4(targetPointSkinSpace.x, targetPointSkinSpace.y, targetPointSkinSpace.z, zone.radius*zone.target.lossyScale.x));
             packedVectors.Add(new Vector4(verletPointSkinSpace.x, verletPointSkinSpace.y, verletPointSkinSpace.z, zone.jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Blend)));
         }
@@ -57,20 +88,11 @@ public class JiggleSkin : MonoBehaviour {
                 m.SetVectorArray(jiggleInfoNameID, packedVectors);
             }
         }
-
-        // Debug draw stuff
-        if (debugDraw) {
-            foreach( JiggleZone zone in jiggleZones) {
-                zone.simulatedPoint.DebugDraw(Color.red, interpolate);
-            }
-        }
     }
+
     private void FixedUpdate() {
-        foreach (JiggleZone zone in jiggleZones) {
-            zone.simulatedPoint.PrepareSimulate();
-        }
-        foreach( JiggleZone zone in jiggleZones) {
-            zone.simulatedPoint.Simulate(zone.jiggleSettings, wind);
+        if (!interpolate) {
+            UpdateMesh();
         }
     }
     void OnValidate() {
@@ -97,8 +119,9 @@ public class JiggleSkin : MonoBehaviour {
     public Vector3 ApplyJiggle(Vector3 toPoint, float blend) {
         Vector3 result = toPoint;
         foreach( JiggleZone zone in jiggleZones) {
+            zone.simulatedPoint.DeriveFinalSolvePosition();
             Vector3 targetPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.target.position);
-            Vector3 verletPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.simulatedPoint.interpolatedPosition);
+            Vector3 verletPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.simulatedPoint.extrapolatedPosition);
             Vector3 diff = verletPointSkinSpace - targetPointSkinSpace;
             float dist = Vector3.Distance(targetPointSkinSpace, targetSkins[0].rootBone.InverseTransformPoint(toPoint));
             float multi = 1f-Mathf.SmoothStep(0,zone.radius*zone.target.lossyScale.x,dist);

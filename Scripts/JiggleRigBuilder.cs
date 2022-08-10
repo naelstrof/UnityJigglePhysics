@@ -38,8 +38,12 @@ public class JiggleRigBuilder : MonoBehaviour {
                 simulatedPoint.PrepareInterpolation(interpolate);
                 simulatedPoint.PrepareBone();
             }
+        }
+
+        foreach (JiggleRig rig in jiggleRigs) {
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
-                simulatedPoint.PoseBone(rig.jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Blend));
+                simulatedPoint.PoseBone(
+                    rig.jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Blend));
                 if (debugDraw) {
                     simulatedPoint.DebugDraw(Color.red, Color.blue, true);
                     //simulatedPoint.DebugDraw(Color.black, false);
@@ -50,9 +54,6 @@ public class JiggleRigBuilder : MonoBehaviour {
 
     private void FixedUpdate() {
         foreach(JiggleRig rig in jiggleRigs) {
-            foreach (JiggleBone simulatedPoint in rig.simulatedPoints) { 
-                simulatedPoint.PrepareBone();
-            }
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) { 
                 simulatedPoint.Simulate(rig.jiggleSettings, wind, rig.simulatedPoints[0]);
             }
@@ -75,7 +76,7 @@ public class JiggleRigBuilder : MonoBehaviour {
                 }
             }
             Vector3 projectedForward = (currentTransform.position - parentJiggleBone.transform.position).normalized;
-            rig.simulatedPoints.Add(new JiggleBone(null, newJiggleBone, currentTransform.position + projectedForward*parentJiggleBone.lengthToParent));
+            rig.simulatedPoints.Add(new JiggleBone(null, newJiggleBone, currentTransform.position + projectedForward*parentJiggleBone.LengthToParent(Time.time)));
             return;
         }
         for (int i = 0; i < currentTransform.childCount; i++) {

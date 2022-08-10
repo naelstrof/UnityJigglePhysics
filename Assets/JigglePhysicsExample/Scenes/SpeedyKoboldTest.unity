@@ -305,7 +305,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4072739780618791525, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4548079058336140704, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: m_UpdateWhenOffscreen
@@ -1243,7 +1243,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4072739780618791525, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7290970698396150437, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: m_Controller
@@ -1329,13 +1329,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1533894030}
-  m_LocalRotation: {x: 0.03342052, y: 0.97863257, z: -0.104429826, w: 0.17394191}
-  m_LocalPosition: {x: -0.723, y: 1.271, z: 1.877}
+  m_LocalRotation: {x: -0.06250464, y: 0.45775616, z: -0.09008712, w: 0.88229066}
+  m_LocalPosition: {x: -1.12, y: 0.75, z: -0.97}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1879521416}
   m_RootOrder: 4
-  m_LocalEulerAnglesHint: {x: 12.476, y: -199.97, z: 1.707}
+  m_LocalEulerAnglesHint: {x: -1.594, y: -304.983, z: -12.49}
 --- !u!114 &1533894032
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1509,7 +1509,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1590352527}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.5, z: 0}
   m_LocalScale: {x: 1000, y: 1, z: 1000}
   m_Children: []
   m_Father: {fileID: 0}
@@ -1522,6 +1522,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2051312510685350412, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+      propertyPath: box
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 2051312510685350412, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: debugDraw
       value: 1
@@ -1574,6 +1578,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BreastDemo (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 4072739780618791525, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4792074260981591440, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: debugDraw
       value: 1
@@ -1606,6 +1614,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed2b660a1aef5f445a822ed13bb9076c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  amplitude: 5
+  freq: 1
 --- !u!75 &1879521418
 ConstantForce:
   m_ObjectHideFlags: 0

@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Tail
   m_EditorClassIdentifier: 
   gravityMultiplier: 0.35
-  friction: 0.1
-  airFriction: 0.199
+  friction: 0.2
+  airFriction: 0.01
   blend: 1
   angleElasticity: 0.301
-  elasticitySoften: 0
+  elasticitySoften: 0.1
   lengthElasticity: 1

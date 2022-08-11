@@ -1,0 +1,197 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-4615915157124506
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 1
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: SkyboxMaterial
+  m_Shader: {fileID: 4800000, guid: 7e939ebe7fce1a54dbabe4a44aed8dbe, type: 3}
+  m_ShaderKeywords: CLOUDS_OFF _SUNDISK_HIGH_QUALITY
+  m_LightmapFlags: 1
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - BlueNoise:
+        m_Texture: {fileID: 2800000, guid: 5bb92e256168a454aa369217d922e1b3, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - DetailNoise:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - DetailNoiseTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - NoiseTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BaseMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _CameraOpaqueTexture:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNoise:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NoiseTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SpecGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Tex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _AlphaClip: 0
+    - _AtmosphereThickness: 1
+    - _BackScattering: 0.86333835
+    - _Blend: 0
+    - _BlendAdjust: 0.25
+    - _BlendAggression: 1000
+    - _BlendOffset: 0.25
+    - _Brightness: 0.5
+    - _BumpScale: 1
+    - _CLOUDS: 0
+    - _CloudDensityOffset: -0.3
+    - _CloudDistance: 300
+    - _CloudHeight: 37.1
+    - _CloudLightness: 0
+    - _CloudScale: 11.6
+    - _CrescentSize: 0.043
+    - _Cull: 2
+    - _Cutoff: 0.5
+    - _DarkSpotScale: 1.48
+    - _DstBlend: 0
+    - _Eclipse: 0.734
+    - _EnableFog: 0
+    - _EnableRotation: 0
+    - _EnvironmentReflections: 1
+    - _Exposure: 1.3
+    - _Float0: 0.1
+    - _FogFill: 0.5
+    - _FogHeight: 1
+    - _FogSmoothness: 0.01
+    - _ForwardScattering: 0.8941177
+    - _GlossMapScale: 0
+    - _Glossiness: 0
+    - _GlossyReflections: 0
+    - _HDRMoon: 1
+    - _HDRSun: 3
+    - _HDRSun1: 2
+    - _Metallic: 0
+    - _MoonCresentOffset: 0.02
+    - _MoonSize: 0.05
+    - _OcclusionStrength: 1
+    - _PhaseFactor: 1
+    - _QueueOffset: 0
+    - _ReceiveShadows: 1
+    - _Rotation: 0
+    - _RotationSpeed: 1
+    - _SecondaryNoiseScale: 1.3879608
+    - _Smoothness: 1
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _StarFrequency: 30
+    - _StarHue: 0.29
+    - _StarPinpointy: 1000
+    - _StarVariance: 1
+    - _SunDisk: 2
+    - _SunSize: 0.047
+    - _SunSize1: 0.1
+    - _SunSizeConvergence: 5
+    - _Surface: 0
+    - _WorkflowMode: 1
+    - _ZWrite: 1
+    - __dirty: 0
+    - _checkerboardFreq: 54
+    - _softness: 37
+    - baseSpeed: 1
+    - darknessThreshold: 0.15
+    - densityMultiplier: 1
+    - densityOffset: 1
+    - detailNoiseScale: 3
+    - detailNoiseWeight: 3.42
+    - detailSpeed: 1
+    - lightAbsorptionThroughCloud: 0.75
+    - lightAbsorptionTowardSun: 1
+    - lightIntensity: 1
+    - numStepsLight: 8
+    - rayOffsetStrength: 10
+    - scale: 0.62
+    - shadowsMax: 1
+    - shadowsMin: 0
+    - timeScale: 1
+    m_Colors:
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _GoldenHours: {r: 0.9245283, g: 0.4536633, b: 0.18752158, a: 0}
+    - _GroundColor: {r: 0.2901961, g: 0.3529412, b: 0.2627451, a: 1}
+    - _HorizonColor: {r: 0.036430337, g: 0.0050729797, b: 0.056603715, a: 0}
+    - _NightColor: {r: 0.0696673, g: 0.008009965, b: 0.11320677, a: 0}
+    - _SkyColor: {r: 0.493681, g: 0.76892054, b: 0.8113207, a: 0}
+    - _SkyTint: {r: 0.47952846, g: 0.5566038, b: 0.47521362, a: 1}
+    - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+    - _SunColor: {r: 4, g: 4, b: 4, a: 1}
+    - _TintColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - boundsMax: {r: 10, g: 10, b: 10, a: 0}
+    - boundsMin: {r: -12.33, g: -9.71, b: -10, a: 0}
+    - colA: {r: 1, g: 1, b: 1, a: 1}
+    - detailOffset: {r: 0, g: 0, b: 0, a: 0}
+    - detailWeights: {r: 1, g: 0.5, b: 0.5, a: 0}
+    - phaseParams: {r: 0.811, g: 0.33, b: 1, a: 0.488}
+    - shapeNoiseWeights: {r: 1, g: 0.48, b: 0.15, a: 0}
+    - shapeOffset: {r: 0, g: 0, b: 0, a: 0}
+  m_BuildTextureStacks: []

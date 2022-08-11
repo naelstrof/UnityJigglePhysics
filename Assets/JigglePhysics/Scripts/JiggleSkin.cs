@@ -40,6 +40,10 @@ public class JiggleSkin : MonoBehaviour {
         packedVectors = new List<Vector4>();
     }
     private void LateUpdate() {
+        if (!interpolate) {
+            return;
+        }
+
         foreach (JiggleZone zone in jiggleZones) {
             zone.simulatedPoint.PrepareSimulate();
         }
@@ -57,9 +61,7 @@ public class JiggleSkin : MonoBehaviour {
             zone.simulatedPoint.DeriveFinalSolvePosition();
         }
 
-        if (interpolate) {
-            UpdateMesh();
-        }
+        UpdateMesh();
 
         // Debug draw stuff
         if (debugDraw) {
@@ -91,8 +93,26 @@ public class JiggleSkin : MonoBehaviour {
     }
 
     private void FixedUpdate() {
-        if (!interpolate) {
-            UpdateMesh();
+        if (interpolate) {
+            return;
+        }
+        foreach (JiggleZone zone in jiggleZones) {
+            zone.simulatedPoint.PrepareSimulate();
+        }
+        
+        foreach( JiggleZone zone in jiggleZones) {
+            zone.simulatedPoint.Simulate(zone.jiggleSettings, wind, Time.time);
+        }
+        
+        foreach( JiggleZone zone in jiggleZones) {
+            zone.simulatedPoint.DeriveFinalSolvePosition();
+        }
+        UpdateMesh();
+        // Debug draw stuff
+        if (debugDraw) {
+            foreach( JiggleZone zone in jiggleZones) {
+                zone.simulatedPoint.DebugDraw(Color.red);
+            }
         }
     }
     void OnValidate() {

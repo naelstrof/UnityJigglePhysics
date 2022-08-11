@@ -35,6 +35,10 @@ public class JiggleRigBuilder : MonoBehaviour {
         }
     }
     private void LateUpdate() {
+        if (!interpolate) {
+            return;
+        }
+        
         foreach(JiggleRig rig in jiggleRigs) {
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
                 simulatedPoint.PrepareBone();
@@ -58,10 +62,6 @@ public class JiggleRigBuilder : MonoBehaviour {
             }
         }
 
-        if (!interpolate) {
-            return;
-        }
-
         foreach (JiggleRig rig in jiggleRigs) {
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
                 simulatedPoint.PoseBone( rig.jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Blend));
@@ -75,6 +75,23 @@ public class JiggleRigBuilder : MonoBehaviour {
     private void FixedUpdate() {
         if (interpolate) {
             return;
+        }
+        foreach(JiggleRig rig in jiggleRigs) {
+            foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
+                simulatedPoint.PrepareBone();
+            }
+        }
+
+        foreach(JiggleRig rig in jiggleRigs) {
+            foreach (JiggleBone simulatedPoint in rig.simulatedPoints) { 
+                simulatedPoint.Simulate(rig.jiggleSettings, wind, Time.time);
+            }
+        }
+
+        foreach (JiggleRig rig in jiggleRigs) {
+            foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
+                simulatedPoint.DeriveFinalSolvePosition();
+            }
         }
 
         foreach (JiggleRig rig in jiggleRigs) {

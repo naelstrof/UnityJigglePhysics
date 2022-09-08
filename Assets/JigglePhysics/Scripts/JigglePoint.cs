@@ -51,7 +51,7 @@ public class JigglePoint {
         
         Vector3 localSpaceVelocity = (position-previousPosition) - (parentPosition-previousParentPosition);
         Vector3 newPosition = JiggleBone.NextPhysicsPosition(
-            position, previousPosition, localSpaceVelocity, Time.deltaTime,
+            position, previousPosition, localSpaceVelocity, Time.fixedDeltaTime,
             jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Gravity),
             jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Friction),
             jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AirFriction)

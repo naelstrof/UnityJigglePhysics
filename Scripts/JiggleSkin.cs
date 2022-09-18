@@ -94,10 +94,14 @@ public class JiggleSkin : MonoBehaviour {
 
     private void FixedUpdate() {
         if (interpolate) {
+            // If we skip ahead, we want to let LateUpdate know, so it doesn't see this as a "jitter".
+            if (System.Math.Abs(Time.fixedTimeAsDouble - Time.timeAsDouble) <= Time.fixedDeltaTime) {
+                return;
+            }
+            foreach (JiggleZone zone in jiggleZones) {
+                zone.simulatedPoint.PrepareSimulate();
+            }
             return;
-        }
-        foreach (JiggleZone zone in jiggleZones) {
-            zone.simulatedPoint.PrepareSimulate();
         }
         
         foreach( JiggleZone zone in jiggleZones) {

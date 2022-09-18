@@ -13,8 +13,8 @@ public class JigglePoint {
     private Vector3 previousParentPosition;
     private struct PositionFrame {
         public Vector3 position;
-        public float time;
-        public PositionFrame(Vector3 position, float time) {
+        public double time;
+        public PositionFrame(Vector3 position, double time) {
             this.position = position;
             this.time = time;
         }
@@ -35,16 +35,20 @@ public class JigglePoint {
         lastTargetAnimatedBoneFrame = new PositionFrame(position, Time.time);
     }
     public void PrepareSimulate() {
+        // Ignore position data that is in the past or is a repeat.
+        if (Time.timeAsDouble <= currentTargetAnimatedBoneFrame.time || System.Math.Abs(Time.timeAsDouble-currentTargetAnimatedBoneFrame.time) < 0.00001f) {
+            return;
+        }
         lastTargetAnimatedBoneFrame = currentTargetAnimatedBoneFrame;
         currentTargetAnimatedBoneFrame = new PositionFrame(transform.position, Time.time);
     }
     private Vector3 GetTargetBonePosition(PositionFrame prev, PositionFrame next, float time) {
-        float diff = next.time - prev.time;
+        double diff = next.time - prev.time;
         if (diff == 0) {
             return next.position;
         }
-        float t = (time - prev.time) / diff;
-        return Vector3.Lerp(prev.position, next.position, t);
+        double t = (time - prev.time) / diff;
+        return Vector3.Lerp(prev.position, next.position, (float)t);
     }
     public void Simulate(JiggleSettingsBase jiggleSettings, Vector3 force, float time) {
         parentPosition = GetTargetBonePosition(lastTargetAnimatedBoneFrame, currentTargetAnimatedBoneFrame, time);

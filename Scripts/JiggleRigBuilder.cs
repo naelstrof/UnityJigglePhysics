@@ -27,7 +27,6 @@ public class JiggleRigBuilder : MonoBehaviour {
     [SerializeField] private bool debugDraw;
 
     private float accumulation;
-    private bool shouldPop;
     private void Awake() {
         accumulation = 0f;
         foreach(JiggleRig rig in jiggleRigs) {
@@ -39,16 +38,12 @@ public class JiggleRigBuilder : MonoBehaviour {
         if (!interpolate) {
             return;
         }
-
+        
         foreach(JiggleRig rig in jiggleRigs) {
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
-                if (shouldPop) {
-                    simulatedPoint.PopAnimationPosition();
-                }
                 simulatedPoint.PrepareBone();
             }
         }
-        shouldPop = false;
 
         accumulation = Mathf.Min(accumulation+Time.deltaTime, Time.fixedDeltaTime*4f);
         while (accumulation > Time.fixedDeltaTime) {
@@ -78,19 +73,16 @@ public class JiggleRigBuilder : MonoBehaviour {
     }
 
     private void FixedUpdate() {
-        
         if (interpolate) {
-            // Okay so this sucks, but its the only way I could think of it working. If FixedUpdate is called more than
-            // once this frame, that would mean that LateUpdate would see it as a noticable "jump".
-            // To prevent this, we try to feed updates up for n-1 FixedUpdates this frame...
-            // Unity provides no way to know how many FixedUpdates we're going to be doing this frame, so
-            // I simply *always* do n updates, then just "undo" the last position update during LateUpdate.
+            // If we skip ahead, we want to let LateUpdate know, so it doesn't see this as a "jitter".
+            if (Math.Abs(Time.fixedTimeAsDouble - Time.timeAsDouble) <= Time.fixedDeltaTime) {
+                return;
+            }
             foreach(JiggleRig rig in jiggleRigs) {
                 foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
                     simulatedPoint.PrepareBone();
                 }
             }
-            shouldPop = true;
             return;
         }
         

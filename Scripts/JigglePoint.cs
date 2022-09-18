@@ -22,7 +22,6 @@ public class JigglePoint {
     
     private PositionFrame currentTargetAnimatedBoneFrame;
     private PositionFrame lastTargetAnimatedBoneFrame;
-    private PositionFrame poppableTargetAnimatedBoneFrame;
     public Vector3 extrapolatedPosition;
     public JigglePoint(Transform transform) {
         this.transform = transform;
@@ -40,17 +39,9 @@ public class JigglePoint {
         if (Time.timeAsDouble <= currentTargetAnimatedBoneFrame.time || System.Math.Abs(Time.timeAsDouble-currentTargetAnimatedBoneFrame.time) < 0.00001f) {
             return;
         }
-
-        poppableTargetAnimatedBoneFrame = lastTargetAnimatedBoneFrame;
         lastTargetAnimatedBoneFrame = currentTargetAnimatedBoneFrame;
         currentTargetAnimatedBoneFrame = new PositionFrame(transform.position, Time.time);
     }
-
-    public void PopLastAnimatedBoneFrame() {
-        currentTargetAnimatedBoneFrame = lastTargetAnimatedBoneFrame;
-        lastTargetAnimatedBoneFrame = poppableTargetAnimatedBoneFrame;
-    }
-
     private Vector3 GetTargetBonePosition(PositionFrame prev, PositionFrame next, float time) {
         double diff = next.time - prev.time;
         if (diff == 0) {

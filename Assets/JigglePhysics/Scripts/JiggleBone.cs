@@ -17,7 +17,6 @@ public class JiggleBone {
     
     private PositionFrame currentTargetAnimatedBoneFrame;
     private PositionFrame lastTargetAnimatedBoneFrame;
-    private PositionFrame poppableBoneFrame;
     private Vector3 currentFixedAnimatedBonePosition;
 
     public JiggleBone parent;
@@ -111,14 +110,18 @@ public class JiggleBone {
         SetNewPosition(newPosition, time);
     }
 
-    public void PopAnimationPosition() {
-        currentTargetAnimatedBoneFrame = lastTargetAnimatedBoneFrame;
-        lastTargetAnimatedBoneFrame = poppableBoneFrame;
-    }
-
     public void CacheAnimationPosition() {
+        if (transform != null) {
+            lastValidPoseBoneRotation = transform.localRotation;
+            lastValidPoseBoneLocalPosition = transform.localPosition;
+        }
+
+        // Ignore position data that is in the past or is a repeat.
+        //if (Time.timeAsDouble <= currentTargetAnimatedBoneFrame.time || System.Math.Abs(Time.timeAsDouble-currentTargetAnimatedBoneFrame.time) < 0.00001f) {
+            //return;
+        //}
+
         // Purely virtual particles need to reconstruct their desired position.
-        poppableBoneFrame = lastTargetAnimatedBoneFrame;
         lastTargetAnimatedBoneFrame = currentTargetAnimatedBoneFrame;
         if (transform == null) {
             Vector3 parentTransformPosition = parent.transform.position;
@@ -135,8 +138,6 @@ public class JiggleBone {
             return;
         }
         currentTargetAnimatedBoneFrame = new PositionFrame(transform.position, Time.timeAsDouble);
-        lastValidPoseBoneRotation = transform.localRotation;
-        lastValidPoseBoneLocalPosition = transform.localPosition;
     }
     
     public Vector3 ConstrainLength(Vector3 newPosition, float elasticity) {

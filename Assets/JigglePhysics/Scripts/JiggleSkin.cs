@@ -26,7 +26,6 @@ public class JiggleSkin : MonoBehaviour {
     [SerializeField] [Tooltip("Draws some simple lines to show what the simulation is doing. Generally this should be disabled.")]
     private bool debugDraw = false;
     private float accumulation;
-    private bool shouldPop;
 
     private List<Material> targetMaterials;
     private List<Vector4> packedVectors;
@@ -46,13 +45,8 @@ public class JiggleSkin : MonoBehaviour {
         }
 
         foreach (JiggleZone zone in jiggleZones) {
-            if (shouldPop) {
-                zone.simulatedPoint.PopLastAnimatedBoneFrame();
-            }
             zone.simulatedPoint.PrepareSimulate();
         }
-
-        shouldPop = false;
         
         accumulation = Mathf.Min(accumulation+Time.deltaTime, Time.fixedDeltaTime*4f);
         while (accumulation > Time.fixedDeltaTime) {
@@ -100,11 +94,13 @@ public class JiggleSkin : MonoBehaviour {
 
     private void FixedUpdate() {
         if (interpolate) {
+            // If we skip ahead, we want to let LateUpdate know, so it doesn't see this as a "jitter".
+            if (System.Math.Abs(Time.fixedTimeAsDouble - Time.timeAsDouble) <= Time.fixedDeltaTime) {
+                return;
+            }
             foreach (JiggleZone zone in jiggleZones) {
                 zone.simulatedPoint.PrepareSimulate();
             }
-
-            shouldPop = true;
             return;
         }
         

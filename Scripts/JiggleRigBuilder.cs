@@ -74,18 +74,8 @@ public class JiggleRigBuilder : MonoBehaviour {
 
     private void FixedUpdate() {
         if (interpolate) {
-            // If we skip ahead, we want to let LateUpdate know, so it doesn't see this as a "jitter".
-            if (Math.Abs(Time.fixedTimeAsDouble - Time.timeAsDouble) <= Time.fixedDeltaTime) {
-                return;
-            }
-            foreach(JiggleRig rig in jiggleRigs) {
-                foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
-                    simulatedPoint.PrepareBone();
-                }
-            }
             return;
         }
-        
         foreach(JiggleRig rig in jiggleRigs) {
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
                 simulatedPoint.PrepareBone();

@@ -44,7 +44,7 @@ public class JigglePoint {
             return next.position;
         }
         double t = (time - prev.time) / diff;
-        return Vector3.Lerp(prev.position, next.position, (float)t);
+        return Vector3.LerpUnclamped(prev.position, next.position, (float)t);
     }
     public void Simulate(JiggleSettingsBase jiggleSettings, Vector3 force, double time) {
         parentPosition = GetTargetBonePosition(lastTargetAnimatedBoneFrame, currentTargetAnimatedBoneFrame, time);
@@ -67,9 +67,10 @@ public class JigglePoint {
         position = newPosition;
         updateTime = time;
     }
-    public void DeriveFinalSolvePosition() {
-        double t = (Time.time - previousUpdateTime) / Time.fixedDeltaTime;
-        extrapolatedPosition = Vector3.LerpUnclamped(previousPosition, position, (float)t);
+    public void DeriveFinalSolvePosition(float smoothing) {
+        Vector3 offset = transform.position-GetTargetBonePosition(lastTargetAnimatedBoneFrame, currentTargetAnimatedBoneFrame, (Time.timeAsDouble-Time.fixedDeltaTime*smoothing));
+        double t = ((Time.timeAsDouble-Time.fixedDeltaTime*smoothing) - previousUpdateTime) / Time.fixedDeltaTime;
+        extrapolatedPosition = offset+Vector3.LerpUnclamped(previousPosition, position, (float)t);
     }
     public Vector3 ConstrainSpring(Vector3 newPosition, float elasticity) {
         return Vector3.Lerp(newPosition, parentPosition, elasticity);

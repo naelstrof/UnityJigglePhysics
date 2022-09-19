@@ -81,8 +81,8 @@ Shader "JigglePhysics/Standard/JiggleSkin"
 	CustomEditor "ASEMaterialInspector"
 }
 /*ASEBEGIN
-Version=18934
-415;300;1855;845;1203.021;299.5211;1;True;False
+Version=18935
+589;422;1855;869;1190.021;312.5211;1;True;False
 Node;AmplifyShaderEditor.SamplerNode;1;-616.6143,-263.515;Inherit;True;Property;_MainTex;MainTex;1;0;Create;True;0;0;0;False;0;False;-1;None;5215424c0dc24f04f8be0426c379cfdc;True;0;False;white;Auto;False;Object;-1;Auto;Texture2D;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
 Node;AmplifyShaderEditor.SamplerNode;2;-635.4885,-24.73577;Inherit;True;Property;_BumpMap;BumpMap;2;0;Create;True;0;0;0;True;0;False;-1;None;None;True;0;True;bump;Auto;True;Object;-1;Auto;Texture2D;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;5;FLOAT3;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
 Node;AmplifyShaderEditor.SamplerNode;3;-640.9557,189.5465;Inherit;True;Property;_MetallicGlossMap;MetallicGlossMap;3;0;Create;True;0;0;0;True;0;False;-1;None;None;True;0;False;black;Auto;False;Object;-1;Auto;Texture2D;8;0;SAMPLER2D;;False;1;FLOAT2;0,0;False;2;FLOAT;0;False;3;FLOAT2;0,0;False;4;FLOAT2;0,0;False;5;FLOAT;1;False;6;FLOAT;0;False;7;SAMPLERSTATE;;False;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
@@ -95,4 +95,4 @@ WireConnection;26;4;3;4
 WireConnection;26;10;1;4
 WireConnection;26;11;25;0
 ASEEND*/
-//CHKSM=445636FB47C935EEEE28FC273175A0C4173FD126
+//CHKSM=C7B34C533B25379D2C6197FF46A537981943ECB5

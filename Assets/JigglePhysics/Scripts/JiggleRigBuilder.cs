@@ -25,7 +25,8 @@ public class JiggleRigBuilder : MonoBehaviour {
     public Vector3 wind;
     [Tooltip("Draws some simple lines to show what the simulation is doing. Generally this should be disabled.")]
     [SerializeField] private bool debugDraw;
-
+    private const float smoothing = 1f;
+    
     private float accumulation;
     private void Awake() {
         accumulation = 0f;
@@ -57,8 +58,10 @@ public class JiggleRigBuilder : MonoBehaviour {
         }
 
         foreach (JiggleRig rig in jiggleRigs) {
+            Vector3 virtualPosition = rig.simulatedPoints[0].DeriveFinalSolvePosition(Vector3.zero, smoothing);
+            Vector3 offset = rig.simulatedPoints[0].transform.position - virtualPosition;
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
-                simulatedPoint.DeriveFinalSolvePosition();
+                simulatedPoint.DeriveFinalSolvePosition(offset, smoothing);
             }
         }
 
@@ -87,10 +90,12 @@ public class JiggleRigBuilder : MonoBehaviour {
                 simulatedPoint.Simulate(rig.jiggleSettings, wind, Time.time);
             }
         }
-
+        
         foreach (JiggleRig rig in jiggleRigs) {
+            Vector3 virtualPosition = rig.simulatedPoints[0].DeriveFinalSolvePosition(Vector3.zero, smoothing);
+            Vector3 offset = rig.simulatedPoints[0].transform.position - virtualPosition;
             foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
-                simulatedPoint.DeriveFinalSolvePosition();
+                simulatedPoint.DeriveFinalSolvePosition(offset, smoothing);
             }
         }
 

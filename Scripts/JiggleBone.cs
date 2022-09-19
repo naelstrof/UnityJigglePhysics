@@ -8,8 +8,8 @@ namespace JigglePhysics {
 public class JiggleBone {
     private struct PositionFrame {
         public Vector3 position;
-        public float time;
-        public PositionFrame(Vector3 position, float time) {
+        public double time;
+        public PositionFrame(Vector3 position, double time) {
             this.position = position;
             this.time = time;
         }
@@ -57,13 +57,13 @@ public class JiggleBone {
         return Vector3.Distance(currentFixedAnimatedBonePosition, parent.currentFixedAnimatedBonePosition);
     }
     
-    private Vector3 GetTargetBonePosition(PositionFrame prev, PositionFrame next, float time) {
-        float diff = next.time - prev.time;
+    private Vector3 GetTargetBonePosition(PositionFrame prev, PositionFrame next, double time) {
+        double diff = next.time - prev.time;
         if (diff == 0) {
             return next.position;
         }
-        float t = (time - prev.time) / diff;
-        return Vector3.Lerp(prev.position, next.position, t);
+        double t = (time - prev.time) / diff;
+        return Vector3.Lerp(prev.position, next.position, (float)t);
     }
     
     public JiggleBone(Transform transform, JiggleBone parent, Vector3 position) {
@@ -118,16 +118,16 @@ public class JiggleBone {
             if (parent.parent != null) {
                 //Vector3 projectedForward = (parentTransformPosition - parent.parent.transform.position).normalized;
                 Vector3 pos = parent.transform.TransformPoint( parent.parent.transform.InverseTransformPoint(parentTransformPosition));
-                currentTargetAnimatedBoneFrame = new PositionFrame(pos, Time.time);
+                currentTargetAnimatedBoneFrame = new PositionFrame(pos, Time.timeAsDouble);
             } else {
                 // parent.transform.parent is guaranteed to exist here, unless the user is jiggling a single bone by itself (which throws an exception).
                 //Vector3 projectedForward = (parentTransformPosition - parent.transform.parent.position).normalized;
                 Vector3 pos = parent.transform.TransformPoint(parent.transform.parent.InverseTransformPoint(parentTransformPosition));
-                currentTargetAnimatedBoneFrame = new PositionFrame(pos, Time.time);
+                currentTargetAnimatedBoneFrame = new PositionFrame(pos, Time.timeAsDouble);
             }
             return;
         }
-        currentTargetAnimatedBoneFrame = new PositionFrame(transform.position, Time.time);
+        currentTargetAnimatedBoneFrame = new PositionFrame(transform.position, Time.timeAsDouble);
         lastValidPoseBoneRotation = transform.localRotation;
         lastValidPoseBoneLocalPosition = transform.localPosition;
     }
@@ -184,11 +184,10 @@ public class JiggleBone {
 
         //Debug.DrawLine(currentFixedAnimatedBonePosition, parent.currentFixedAnimatedBonePosition, targetColor, 0, false);
     }
-    public void DeriveFinalSolvePosition() {
-        float t = (Time.time - previousUpdateTime) / Time.fixedDeltaTime;
-        //Debug.DrawLine(Vector3.right * Mathf.LerpUnclamped(previousUpdateTime, updateTime, t)*5f,
-            //Vector3.right * Mathf.LerpUnclamped(previousUpdateTime, updateTime, t)*5f + Vector3.up*4f, Color.yellow, 100f);
-        extrapolatedPosition = Vector3.LerpUnclamped(previousPosition, position, t);
+    public Vector3 DeriveFinalSolvePosition(Vector3 offset, float smoothing) {
+        double t = ((Time.timeAsDouble - smoothing*Time.fixedDeltaTime) - previousUpdateTime) / Time.fixedDeltaTime;
+        extrapolatedPosition = offset+Vector3.LerpUnclamped(previousPosition, position, (float)t);
+        return extrapolatedPosition;
     }
 
     public void PrepareBone() {

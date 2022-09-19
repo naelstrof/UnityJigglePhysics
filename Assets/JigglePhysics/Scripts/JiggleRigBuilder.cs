@@ -27,7 +27,7 @@ public class JiggleRigBuilder : MonoBehaviour {
     [SerializeField] private bool debugDraw;
     private const float smoothing = 1f;
     
-    private float accumulation;
+    private double accumulation;
     private void Awake() {
         accumulation = 0f;
         foreach(JiggleRig rig in jiggleRigs) {
@@ -46,10 +46,10 @@ public class JiggleRigBuilder : MonoBehaviour {
             }
         }
 
-        accumulation = Mathf.Min(accumulation+Time.deltaTime, Time.fixedDeltaTime*4f);
+        accumulation = System.Math.Min(accumulation+Time.deltaTime, Time.fixedDeltaTime*4f);
         while (accumulation > Time.fixedDeltaTime) {
             accumulation -= Time.fixedDeltaTime;
-            float time = Time.time - accumulation;
+            double time = Time.timeAsDouble - accumulation;
             foreach(JiggleRig rig in jiggleRigs) {
                 foreach (JiggleBone simulatedPoint in rig.simulatedPoints) { 
                     simulatedPoint.Simulate(rig.jiggleSettings, wind, time);

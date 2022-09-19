@@ -30,8 +30,8 @@ public class JiggleBone {
 
     public Transform transform;
 
-    private float updateTime;
-    private float previousUpdateTime;
+    private double updateTime;
+    private double previousUpdateTime;
     
     public Vector3 position;
     public Vector3 previousPosition;
@@ -76,9 +76,9 @@ public class JiggleBone {
             lastValidPoseBoneLocalPosition = transform.localPosition;
         }
 
-        updateTime = Time.time;
-        previousUpdateTime = Time.time;
-        lastTargetAnimatedBoneFrame = new PositionFrame(position, Time.time);
+        updateTime = Time.timeAsDouble;
+        previousUpdateTime = Time.timeAsDouble;
+        lastTargetAnimatedBoneFrame = new PositionFrame(position, Time.timeAsDouble);
         currentTargetAnimatedBoneFrame = lastTargetAnimatedBoneFrame;
 
         if (parent == null) {
@@ -89,7 +89,7 @@ public class JiggleBone {
         this.parent.child = this;
     }
 
-    public void Simulate(JiggleSettingsBase jiggleSettings, Vector3 wind, float time) {
+    public void Simulate(JiggleSettingsBase jiggleSettings, Vector3 wind, double time) {
         currentFixedAnimatedBonePosition = GetTargetBonePosition(lastTargetAnimatedBoneFrame, currentTargetAnimatedBoneFrame, time);
         
         if (parent == null) {
@@ -160,7 +160,7 @@ public class JiggleBone {
         return Vector3.Lerp(newPosition, parentParentPosition + constraintTarget, elasticity * error);
     }
 
-    public void SetNewPosition(Vector3 newPosition, float time) {
+    public void SetNewPosition(Vector3 newPosition, double time) {
         previousUpdateTime = updateTime;
         previousPosition = position;
         //if (parent!=null) previousLocalPosition = parent.transform.InverseTransformPoint(previousPosition);

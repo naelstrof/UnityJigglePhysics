@@ -5,6 +5,7 @@
 [Bb]uilds/
 [Ll]ogs/
 Assets/AmplifyShaderEditor
+Assets/KoboldKare
 Assets/AssetStoreTools*
 
 # Visual Studio cache directory
@@ -37,3 +38,4 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+Assets/KoboldKare.meta

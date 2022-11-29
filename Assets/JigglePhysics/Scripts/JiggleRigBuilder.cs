@@ -14,14 +14,13 @@ public class JiggleRigBuilder : MonoBehaviour {
         public JiggleSettingsBase jiggleSettings;
         [Tooltip("The list of transforms to ignore during the jiggle. Each bone listed will also ignore all the children of the specified bone.")]
         public List<Transform> ignoredTransforms;
-        //public List<Transform> ignoredChildTransforms;
-
-            [HideInInspector]
+        [HideInInspector]
         public List<JiggleBone> simulatedPoints;
     }
-        public List<Transform> ignoredChildTransforms;
-        [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
+    public List<Transform> ignoredChildTransforms;
+    [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
     public bool interpolate = true;
+    [Tooltip("Will automatically add all children of ignoredTransforms to be ignored")]
     public bool ignoreChildren = false;
     public List<JiggleRig> jiggleRigs;
     [Tooltip("An air force that is applied to the entire rig, this is useful to plug in some wind volumes from external sources.")]

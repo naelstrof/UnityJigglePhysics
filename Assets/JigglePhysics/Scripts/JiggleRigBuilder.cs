@@ -14,12 +14,14 @@ public class JiggleRigBuilder : MonoBehaviour {
         public JiggleSettingsBase jiggleSettings;
         [Tooltip("The list of transforms to ignore during the jiggle. Each bone listed will also ignore all the children of the specified bone.")]
         public List<Transform> ignoredTransforms;
-
         [HideInInspector]
         public List<JiggleBone> simulatedPoints;
     }
+    public List<Transform> ignoredChildTransforms;
     [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
     public bool interpolate = true;
+    [Tooltip("Will automatically add all children of ignoredTransforms to be ignored")]
+    public bool ignoreChildren = false;
     public List<JiggleRig> jiggleRigs;
     [Tooltip("An air force that is applied to the entire rig, this is useful to plug in some wind volumes from external sources.")]
     public Vector3 wind;
@@ -30,6 +32,13 @@ public class JiggleRigBuilder : MonoBehaviour {
     private double accumulation;
     private void Awake() {
         accumulation = 0f;
+
+        foreach(JiggleRig rig in jiggleRigs) {
+            if (ignoreChildren) {
+                DisableChildren(rig);
+            }
+        }
+
         foreach(JiggleRig rig in jiggleRigs) {
             rig.simulatedPoints = new List<JiggleBone>();
             CreateSimulatedPoints(rig, rig.rootTransform, null);
@@ -110,6 +119,10 @@ public class JiggleRigBuilder : MonoBehaviour {
     }
 
     private void CreateSimulatedPoints(JiggleRig rig, Transform currentTransform, JiggleBone parentJiggleBone) {
+        if(ignoredChildTransforms.Contains(currentTransform)) {
+            return;
+        }
+
         JiggleBone newJiggleBone = new JiggleBone(currentTransform, parentJiggleBone, currentTransform.position);
         rig.simulatedPoints.Add(newJiggleBone);
         // Create an extra purely virtual point if we have no children.
@@ -136,9 +149,30 @@ public class JiggleRigBuilder : MonoBehaviour {
             if (rig.ignoredTransforms.Contains(currentTransform.GetChild(i))) {
                 continue;
             }
-            CreateSimulatedPoints(rig,currentTransform.GetChild(i), newJiggleBone);
+            CreateSimulatedPoints(rig, currentTransform.GetChild(i), newJiggleBone);
         }
-    }
+        }
+
+    private void DisableChildren(JiggleRig rig) {
+            foreach (Transform t in rig.ignoredTransforms) {
+                DescendHierarchy(t, rig);
+            }
+        }
+
+    private void DescendHierarchy(Transform currentTransform, JiggleRig rig) {
+            if (currentTransform.childCount > 0) {
+                for (int i = 0; i < currentTransform.childCount; i++) {
+                    DescendHierarchy(currentTransform.GetChild(i), rig);
+                }
+            }
+            foreach (JiggleRig jRig in jiggleRigs) {
+                if (jRig.rootTransform != currentTransform) {
+                    if (!ignoredChildTransforms.Contains(currentTransform)) {
+                        ignoredChildTransforms.Add(currentTransform);
+                    }
+                }
+            }
+        }
 }
 
 }

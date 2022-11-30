@@ -32,11 +32,15 @@ public class JiggleRigBuilder : MonoBehaviour {
     private double accumulation;
     private void Awake() {
         accumulation = 0f;
+
+        foreach(JiggleRig rig in jiggleRigs) {
+            if (ignoreChildren) {
+                DisableChildren(rig);
+            }
+        }
+
         foreach(JiggleRig rig in jiggleRigs) {
             rig.simulatedPoints = new List<JiggleBone>();
-            if (ignoreChildren) {
-                    DisableChildren(rig);
-            }
             CreateSimulatedPoints(rig, rig.rootTransform, null);
         }
     }

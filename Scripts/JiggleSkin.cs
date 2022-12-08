@@ -43,7 +43,7 @@ public class JiggleSkin : MonoBehaviour {
         foreach( JiggleZone zone in jiggleZones) {
             try {
                 jiggleZoneLookup.Add(zone.target, zone);
-            } catch (ArgumentException e) {
+            } catch (ArgumentException) {
                 throw new UnityException("JiggleRig was added to transform where one already exists!");
             }
             if (zone.jiggleSettings is JiggleSettingsBlend) {
@@ -86,7 +86,7 @@ public class JiggleSkin : MonoBehaviour {
         };
         try {
             jiggleZoneLookup.Add(targetTransform, zone);
-        } catch (ArgumentException e) {
+        } catch (ArgumentException) {
             throw new UnityException("JiggleZone was added to transform where one already exists!");
         }
         jiggleZones.Add(zone);

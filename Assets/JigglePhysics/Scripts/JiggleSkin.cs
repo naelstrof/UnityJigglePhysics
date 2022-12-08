@@ -37,8 +37,8 @@ public class JiggleSkin : MonoBehaviour {
     void Awake() {
         accumulation = 0f;
         
-        jiggleZones ??= new List<JiggleZone>();
-        jiggleZoneLookup ??= new Dictionary<Transform, JiggleZone>();
+        if (jiggleZones == null) { jiggleZones = new List<JiggleZone>(); }
+        if (jiggleZoneLookup == null) { jiggleZoneLookup = new Dictionary<Transform, JiggleZone>(); }
         jiggleZoneLookup.Clear();
         foreach( JiggleZone zone in jiggleZones) {
             try {
@@ -75,8 +75,8 @@ public class JiggleSkin : MonoBehaviour {
     }
 
     public void AddJiggleZone(Transform targetTransform, JiggleSettingsBase jiggleSettings, float radius) {
-        jiggleZoneLookup ??= new Dictionary<Transform, JiggleZone>();
-        jiggleZones ??= new List<JiggleZone>();
+        if (jiggleZoneLookup == null) { jiggleZoneLookup = new Dictionary<Transform, JiggleZone>(); }
+        if (jiggleZones == null) { jiggleZones = new List<JiggleZone>(); }
         
         JiggleZone zone = new JiggleZone() {
             target = targetTransform,

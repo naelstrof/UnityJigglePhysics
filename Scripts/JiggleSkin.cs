@@ -41,11 +41,10 @@ public class JiggleSkin : MonoBehaviour {
         if (jiggleZoneLookup == null) { jiggleZoneLookup = new Dictionary<Transform, JiggleZone>(); }
         jiggleZoneLookup.Clear();
         foreach( JiggleZone zone in jiggleZones) {
-            try {
-                jiggleZoneLookup.Add(zone.target, zone);
-            } catch (ArgumentException) {
-                throw new UnityException("JiggleRig was added to transform where one already exists!");
+            if (jiggleZoneLookup.ContainsKey(zone.target)) {
+                throw new UnityException($"JiggleZone was added to transform {zone.target}, where one already exists!");
             }
+            jiggleZoneLookup.Add(zone.target, zone);
             if (zone.jiggleSettings is JiggleSettingsBlend) {
                 zone.jiggleSettings = Instantiate(zone.jiggleSettings);
             }
@@ -84,10 +83,8 @@ public class JiggleSkin : MonoBehaviour {
             radius = radius,
             simulatedPoint = new JigglePoint(targetTransform)
         };
-        try {
-            jiggleZoneLookup.Add(targetTransform, zone);
-        } catch (ArgumentException) {
-            throw new UnityException("JiggleZone was added to transform where one already exists!");
+        if (jiggleZoneLookup.ContainsKey(targetTransform)) {
+            throw new UnityException($"JiggleZone was added to transform {zone.target}, where one already exists!");
         }
         jiggleZones.Add(zone);
     }

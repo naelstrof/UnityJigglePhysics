@@ -41,11 +41,11 @@ public class JiggleRigBuilder : MonoBehaviour {
         jiggleRigLookup.Clear();
         if (jiggleRigs == null) { jiggleRigs = new List<JiggleRig>(); }
         foreach(JiggleRig rig in jiggleRigs) {
-            try {
-                jiggleRigLookup.Add(rig.rootTransform, rig);
-            } catch (ArgumentException) {
+            if (jiggleRigLookup.ContainsKey(rig.rootTransform)) {
                 throw new UnityException("JiggleRig was added to transform where one already exists!");
             }
+            jiggleRigLookup.Add(rig.rootTransform, rig);
+            
             if (rig.jiggleSettings is JiggleSettingsBlend) {
                 rig.jiggleSettings = Instantiate(rig.jiggleSettings);
             }
@@ -64,11 +64,10 @@ public class JiggleRigBuilder : MonoBehaviour {
             jiggleSettings = (jiggleSettings is JiggleSettingsBlend) ? Instantiate(jiggleSettings) : jiggleSettings,
             simulatedPoints = new List<JiggleBone>()
         };
-        try {
-            jiggleRigLookup.Add(rootTransform, rig);
-        } catch (ArgumentException) {
-            throw new UnityException("JiggleRig was added to transform where one already exists!");
+        if (jiggleRigLookup.ContainsKey(rootTransform)) {
+            throw new UnityException($"JiggleRig was added to transform {rootTransform}, where one already exists!");
         }
+        jiggleRigLookup.Add(rootTransform, rig);
         jiggleRigs.Add(rig);
         CreateSimulatedPoints(rig, rig.rootTransform, null);
     }

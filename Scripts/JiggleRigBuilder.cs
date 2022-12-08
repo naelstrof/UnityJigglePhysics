@@ -78,7 +78,7 @@ public class JiggleRigBuilder : MonoBehaviour {
             throw new UnityException($"No JiggleRig was found on the bone {targetRootTransform}");
         }
         JiggleRig rig = jiggleRigLookup[targetRootTransform];
-        if (rig.jiggleSettings is not JiggleSettingsBlend blend) {
+        if (!(rig.jiggleSettings is JiggleSettingsBlend blend)) {
             throw new UnityException($"Attempted to change normalizedBlend of JiggleRig's JiggleSettingsBlend, when the actual settings type was {rig.jiggleSettings.GetType()}");
         }
         blend.normalizedBlend = normalizedBlend;

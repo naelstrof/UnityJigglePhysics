@@ -1,40 +1,89 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using UnityEngine;
 
 namespace JigglePhysics {
 
 public class JiggleRigBuilder : MonoBehaviour {
+
     [System.Serializable]
-    public class JiggleRig {
+    private class JiggleRig {
         [Tooltip("The root bone from which an individual JiggleRig will be constructed. The JiggleRig encompasses all children of the specified root.")]
         public Transform rootTransform;
         [Tooltip("The settings that the rig should update with, create them using the Create->JigglePhysics->Settings menu option.")]
         public JiggleSettingsBase jiggleSettings;
         [Tooltip("The list of transforms to ignore during the jiggle. Each bone listed will also ignore all the children of the specified bone.")]
         public List<Transform> ignoredTransforms;
-
+        
         [HideInInspector]
         public List<JiggleBone> simulatedPoints;
     }
     [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
     public bool interpolate = true;
-    public List<JiggleRig> jiggleRigs;
+
+    [SerializeField]
+    private List<JiggleRig> jiggleRigs;
+
     [Tooltip("An air force that is applied to the entire rig, this is useful to plug in some wind volumes from external sources.")]
     public Vector3 wind;
     [Tooltip("Draws some simple lines to show what the simulation is doing. Generally this should be disabled.")]
     [SerializeField] private bool debugDraw;
     private const float smoothing = 1f;
-    
+    private Dictionary<Transform, JiggleRig> jiggleRigLookup;
+
     private double accumulation;
     private void Awake() {
         accumulation = 0f;
+        // When created via AddComponent, jiggleRigs will be null...
+        jiggleRigLookup ??= new Dictionary<Transform, JiggleRig>();
+        jiggleRigLookup.Clear();
+        jiggleRigs ??= new List<JiggleRig>();
         foreach(JiggleRig rig in jiggleRigs) {
+            try {
+                jiggleRigLookup.Add(rig.rootTransform, rig);
+            } catch (ArgumentException e) {
+                throw new UnityException("JiggleRig was added to transform where one already exists!");
+            }
+            if (rig.jiggleSettings is JiggleSettingsBlend) {
+                rig.jiggleSettings = Instantiate(rig.jiggleSettings);
+            }
             rig.simulatedPoints = new List<JiggleBone>();
             CreateSimulatedPoints(rig, rig.rootTransform, null);
         }
     }
+
+    public void AddJiggleRig(Transform rootTransform, JiggleSettingsBase jiggleSettings, ICollection<Transform> ignoredTransforms = null) {
+        jiggleRigLookup ??= new Dictionary<Transform, JiggleRig>();
+        jiggleRigs ??= new List<JiggleRig>();
+        
+        JiggleRig rig = new JiggleRig() {
+            rootTransform = rootTransform,
+            ignoredTransforms = ignoredTransforms == null ? new List<Transform> () : new List<Transform>(ignoredTransforms),
+            jiggleSettings = (jiggleSettings is JiggleSettingsBlend) ? Instantiate(jiggleSettings) : jiggleSettings,
+            simulatedPoints = new List<JiggleBone>()
+        };
+        try {
+            jiggleRigLookup.Add(rootTransform, rig);
+        } catch (ArgumentException e) {
+            throw new UnityException("JiggleRig was added to transform where one already exists!");
+        }
+        jiggleRigs.Add(rig);
+        CreateSimulatedPoints(rig, rig.rootTransform, null);
+    }
+
+    public void SetJiggleSettingsNormalizedBlend(Transform targetRootTransform, float normalizedBlend) {
+        if (!jiggleRigLookup.ContainsKey(targetRootTransform)) {
+            throw new UnityException($"No JiggleRig was found on the bone {targetRootTransform}");
+        }
+        JiggleRig rig = jiggleRigLookup[targetRootTransform];
+        if (rig.jiggleSettings is not JiggleSettingsBlend blend) {
+            throw new UnityException($"Attempted to change normalizedBlend of JiggleRig's JiggleSettingsBlend, when the actual settings type was {rig.jiggleSettings.GetType()}");
+        }
+        blend.normalizedBlend = normalizedBlend;
+    }
+
     private void LateUpdate() {
         if (!interpolate) {
             return;

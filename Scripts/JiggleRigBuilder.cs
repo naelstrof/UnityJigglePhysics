@@ -37,9 +37,9 @@ public class JiggleRigBuilder : MonoBehaviour {
     private void Awake() {
         accumulation = 0f;
         // When created via AddComponent, jiggleRigs will be null...
-        jiggleRigLookup ??= new Dictionary<Transform, JiggleRig>();
+        if (jiggleRigLookup == null) { jiggleRigLookup = new Dictionary<Transform, JiggleRig>(); }
         jiggleRigLookup.Clear();
-        jiggleRigs ??= new List<JiggleRig>();
+        if (jiggleRigs == null) { jiggleRigs = new List<JiggleRig>(); }
         foreach(JiggleRig rig in jiggleRigs) {
             try {
                 jiggleRigLookup.Add(rig.rootTransform, rig);
@@ -55,9 +55,9 @@ public class JiggleRigBuilder : MonoBehaviour {
     }
 
     public void AddJiggleRig(Transform rootTransform, JiggleSettingsBase jiggleSettings, ICollection<Transform> ignoredTransforms = null) {
-        jiggleRigLookup ??= new Dictionary<Transform, JiggleRig>();
-        jiggleRigs ??= new List<JiggleRig>();
-        
+        if (jiggleRigLookup == null) { jiggleRigLookup = new Dictionary<Transform, JiggleRig>(); }
+        if (jiggleRigs == null) { jiggleRigs = new List<JiggleRig>(); }
+
         JiggleRig rig = new JiggleRig() {
             rootTransform = rootTransform,
             ignoredTransforms = ignoredTransforms == null ? new List<Transform> () : new List<Transform>(ignoredTransforms),

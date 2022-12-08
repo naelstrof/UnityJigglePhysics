@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class BreastSlider : MonoBehaviour {
-    [SerializeField]
-    private AnimationCurve flatCurve;
-    [SerializeField]
-    private AnimationCurve bigCurve;
+    [Header("This is a demo on how you can use Blends to configure breast physics per character")]
     [Range(0f,1f)] [SerializeField]
     private float boobSize;
+    
+    [Header("Breast configuration")]
     [SerializeField]
-    private string blendshapeFlat;
+    private AnimationCurve bigCurve;
     [SerializeField]
     private string blendshapeBig;
     [SerializeField]
@@ -18,22 +17,20 @@ public class BreastSlider : MonoBehaviour {
     [SerializeField]
     private JigglePhysics.JiggleRigBuilder rigTarget;
     [SerializeField]
-    private JigglePhysics.JiggleSettingsBlend boobBlend;
-    void Start() {
-        // Instantiate our blend, so that we can individually adjust blend values.
-        boobBlend = JigglePhysics.JiggleSettingsBlend.Instantiate(boobBlend);
-        foreach(JigglePhysics.JiggleRigBuilder.JiggleRig rig in rigTarget.jiggleRigs) {
-            // Lazily detect which rig is a breast jiggle rig.
-            if (rig.rootTransform.name.Contains("Breast")) {
-                rig.jiggleSettings = boobBlend;
-            }
-        }
-    }
+    private JigglePhysics.JiggleSkin skinTarget;
+    [SerializeField]
+    private List<Transform> jiggleSkinTargets;
+    [SerializeField]
+    private List<Transform> jiggleRigTargets;
     void Update() {
-        boobBlend.normalizedBlend = boobSize;
         foreach(SkinnedMeshRenderer renderer in targetRenderers) {
-            renderer.SetBlendShapeWeight(renderer.sharedMesh.GetBlendShapeIndex(blendshapeFlat), flatCurve.Evaluate(boobSize)*100f);
             renderer.SetBlendShapeWeight(renderer.sharedMesh.GetBlendShapeIndex(blendshapeBig), bigCurve.Evaluate(boobSize)*100f);
+        }
+        foreach (var breast in jiggleSkinTargets) {
+            skinTarget.SetJiggleSettingsNormalizedBlend(breast, boobSize);
+        }
+        foreach (var breast in jiggleRigTargets) {
+            rigTarget.SetJiggleSettingsNormalizedBlend(breast, boobSize);
         }
     }
 }

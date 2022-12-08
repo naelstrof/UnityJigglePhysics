@@ -81,20 +81,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4072739780618791525, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: m_Name
-      value: BoobyDemoSpine
+      value: BreastDemoSpine
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
---- !u!4 &8271210122340173062 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5665493225524978551, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
-  m_PrefabInstance: {fileID: 4347906421942118001}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &4705096210103825508 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 9015363995241648661, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
-  m_PrefabInstance: {fileID: 4347906421942118001}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1313997527398279275 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3344657269369277978, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
@@ -103,5 +93,15 @@ Transform:
 --- !u!4 &4603595716296975705 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 267291497821094696, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+  m_PrefabInstance: {fileID: 4347906421942118001}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &4705096210103825508 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9015363995241648661, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+  m_PrefabInstance: {fileID: 4347906421942118001}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8271210122340173062 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5665493225524978551, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
   m_PrefabInstance: {fileID: 4347906421942118001}
   m_PrefabAsset: {fileID: 0}

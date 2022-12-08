@@ -60,7 +60,7 @@ public class JiggleSkin : MonoBehaviour {
             throw new UnityException($"No JiggleZone was found on the bone {targetRootTransform}");
         }
         JiggleZone zone = jiggleZoneLookup[targetRootTransform];
-        if (zone.jiggleSettings is not JiggleSettingsBlend blend) {
+        if (!(zone.jiggleSettings is JiggleSettingsBlend blend)) {
             throw new UnityException($"Attempted to change normalizedBlend of JiggleZone's JiggleSettingsBlend, when the actual settings type was {zone.jiggleSettings.GetType()}");
         }
         blend.normalizedBlend = normalizedBlend;

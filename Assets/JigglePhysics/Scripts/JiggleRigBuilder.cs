@@ -43,7 +43,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         foreach(JiggleRig rig in jiggleRigs) {
             try {
                 jiggleRigLookup.Add(rig.rootTransform, rig);
-            } catch (ArgumentException e) {
+            } catch (ArgumentException) {
                 throw new UnityException("JiggleRig was added to transform where one already exists!");
             }
             if (rig.jiggleSettings is JiggleSettingsBlend) {
@@ -66,7 +66,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         };
         try {
             jiggleRigLookup.Add(rootTransform, rig);
-        } catch (ArgumentException e) {
+        } catch (ArgumentException) {
             throw new UnityException("JiggleRig was added to transform where one already exists!");
         }
         jiggleRigs.Add(rig);

@@ -157,6 +157,22 @@ public class JiggleRigBuilder : MonoBehaviour {
         }
     }
 
+    public void PrepareTeleport() {
+        foreach (JiggleRig rig in jiggleRigs) {
+            foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
+                simulatedPoint.PrepareTeleport();
+            }
+        }
+    }
+    
+    public void FinishTeleport() {
+        foreach (JiggleRig rig in jiggleRigs) {
+            foreach (JiggleBone simulatedPoint in rig.simulatedPoints) {
+                simulatedPoint.FinishTeleport();
+            }
+        }
+    }
+
     private void CreateSimulatedPoints(JiggleRig rig, Transform currentTransform, JiggleBone parentJiggleBone) {
         JiggleBone newJiggleBone = new JiggleBone(currentTransform, parentJiggleBone, currentTransform.position);
         rig.simulatedPoints.Add(newJiggleBone);

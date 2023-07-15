@@ -141,10 +141,17 @@ public class JiggleBone {
     }
 
     public void PrepareTeleport() {
+        if (transform == null) {
+            return;
+        }
         preTeleportPosition = transform.position;
     }
     
     public void FinishTeleport() {
+        if (transform == null) {
+            return;
+        }
+
         Vector3 newPosition = transform.position;
         Vector3 diff = newPosition - preTeleportPosition;
         lastTargetAnimatedBoneFrame = new PositionFrame(lastTargetAnimatedBoneFrame.position + diff, lastTargetAnimatedBoneFrame.time);

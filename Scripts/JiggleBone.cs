@@ -154,7 +154,17 @@ public class JiggleBone {
     }
     
     public void FinishTeleport() {
-        Vector3 newPosition = transform.position;
+        Vector3 newPosition = Vector3.zero;
+        if (transform == null) {
+            Vector3 parentTransformPosition = parent.transform.position;
+            if (parent.parent != null) {
+                newPosition = parent.transform.TransformPoint( parent.parent.transform.InverseTransformPoint(parentTransformPosition));
+            } else {
+                newPosition = parent.transform.TransformPoint(parent.transform.parent.InverseTransformPoint(parentTransformPosition));
+            }
+        } else {
+            newPosition = transform.position;
+        }
         Vector3 diff = newPosition - preTeleportPosition;
         lastTargetAnimatedBoneFrame = new PositionFrame(lastTargetAnimatedBoneFrame.position + diff, lastTargetAnimatedBoneFrame.time);
         currentTargetAnimatedBoneFrame = new PositionFrame(currentTargetAnimatedBoneFrame.position + diff, currentTargetAnimatedBoneFrame.time);

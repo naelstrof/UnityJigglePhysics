@@ -35,6 +35,8 @@ public class JiggleBone {
     
     public Vector3 position;
     public Vector3 previousPosition;
+    
+    public Vector3 preTeleportPosition;
 
     private Vector3 extrapolatedPosition;
 
@@ -136,6 +138,19 @@ public class JiggleBone {
         Vector3 diff = newPosition - parent.position;
         Vector3 dir = diff.normalized;
         return Vector3.Lerp(newPosition, parent.position + dir * GetLengthToParent(), elasticity);
+    }
+
+    public void PrepareTeleport() {
+        preTeleportPosition = transform.position;
+    }
+    
+    public void FinishTeleport() {
+        Vector3 newPosition = transform.position;
+        Vector3 diff = newPosition - preTeleportPosition;
+        lastTargetAnimatedBoneFrame = new PositionFrame(lastTargetAnimatedBoneFrame.position + diff, lastTargetAnimatedBoneFrame.time);
+        currentTargetAnimatedBoneFrame = new PositionFrame(currentTargetAnimatedBoneFrame.position + diff, currentTargetAnimatedBoneFrame.time);
+        position += diff;
+        previousPosition += diff;
     }
 
     public Vector3 ConstrainAngle(Vector3 newPosition, float elasticity, float elasticitySoften) {

@@ -6,16 +6,51 @@ using UnityEngine;
 namespace JigglePhysics {
 
 public class JiggleSkin : MonoBehaviour {
-    [System.Serializable]
-    private class JiggleZone {
-        [Tooltip("The transform from which the zone effects, this is used as the 'center'.")]
-        public Transform target;
+    [Serializable]
+    public class JiggleZone {
+        [SerializeField][Tooltip("The transform from which the zone effects, this is used as the 'center'.")]
+        private Transform target;
         [Tooltip("How large of a radius the zone should effect, in target-space meters. (Scaling the target will effect the radius.)")]
         public float radius;
         [Tooltip("The settings that the skin should update with, create them using the Create->JigglePhysics->Settings menu option.")]
         public JiggleSettingsBase jiggleSettings;
+        
         [HideInInspector]
-        public JigglePoint simulatedPoint;
+        private JigglePoint simulatedPoint;
+
+        public void PrepareSimulate() {
+            simulatedPoint.PrepareSimulate();
+        }
+
+        public void Awake() {
+            simulatedPoint = new JigglePoint(target);
+        }
+
+        public Transform GetTargetBone() => target;
+
+        public void Simulate(Vector3 wind, double time) {
+            simulatedPoint.Simulate(jiggleSettings, wind, time);
+        }
+        public void DeriveFinalSolve(float smoothing) {
+            simulatedPoint.DeriveFinalSolvePosition(smoothing);
+        }
+
+        public void DebugDraw() {
+            simulatedPoint.DebugDraw(Color.red);
+        }
+
+        public float GetLossyScale() => target.lossyScale.x;
+
+        public Vector3 GetPosition() => target.position;
+        public Vector3 GetSolve() => simulatedPoint.extrapolatedPosition;
+
+        public void OnDrawGizmosSelected() {
+            if (target == null) {
+                return;
+            }
+            Gizmos.color = new Color(0.1f,0.1f,0.8f,0.5f);
+            Gizmos.DrawWireSphere(target.position, radius*target.lossyScale.x);
+        }
     }
     [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
     public bool interpolate = true;
@@ -28,7 +63,6 @@ public class JiggleSkin : MonoBehaviour {
     [SerializeField] [Tooltip("Draws some simple lines to show what the simulation is doing. Generally this should be disabled.")]
     private bool debugDraw = false;
     private double accumulation;
-    private Dictionary<Transform, JiggleZone> jiggleZoneLookup;
 
     private List<Material> targetMaterials;
     private List<Vector4> packedVectors;
@@ -37,56 +71,31 @@ public class JiggleSkin : MonoBehaviour {
     void Awake() {
         accumulation = 0f;
         
-        if (jiggleZones == null) { jiggleZones = new List<JiggleZone>(); }
-        if (jiggleZoneLookup == null) { jiggleZoneLookup = new Dictionary<Transform, JiggleZone>(); }
-        jiggleZoneLookup.Clear();
+        jiggleZones ??= new List<JiggleZone>();
         foreach( JiggleZone zone in jiggleZones) {
-            if (jiggleZoneLookup.ContainsKey(zone.target)) {
-                throw new UnityException($"JiggleZone was added to transform {zone.target}, where one already exists!");
-            }
-            jiggleZoneLookup.Add(zone.target, zone);
-            if (zone.jiggleSettings is JiggleSettingsBlend) {
-                zone.jiggleSettings = Instantiate(zone.jiggleSettings);
-            }
-            zone.simulatedPoint = new JigglePoint(zone.target);
+            zone.Awake();
         }
         targetMaterials = new List<Material>();
         jiggleInfoNameID = Shader.PropertyToID("_JiggleInfos");
         packedVectors = new List<Vector4>();
     }
-    public void SetJiggleSettingsNormalizedBlend(Transform targetRootTransform, float normalizedBlend) {
-        if (!jiggleZoneLookup.ContainsKey(targetRootTransform)) {
-            throw new UnityException($"No JiggleZone was found on the bone {targetRootTransform}");
-        }
-        JiggleZone zone = jiggleZoneLookup[targetRootTransform];
-        if (!(zone.jiggleSettings is JiggleSettingsBlend blend)) {
-            throw new UnityException($"Attempted to change normalizedBlend of JiggleZone's JiggleSettingsBlend, when the actual settings type was {zone.jiggleSettings.GetType()}");
-        }
-        blend.normalizedBlend = normalizedBlend;
-    }
-
-    public void SetJiggleZoneRadius(Transform targetTransform, float newRadius) {
-        if (!jiggleZoneLookup.ContainsKey(targetTransform)) {
-            throw new UnityException($"No JiggleZone was found on the bone {targetTransform}");
-        }
-        JiggleZone zone = jiggleZoneLookup[targetTransform];
-        zone.radius = newRadius;
-    }
-
-    public void AddJiggleZone(Transform targetTransform, JiggleSettingsBase jiggleSettings, float radius) {
-        if (jiggleZoneLookup == null) { jiggleZoneLookup = new Dictionary<Transform, JiggleZone>(); }
-        if (jiggleZones == null) { jiggleZones = new List<JiggleZone>(); }
-        
-        JiggleZone zone = new JiggleZone() {
-            target = targetTransform,
-            jiggleSettings = (jiggleSettings is JiggleSettingsBlend) ? Instantiate(jiggleSettings) : jiggleSettings,
-            radius = radius,
-            simulatedPoint = new JigglePoint(targetTransform)
-        };
-        if (jiggleZoneLookup.ContainsKey(targetTransform)) {
-            throw new UnityException($"JiggleZone was added to transform {zone.target}, where one already exists!");
-        }
+    public void AddJiggleZone(JiggleZone zone) {
+        jiggleZones ??= new List<JiggleZone>();
         jiggleZones.Add(zone);
+    }
+
+    public JiggleZone GetJiggleZone(Transform target) {
+        foreach (var jiggleZone in jiggleZones) {
+            if (jiggleZone.GetTargetBone() == target) {
+                return jiggleZone;
+            }
+        }
+
+        return null;
+    }
+
+    public void RemoveJiggleZone(JiggleZone zone) {
+        jiggleZones.Remove(zone);
     }
     private void LateUpdate() {
         if (!interpolate) {
@@ -94,20 +103,20 @@ public class JiggleSkin : MonoBehaviour {
         }
 
         foreach (JiggleZone zone in jiggleZones) {
-            zone.simulatedPoint.PrepareSimulate();
+            zone.PrepareSimulate();
         }
         
-        accumulation = System.Math.Min(accumulation+Time.deltaTime, Time.fixedDeltaTime*4f);
+        accumulation = Math.Min(accumulation+Time.deltaTime, Time.fixedDeltaTime*4f);
         while (accumulation > Time.fixedDeltaTime) {
             accumulation -= Time.fixedDeltaTime;
             double time = Time.timeAsDouble - accumulation;
             foreach( JiggleZone zone in jiggleZones) {
-                zone.simulatedPoint.Simulate(zone.jiggleSettings, wind, time);
+                zone.Simulate(wind, time);
             }
         }
         
         foreach( JiggleZone zone in jiggleZones) {
-            zone.simulatedPoint.DeriveFinalSolvePosition(smoothing);
+            zone.DeriveFinalSolve(smoothing);
         }
 
         UpdateMesh();
@@ -115,7 +124,7 @@ public class JiggleSkin : MonoBehaviour {
         // Debug draw stuff
         if (debugDraw) {
             foreach( JiggleZone zone in jiggleZones) {
-                zone.simulatedPoint.DebugDraw(Color.red);
+                zone.DebugDraw();
             }
         }
     }
@@ -124,10 +133,10 @@ public class JiggleSkin : MonoBehaviour {
         packedVectors.Clear();
         foreach( var targetSkin in targetSkins) {
             foreach (var zone in jiggleZones) {
-                Vector3 targetPointSkinSpace = targetSkin.rootBone.InverseTransformPoint(zone.target.position);
-                Vector3 verletPointSkinSpace = targetSkin.rootBone.InverseTransformPoint(zone.simulatedPoint.extrapolatedPosition);
+                Vector3 targetPointSkinSpace = targetSkin.rootBone.InverseTransformPoint(zone.GetPosition());
+                Vector3 verletPointSkinSpace = targetSkin.rootBone.InverseTransformPoint(zone.GetSolve());
                 packedVectors.Add(new Vector4(targetPointSkinSpace.x, targetPointSkinSpace.y, targetPointSkinSpace.z,
-                    zone.radius * zone.target.lossyScale.x));
+                    zone.radius * zone.GetLossyScale()));
                 packedVectors.Add(new Vector4(verletPointSkinSpace.x, verletPointSkinSpace.y, verletPointSkinSpace.z,
                     zone.jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Blend)));
             }
@@ -150,21 +159,21 @@ public class JiggleSkin : MonoBehaviour {
             return;
         }
         foreach (JiggleZone zone in jiggleZones) {
-            zone.simulatedPoint.PrepareSimulate();
+            zone.PrepareSimulate();
         }
         
         foreach( JiggleZone zone in jiggleZones) {
-            zone.simulatedPoint.Simulate(zone.jiggleSettings, wind, Time.time);
+            zone.Simulate(wind, Time.timeAsDouble);
         }
         
         foreach( JiggleZone zone in jiggleZones) {
-            zone.simulatedPoint.DeriveFinalSolvePosition(smoothing);
+            zone.DeriveFinalSolve(smoothing);
         }
         UpdateMesh();
         // Debug draw stuff
         if (debugDraw) {
             foreach( JiggleZone zone in jiggleZones) {
-                zone.simulatedPoint.DebugDraw(Color.red);
+                zone.DebugDraw();
             }
         }
     }
@@ -182,22 +191,19 @@ public class JiggleSkin : MonoBehaviour {
         }
         Gizmos.color = new Color(0.1f,0.1f,0.8f,0.5f);
         foreach(JiggleZone zone in jiggleZones) {
-            if (zone.target == null) {
-                continue;
-            }
-            Gizmos.DrawWireSphere(zone.target.position, zone.radius*zone.target.lossyScale.x);
+            zone.OnDrawGizmosSelected();
         }
     }
     // CPU version of the skin transformation, untested, can be useful in reconstructing the deformation on the cpu.
     public Vector3 ApplyJiggle(Vector3 toPoint, float blend) {
         Vector3 result = toPoint;
         foreach( JiggleZone zone in jiggleZones) {
-            zone.simulatedPoint.DeriveFinalSolvePosition(smoothing);
-            Vector3 targetPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.target.position);
-            Vector3 verletPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.simulatedPoint.extrapolatedPosition);
+            zone.DeriveFinalSolve(smoothing);
+            Vector3 targetPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.GetPosition());
+            Vector3 verletPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.GetSolve());
             Vector3 diff = verletPointSkinSpace - targetPointSkinSpace;
             float dist = Vector3.Distance(targetPointSkinSpace, targetSkins[0].rootBone.InverseTransformPoint(toPoint));
-            float multi = 1f-Mathf.SmoothStep(0,zone.radius*zone.target.lossyScale.x,dist);
+            float multi = 1f-Mathf.SmoothStep(0,zone.radius*zone.GetLossyScale(),dist);
             result += targetSkins[0].rootBone.TransformVector(diff) * zone.jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.Blend) * blend;
         }
         return result;

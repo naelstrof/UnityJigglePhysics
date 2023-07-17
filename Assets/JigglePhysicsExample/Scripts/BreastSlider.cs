@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using JigglePhysics;
 using UnityEngine;
 
 public class BreastSlider : MonoBehaviour {
@@ -27,10 +28,10 @@ public class BreastSlider : MonoBehaviour {
             renderer.SetBlendShapeWeight(renderer.sharedMesh.GetBlendShapeIndex(blendshapeBig), bigCurve.Evaluate(boobSize)*100f);
         }
         foreach (var breast in jiggleSkinTargets) {
-            skinTarget.SetJiggleSettingsNormalizedBlend(breast, boobSize);
+            ((JiggleSettingsBlend)skinTarget.GetJiggleZone(breast).jiggleSettings).normalizedBlend = boobSize;
         }
         foreach (var breast in jiggleRigTargets) {
-            rigTarget.SetJiggleSettingsNormalizedBlend(breast, boobSize);
+            ((JiggleSettingsBlend)rigTarget.GetJiggleRig(breast).jiggleSettings).normalizedBlend = boobSize;
         }
     }
 }

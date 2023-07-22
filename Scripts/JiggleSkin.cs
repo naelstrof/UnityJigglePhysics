@@ -18,12 +18,19 @@ public class JiggleSkin : MonoBehaviour {
         [HideInInspector]
         private JigglePoint simulatedPoint;
 
+        private bool initialized;
+
         public void PrepareSimulate() {
+            if (!initialized) {
+                throw new UnityException( "JiggleZone wasn't initialized, please call JiggleSkin.Initialize() or JiggleZone.Awake() before manually timestepping.");
+            }
+
             simulatedPoint.PrepareSimulate();
         }
 
         public void Awake() {
             simulatedPoint = new JigglePoint(target);
+            initialized = true;
         }
 
         public Transform GetTargetBone() => target;
@@ -69,8 +76,11 @@ public class JiggleSkin : MonoBehaviour {
     private int jiggleInfoNameID;
     private const float smoothing = 1f;
     void Awake() {
+        Initialize();
+    }
+
+    public void Initialize() {
         accumulation = 0f;
-        
         jiggleZones ??= new List<JiggleZone>();
         foreach( JiggleZone zone in jiggleZones) {
             zone.Awake();
@@ -79,6 +89,7 @@ public class JiggleSkin : MonoBehaviour {
         jiggleInfoNameID = Shader.PropertyToID("_JiggleInfos");
         packedVectors = new List<Vector4>();
     }
+
     public void AddJiggleZone(JiggleZone zone) {
         jiggleZones ??= new List<JiggleZone>();
         jiggleZones.Add(zone);
@@ -97,16 +108,12 @@ public class JiggleSkin : MonoBehaviour {
     public void RemoveJiggleZone(JiggleZone zone) {
         jiggleZones.Remove(zone);
     }
-    private void LateUpdate() {
-        if (!interpolate) {
-            return;
-        }
 
+    public void Advance(float deltaTime) {
         foreach (JiggleZone zone in jiggleZones) {
             zone.PrepareSimulate();
         }
-        
-        accumulation = Math.Min(accumulation+Time.deltaTime, Time.fixedDeltaTime*4f);
+        accumulation = Math.Min(accumulation+deltaTime, Time.fixedDeltaTime*4f);
         while (accumulation > Time.fixedDeltaTime) {
             accumulation -= Time.fixedDeltaTime;
             double time = Time.timeAsDouble - accumulation;
@@ -118,15 +125,19 @@ public class JiggleSkin : MonoBehaviour {
         foreach( JiggleZone zone in jiggleZones) {
             zone.DeriveFinalSolve(smoothing);
         }
-
         UpdateMesh();
-
-        // Debug draw stuff
-        if (debugDraw) {
-            foreach( JiggleZone zone in jiggleZones) {
-                zone.DebugDraw();
-            }
+        if (!debugDraw) return;
+        foreach( JiggleZone zone in jiggleZones) {
+            zone.DebugDraw();
         }
+    }
+
+    private void LateUpdate() {
+        if (!interpolate) {
+            return;
+        }
+
+        Advance(Time.deltaTime);
     }
     private void UpdateMesh() {
         // Pack the data
@@ -158,25 +169,9 @@ public class JiggleSkin : MonoBehaviour {
         if (interpolate) {
             return;
         }
-        foreach (JiggleZone zone in jiggleZones) {
-            zone.PrepareSimulate();
-        }
-        
-        foreach( JiggleZone zone in jiggleZones) {
-            zone.Simulate(wind, Time.timeAsDouble);
-        }
-        
-        foreach( JiggleZone zone in jiggleZones) {
-            zone.DeriveFinalSolve(smoothing);
-        }
-        UpdateMesh();
-        // Debug draw stuff
-        if (debugDraw) {
-            foreach( JiggleZone zone in jiggleZones) {
-                zone.DebugDraw();
-            }
-        }
+        Advance(Time.deltaTime);
     }
+    
     void OnValidate() {
         if (jiggleZones == null) {
             return;

@@ -14,6 +14,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         public JiggleSettingsBase jiggleSettings;
         [SerializeField][Tooltip("The list of transforms to ignore during the jiggle. Each bone listed will also ignore all the children of the specified bone.")]
         private List<Transform> ignoredTransforms;
+        private bool initialized;
 
         public Transform GetRootTransform() => rootTransform;
         public JiggleRig(Transform rootTransform, JiggleSettingsBase jiggleSettings,
@@ -28,6 +29,10 @@ public class JiggleRigBuilder : MonoBehaviour {
         private List<JiggleBone> simulatedPoints;
 
         public void PrepareBone() {
+            if (!initialized) {
+                throw new UnityException( "JiggleRig was never initialized. Please call JiggleRig.Initialize() if you're going to manually timestep.");
+            }
+
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
                 simulatedPoint.PrepareBone();
             }
@@ -41,6 +46,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         public void Awake() {
             simulatedPoints = new List<JiggleBone>();
             CreateSimulatedPoints(simulatedPoints, ignoredTransforms, rootTransform, null);
+            initialized = true;
         }
 
         public void DeriveFinalSolve() {
@@ -117,11 +123,37 @@ public class JiggleRigBuilder : MonoBehaviour {
 
     private double accumulation;
     private void Awake() {
+        Initialize();
+    }
+
+    public void Initialize() {
         accumulation = 0f;
-        // When created via AddComponent, jiggleRigs will be null...
         jiggleRigs ??= new List<JiggleRig>();
         foreach(JiggleRig rig in jiggleRigs) {
             rig.Awake();
+        }
+    }
+
+    public void Advance(float deltaTime) {
+        foreach(JiggleRig rig in jiggleRigs) {
+            rig.PrepareBone();
+        }
+
+        accumulation = Math.Min(accumulation+deltaTime, Time.fixedDeltaTime*4f);
+        while (accumulation > Time.fixedDeltaTime) {
+            accumulation -= Time.fixedDeltaTime;
+            double time = Time.timeAsDouble - accumulation;
+            foreach(JiggleRig rig in jiggleRigs) {
+                rig.Simulate(wind, time);
+            }
+        }
+
+        foreach (JiggleRig rig in jiggleRigs) {
+            rig.DeriveFinalSolve();
+        }
+
+        foreach (JiggleRig rig in jiggleRigs) {
+            rig.Pose(debugDraw);
         }
     }
 
@@ -150,48 +182,14 @@ public class JiggleRigBuilder : MonoBehaviour {
         if (!interpolate) {
             return;
         }
-        
-        foreach(JiggleRig rig in jiggleRigs) {
-            rig.PrepareBone();
-        }
-
-        accumulation = Math.Min(accumulation+Time.deltaTime, Time.fixedDeltaTime*4f);
-        while (accumulation > Time.fixedDeltaTime) {
-            accumulation -= Time.fixedDeltaTime;
-            double time = Time.timeAsDouble - accumulation;
-            foreach(JiggleRig rig in jiggleRigs) {
-                rig.Simulate(wind, time);
-            }
-        }
-
-        foreach (JiggleRig rig in jiggleRigs) {
-            rig.DeriveFinalSolve();
-        }
-
-        foreach (JiggleRig rig in jiggleRigs) {
-            rig.Pose(debugDraw);
-        }
+        Advance(Time.deltaTime);
     }
 
     private void FixedUpdate() {
         if (interpolate) {
             return;
         }
-        foreach(JiggleRig rig in jiggleRigs) {
-            rig.PrepareBone();
-        }
-
-        foreach(JiggleRig rig in jiggleRigs) {
-            rig.Simulate(wind, Time.timeAsDouble);
-        }
-        
-        foreach (JiggleRig rig in jiggleRigs) {
-            rig.DeriveFinalSolve();
-        }
-
-        foreach (JiggleRig rig in jiggleRigs) {
-            rig.Pose(debugDraw);
-        }
+        Advance(Time.deltaTime);
     }
 
     public void PrepareTeleport() {

@@ -28,7 +28,7 @@ public class JiggleSkin : MonoBehaviour {
             simulatedPoint.PrepareSimulate();
         }
 
-        public void Awake() {
+        public void Initialize() {
             simulatedPoint = new JigglePoint(target);
             initialized = true;
         }
@@ -61,8 +61,7 @@ public class JiggleSkin : MonoBehaviour {
     }
     [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
     public bool interpolate = true;
-    [SerializeField]
-    private List<JiggleZone> jiggleZones;
+    public List<JiggleZone> jiggleZones;
     [SerializeField] [Tooltip("The list of skins to send the deformation data too, they should have JiggleSkin-compatible materials!")]
     public List<SkinnedMeshRenderer> targetSkins;
     [Tooltip("An air force that is applied to the entire rig, this is useful to plug in some wind volumes from external sources.")]
@@ -83,16 +82,11 @@ public class JiggleSkin : MonoBehaviour {
         accumulation = 0f;
         jiggleZones ??= new List<JiggleZone>();
         foreach( JiggleZone zone in jiggleZones) {
-            zone.Awake();
+            zone.Initialize();
         }
         targetMaterials = new List<Material>();
         jiggleInfoNameID = Shader.PropertyToID("_JiggleInfos");
         packedVectors = new List<Vector4>();
-    }
-
-    public void AddJiggleZone(JiggleZone zone) {
-        jiggleZones ??= new List<JiggleZone>();
-        jiggleZones.Add(zone);
     }
 
     public JiggleZone GetJiggleZone(Transform target) {
@@ -103,10 +97,6 @@ public class JiggleSkin : MonoBehaviour {
         }
 
         return null;
-    }
-
-    public void RemoveJiggleZone(JiggleZone zone) {
-        jiggleZones.Remove(zone);
     }
 
     public void Advance(float deltaTime) {

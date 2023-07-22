@@ -22,7 +22,7 @@ public class JiggleRigBuilder : MonoBehaviour {
             this.rootTransform = rootTransform;
             this.jiggleSettings = jiggleSettings;
             this.ignoredTransforms = new List<Transform>(ignoredTransforms);
-            Awake();
+            Initialize();
         }
 
         [HideInInspector]
@@ -43,7 +43,7 @@ public class JiggleRigBuilder : MonoBehaviour {
             }
         }
 
-        public void Awake() {
+        public void Initialize() {
             simulatedPoints = new List<JiggleBone>();
             CreateSimulatedPoints(simulatedPoints, ignoredTransforms, rootTransform, null);
             initialized = true;
@@ -112,8 +112,7 @@ public class JiggleRigBuilder : MonoBehaviour {
     [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
     public bool interpolate = true;
 
-    [SerializeField]
-    private List<JiggleRig> jiggleRigs;
+    public List<JiggleRig> jiggleRigs;
 
     [Tooltip("An air force that is applied to the entire rig, this is useful to plug in some wind volumes from external sources.")]
     public Vector3 wind;
@@ -130,7 +129,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         accumulation = 0f;
         jiggleRigs ??= new List<JiggleRig>();
         foreach(JiggleRig rig in jiggleRigs) {
-            rig.Awake();
+            rig.Initialize();
         }
     }
 
@@ -157,14 +156,6 @@ public class JiggleRigBuilder : MonoBehaviour {
         }
     }
 
-    public void AddJiggleRig(JiggleRig rig) {
-        jiggleRigs ??= new List<JiggleRig>();
-        if (jiggleRigs.Contains(rig)) {
-            throw new UnityException("Added an already existing jiggle rig to the jiggle rig builder.");
-        }
-        jiggleRigs.Add(rig);
-    }
-
     public JiggleRig GetJiggleRig(Transform rootTransform) {
         foreach (var rig in jiggleRigs) {
             if (rig.GetRootTransform() == rootTransform) {
@@ -173,11 +164,6 @@ public class JiggleRigBuilder : MonoBehaviour {
         }
         return null;
     }
-
-    public void RemoveJiggleRig(JiggleRig rig) {
-        jiggleRigs.Remove(rig);
-    }
-
     private void LateUpdate() {
         if (!interpolate) {
             return;

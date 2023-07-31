@@ -21,6 +21,10 @@ public class JiggleSettings : JiggleSettingsBase {
     private float elasticitySoften = 0f;
     [SerializeField] [Range(0f,1f)] [Tooltip("How much linear force to apply in order to keep the jiggled object at the correct length. Squash and stretch!")]
     private float lengthElasticity = 0.4f;
+    [SerializeField] [Tooltip("How much radius points have, only used for collisions. Set to 0 to disable collisions")]
+    private float radiusMultiplier = 0f;
+    [SerializeField]
+    private AnimationCurve radiusCurve = new(new Keyframe(0f, 1f), new Keyframe(1f, 0f));
     public override float GetParameter(JiggleSettingParameter parameter) {
         switch(parameter) {
             case JiggleSettingParameter.Gravity: return gravityMultiplier;
@@ -44,6 +48,10 @@ public class JiggleSettings : JiggleSettingsBase {
             case JiggleSettingParameter.LengthElasticity: lengthElasticity = value; break;
             default: throw new UnityException("Invalid Jiggle Setting Parameter:"+parameter);
         }
+    }
+
+    public override float GetRadius(float normalizedIndex) {
+        return radiusMultiplier * radiusCurve.Evaluate(normalizedIndex);
     }
 }
 

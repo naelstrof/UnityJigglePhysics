@@ -14,6 +14,8 @@ public class JiggleRigBuilder : MonoBehaviour {
         public JiggleSettingsBase jiggleSettings;
         [SerializeField][Tooltip("The list of transforms to ignore during the jiggle. Each bone listed will also ignore all the children of the specified bone.")]
         private List<Transform> ignoredTransforms;
+        [SerializeField] private List<Collider> colliders;
+        
         private bool initialized;
 
         public Transform GetRootTransform() => rootTransform;
@@ -39,13 +41,16 @@ public class JiggleRigBuilder : MonoBehaviour {
         }
         public void Simulate(Vector3 wind, double time) {
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.Simulate(jiggleSettings, wind, time);
+                simulatedPoint.Simulate(jiggleSettings, wind, time, colliders);
             }
         }
 
         public void Initialize() {
             simulatedPoints = new List<JiggleBone>();
             CreateSimulatedPoints(simulatedPoints, ignoredTransforms, rootTransform, null);
+            foreach (var simulatedPoint in simulatedPoints) {
+                simulatedPoint.CalculateNormalizedIndex();
+            }
             initialized = true;
         }
 
@@ -75,6 +80,15 @@ public class JiggleRigBuilder : MonoBehaviour {
         public void FinishTeleport() {
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
                 simulatedPoint.FinishTeleport();
+            }
+        }
+
+        public void OnDrawGizmos() {
+            if (!initialized || simulatedPoints == null) {
+                Initialize();
+            }
+            foreach (JiggleBone simulatedPoint in simulatedPoints) {
+                simulatedPoint.OnDrawGizmos(jiggleSettings);
             }
         }
 
@@ -190,6 +204,11 @@ public class JiggleRigBuilder : MonoBehaviour {
         }
     }
 
+    private void OnDrawGizmos() {
+        foreach (var rig in jiggleRigs) {
+            rig.OnDrawGizmos();
+        }
+    }
 }
 
 }

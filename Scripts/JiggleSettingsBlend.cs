@@ -18,6 +18,14 @@ public class JiggleSettingsBlend : JiggleSettingsBase {
         return Mathf.Lerp(blendSettings[Mathf.Clamp(targetA,0,blendSettings.Count-1)].GetParameter(parameter),
                           blendSettings[Mathf.Clamp(targetB,0,blendSettings.Count-1)].GetParameter(parameter), Mathf.Clamp01(normalizedBlendClamp*blendSettings.Count-targetA));
     }
+
+    public override float GetRadius(float normalizedIndex) {
+        float normalizedBlendClamp = Mathf.Clamp01(normalizedBlend);
+        int targetA = Mathf.FloorToInt(normalizedBlendClamp*blendSettings.Count);
+        int targetB = Mathf.FloorToInt(normalizedBlendClamp*blendSettings.Count)+1;
+        return Mathf.Lerp(blendSettings[Mathf.Clamp(targetA,0,blendSettings.Count-1)].GetRadius(normalizedIndex),
+                          blendSettings[Mathf.Clamp(targetB,0,blendSettings.Count-1)].GetRadius(normalizedIndex), Mathf.Clamp01(normalizedBlendClamp*blendSettings.Count-targetA));
+    }
 }
 
 }

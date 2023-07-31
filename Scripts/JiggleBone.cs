@@ -14,6 +14,8 @@ public class JiggleBone {
             this.time = time;
         }
     }
+
+    private static SphereCollider sphereCollider;
     
     private PositionFrame currentTargetAnimatedBoneFrame;
     private PositionFrame lastTargetAnimatedBoneFrame;
@@ -25,6 +27,7 @@ public class JiggleBone {
     private Vector3 bonePositionChangeCheck;
     public Quaternion lastValidPoseBoneRotation;
     private Vector3 lastValidPoseBoneLocalPosition;
+    private float normalizedIndex;
     //public Vector3 targetAnimatedBonePosition;
 
 
@@ -69,6 +72,15 @@ public class JiggleBone {
     }
     
     public JiggleBone(Transform transform, JiggleBone parent, Vector3 position) {
+        if (sphereCollider == null) {
+            var obj = new GameObject("JiggleBoneSphereCollider", typeof(SphereCollider));
+            obj.hideFlags = HideFlags.HideAndDontSave;
+            if (Application.isPlaying) {
+                Object.DontDestroyOnLoad(obj);
+            }
+            sphereCollider = obj.GetComponent<SphereCollider>();
+        }
+
         this.transform = transform;
         this.parent = parent;
         this.position = position;
@@ -91,7 +103,27 @@ public class JiggleBone {
         this.parent.child = this;
     }
 
-    public void Simulate(JiggleSettingsBase jiggleSettings, Vector3 wind, double time) {
+    public void CalculateNormalizedIndex() {
+        int distanceToRoot = 0;
+        JiggleBone test = this;
+        while (test.parent != null) {
+            test = test.parent;
+            distanceToRoot++;
+        }
+
+        int distanceToChild = 0;
+        test = this;
+        while (test.child != null) {
+            test = test.child;
+            distanceToChild++;
+        }
+
+        int max = distanceToRoot + distanceToChild;
+        float frac = (float)distanceToRoot / max;
+        normalizedIndex = frac;
+    }
+
+    public void Simulate(JiggleSettingsBase jiggleSettings, Vector3 wind, double time, ICollection<Collider> colliders) {
         currentFixedAnimatedBonePosition = GetTargetBonePosition(lastTargetAnimatedBoneFrame, currentTargetAnimatedBoneFrame, time);
         
         if (parent == null) {
@@ -99,16 +131,27 @@ public class JiggleBone {
             return;
         }
         Vector3 localSpaceVelocity = (position-previousPosition) - (parent.position-parent.previousPosition);
-        //Debug.DrawLine(position, position + localSpaceVelocity, Color.cyan);
         Vector3 newPosition = JiggleBone.NextPhysicsPosition(
             position, previousPosition, localSpaceVelocity, Time.fixedDeltaTime,
-            jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Gravity),
-            jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Friction),
-            jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AirFriction)
+            jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.Gravity),
+            jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.Friction),
+            jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AirFriction)
         );
         newPosition += wind * (Time.fixedDeltaTime * jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AirFriction));
-        newPosition = ConstrainAngle(newPosition, jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AngleElasticity)*jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AngleElasticity), jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.ElasticitySoften));
-        newPosition = ConstrainLength(newPosition, jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.LengthElasticity)*jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.LengthElasticity));
+
+        newPosition = ConstrainAngle(newPosition, jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AngleElasticity)*jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AngleElasticity), jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.ElasticitySoften));
+        newPosition = ConstrainLength(newPosition, jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.LengthElasticity)*jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.LengthElasticity));
+        foreach (var collider in colliders) {
+            sphereCollider.radius = jiggleSettings.GetRadius(normalizedIndex);
+            if (sphereCollider.radius <= 0) {
+                continue;
+            }
+            if (Physics.ComputePenetration(sphereCollider, newPosition, Quaternion.identity,
+                                           collider, collider.transform.position, collider.transform.rotation,
+                                           out Vector3 dir, out float dist)) {
+                newPosition += dir * dist;
+            }
+        }
         SetNewPosition(newPosition, time);
     }
 
@@ -215,8 +258,7 @@ public class JiggleBone {
         } else {
             Debug.DrawLine(position, parent.position, simulateColor, 0, false);
         }
-
-        //Debug.DrawLine(currentFixedAnimatedBonePosition, parent.currentFixedAnimatedBonePosition, targetColor, 0, false);
+        Debug.DrawLine(currentFixedAnimatedBonePosition, parent.currentFixedAnimatedBonePosition, targetColor, 0, false);
     }
     public Vector3 DeriveFinalSolvePosition(Vector3 offset, float smoothing) {
         double t = ((Time.timeAsDouble - smoothing*Time.fixedDeltaTime) - previousUpdateTime) / Time.fixedDeltaTime;
@@ -235,6 +277,16 @@ public class JiggleBone {
             }
         }
         CacheAnimationPosition();
+    }
+
+    public void OnDrawGizmos(JiggleSettingsBase jiggleSettings) {
+        if (child != null) {
+            Gizmos.DrawLine(position, child.position);
+        }
+
+        if (jiggleSettings != null) {
+            Gizmos.DrawWireSphere(position, jiggleSettings.GetRadius(normalizedIndex));
+        }
     }
 
     public void PoseBone(float blend) {

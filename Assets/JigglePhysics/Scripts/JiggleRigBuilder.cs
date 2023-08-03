@@ -47,6 +47,10 @@ public class JiggleRigBuilder : MonoBehaviour {
 
         public void Initialize() {
             simulatedPoints = new List<JiggleBone>();
+            if (rootTransform == null) {
+                return;
+            }
+
             CreateSimulatedPoints(simulatedPoints, ignoredTransforms, rootTransform, null);
             foreach (var simulatedPoint in simulatedPoints) {
                 simulatedPoint.CalculateNormalizedIndex();
@@ -205,8 +209,18 @@ public class JiggleRigBuilder : MonoBehaviour {
     }
 
     private void OnDrawGizmos() {
+        if (jiggleRigs == null) {
+            return;
+        }
         foreach (var rig in jiggleRigs) {
             rig.OnDrawGizmos();
+        }
+    }
+
+    private void OnValidate() {
+        if (Application.isPlaying) return;
+        foreach (JiggleRig rig in jiggleRigs) {
+            rig.Initialize();
         }
     }
 }

@@ -15,7 +15,30 @@ public class JiggleBone {
         }
     }
 
-    private static SphereCollider sphereCollider;
+    private static class CachedSphereCollider {
+        private static SphereCollider _sphereCollider;
+        public static bool TryGet(out SphereCollider collider) {
+            if (_sphereCollider != null) {
+                collider = _sphereCollider;
+                return true;
+            }
+            try {
+                var obj = new GameObject("JiggleBoneSphereCollider", typeof(SphereCollider));
+                obj.hideFlags = HideFlags.HideAndDontSave;
+                if (Application.isPlaying) {
+                    Object.DontDestroyOnLoad(obj);
+                }
+
+                _sphereCollider = obj.GetComponent<SphereCollider>();
+                collider = _sphereCollider;
+                return true;
+            } catch {
+                collider = null;
+                return false;
+            }
+        }
+    }
+
     
     private PositionFrame currentTargetAnimatedBoneFrame;
     private PositionFrame lastTargetAnimatedBoneFrame;
@@ -72,15 +95,6 @@ public class JiggleBone {
     }
     
     public JiggleBone(Transform transform, JiggleBone parent, Vector3 position) {
-        if (sphereCollider == null) {
-            var obj = new GameObject("JiggleBoneSphereCollider", typeof(SphereCollider));
-            obj.hideFlags = HideFlags.HideAndDontSave;
-            if (Application.isPlaying) {
-                Object.DontDestroyOnLoad(obj);
-            }
-            sphereCollider = obj.GetComponent<SphereCollider>();
-        }
-
         this.transform = transform;
         this.parent = parent;
         this.position = position;
@@ -141,35 +155,46 @@ public class JiggleBone {
 
         newPosition = ConstrainAngle(newPosition, jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AngleElasticity)*jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AngleElasticity), jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.ElasticitySoften));
         newPosition = ConstrainLength(newPosition, jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.LengthElasticity)*jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.LengthElasticity));
-        foreach (var collider in colliders) {
-            sphereCollider.radius = jiggleSettings.GetRadius(normalizedIndex);
-            if (sphereCollider.radius <= 0) {
-                continue;
-            }
-            if (Physics.ComputePenetration(sphereCollider, newPosition, Quaternion.identity,
-                                           collider, collider.transform.position, collider.transform.rotation,
-                                           out Vector3 dir, out float dist)) {
-                newPosition += dir * dist;
+        if (CachedSphereCollider.TryGet(out SphereCollider sphereCollider)) {
+            foreach (var collider in colliders) {
+                sphereCollider.radius = jiggleSettings.GetRadius(normalizedIndex);
+                if (sphereCollider.radius <= 0) {
+                    continue;
+                }
+
+                if (Physics.ComputePenetration(sphereCollider, newPosition, Quaternion.identity,
+                        collider, collider.transform.position, collider.transform.rotation,
+                        out Vector3 dir, out float dist)) {
+                    newPosition += dir * dist;
+                }
             }
         }
+
         SetNewPosition(newPosition, time);
+    }
+
+    private Vector3 GetProjectedPosition() {
+        if (transform != null) {
+            throw new UnityException("Tried to get a projected position of a jigglebone that doesn't need to project!");
+        }
+        Vector3 parentTransformPosition = parent.transform.position;
+        if (parent.parent != null) {
+            //Vector3 projectedForward = (parentTransformPosition - parent.parent.transform.position).normalized;
+            Vector3 pos = parent.transform.TransformPoint( parent.parent.transform.InverseTransformPoint(parentTransformPosition));
+            return pos;
+        } else {
+            // parent.transform.parent is guaranteed to exist here, unless the user is jiggling a single bone by itself (which throws an exception).
+            //Vector3 projectedForward = (parentTransformPosition - parent.transform.parent.position).normalized;
+            Vector3 pos = parent.transform.TransformPoint(parent.transform.parent.InverseTransformPoint(parentTransformPosition));
+            return pos;
+        }
     }
 
     public void CacheAnimationPosition() {
         // Purely virtual particles need to reconstruct their desired position.
         lastTargetAnimatedBoneFrame = currentTargetAnimatedBoneFrame;
         if (transform == null) {
-            Vector3 parentTransformPosition = parent.transform.position;
-            if (parent.parent != null) {
-                //Vector3 projectedForward = (parentTransformPosition - parent.parent.transform.position).normalized;
-                Vector3 pos = parent.transform.TransformPoint( parent.parent.transform.InverseTransformPoint(parentTransformPosition));
-                currentTargetAnimatedBoneFrame = new PositionFrame(pos, Time.timeAsDouble);
-            } else {
-                // parent.transform.parent is guaranteed to exist here, unless the user is jiggling a single bone by itself (which throws an exception).
-                //Vector3 projectedForward = (parentTransformPosition - parent.transform.parent.position).normalized;
-                Vector3 pos = parent.transform.TransformPoint(parent.transform.parent.InverseTransformPoint(parentTransformPosition));
-                currentTargetAnimatedBoneFrame = new PositionFrame(pos, Time.timeAsDouble);
-            }
+            currentTargetAnimatedBoneFrame = new PositionFrame(GetProjectedPosition(), Time.timeAsDouble);
             return;
         }
         currentTargetAnimatedBoneFrame = new PositionFrame(transform.position, Time.timeAsDouble);
@@ -280,12 +305,17 @@ public class JiggleBone {
     }
 
     public void OnDrawGizmos(JiggleSettingsBase jiggleSettings) {
-        if (child != null) {
-            Gizmos.DrawLine(position, child.position);
+        if (transform != null && child.transform != null) {
+            Gizmos.DrawLine(transform.position, child.transform.position);
         }
-
-        if (jiggleSettings != null) {
-            Gizmos.DrawWireSphere(position, jiggleSettings.GetRadius(normalizedIndex));
+        if (transform != null && child.transform == null) {
+            Gizmos.DrawLine(transform.position, child.GetProjectedPosition());
+        }
+        if (transform != null && jiggleSettings != null) {
+            Gizmos.DrawWireSphere(transform.position, jiggleSettings.GetRadius(normalizedIndex));
+        }
+        if (transform == null && jiggleSettings != null) {
+            Gizmos.DrawWireSphere(GetProjectedPosition(), jiggleSettings.GetRadius(normalizedIndex));
         }
     }
 

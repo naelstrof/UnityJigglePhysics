@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace JigglePhysics {
@@ -39,9 +40,26 @@ public class JiggleRigBuilder : MonoBehaviour {
                 simulatedPoint.PrepareBone();
             }
         }
-        public void Simulate(Vector3 wind, double time) {
+
+        public void FirstPass(Vector3 wind, double time) {
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.Simulate(jiggleSettings, wind, time, colliders);
+                simulatedPoint.FirstPass(jiggleSettings, wind, time);
+            }
+        }
+        public void SecondPass() {
+            for (int i=simulatedPoints.Count-1;i>=0;i--) {
+                simulatedPoints[i].SecondPass(jiggleSettings);
+            }
+        }
+        public void ThirdPass() {
+            foreach (JiggleBone simulatedPoint in simulatedPoints) {
+                simulatedPoint.ThirdPass(jiggleSettings);
+            }
+        }
+        
+        public void FinalPass(double time) {
+            foreach (JiggleBone simulatedPoint in simulatedPoints) {
+                simulatedPoint.FinalPass(jiggleSettings, time, colliders);
             }
         }
 
@@ -161,7 +179,16 @@ public class JiggleRigBuilder : MonoBehaviour {
             accumulation -= Time.fixedDeltaTime;
             double time = Time.timeAsDouble - accumulation;
             foreach(JiggleRig rig in jiggleRigs) {
-                rig.Simulate(wind, time);
+                rig.FirstPass(wind, time);
+            }
+            foreach (JiggleRig rig in jiggleRigs) {
+                rig.SecondPass();
+            }
+            foreach (JiggleRig rig in jiggleRigs) {
+                rig.ThirdPass();
+            }
+            foreach (JiggleRig rig in jiggleRigs) {
+                rig.FinalPass(time);
             }
         }
 

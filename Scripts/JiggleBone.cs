@@ -137,41 +137,54 @@ public class JiggleBone {
         normalizedIndex = frac;
     }
 
-    public void Simulate(JiggleSettingsBase jiggleSettings, Vector3 wind, double time, ICollection<Collider> colliders) {
+    public void FirstPass(JiggleSettingsBase jiggleSettings, Vector3 wind, double time) {
         currentFixedAnimatedBonePosition = GetTargetBonePosition(lastTargetAnimatedBoneFrame, currentTargetAnimatedBoneFrame, time);
-        
         if (parent == null) {
-            SetNewPosition(currentFixedAnimatedBonePosition, time);
+            RecordPosition(time);
+            position = currentFixedAnimatedBonePosition;
             return;
         }
         Vector3 localSpaceVelocity = (position-previousPosition) - (parent.position-parent.previousPosition);
-        Vector3 newPosition = JiggleBone.NextPhysicsPosition(
+        Vector3 newPosition = NextPhysicsPosition(
             position, previousPosition, localSpaceVelocity, Time.fixedDeltaTime,
             jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.Gravity),
             jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.Friction),
             jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AirFriction)
         );
         newPosition += wind * (Time.fixedDeltaTime * jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AirFriction));
+        RecordPosition(time);
+        position = newPosition;
+    }
 
-        newPosition = ConstrainAngle(newPosition, jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AngleElasticity)*jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AngleElasticity), jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.ElasticitySoften));
-        newPosition = ConstrainLength(newPosition, jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.LengthElasticity)*jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.LengthElasticity));
-        if (CachedSphereCollider.TryGet(out SphereCollider sphereCollider)) {
-            foreach (var collider in colliders) {
-                sphereCollider.radius = jiggleSettings.GetRadius(normalizedIndex);
-                if (sphereCollider.radius <= 0) {
-                    continue;
-                }
+    public void SecondPass(JiggleSettingsBase jiggleSettings) {
+        position = ConstrainLengthBackwards(position, jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.LengthElasticity)*jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.LengthElasticity)*0.5f);
+        //position = ConstrainAngleBackward(position,jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AngleElasticity)*jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AngleElasticity), jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.ElasticitySoften));
+    }
 
-                if (Physics.ComputePenetration(sphereCollider, newPosition, Quaternion.identity,
-                        collider, collider.transform.position, collider.transform.rotation,
-                        out Vector3 dir, out float dist)) {
-                    newPosition += dir * dist;
-                }
+    public void ThirdPass(JiggleSettingsBase jiggleSettings) {
+        if (parent == null) {
+            return;
+        }
+        position = ConstrainAngle(position, jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AngleElasticity)*jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AngleElasticity), jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.ElasticitySoften)); 
+        position = ConstrainLength(position, jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.LengthElasticity)*jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.LengthElasticity));
+    }
+
+    public void FinalPass(JiggleSettingsBase jiggleSettings, double time, ICollection<Collider> colliders) {
+        if (!CachedSphereCollider.TryGet(out SphereCollider sphereCollider)) return;
+        foreach (var collider in colliders) {
+            sphereCollider.radius = jiggleSettings.GetRadius(normalizedIndex);
+            if (sphereCollider.radius <= 0) {
+                continue;
+            }
+
+            if (Physics.ComputePenetration(sphereCollider, position, Quaternion.identity,
+                    collider, collider.transform.position, collider.transform.rotation,
+                    out Vector3 dir, out float dist)) {
+                position += dir * dist;
             }
         }
-
-        SetNewPosition(newPosition, time);
     }
+
 
     private Vector3 GetProjectedPosition() {
         if (transform != null) {
@@ -202,6 +215,15 @@ public class JiggleBone {
         lastValidPoseBoneLocalPosition = transform.localPosition;
     }
     
+    public Vector3 ConstrainLengthBackwards(Vector3 newPosition, float elasticity) {
+        if (child == null) {
+            return newPosition;
+        }
+        Vector3 diff = newPosition - child.position;
+        Vector3 dir = diff.normalized;
+        return Vector3.Lerp(newPosition, child.position + dir * child.GetLengthToParent(), elasticity);
+    }
+    
     public Vector3 ConstrainLength(Vector3 newPosition, float elasticity) {
         Vector3 diff = newPosition - parent.position;
         Vector3 dir = diff.normalized;
@@ -222,25 +244,43 @@ public class JiggleBone {
     }
     
     public void FinishTeleport() {
-        Vector3 newPosition = Vector3.zero;
+        Vector3 teleportedPosition;
         if (transform == null) {
             Vector3 parentTransformPosition = parent.transform.position;
             if (parent.parent != null) {
-                newPosition = parent.transform.TransformPoint( parent.parent.transform.InverseTransformPoint(parentTransformPosition));
+                teleportedPosition = parent.transform.TransformPoint( parent.parent.transform.InverseTransformPoint(parentTransformPosition));
             } else {
-                newPosition = parent.transform.TransformPoint(parent.transform.parent.InverseTransformPoint(parentTransformPosition));
+                teleportedPosition = parent.transform.TransformPoint(parent.transform.parent.InverseTransformPoint(parentTransformPosition));
             }
         } else {
-            newPosition = transform.position;
+            teleportedPosition = transform.position;
         }
-        Vector3 diff = newPosition - preTeleportPosition;
+        Vector3 diff = teleportedPosition - preTeleportPosition;
         lastTargetAnimatedBoneFrame = new PositionFrame(lastTargetAnimatedBoneFrame.position + diff, lastTargetAnimatedBoneFrame.time);
         currentTargetAnimatedBoneFrame = new PositionFrame(currentTargetAnimatedBoneFrame.position + diff, currentTargetAnimatedBoneFrame.time);
         position += diff;
         previousPosition += diff;
     }
 
-    public Vector3 ConstrainAngle(Vector3 newPosition, float elasticity, float elasticitySoften) {
+    private Vector3 ConstrainAngleBackward(Vector3 newPosition, float elasticity, float elasticitySoften) {
+        if (child == null || child.child == null) {
+            return newPosition;
+        }
+        Vector3 cToDTargetPose = child.child.currentFixedAnimatedBonePosition - child.currentFixedAnimatedBonePosition;
+        Vector3 cToD = child.child.position - child.position;
+        Quaternion neededRotation = Quaternion.FromToRotation(cToDTargetPose, cToD);
+        Vector3 cToB = newPosition - child.position;
+        Vector3 constraintTarget = neededRotation * cToB;
+
+        Debug.DrawLine(newPosition, child.position + constraintTarget, Color.cyan);
+        float error = Vector3.Distance(newPosition, child.position + constraintTarget);
+        error /= child.GetLengthToParent();
+        error = Mathf.Clamp01(error);
+        error = Mathf.Pow(error, elasticitySoften * 2f);
+        return Vector3.Lerp(newPosition, child.position + constraintTarget, elasticity * error);
+    }
+
+    private Vector3 ConstrainAngle(Vector3 newPosition, float elasticity, float elasticitySoften) {
         Vector3 parentParentPosition;
         Vector3 poseParentParent;
         if (parent.parent == null) {
@@ -262,12 +302,10 @@ public class JiggleBone {
         return Vector3.Lerp(newPosition, parentParentPosition + constraintTarget, elasticity * error);
     }
 
-    public void SetNewPosition(Vector3 newPosition, double time) {
+    private void RecordPosition(double time) {
         previousUpdateTime = updateTime;
         previousPosition = position;
-        //if (parent!=null) previousLocalPosition = parent.transform.InverseTransformPoint(previousPosition);
         updateTime = time;
-        position = newPosition;
     }
 
     public static Vector3 NextPhysicsPosition(Vector3 newPosition, Vector3 previousPosition, Vector3 localSpaceVelocity, float deltaTime, float gravityMultiplier, float friction, float airFriction) {

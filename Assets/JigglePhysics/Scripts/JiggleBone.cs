@@ -343,10 +343,10 @@ public class JiggleBone {
     }
 
     public void OnDrawGizmos(JiggleSettingsBase jiggleSettings) {
-        if (transform != null && child.transform != null) {
+        if (transform != null && child != null && child.transform != null) {
             Gizmos.DrawLine(transform.position, child.transform.position);
         }
-        if (transform != null && child.transform == null) {
+        if (transform != null && child != null && child.transform == null) {
             Gizmos.DrawLine(transform.position, child.GetProjectedPosition());
         }
         if (transform != null && jiggleSettings != null) {

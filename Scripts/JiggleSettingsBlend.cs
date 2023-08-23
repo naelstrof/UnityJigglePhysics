@@ -12,11 +12,15 @@ public class JiggleSettingsBlend : JiggleSettingsBase {
     [Range(0f,1f)][Tooltip("A value from 0 to 1 that linearly blends between all of the blendSettings.")]
     public float normalizedBlend;
     public override float GetParameter(JiggleSettingParameter parameter) {
+        int settingsCountSpace = blendSettings.Count - 1;
         float normalizedBlendClamp = Mathf.Clamp01(normalizedBlend);
-        int targetA = Mathf.FloorToInt(normalizedBlendClamp*blendSettings.Count);
-        int targetB = Mathf.FloorToInt(normalizedBlendClamp*blendSettings.Count)+1;
-        return Mathf.Lerp(blendSettings[Mathf.Clamp(targetA,0,blendSettings.Count-1)].GetParameter(parameter),
-                          blendSettings[Mathf.Clamp(targetB,0,blendSettings.Count-1)].GetParameter(parameter), Mathf.Clamp01(normalizedBlendClamp*blendSettings.Count-targetA));
+        int targetA = Mathf.Clamp(Mathf.FloorToInt(normalizedBlendClamp*settingsCountSpace), 0,settingsCountSpace);
+        int targetB = Mathf.Clamp(Mathf.FloorToInt(normalizedBlendClamp*settingsCountSpace)+1, 0,settingsCountSpace);
+        return Mathf.Lerp(
+            blendSettings[targetA].GetParameter(parameter),
+            blendSettings[targetB].GetParameter(parameter), 
+            Mathf.Clamp01(normalizedBlendClamp*settingsCountSpace-targetA)
+            );
     }
 
     public override float GetRadius(float normalizedIndex) {

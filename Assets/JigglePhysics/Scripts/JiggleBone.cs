@@ -31,6 +31,7 @@ public class JiggleBone {
 
                 _sphereCollider = obj.GetComponent<SphereCollider>();
                 collider = _sphereCollider;
+                collider.enabled = false;
                 return true;
             } catch {
                 collider = null;
@@ -171,6 +172,7 @@ public class JiggleBone {
 
     public void FinalPass(JiggleSettingsBase jiggleSettings, double time, ICollection<Collider> colliders) {
         if (!CachedSphereCollider.TryGet(out SphereCollider sphereCollider)) return;
+        sphereCollider.enabled = true;
         foreach (var collider in colliders) {
             sphereCollider.radius = jiggleSettings.GetRadius(normalizedIndex);
             if (sphereCollider.radius <= 0) {
@@ -183,6 +185,7 @@ public class JiggleBone {
                 position += dir * dist;
             }
         }
+        sphereCollider.enabled = false;
     }
 
 

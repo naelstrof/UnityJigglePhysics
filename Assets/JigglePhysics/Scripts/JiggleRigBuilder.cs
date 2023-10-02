@@ -15,7 +15,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         public JiggleSettingsBase jiggleSettings;
         [SerializeField][Tooltip("The list of transforms to ignore during the jiggle. Each bone listed will also ignore all the children of the specified bone.")]
         private List<Transform> ignoredTransforms;
-        [SerializeField] private List<Collider> colliders;
+        public List<Collider> colliders;
         
         private bool initialized;
 

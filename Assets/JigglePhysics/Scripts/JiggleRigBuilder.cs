@@ -42,18 +42,21 @@ public class JiggleRigBuilder : MonoBehaviour {
         }
 
         public void FirstPass(Vector3 wind, double time) {
+            var data = jiggleSettings.GetData();
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.FirstPass(jiggleSettings, wind, time);
+                simulatedPoint.FirstPass(data, wind, time);
             }
         }
         public void SecondPass() {
+            var data = jiggleSettings.GetData();
             for (int i=simulatedPoints.Count-1;i>=0;i--) {
-                simulatedPoints[i].SecondPass(jiggleSettings);
+                simulatedPoints[i].SecondPass(data);
             }
         }
         public void ThirdPass() {
+            var data = jiggleSettings.GetData();
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.ThirdPass(jiggleSettings);
+                simulatedPoint.ThirdPass(data);
             }
         }
         
@@ -86,7 +89,7 @@ public class JiggleRigBuilder : MonoBehaviour {
 
         public void Pose(bool debugDraw) {
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.PoseBone( jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Blend));
+                simulatedPoint.PoseBone( jiggleSettings.GetData().blend);
                 if (debugDraw) {
                     simulatedPoint.DebugDraw(Color.red, Color.blue, true);
                 }

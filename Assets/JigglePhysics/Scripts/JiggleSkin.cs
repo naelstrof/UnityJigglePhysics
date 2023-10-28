@@ -36,7 +36,7 @@ public class JiggleSkin : MonoBehaviour {
         public Transform GetTargetBone() => target;
 
         public void Simulate(Vector3 wind, double time) {
-            simulatedPoint.Simulate(jiggleSettings, wind, time);
+            simulatedPoint.Simulate(jiggleSettings.GetData(), wind, time);
         }
         public void DeriveFinalSolve(float smoothing) {
             simulatedPoint.DeriveFinalSolvePosition(smoothing);
@@ -139,7 +139,7 @@ public class JiggleSkin : MonoBehaviour {
                 packedVectors.Add(new Vector4(targetPointSkinSpace.x, targetPointSkinSpace.y, targetPointSkinSpace.z,
                     zone.radius * zone.GetLossyScale()));
                 packedVectors.Add(new Vector4(verletPointSkinSpace.x, verletPointSkinSpace.y, verletPointSkinSpace.z,
-                    zone.jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Blend)));
+                    zone.jiggleSettings.GetData().blend));
             }
         }
         for(int i=packedVectors.Count;i<16;i++) {
@@ -189,7 +189,7 @@ public class JiggleSkin : MonoBehaviour {
             Vector3 diff = verletPointSkinSpace - targetPointSkinSpace;
             float dist = Vector3.Distance(targetPointSkinSpace, targetSkins[0].rootBone.InverseTransformPoint(toPoint));
             float multi = 1f-Mathf.SmoothStep(0,zone.radius*zone.GetLossyScale(),dist);
-            result += targetSkins[0].rootBone.TransformVector(diff) * zone.jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.Blend) * blend;
+            result += targetSkins[0].rootBone.TransformVector(diff) * zone.jiggleSettings.GetData().blend * blend;
         }
         return result;
     }

@@ -153,6 +153,17 @@ public class JiggleSettings : JiggleSettingsBase {
         }
     }
 
+    public void SetData(JiggleSettingsData data) {
+        gravityMultiplier = data.gravityMultiplier;
+        friction = data.friction;
+        angleElasticity = data.angleElasticity;
+        blend = data.blend;
+        airDrag = data.airDrag;
+        lengthElasticity = data.lengthElasticity;
+        elasticitySoften = data.elasticitySoften;
+        radiusMultiplier = data.radiusMultiplier;
+    }
+
     [ContextMenu("Copy Parameters")]
     private void CopyParameters() {
         string json = JsonUtility.ToJson(new SettingsData(this));
@@ -166,31 +177,19 @@ public class JiggleSettings : JiggleSettingsBase {
     }
     #endif
 
-    public override float GetParameter(JiggleSettingParameter parameter) {
-        switch(parameter) {
-            case JiggleSettingParameter.Gravity: return gravityMultiplier;
-            case JiggleSettingParameter.Friction: return friction;
-            case JiggleSettingParameter.AirFriction: return airDrag;
-            case JiggleSettingParameter.Blend: return blend;
-            case JiggleSettingParameter.AngleElasticity: return angleElasticity;
-            case JiggleSettingParameter.ElasticitySoften: return elasticitySoften;
-            case JiggleSettingParameter.LengthElasticity: return lengthElasticity;
-            default: throw new UnityException("Invalid Jiggle Setting Parameter:"+parameter);
-        }
+    public override JiggleSettingsData GetData() {
+        return new JiggleSettingsData {
+            gravityMultiplier = gravityMultiplier,
+            friction = friction,
+            airDrag = airDrag,
+            blend = blend,
+            angleElasticity = angleElasticity,
+            elasticitySoften = elasticitySoften,
+            lengthElasticity = lengthElasticity,
+            radiusMultiplier = radiusMultiplier,
+        };
     }
-    public void SetParameter(JiggleSettingParameter parameter, float value) {
-        switch(parameter) {
-            case JiggleSettingParameter.Gravity: gravityMultiplier = value; break;
-            case JiggleSettingParameter.Friction: friction = value; break;
-            case JiggleSettingParameter.AirFriction: airDrag = value; break;
-            case JiggleSettingParameter.Blend: blend = value; break;
-            case JiggleSettingParameter.AngleElasticity: angleElasticity = value; break;
-            case JiggleSettingParameter.ElasticitySoften: elasticitySoften = value; break;
-            case JiggleSettingParameter.LengthElasticity: lengthElasticity = value; break;
-            default: throw new UnityException("Invalid Jiggle Setting Parameter:"+parameter);
-        }
-    }
-
+    
     public override float GetRadius(float normalizedIndex) {
         return radiusMultiplier * radiusCurve.Evaluate(normalizedIndex);
     }

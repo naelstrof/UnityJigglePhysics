@@ -138,7 +138,7 @@ public class JiggleBone {
         normalizedIndex = frac;
     }
 
-    public void FirstPass(JiggleSettingsBase jiggleSettings, Vector3 wind, double time) {
+    public void FirstPass(JiggleSettingsData jiggleSettings, Vector3 wind, double time) {
         currentFixedAnimatedBonePosition = GetTargetBonePosition(lastTargetAnimatedBoneFrame, currentTargetAnimatedBoneFrame, time);
         if (parent == null) {
             RecordPosition(time);
@@ -148,29 +148,32 @@ public class JiggleBone {
         Vector3 localSpaceVelocity = (position-previousPosition) - (parent.position-parent.previousPosition);
         Vector3 newPosition = NextPhysicsPosition(
             position, previousPosition, localSpaceVelocity, Time.fixedDeltaTime,
-            jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.Gravity),
-            jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.Friction),
-            jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AirFriction)
+            jiggleSettings.gravityMultiplier,
+            jiggleSettings.friction,
+            jiggleSettings.airDrag
         );
-        newPosition += wind * (Time.fixedDeltaTime * jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AirFriction));
+        newPosition += wind * (Time.fixedDeltaTime * jiggleSettings.airDrag);
         RecordPosition(time);
         position = newPosition;
     }
 
-    public void SecondPass(JiggleSettingsBase jiggleSettings) {
-        position = ConstrainLengthBackwards(position, jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.LengthElasticity)*jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.LengthElasticity)*0.5f);
-        //position = ConstrainAngleBackward(position,jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AngleElasticity)*jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AngleElasticity), jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.ElasticitySoften));
+    public void SecondPass(JiggleSettingsData jiggleSettings) {
+        position = ConstrainLengthBackwards(position, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity*0.5f);
     }
 
-    public void ThirdPass(JiggleSettingsBase jiggleSettings) {
+    public void ThirdPass(JiggleSettingsData jiggleSettings) {
         if (parent == null) {
             return;
         }
-        position = ConstrainAngle(position, jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AngleElasticity)*jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AngleElasticity), jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.ElasticitySoften)); 
-        position = ConstrainLength(position, jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.LengthElasticity)*jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.LengthElasticity));
+        position = ConstrainAngle(position, jiggleSettings.angleElasticity*jiggleSettings.angleElasticity, jiggleSettings.elasticitySoften); 
+        position = ConstrainLength(position, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity);
     }
 
-    public void FinalPass(JiggleSettingsBase jiggleSettings, double time, ICollection<Collider> colliders) {
+    public void FinalPass(JiggleSettingsBase jiggleSettings, double time, List<Collider> colliders) {
+        if (colliders.Count == 0) {
+            return;
+        }
+
         if (!CachedSphereCollider.TryGet(out SphereCollider sphereCollider)) return;
         sphereCollider.enabled = true;
         foreach (var collider in colliders) {

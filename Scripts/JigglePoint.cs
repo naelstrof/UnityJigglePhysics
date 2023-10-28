@@ -46,18 +46,18 @@ public class JigglePoint {
         double t = (time - prev.time) / diff;
         return Vector3.LerpUnclamped(prev.position, next.position, (float)t);
     }
-    public void Simulate(JiggleSettingsBase jiggleSettings, Vector3 force, double time) {
+    public void Simulate(JiggleSettingsData jiggleSettings, Vector3 force, double time) {
         parentPosition = GetTargetBonePosition(lastTargetAnimatedBoneFrame, currentTargetAnimatedBoneFrame, time);
         
         Vector3 localSpaceVelocity = (position-previousPosition) - (parentPosition-previousParentPosition);
         Vector3 newPosition = JiggleBone.NextPhysicsPosition(
             position, previousPosition, localSpaceVelocity, Time.fixedDeltaTime,
-            jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Gravity),
-            jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.Friction),
-            jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.AirFriction)
+            jiggleSettings.gravityMultiplier,
+            jiggleSettings.friction,
+            jiggleSettings.airDrag
         );
-        newPosition += force * (Time.deltaTime * jiggleSettings.GetParameter(JiggleSettingsBase.JiggleSettingParameter.AirFriction));
-        newPosition = ConstrainSpring(newPosition, jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.LengthElasticity)*jiggleSettings.GetParameter(JiggleSettings.JiggleSettingParameter.LengthElasticity));
+        newPosition += force * (Time.deltaTime * jiggleSettings.airDrag);
+        newPosition = ConstrainSpring(newPosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity);
         SetNewPosition(newPosition, time);
     }
     public void SetNewPosition(Vector3 newPosition, double time) {

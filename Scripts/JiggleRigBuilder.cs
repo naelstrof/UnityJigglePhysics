@@ -16,6 +16,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         [SerializeField][Tooltip("The list of transforms to ignore during the jiggle. Each bone listed will also ignore all the children of the specified bone.")]
         private List<Transform> ignoredTransforms;
         public List<Collider> colliders;
+        private JiggleSettingsData data;
         
         private bool initialized;
 
@@ -39,22 +40,21 @@ public class JiggleRigBuilder : MonoBehaviour {
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
                 simulatedPoint.PrepareBone();
             }
+
+            data = jiggleSettings.GetData();
         }
 
         public void FirstPass(Vector3 wind, double time) {
-            var data = jiggleSettings.GetData();
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
                 simulatedPoint.FirstPass(data, wind, time);
             }
         }
         public void SecondPass() {
-            var data = jiggleSettings.GetData();
             for (int i=simulatedPoints.Count-1;i>=0;i--) {
                 simulatedPoints[i].SecondPass(data);
             }
         }
         public void ThirdPass() {
-            var data = jiggleSettings.GetData();
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
                 simulatedPoint.ThirdPass(data);
             }

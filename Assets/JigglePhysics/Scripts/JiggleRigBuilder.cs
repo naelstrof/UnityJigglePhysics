@@ -29,6 +29,8 @@ public class JiggleRigBuilder : MonoBehaviour {
             Initialize();
         }
 
+        private bool NeedsCollisions => colliders.Count != 0;
+
         [HideInInspector]
         private List<JiggleBone> simulatedPoints;
 
@@ -44,25 +46,29 @@ public class JiggleRigBuilder : MonoBehaviour {
             data = jiggleSettings.GetData();
         }
 
-        public void FirstPass(Vector3 wind, double time) {
+        public void Update(Vector3 wind, double time) {
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.FirstPass(data, wind, time);
+                simulatedPoint.VerletPass(data, wind, time);
             }
-        }
-        public void SecondPass() {
-            for (int i=simulatedPoints.Count-1;i>=0;i--) {
-                simulatedPoints[i].SecondPass(data);
+
+            if (NeedsCollisions) {
+                for (int i = simulatedPoints.Count - 1; i >= 0; i--) {
+                    simulatedPoints[i].CollisionPreparePass(data);
+                }
             }
-        }
-        public void ThirdPass() {
+            
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.ThirdPass(data);
+                simulatedPoint.ConstraintPass(data);
             }
-        }
-        
-        public void FinalPass(double time) {
+            
+            if (NeedsCollisions) {
+                foreach (JiggleBone simulatedPoint in simulatedPoints) {
+                    simulatedPoint.CollisionPass(jiggleSettings, colliders);
+                }
+            }
+            
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.FinalPass(jiggleSettings, time, colliders);
+                simulatedPoint.SignalWritePosition(time);
             }
         }
 
@@ -79,15 +85,14 @@ public class JiggleRigBuilder : MonoBehaviour {
             initialized = true;
         }
 
-        public void DeriveFinalSolve() {
-            Vector3 virtualPosition = simulatedPoints[0].DeriveFinalSolvePosition(Vector3.zero, smoothing);
-            Vector3 offset = simulatedPoints[0].transform.position - virtualPosition;
+        private void DeriveFinalSolve() {
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.DeriveFinalSolvePosition(offset, smoothing);
+                simulatedPoint.DeriveFinalSolvePosition();
             }
         }
 
         public void Pose(bool debugDraw) {
+            DeriveFinalSolve();
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
                 simulatedPoint.PoseBone( jiggleSettings.GetData().blend);
                 if (debugDraw) {
@@ -157,7 +162,6 @@ public class JiggleRigBuilder : MonoBehaviour {
     public Vector3 wind;
     [Tooltip("Draws some simple lines to show what the simulation is doing. Generally this should be disabled.")]
     [SerializeField] private bool debugDraw;
-    private const float smoothing = 1f;
 
     private double accumulation;
     private void Awake() {
@@ -182,23 +186,10 @@ public class JiggleRigBuilder : MonoBehaviour {
             accumulation -= Time.fixedDeltaTime;
             double time = Time.timeAsDouble - accumulation;
             foreach(JiggleRig rig in jiggleRigs) {
-                rig.FirstPass(wind, time);
-            }
-            foreach (JiggleRig rig in jiggleRigs) {
-                rig.SecondPass();
-            }
-            foreach (JiggleRig rig in jiggleRigs) {
-                rig.ThirdPass();
-            }
-            foreach (JiggleRig rig in jiggleRigs) {
-                rig.FinalPass(time);
+                rig.Update(wind, time);
             }
         }
-
-        foreach (JiggleRig rig in jiggleRigs) {
-            rig.DeriveFinalSolve();
-        }
-
+        
         foreach (JiggleRig rig in jiggleRigs) {
             rig.Pose(debugDraw);
         }

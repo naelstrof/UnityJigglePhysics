@@ -1,4 +1,5 @@
 using System;
+using JigglePhysics;
 using UnityEngine;
 
 public class PositionSignal {
@@ -35,15 +36,14 @@ public class PositionSignal {
 		};
 	}
 
-	public void FlattenSignal(double time) {
-		var position = SamplePosition(time);
+	public void FlattenSignal(double time, Vector3 position) {
 		previousFrame = new Frame {
 			position = position,
-			time = time-Time.fixedDeltaTime*5f,
+			time = time-JiggleRigBuilder.maxCatchupTime*2f,
 		};
 		currentFrame = new Frame {
 			position = position,
-			time = time-Time.fixedDeltaTime*4f,
+			time = time-JiggleRigBuilder.maxCatchupTime,
 		};
 	}
 

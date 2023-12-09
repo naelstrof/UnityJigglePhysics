@@ -187,10 +187,21 @@ public partial class JiggleBone {
         return Vector3.Lerp(newPosition, parent.workingPosition + dir * GetLengthToParent(), elasticity);
     }
 
-    public void ZeroVelocity() {
+    public void MatchAnimationInstantly() {
         var time = Time.timeAsDouble;
-        targetAnimatedBoneSignal.FlattenSignal(time);
-        particleSignal.FlattenSignal(time);
+        Vector3 position;
+        if (!hasTransform) {
+            Vector3 parentTransformPosition = parent.transform.position;
+            if (parent.parent != null) {
+                position = parent.transform.TransformPoint( parent.parent.transform.InverseTransformPoint(parentTransformPosition));
+            } else {
+                position = parent.transform.TransformPoint(parent.transform.parent.InverseTransformPoint(parentTransformPosition));
+            }
+        } else {
+            position = transform.position;
+        }
+        targetAnimatedBoneSignal.FlattenSignal(time, position);
+        particleSignal.FlattenSignal(time, position);
     }
 
     /// <summary>
@@ -215,7 +226,7 @@ public partial class JiggleBone {
     /// </summary>
     public void FinishTeleport() {
         if (!preTeleportPosition.HasValue) {
-            ZeroVelocity();
+            MatchAnimationInstantly();
             return;
         }
         Vector3 teleportedPosition;

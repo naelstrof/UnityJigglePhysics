@@ -6,7 +6,7 @@ using UnityEngine;
 namespace JigglePhysics {
 
 public class JiggleRigBuilder : MonoBehaviour {
-    public static float maxCatchupTime = Time.fixedDeltaTime*4;
+    public static float maxCatchupTime => Time.fixedDeltaTime*4;
 
     [Serializable]
     public class JiggleRig {

@@ -6,6 +6,7 @@ using UnityEngine;
 namespace JigglePhysics {
 
 public class JiggleRigBuilder : MonoBehaviour {
+    public static float maxCatchupTime = Time.fixedDeltaTime*4;
 
     [Serializable]
     public class JiggleRig {
@@ -46,9 +47,9 @@ public class JiggleRigBuilder : MonoBehaviour {
             data = jiggleSettings.GetData();
         }
 
-        public void ZeroVelocity() {
+        public void MatchAnimationInstantly() {
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.ZeroVelocity();
+                simulatedPoint.MatchAnimationInstantly();
             }
         }
 
@@ -172,14 +173,13 @@ public class JiggleRigBuilder : MonoBehaviour {
     [SerializeField] private bool debugDraw;
 
     private double accumulation;
+    private bool reset = false;
     private void Awake() {
         Initialize();
     }
     void OnEnable() {
         CachedSphereCollider.AddBuilder(this);
-        foreach (var rig in jiggleRigs) {
-            rig.FinishTeleport();
-        }
+        reset = true;
     }
     void OnDisable() {
         CachedSphereCollider.RemoveBuilder(this);
@@ -201,8 +201,15 @@ public class JiggleRigBuilder : MonoBehaviour {
         foreach(JiggleRig rig in jiggleRigs) {
             rig.PrepareBone();
         }
+        
+        if (reset) {
+            foreach (var rig in jiggleRigs) {
+                rig.FinishTeleport();
+            }
+            reset = false;
+        }
 
-        accumulation = Math.Min(accumulation+deltaTime, Time.fixedDeltaTime*4f);
+        accumulation = Math.Min(accumulation+deltaTime, maxCatchupTime);
         while (accumulation > Time.fixedDeltaTime) {
             accumulation -= Time.fixedDeltaTime;
             double time = Time.timeAsDouble - accumulation;

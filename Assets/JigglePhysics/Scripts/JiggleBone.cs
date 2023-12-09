@@ -27,7 +27,7 @@ public partial class JiggleBone {
 
     private PositionSignal particleSignal;
     private Vector3 workingPosition;
-    public Vector3 preTeleportPosition;
+    private Vector3? preTeleportPosition;
 
     private Vector3 extrapolatedPosition;
 
@@ -214,6 +214,10 @@ public partial class JiggleBone {
     /// The companion function to PrepareTeleport, it discards all the movement that has happened since the call to PrepareTeleport, assuming that they've both been called on the same frame.
     /// </summary>
     public void FinishTeleport() {
+        if (!preTeleportPosition.HasValue) {
+            ZeroVelocity();
+            return;
+        }
         Vector3 teleportedPosition;
         if (!hasTransform) {
             Vector3 parentTransformPosition = parent.transform.position;
@@ -225,7 +229,7 @@ public partial class JiggleBone {
         } else {
             teleportedPosition = transform.position;
         }
-        Vector3 diff = teleportedPosition - preTeleportPosition;
+        Vector3 diff = teleportedPosition - preTeleportPosition.Value;
         targetAnimatedBoneSignal.OffsetSignal(diff);
         particleSignal.OffsetSignal(diff);
         workingPosition += diff;

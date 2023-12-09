@@ -290,8 +290,8 @@ public partial class JiggleBone {
         }
         Debug.DrawLine(currentFixedAnimatedBonePosition, parent.currentFixedAnimatedBonePosition, targetColor, 0, false);
     }
-    public Vector3 DeriveFinalSolvePosition() {
-        extrapolatedPosition = particleSignal.SamplePosition(Time.timeAsDouble);
+    public Vector3 DeriveFinalSolvePosition(Vector3 offset) {
+        extrapolatedPosition = offset+particleSignal.SamplePosition(Time.timeAsDouble);
         return extrapolatedPosition;
     }
 

@@ -2,66 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Object = UnityEngine.Object;
+using UnityEngine.Assertions;
 
 namespace JigglePhysics {
 
 // Uses Verlet to resolve constraints easily 
-public class JiggleBone {
-
-    private static class CachedSphereCollider {
-        private class DestroyListener : MonoBehaviour {
-            void OnDestroy() {
-                _hasSphere = false;
-            }
-        }
-        private static int remainingBuilders;
-        private static bool _hasSphere = false;
-        private static SphereCollider _sphereCollider;
-
-        public static void StartPass() {
-            if (remainingBuilders == 0 && TryGet(out SphereCollider collider)) {
-                collider.enabled = true;
-            }
-            remainingBuilders++;
-            
-        }
-
-        public static void FinishedPass() {
-            remainingBuilders--;
-            if (remainingBuilders == 0 && TryGet(out SphereCollider collider)) {
-                collider.enabled = false;
-            }
-        }
-        
-        public static bool TryGet(out SphereCollider collider) {
-            if (_hasSphere) {
-                collider = _sphereCollider;
-                return true;
-            }
-            try {
-                var obj = new GameObject("JiggleBoneSphereCollider", new []{typeof(SphereCollider), typeof(DestroyListener)})
-                    {
-                        hideFlags = HideFlags.HideAndDontSave
-                    };
-                if (Application.isPlaying) {
-                    Object.DontDestroyOnLoad(obj);
-                }
-
-                _sphereCollider = obj.GetComponent<SphereCollider>();
-                collider = _sphereCollider;
-                collider.enabled = false;
-                _hasSphere = true;
-                return true;
-            } catch {
-                _hasSphere = false;
-                collider = null;
-                throw;
-            }
-        }
-    }
-
-    
+public partial class JiggleBone {
+    private bool hasTransform;
     private PositionSignal targetAnimatedBoneSignal;
     private Vector3 currentFixedAnimatedBonePosition;
 
@@ -113,6 +60,7 @@ public class JiggleBone {
         targetAnimatedBoneSignal = new PositionSignal(position, Time.timeAsDouble);
         particleSignal = new PositionSignal(position, Time.timeAsDouble);
 
+        hasTransform = transform != null;
         if (parent == null) {
             return;
         }
@@ -159,7 +107,6 @@ public class JiggleBone {
     }
 
     public void CollisionPreparePass(JiggleSettingsData jiggleSettings) {
-        CachedSphereCollider.StartPass();
         workingPosition = ConstrainLengthBackwards(workingPosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity*0.5f);
     }
 
@@ -176,6 +123,7 @@ public class JiggleBone {
             return;
         }
 
+        CachedSphereCollider.StartPass();
         if (!CachedSphereCollider.TryGet(out SphereCollider sphereCollider)) {
             return;
         }
@@ -200,9 +148,7 @@ public class JiggleBone {
 
 
     private Vector3 GetProjectedPosition() {
-        if (transform != null) {
-            throw new UnityException("Tried to get a projected position of a jigglebone that doesn't need to project!");
-        }
+        Assert.IsFalse(hasTransform); // Projected positions are only useful on virtual jigglebones. real jigglebones have a position to sample instead.
         Vector3 parentTransformPosition = parent.transform.position;
         if (parent.parent != null) {
             //Vector3 projectedForward = (parentTransformPosition - parent.parent.transform.position).normalized;
@@ -216,8 +162,8 @@ public class JiggleBone {
         }
     }
 
-    public void CacheAnimationPosition() {
-        if (transform == null) {
+    private void CacheAnimationPosition() {
+        if (!hasTransform) {
             targetAnimatedBoneSignal.SetPosition(GetProjectedPosition(), Time.timeAsDouble);
             return;
         }
@@ -226,7 +172,7 @@ public class JiggleBone {
         lastValidPoseBoneLocalPosition = transform.localPosition;
     }
     
-    public Vector3 ConstrainLengthBackwards(Vector3 newPosition, float elasticity) {
+    private Vector3 ConstrainLengthBackwards(Vector3 newPosition, float elasticity) {
         if (child == null) {
             return newPosition;
         }
@@ -235,15 +181,24 @@ public class JiggleBone {
         return Vector3.Lerp(newPosition, child.workingPosition + dir * child.GetLengthToParent(), elasticity);
     }
     
-    public Vector3 ConstrainLength(Vector3 newPosition, float elasticity) {
+    private Vector3 ConstrainLength(Vector3 newPosition, float elasticity) {
         Vector3 diff = newPosition - parent.workingPosition;
         Vector3 dir = diff.normalized;
         return Vector3.Lerp(newPosition, parent.workingPosition + dir * GetLengthToParent(), elasticity);
     }
 
+    public void ZeroVelocity() {
+        var time = Time.timeAsDouble;
+        targetAnimatedBoneSignal.FlattenSignal(time);
+        particleSignal.FlattenSignal(time);
+    }
+
+    /// <summary>
+    /// Physically accurate teleportation, maintains the existing signals of motion and keeps their trajectories through a teleport. First call PrepareTeleport(), then move the character, then call FinishTeleport().
+    /// Use ZeroVelocity() instead if you don't want jiggles to be maintained through a teleport.
+    /// </summary>
     public void PrepareTeleport() {
-        throw new NotImplementedException();
-        if (transform == null) {
+        if (!hasTransform) {
             Vector3 parentTransformPosition = parent.transform.position;
             if (parent.parent != null) {
                 preTeleportPosition = parent.transform.TransformPoint( parent.parent.transform.InverseTransformPoint(parentTransformPosition));
@@ -255,10 +210,12 @@ public class JiggleBone {
         preTeleportPosition = transform.position;
     }
     
+    /// <summary>
+    /// The companion function to PrepareTeleport, it discards all the movement that has happened since the call to PrepareTeleport, assuming that they've both been called on the same frame.
+    /// </summary>
     public void FinishTeleport() {
-        throw new NotImplementedException();
         Vector3 teleportedPosition;
-        if (transform == null) {
+        if (!hasTransform) {
             Vector3 parentTransformPosition = parent.transform.position;
             if (parent.parent != null) {
                 teleportedPosition = parent.transform.TransformPoint( parent.parent.transform.InverseTransformPoint(parentTransformPosition));
@@ -269,10 +226,9 @@ public class JiggleBone {
             teleportedPosition = transform.position;
         }
         Vector3 diff = teleportedPosition - preTeleportPosition;
-        //lastTargetAnimatedBoneFrame = new PositionFrame(lastTargetAnimatedBoneFrame.position + diff, lastTargetAnimatedBoneFrame.time);
-        //currentTargetAnimatedBoneFrame = new PositionFrame(currentTargetAnimatedBoneFrame.position + diff, currentTargetAnimatedBoneFrame.time);
-        //position += diff;
-        //previousPosition += diff;
+        targetAnimatedBoneSignal.OffsetSignal(diff);
+        particleSignal.OffsetSignal(diff);
+        workingPosition += diff;
     }
 
     private Vector3 ConstrainAngleBackward(Vector3 newPosition, float elasticity, float elasticitySoften) {
@@ -337,7 +293,7 @@ public class JiggleBone {
 
     public void PrepareBone() {
         // If bone is not animated, return to last unadulterated pose
-        if (transform != null) {
+        if (hasTransform) {
             if (boneRotationChangeCheck == transform.localRotation) {
                 transform.localRotation = lastValidPoseBoneRotation;
             }
@@ -372,7 +328,7 @@ public class JiggleBone {
                 transform.position = positionBlend;
             }
             Vector3 childPosition;
-            if (child.transform == null) {
+            if (!child.hasTransform) {
                 if (parent != null) { // If we have a proper jigglebone parent...
                     childPosition = transform.TransformPoint(parent.transform.InverseTransformPoint(transform.position));
                 } else { // Otherwise we guess with the parent transform
@@ -386,7 +342,7 @@ public class JiggleBone {
             Quaternion animPoseToPhysicsPose = Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector);
             transform.rotation = animPoseToPhysicsPose * transform.rotation;
         }
-        if (transform != null) {
+        if (hasTransform) {
             boneRotationChangeCheck = transform.localRotation;
             bonePositionChangeCheck = transform.localPosition;
         }

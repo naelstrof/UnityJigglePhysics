@@ -46,6 +46,12 @@ public class JiggleRigBuilder : MonoBehaviour {
             data = jiggleSettings.GetData();
         }
 
+        public void ZeroVelocity() {
+            foreach (JiggleBone simulatedPoint in simulatedPoints) {
+                simulatedPoint.ZeroVelocity();
+            }
+        }
+
         public void Update(Vector3 wind, double time) {
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
                 simulatedPoint.VerletPass(data, wind, time);
@@ -167,6 +173,18 @@ public class JiggleRigBuilder : MonoBehaviour {
     private void Awake() {
         Initialize();
     }
+    void OnEnable() {
+        CachedSphereCollider.AddBuilder(this);
+        foreach (var rig in jiggleRigs) {
+            rig.FinishTeleport();
+        }
+    }
+    void OnDisable() {
+        CachedSphereCollider.RemoveBuilder(this);
+        foreach (var rig in jiggleRigs) {
+            rig.PrepareTeleport();
+        }
+    }
 
     public void Initialize() {
         accumulation = 0f;
@@ -177,6 +195,7 @@ public class JiggleRigBuilder : MonoBehaviour {
     }
 
     public void Advance(float deltaTime) {
+        CachedSphereCollider.StartPass();
         foreach(JiggleRig rig in jiggleRigs) {
             rig.PrepareBone();
         }
@@ -193,6 +212,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         foreach (JiggleRig rig in jiggleRigs) {
             rig.Pose(debugDraw);
         }
+        CachedSphereCollider.FinishedPass();
     }
 
     public JiggleRig GetJiggleRig(Transform rootTransform) {

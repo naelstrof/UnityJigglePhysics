@@ -1,41 +1,61 @@
+using System;
 using UnityEngine;
 
 public class PositionSignal {
 	private struct Frame {
-		public Vector3 Position;
-		public double Time;
-		public Frame(Vector3 position, double time) {
-			Position = position;
-			Time = time;
-		}
+		public Vector3 position;
+		public double time;
 	}
-	private Frame _previousFrame;
-	private Frame _currentFrame;
+	private Frame previousFrame;
+	private Frame currentFrame;
 
 	public PositionSignal(Vector3 startPosition, double time) {
-		_currentFrame = _previousFrame = new Frame {
-			Position = startPosition,
-			Time = time,
+		currentFrame = previousFrame = new Frame {
+			position = startPosition,
+			time = time,
 		};
 	}
 
 	public void SetPosition(Vector3 position, double time) {
-		_previousFrame = _currentFrame;
-		_currentFrame = new Frame {
-			Position = position,
-			Time = time,
+		previousFrame = currentFrame;
+		currentFrame = new Frame {
+			position = position,
+			time = time,
 		};
 	}
 
-	public Vector3 GetCurrent() => _currentFrame.Position;
-	public Vector3 GetPrevious() => _previousFrame.Position;
+	public void OffsetSignal(Vector3 offset) {
+		previousFrame = new Frame {
+			position = previousFrame.position+offset,
+			time = previousFrame.time,
+		};
+		currentFrame = new Frame {
+			position = currentFrame.position + offset,
+			time = previousFrame.time,
+		};
+	}
+
+	public void FlattenSignal(double time) {
+		var position = SamplePosition(time);
+		previousFrame = new Frame {
+			position = position,
+			time = time-Time.fixedDeltaTime*5f,
+		};
+		currentFrame = new Frame {
+			position = position,
+			time = time-Time.fixedDeltaTime*4f,
+		};
+	}
+
+	public Vector3 GetCurrent() => currentFrame.position;
+	public Vector3 GetPrevious() => previousFrame.position;
 
 	public Vector3 SamplePosition(double time) {
-		var diff = _currentFrame.Time - _previousFrame.Time;
+		var diff = currentFrame.time - previousFrame.time;
 		if (diff == 0) {
-			return _previousFrame.Position;
+			return previousFrame.position;
 		}
-		double t = ((double)(time) - (double)_previousFrame.Time) / (double)diff;
-		return Vector3.Lerp(_previousFrame.Position,_currentFrame.Position, (float)t);
+		double t = ((double)(time) - (double)previousFrame.time) / (double)diff;
+		return Vector3.Lerp(previousFrame.position,currentFrame.position, (float)t);
 	}
 }

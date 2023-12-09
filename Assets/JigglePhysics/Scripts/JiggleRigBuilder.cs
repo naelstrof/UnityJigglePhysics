@@ -92,8 +92,10 @@ public class JiggleRigBuilder : MonoBehaviour {
         }
 
         private void DeriveFinalSolve() {
+            Vector3 virtualPosition = simulatedPoints[0].DeriveFinalSolvePosition(Vector3.zero);
+            Vector3 offset = simulatedPoints[0].transform.position - virtualPosition;
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.DeriveFinalSolvePosition();
+                simulatedPoint.DeriveFinalSolvePosition(offset);
             }
         }
 

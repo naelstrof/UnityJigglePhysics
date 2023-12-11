@@ -46,7 +46,6 @@ public class JiggleRigBuilder : MonoBehaviour {
 
             data = jiggleSettings.GetData();
             data = jiggleRigLOD!=null?jiggleRigLOD.AdjustJiggleSettingsData(position, data):data;
-            Debug.Log("data is now: "+data.blend);
         }
 
         public void MatchAnimationInstantly() {

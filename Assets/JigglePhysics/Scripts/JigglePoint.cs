@@ -4,76 +4,62 @@ using UnityEngine;
 
 namespace JigglePhysics {
 public class JigglePoint {
-    private Vector3 position;
     private Transform transform;
-    private Vector3 previousPosition;
-    private double previousUpdateTime;
-    private double updateTime;
-    private Vector3 parentPosition;
-    private Vector3 previousParentPosition;
-    private struct PositionFrame {
-        public Vector3 position;
-        public double time;
-        public PositionFrame(Vector3 position, double time) {
-            this.position = position;
-            this.time = time;
-        }
-    }
-    
-    private PositionFrame currentTargetAnimatedBoneFrame;
-    private PositionFrame lastTargetAnimatedBoneFrame;
+    private PositionSignal particleSignal;
+    private PositionSignal animatedBoneSignal;
     public Vector3 extrapolatedPosition;
+    private Vector3? preTeleportPosition;
     public JigglePoint(Transform transform) {
         this.transform = transform;
-        this.position = transform.position;
-        previousPosition = position;
-        updateTime = Time.timeAsDouble;
-        previousUpdateTime = Time.timeAsDouble;
-        parentPosition = position;
-        previousParentPosition = parentPosition;
-        currentTargetAnimatedBoneFrame = new PositionFrame(position, Time.timeAsDouble);
-        lastTargetAnimatedBoneFrame = new PositionFrame(position, Time.timeAsDouble);
+        var pos = transform.position;
+        particleSignal = new PositionSignal(pos, Time.timeAsDouble);
+        animatedBoneSignal = new PositionSignal(pos, Time.timeAsDouble);
     }
     public void PrepareSimulate() {
-        lastTargetAnimatedBoneFrame = currentTargetAnimatedBoneFrame;
-        currentTargetAnimatedBoneFrame = new PositionFrame(transform.position, Time.timeAsDouble);
-    }
-    private Vector3 GetTargetBonePosition(PositionFrame prev, PositionFrame next, double time) {
-        double diff = next.time - prev.time;
-        if (diff == 0) {
-            return next.position;
-        }
-        double t = (time - prev.time) / diff;
-        return Vector3.LerpUnclamped(prev.position, next.position, (float)t);
+        animatedBoneSignal.SetPosition(transform.position, Time.timeAsDouble);
     }
     public void Simulate(JiggleSettingsData jiggleSettings, Vector3 force, double time) {
-        parentPosition = GetTargetBonePosition(lastTargetAnimatedBoneFrame, currentTargetAnimatedBoneFrame, time);
-        
-        Vector3 localSpaceVelocity = (position-previousPosition) - (parentPosition-previousParentPosition);
+        var animatedBonePosition = animatedBoneSignal.SamplePosition(time);
+        var animatedBonePositionPrev = animatedBoneSignal.SamplePosition(time-Time.fixedDeltaTime);
+        Vector3 localSpaceVelocity = (particleSignal.GetCurrent()-particleSignal.GetPrevious()) - (animatedBonePosition-animatedBonePositionPrev);
         Vector3 newPosition = JiggleBone.NextPhysicsPosition(
-            position, previousPosition, localSpaceVelocity, Time.fixedDeltaTime,
+            particleSignal.GetCurrent(), particleSignal.GetPrevious(), localSpaceVelocity, Time.fixedDeltaTime,
             jiggleSettings.gravityMultiplier,
             jiggleSettings.friction,
             jiggleSettings.airDrag
         );
         newPosition += force * (Time.deltaTime * jiggleSettings.airDrag);
-        newPosition = ConstrainSpring(newPosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity);
-        SetNewPosition(newPosition, time);
+        newPosition = ConstrainSpring(newPosition, animatedBonePosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity);
+        particleSignal.SetPosition(newPosition, time);
     }
-    public void SetNewPosition(Vector3 newPosition, double time) {
-        previousPosition = position;
-        previousParentPosition = parentPosition;
-        previousUpdateTime = updateTime;
-        position = newPosition;
-        updateTime = time;
+
+    public void MatchAnimationInstantly() {
+        var time = Time.timeAsDouble;
+        var position = transform.position;
+        particleSignal.FlattenSignal(time, position);
+        animatedBoneSignal.FlattenSignal(time, position);
     }
-    public void DeriveFinalSolvePosition(float smoothing) {
-        Vector3 offset = transform.position-GetTargetBonePosition(lastTargetAnimatedBoneFrame, currentTargetAnimatedBoneFrame, (Time.timeAsDouble-Time.fixedDeltaTime*smoothing));
-        double t = ((Time.timeAsDouble-Time.fixedDeltaTime*smoothing) - previousUpdateTime) / Time.fixedDeltaTime;
-        extrapolatedPosition = offset+Vector3.LerpUnclamped(previousPosition, position, (float)t);
+
+    public void PrepareTeleport() {
+        preTeleportPosition = transform.position;
     }
-    public Vector3 ConstrainSpring(Vector3 newPosition, float elasticity) {
-        return Vector3.Lerp(newPosition, parentPosition, elasticity);
+    public void FinishTeleport() {
+        if (!preTeleportPosition.HasValue) {
+            MatchAnimationInstantly();
+            return;
+        }
+
+        var position = transform.position;
+        Vector3 offset = position - preTeleportPosition.Value;
+        particleSignal.OffsetSignal(offset);
+        animatedBoneSignal.FlattenSignal(Time.timeAsDouble, position);
+    }
+
+    public void DeriveFinalSolvePosition() {
+        extrapolatedPosition = particleSignal.SamplePosition(Time.timeAsDouble-Time.fixedDeltaTime);
+    }
+    public Vector3 ConstrainSpring(Vector3 newPosition, Vector3 animatedBonePosition, float elasticity) {
+        return Vector3.Lerp(newPosition, animatedBonePosition, elasticity);
     }
     public void DrawGizmos(Color color) {
         Gizmos.color = color;

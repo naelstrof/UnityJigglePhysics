@@ -29,8 +29,17 @@ public class JiggleSkin : MonoBehaviour {
         }
 
         public void Initialize() {
+            if (initialized) return;
             simulatedPoint = new JigglePoint(target);
             initialized = true;
+        }
+
+        public void PrepareTeleport() {
+            simulatedPoint.PrepareTeleport();
+        }
+        
+        public void FinishTeleport() {
+            simulatedPoint.FinishTeleport();
         }
 
         public Transform GetTargetBone() => target;
@@ -38,8 +47,8 @@ public class JiggleSkin : MonoBehaviour {
         public void Simulate(Vector3 wind, double time) {
             simulatedPoint.Simulate(jiggleSettings.GetData(), wind, time);
         }
-        public void DeriveFinalSolve(float smoothing) {
-            simulatedPoint.DeriveFinalSolvePosition(smoothing);
+        public void DeriveFinalSolve() {
+            simulatedPoint.DeriveFinalSolvePosition();
         }
 
         public void DebugDraw() {
@@ -73,9 +82,18 @@ public class JiggleSkin : MonoBehaviour {
     private List<Material> targetMaterials;
     private List<Vector4> packedVectors;
     private int jiggleInfoNameID;
-    private const float smoothing = 1f;
-    void Awake() {
+
+    private void OnEnable() {
         Initialize();
+        foreach (var zone in jiggleZones) {
+            zone.FinishTeleport();
+        }
+    }
+    
+    private void OnDisable() {
+        foreach (var zone in jiggleZones) {
+            zone.PrepareTeleport();
+        }
     }
 
     public void Initialize() {
@@ -113,7 +131,7 @@ public class JiggleSkin : MonoBehaviour {
         }
         
         foreach( JiggleZone zone in jiggleZones) {
-            zone.DeriveFinalSolve(smoothing);
+            zone.DeriveFinalSolve();
         }
         UpdateMesh();
         if (!debugDraw) return;
@@ -183,7 +201,7 @@ public class JiggleSkin : MonoBehaviour {
     public Vector3 ApplyJiggle(Vector3 toPoint, float blend) {
         Vector3 result = toPoint;
         foreach( JiggleZone zone in jiggleZones) {
-            zone.DeriveFinalSolve(smoothing);
+            zone.DeriveFinalSolve();
             Vector3 targetPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.GetPosition());
             Vector3 verletPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.GetSolve());
             Vector3 diff = verletPointSkinSpace - targetPointSkinSpace;

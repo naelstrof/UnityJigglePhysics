@@ -197,8 +197,10 @@ public partial class JiggleBone {
             MatchAnimationInstantly();
             return;
         }
-        Vector3 diff = GetTransformPosition() - preTeleportPosition ?? Vector3.zero;
-        targetAnimatedBoneSignal.OffsetSignal(diff);
+
+        var position = GetTransformPosition();
+        Vector3 diff = position - preTeleportPosition.Value;
+        targetAnimatedBoneSignal.FlattenSignal(Time.timeAsDouble, position);
         particleSignal.OffsetSignal(diff);
         workingPosition += diff;
     }

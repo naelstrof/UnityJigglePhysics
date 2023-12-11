@@ -31,6 +31,7 @@ public static class CachedSphereCollider {
         remainingBuilders++;
         if (remainingBuilders >= builders.Count && TryGet(out SphereCollider collider)) {
             collider.enabled = false;
+            remainingBuilders = -1;
         }
     }
 

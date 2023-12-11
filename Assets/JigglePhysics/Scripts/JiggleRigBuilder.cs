@@ -35,7 +35,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         [HideInInspector]
         private List<JiggleBone> simulatedPoints;
 
-        public void PrepareBone() {
+        public void PrepareBone(Vector3 position, JiggleRigLOD jiggleRigLOD) {
             if (!initialized) {
                 throw new UnityException( "JiggleRig was never initialized. Please call JiggleRig.Initialize() if you're going to manually timestep.");
             }
@@ -45,6 +45,8 @@ public class JiggleRigBuilder : MonoBehaviour {
             }
 
             data = jiggleSettings.GetData();
+            data = jiggleRigLOD!=null?jiggleRigLOD.AdjustJiggleSettingsData(position, data):data;
+            Debug.Log("data is now: "+data.blend);
         }
 
         public void MatchAnimationInstantly() {
@@ -103,7 +105,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         public void Pose(bool debugDraw) {
             DeriveFinalSolve();
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.PoseBone( jiggleSettings.GetData().blend);
+                simulatedPoint.PoseBone(data.blend);
                 if (debugDraw) {
                     simulatedPoint.DebugDraw(Color.red, Color.blue, true);
                 }
@@ -169,17 +171,20 @@ public class JiggleRigBuilder : MonoBehaviour {
 
     [Tooltip("An air force that is applied to the entire rig, this is useful to plug in some wind volumes from external sources.")]
     public Vector3 wind;
+    [Tooltip("Level of detail manager. This system will control how the jiggle rig saves performance cost.")]
+    public JiggleRigLOD levelOfDetail;
     [Tooltip("Draws some simple lines to show what the simulation is doing. Generally this should be disabled.")]
     [SerializeField] private bool debugDraw;
 
     private double accumulation;
-    private bool reset = false;
+    private bool dirtyFromEnable = false;
+    private bool wasLODActive = true;
     private void Awake() {
         Initialize();
     }
     void OnEnable() {
         CachedSphereCollider.AddBuilder(this);
-        reset = true;
+        dirtyFromEnable = true;
     }
     void OnDisable() {
         CachedSphereCollider.RemoveBuilder(this);
@@ -197,16 +202,24 @@ public class JiggleRigBuilder : MonoBehaviour {
     }
 
     public void Advance(float deltaTime) {
+        if (levelOfDetail!=null && !levelOfDetail.CheckActive(transform.position)) {
+            if (wasLODActive) PrepareTeleport();
+            CachedSphereCollider.StartPass();
+            CachedSphereCollider.FinishedPass();
+            wasLODActive = false;
+            return;
+        }
+        if (!wasLODActive) FinishTeleport();
         CachedSphereCollider.StartPass();
         foreach(JiggleRig rig in jiggleRigs) {
-            rig.PrepareBone();
+            rig.PrepareBone(transform.position, levelOfDetail);
         }
         
-        if (reset) {
+        if (dirtyFromEnable) {
             foreach (var rig in jiggleRigs) {
                 rig.FinishTeleport();
             }
-            reset = false;
+            dirtyFromEnable = false;
         }
 
         accumulation = Math.Min(accumulation+deltaTime, maxCatchupTime);
@@ -222,6 +235,7 @@ public class JiggleRigBuilder : MonoBehaviour {
             rig.Pose(debugDraw);
         }
         CachedSphereCollider.FinishedPass();
+        wasLODActive = true;
     }
 
     public JiggleRig GetJiggleRig(Transform rootTransform) {

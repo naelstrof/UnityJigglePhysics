@@ -38,7 +38,7 @@ public class JiggleSettings : JiggleSettingsBase {
     [HideInInspector] [SerializeField] [Tooltip("How much radius points have, only used for collisions. Set to 0 to disable collisions")]
     private float radiusMultiplier = 0f;
     [HideInInspector] [SerializeField] [Tooltip("How the radius is expressed as a curve along the bone chain from root to child.")]
-    private AnimationCurve radiusCurve = new(new Keyframe(0f, 1f), new Keyframe(1f, 0f));
+    private AnimationCurve radiusCurve = new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0f));
 
     #if UNITY_EDITOR
     private static bool advancedFoldout;
@@ -162,6 +162,10 @@ public class JiggleSettings : JiggleSettingsBase {
         lengthElasticity = data.lengthElasticity;
         elasticitySoften = data.elasticitySoften;
         radiusMultiplier = data.radiusMultiplier;
+    }
+
+    public void SetRadiusCurve(AnimationCurve curve) {
+        radiusCurve = curve;
     }
 
     [ContextMenu("Copy Parameters")]

@@ -2,6 +2,7 @@ using System;
 using JigglePhysics;
 using UnityEngine;
 
+namespace JigglePhysics {
 public class PositionSignal {
 	private struct Frame {
 		public Vector3 position;
@@ -58,4 +59,6 @@ public class PositionSignal {
 		double t = ((double)(time) - (double)previousFrame.time) / (double)diff;
 		return Vector3.Lerp(previousFrame.position,currentFrame.position, (float)t);
 	}
+}
+
 }

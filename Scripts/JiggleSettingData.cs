@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+namespace JigglePhysics {
+
 public struct JiggleSettingsData {
     public float gravityMultiplier;
     public float friction;
@@ -24,4 +26,6 @@ public struct JiggleSettingsData {
             radiusMultiplier = Mathf.Lerp(a.radiusMultiplier, b.radiusMultiplier, t),
         };
     }
+}
+
 }

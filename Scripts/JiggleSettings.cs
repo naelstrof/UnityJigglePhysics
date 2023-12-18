@@ -40,6 +40,35 @@ public class JiggleSettings : JiggleSettingsBase {
     [HideInInspector] [SerializeField] [Tooltip("How the radius is expressed as a curve along the bone chain from root to child.")]
     private AnimationCurve radiusCurve = new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0f));
 
+    public override JiggleSettingsData GetData() {
+        return new JiggleSettingsData {
+            gravityMultiplier = gravityMultiplier,
+            friction = friction,
+            airDrag = airDrag,
+            blend = blend,
+            angleElasticity = angleElasticity,
+            elasticitySoften = elasticitySoften,
+            lengthElasticity = lengthElasticity,
+            radiusMultiplier = radiusMultiplier,
+        };
+    }
+    public void SetData(JiggleSettingsData data) {
+        gravityMultiplier = data.gravityMultiplier;
+        friction = data.friction;
+        angleElasticity = data.angleElasticity;
+        blend = data.blend;
+        airDrag = data.airDrag;
+        lengthElasticity = data.lengthElasticity;
+        elasticitySoften = data.elasticitySoften;
+        radiusMultiplier = data.radiusMultiplier;
+    }
+    public override float GetRadius(float normalizedIndex) {
+        return radiusMultiplier * radiusCurve.Evaluate(normalizedIndex);
+    }
+    public void SetRadiusCurve(AnimationCurve curve) {
+        radiusCurve = curve;
+    }
+
     #if UNITY_EDITOR
     private static bool advancedFoldout;
     private static bool collisionFoldout;
@@ -153,21 +182,6 @@ public class JiggleSettings : JiggleSettingsBase {
         }
     }
 
-    public void SetData(JiggleSettingsData data) {
-        gravityMultiplier = data.gravityMultiplier;
-        friction = data.friction;
-        angleElasticity = data.angleElasticity;
-        blend = data.blend;
-        airDrag = data.airDrag;
-        lengthElasticity = data.lengthElasticity;
-        elasticitySoften = data.elasticitySoften;
-        radiusMultiplier = data.radiusMultiplier;
-    }
-
-    public void SetRadiusCurve(AnimationCurve curve) {
-        radiusCurve = curve;
-    }
-
     [ContextMenu("Copy Parameters")]
     private void CopyParameters() {
         string json = JsonUtility.ToJson(new SettingsData(this));
@@ -180,23 +194,6 @@ public class JiggleSettings : JiggleSettingsBase {
         data.ApplyTo(this);
     }
     #endif
-
-    public override JiggleSettingsData GetData() {
-        return new JiggleSettingsData {
-            gravityMultiplier = gravityMultiplier,
-            friction = friction,
-            airDrag = airDrag,
-            blend = blend,
-            angleElasticity = angleElasticity,
-            elasticitySoften = elasticitySoften,
-            lengthElasticity = lengthElasticity,
-            radiusMultiplier = radiusMultiplier,
-        };
-    }
-    
-    public override float GetRadius(float normalizedIndex) {
-        return radiusMultiplier * radiusCurve.Evaluate(normalizedIndex);
-    }
 }
 
 }

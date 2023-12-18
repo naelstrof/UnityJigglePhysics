@@ -23,10 +23,11 @@ public class JiggleRigBuilder : MonoBehaviour {
 
         public Transform GetRootTransform() => rootTransform;
         public JiggleRig(Transform rootTransform, JiggleSettingsBase jiggleSettings,
-            ICollection<Transform> ignoredTransforms) {
+            ICollection<Transform> ignoredTransforms, ICollection<Collider> colliders) {
             this.rootTransform = rootTransform;
             this.jiggleSettings = jiggleSettings;
             this.ignoredTransforms = new List<Transform>(ignoredTransforms);
+            this.colliders = new List<Collider>(colliders);
             Initialize();
         }
 

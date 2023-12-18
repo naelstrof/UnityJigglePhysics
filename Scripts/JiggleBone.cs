@@ -17,6 +17,7 @@ public partial class JiggleBone {
     private Quaternion boneRotationChangeCheck;
     private Vector3 bonePositionChangeCheck;
     private Quaternion lastValidPoseBoneRotation;
+    private float projectionAmount;
 
     private Vector3 lastValidPoseBoneLocalPosition;
     private float normalizedIndex;
@@ -35,13 +36,20 @@ public partial class JiggleBone {
         return Vector3.Distance(currentFixedAnimatedBonePosition, parent.currentFixedAnimatedBonePosition);
     }
     
-    public JiggleBone(Transform transform, JiggleBone parent, Vector3 position) {
+    public JiggleBone(Transform transform, JiggleBone parent, float projectionAmount = 1f) {
         this.transform = transform;
         this.parent = parent;
+        this.projectionAmount = projectionAmount;
+
+        Vector3 position;
         if (transform != null) {
             lastValidPoseBoneRotation = transform.localRotation;
             lastValidPoseBoneLocalPosition = transform.localPosition;
+            position = transform.position;
+        } else {
+            position = GetProjectedPosition();
         }
+
         targetAnimatedBoneSignal = new PositionSignal(position, Time.timeAsDouble);
         particleSignal = new PositionSignal(position, Time.timeAsDouble);
 
@@ -131,14 +139,8 @@ public partial class JiggleBone {
 
 
     private Vector3 GetProjectedPosition() {
-        Assert.IsFalse(hasTransform); // Projected positions are only useful on virtual jigglebones. real jigglebones have a position to sample instead.
         Vector3 parentTransformPosition = parent.transform.position;
-        if (parent.parent != null) {
-            return parent.transform.TransformPoint( parent.parent.transform.InverseTransformPoint(parentTransformPosition));
-        } else {
-            // parent.transform.parent is guaranteed to exist here, unless the user is jiggling a single bone by itself (which throws an exception).
-            return parent.transform.TransformPoint(parent.transform.parent.InverseTransformPoint(parentTransformPosition));
-        }
+        return parent.transform.TransformPoint(parent.GetParentTransform().InverseTransformPoint(parentTransformPosition)*projectionAmount);
     }
 
     private Vector3 GetTransformPosition() {
@@ -147,6 +149,13 @@ public partial class JiggleBone {
         } else {
             return transform.position;
         }
+    }
+
+    private Transform GetParentTransform() {
+        if (parent != null) {
+            return parent.transform;
+        }
+        return transform.parent;
     }
 
     private void CacheAnimationPosition() {
@@ -224,6 +233,9 @@ public partial class JiggleBone {
     }
 
     private Vector3 ConstrainAngle(Vector3 newPosition, float elasticity, float elasticitySoften) {
+        if (!hasTransform && projectionAmount == 0f) {
+            return newPosition;
+        }
         Vector3 parentParentPosition;
         Vector3 poseParentParent;
         if (parent.parent == null) {
@@ -264,6 +276,8 @@ public partial class JiggleBone {
         extrapolatedPosition = offset+particleSignal.SamplePosition(Time.timeAsDouble);
         return extrapolatedPosition;
     }
+
+    public Vector3 GetCachedSolvePosition() => extrapolatedPosition;
 
     public void PrepareBone() {
         // If bone is not animated, return to last unadulterated pose

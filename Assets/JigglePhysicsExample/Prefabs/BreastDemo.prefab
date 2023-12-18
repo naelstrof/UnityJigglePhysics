@@ -80,6 +80,10 @@ PrefabInstance:
       value: 0.5509215
       objectReference: {fileID: 0}
     - target: {fileID: -2822988680023276003, guid: edb77dd2fc9e7004d8bda98d7fa43864, type: 3}
+      propertyPath: m_UpdateWhenOffscreen
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -2822988680023276003, guid: edb77dd2fc9e7004d8bda98d7fa43864, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 9de64d064db478c428bcb6fe872941dc, type: 2}
@@ -106,6 +110,10 @@ PrefabInstance:
     - target: {fileID: 818013973116574356, guid: edb77dd2fc9e7004d8bda98d7fa43864, type: 3}
       propertyPath: m_AABB.m_Extent.z
       value: 0.6858221
+      objectReference: {fileID: 0}
+    - target: {fileID: 818013973116574356, guid: edb77dd2fc9e7004d8bda98d7fa43864, type: 3}
+      propertyPath: m_UpdateWhenOffscreen
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 818013973116574356, guid: edb77dd2fc9e7004d8bda98d7fa43864, type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -184,6 +192,10 @@ PrefabInstance:
       value: 1.2450031
       objectReference: {fileID: 0}
     - target: {fileID: 3948408232386947309, guid: edb77dd2fc9e7004d8bda98d7fa43864, type: 3}
+      propertyPath: m_UpdateWhenOffscreen
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948408232386947309, guid: edb77dd2fc9e7004d8bda98d7fa43864, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 9de64d064db478c428bcb6fe872941dc, type: 2}
@@ -226,6 +238,30 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: edb77dd2fc9e7004d8bda98d7fa43864, type: 3}
   m_PrefabInstance: {fileID: 3766186390479410996}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &790571755588454276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4072739780618791525}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a63eef503a567ef4eaf3898b5732b105, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interpolate: 1
+  jiggleZones:
+  - rootTransform: {fileID: 8808349847900053848}
+    jiggleSettings: {fileID: 11400000, guid: d59358c4708acdf46b4afa17f53616b1, type: 2}
+    ignoredTransforms: []
+    colliders: []
+    radius: 2
+  targetSkins:
+  - {fileID: 4876044611170610684}
+  wind: {x: 0, y: 0, z: 0}
+  levelOfDetail: {fileID: 0}
+  debugDraw: 1
 --- !u!114 &2051312510685350412
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -243,13 +279,17 @@ MonoBehaviour:
   - rootTransform: {fileID: 2467880594233073946}
     jiggleSettings: {fileID: 11400000, guid: b7fce8dfda721b548a5b989dc918b2a8, type: 2}
     ignoredTransforms: []
+    colliders: []
   - rootTransform: {fileID: 9015363995241648661}
     jiggleSettings: {fileID: 11400000, guid: db255ab29ae60bb47b1ac108d90aff5f, type: 2}
     ignoredTransforms: []
+    colliders: []
   - rootTransform: {fileID: 3344657269369277978}
     jiggleSettings: {fileID: 11400000, guid: db255ab29ae60bb47b1ac108d90aff5f, type: 2}
     ignoredTransforms: []
+    colliders: []
   wind: {x: 0, y: 0, z: 0}
+  levelOfDetail: {fileID: 0}
   debugDraw: 0
 --- !u!114 &2786233549984174320
 MonoBehaviour:
@@ -263,6 +303,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 569189b4d0473b74fb0eb5b055737a16, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  boobSize: 0
   bigCurve:
     serializedVersion: 2
     m_Curve:
@@ -287,7 +328,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  boobSize: 0
   blendshapeBig: LargeBreast
   targetRenderers:
   - {fileID: 184575907318038489}
@@ -313,20 +353,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   interpolate: 1
   jiggleZones:
-  - target: {fileID: 8808349847900053848}
-    radius: 2
-    jiggleSettings: {fileID: 11400000, guid: d59358c4708acdf46b4afa17f53616b1, type: 2}
-  - target: {fileID: 4525457624220928152}
-    radius: 0.15
+  - rootTransform: {fileID: 4525457624220928152}
     jiggleSettings: {fileID: 11400000, guid: c590983b1c210c2418944783533cd71b, type: 2}
-  - target: {fileID: 6077933502219286894}
+    ignoredTransforms: []
+    colliders: []
     radius: 0.15
+  - rootTransform: {fileID: 6077933502219286894}
     jiggleSettings: {fileID: 11400000, guid: c590983b1c210c2418944783533cd71b, type: 2}
+    ignoredTransforms: []
+    colliders: []
+    radius: 0.15
   targetSkins:
-  - {fileID: 4876044611170610684}
   - {fileID: 184575907318038489}
   wind: {x: 0, y: 0, z: 0}
-  debugDraw: 0
+  levelOfDetail: {fileID: 0}
+  debugDraw: 1
 --- !u!4 &4525457624220928152 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8464083210854588500, guid: edb77dd2fc9e7004d8bda98d7fa43864, type: 3}

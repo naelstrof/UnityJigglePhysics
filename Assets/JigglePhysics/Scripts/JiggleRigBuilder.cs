@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace JigglePhysics {
     
@@ -11,7 +12,7 @@ public class JiggleRigBuilder : MonoBehaviour {
 
     [Serializable]
     public class JiggleRig {
-        [SerializeField][Tooltip("The root bone from which an individual JiggleRig will be constructed. The JiggleRig encompasses all children of the specified root.")]
+        [SerializeField][Tooltip("The root bone from which an individual JiggleRig will be constructed. The JiggleRig encompasses all children of the specified root.")][FormerlySerializedAs("target")]
         private Transform rootTransform;
         [Tooltip("The settings that the rig should update with, create them using the Create->JigglePhysics->Settings menu option.")]
         public JiggleSettingsBase jiggleSettings;
@@ -35,7 +36,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         private bool NeedsCollisions => colliders.Count != 0;
 
         [HideInInspector]
-        private List<JiggleBone> simulatedPoints;
+        protected List<JiggleBone> simulatedPoints;
 
         public void PrepareBone(Vector3 position, JiggleRigLOD jiggleRigLOD) {
             if (!initialized) {
@@ -95,7 +96,7 @@ public class JiggleRigBuilder : MonoBehaviour {
             initialized = true;
         }
 
-        private void DeriveFinalSolve() {
+        public void DeriveFinalSolve() {
             Vector3 virtualPosition = simulatedPoints[0].DeriveFinalSolvePosition(Vector3.zero);
             Vector3 offset = simulatedPoints[0].transform.position - virtualPosition;
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
@@ -134,8 +135,8 @@ public class JiggleRigBuilder : MonoBehaviour {
             }
         }
 
-        private static void CreateSimulatedPoints(ICollection<JiggleBone> outputPoints, ICollection<Transform> ignoredTransforms, Transform currentTransform, JiggleBone parentJiggleBone) {
-            JiggleBone newJiggleBone = new JiggleBone(currentTransform, parentJiggleBone, currentTransform.position);
+        protected virtual void CreateSimulatedPoints(ICollection<JiggleBone> outputPoints, ICollection<Transform> ignoredTransforms, Transform currentTransform, JiggleBone parentJiggleBone) {
+            JiggleBone newJiggleBone = new JiggleBone(currentTransform, parentJiggleBone);
             outputPoints.Add(newJiggleBone);
             // Create an extra purely virtual point if we have no children.
             if (currentTransform.childCount == 0) {
@@ -143,18 +144,11 @@ public class JiggleRigBuilder : MonoBehaviour {
                     if (newJiggleBone.transform.parent == null) {
                         throw new UnityException("Can't have a singular jiggle bone with no parents. That doesn't even make sense!");
                     } else {
-                        float lengthToParent = Vector3.Distance(currentTransform.position, newJiggleBone.transform.parent.position);
-                        Vector3 projectedForwardReal = (currentTransform.position - newJiggleBone.transform.parent.position).normalized;
-                        outputPoints.Add(new JiggleBone(null, newJiggleBone, currentTransform.position + projectedForwardReal*lengthToParent));
+                        outputPoints.Add(new JiggleBone(null, newJiggleBone));
                         return;
                     }
                 }
-                Vector3 projectedForward = (currentTransform.position - parentJiggleBone.transform.position).normalized;
-                float length = 0.1f;
-                if (parentJiggleBone.parent != null) {
-                    length = Vector3.Distance(parentJiggleBone.transform.position, parentJiggleBone.parent.transform.position);
-                }
-                outputPoints.Add(new JiggleBone(null, newJiggleBone, currentTransform.position + projectedForward*length));
+                outputPoints.Add(new JiggleBone(null, newJiggleBone));
                 return;
             }
             for (int i = 0; i < currentTransform.childCount; i++) {
@@ -202,7 +196,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         }
     }
 
-    public void Advance(float deltaTime) {
+    public virtual void Advance(float deltaTime) {
         if (levelOfDetail!=null && !levelOfDetail.CheckActive(transform.position)) {
             if (wasLODActive) PrepareTeleport();
             CachedSphereCollider.StartPass();

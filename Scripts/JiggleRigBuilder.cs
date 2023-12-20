@@ -277,7 +277,7 @@ public class JiggleRigBuilder : MonoBehaviour {
     }
 
     private void OnValidate() {
-        if (Application.isPlaying) return;
+        if (Application.isPlaying || jiggleRigs == null) return;
         foreach (JiggleRig rig in jiggleRigs) {
             rig.Initialize();
         }

@@ -17,8 +17,8 @@ public class BreastSlider : MonoBehaviour {
     private List<SkinnedMeshRenderer> targetRenderers;
     [SerializeField]
     private JigglePhysics.JiggleRigBuilder rigTarget;
-    [SerializeField]
-    private JigglePhysics.JiggleSkin skinTarget;
+    //[SerializeField]
+    //private JigglePhysics.JiggleSkin skinTarget;
     [SerializeField]
     private List<Transform> jiggleSkinTargets;
     [SerializeField]
@@ -27,11 +27,11 @@ public class BreastSlider : MonoBehaviour {
         foreach(SkinnedMeshRenderer renderer in targetRenderers) {
             renderer.SetBlendShapeWeight(renderer.sharedMesh.GetBlendShapeIndex(blendshapeBig), bigCurve.Evaluate(boobSize)*100f);
         }
-        foreach (var breast in jiggleSkinTargets) {
-            ((JiggleSettingsBlend)skinTarget.GetJiggleZone(breast).jiggleSettings).normalizedBlend = boobSize;
-        }
-        foreach (var breast in jiggleRigTargets) {
-            ((JiggleSettingsBlend)rigTarget.GetJiggleRig(breast).jiggleSettings).normalizedBlend = boobSize;
-        }
+        //foreach (var breast in jiggleSkinTargets) {
+            //((JiggleSettingsBlend)skinTarget.GetJiggleZone(breast).jiggleSettings).normalizedBlend = boobSize;
+        //}
+        //foreach (var breast in jiggleRigTargets) {
+            //((JiggleSettingsBlend)rigTarget.GetJiggleRig(breast).jiggleSettings).normalizedBlend = boobSize;
+        //}
     }
 }

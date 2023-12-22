@@ -220,6 +220,9 @@ public class JiggleRigBuilder : MonoBehaviour {
     }
 
     private void OnValidate() {
+        if (rootTransform == null) {
+            rootTransform = transform;
+        }
         if (Application.isPlaying) return;
         Initialize();
     }

@@ -114,7 +114,6 @@ public partial class JiggleBone {
             return;
         }
 
-        CachedSphereCollider.StartPass();
         if (!CachedSphereCollider.TryGet(out SphereCollider sphereCollider)) {
             return;
         }
@@ -130,7 +129,6 @@ public partial class JiggleBone {
                 workingPosition += dir * dist;
             }
         }
-        CachedSphereCollider.FinishedPass();
     }
 
     public void SignalWritePosition(double time) {

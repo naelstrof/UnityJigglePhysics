@@ -8,30 +8,18 @@ public static class CachedSphereCollider {
             _hasSphere = false;
         }
     }
-    private static int remainingBuilders = -1;
     private static bool _hasSphere = false;
     private static SphereCollider _sphereCollider;
-    private static readonly HashSet<JiggleRigBuilder> builders = new HashSet<JiggleRigBuilder>();
-
-    public static void AddBuilder(JiggleRigBuilder builder) {
-        builders.Add(builder);
-    }
-    public static void RemoveBuilder(JiggleRigBuilder builder) {
-        builders.Remove(builder);
-    }
 
     public static void StartPass() {
-        if ((remainingBuilders <= -1 || remainingBuilders >= builders.Count) && TryGet(out SphereCollider collider)) {
+        if (TryGet(out SphereCollider collider)) {
             collider.enabled = true;
-            remainingBuilders = 0;
         }
     }
 
     public static void FinishedPass() {
-        remainingBuilders++;
-        if (remainingBuilders >= builders.Count && TryGet(out SphereCollider collider)) {
+        if (TryGet(out SphereCollider collider)) {
             collider.enabled = false;
-            remainingBuilders = -1;
         }
     }
 

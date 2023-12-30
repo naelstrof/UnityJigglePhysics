@@ -10,8 +10,8 @@ namespace JigglePhysics {
 public class JiggleRigBuilder : MonoBehaviour {
     public static float maxCatchupTime => Time.fixedDeltaTime*4;
 
-    [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
-    public bool interpolate = true;
+    //[Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
+    //public bool interpolate = true;
     [SerializeField][Tooltip("The root bone from which an individual JiggleRig will be constructed. The JiggleRig encompasses all children of the specified root.")][FormerlySerializedAs("target")]
     private Transform rootTransform;
     [Tooltip("The settings that the rig should update with, create them using the Create->JigglePhysics->Settings menu option.")]
@@ -144,11 +144,11 @@ public class JiggleRigBuilder : MonoBehaviour {
         Initialize();
     }
     void OnEnable() {
-        CachedSphereCollider.AddBuilder(this);
+        JiggleRigHandler.AddBuilder(this);
         dirtyFromEnable = true;
     }
     void OnDisable() {
-        CachedSphereCollider.RemoveBuilder(this);
+        JiggleRigHandler.RemoveBuilder(this);
         PrepareTeleport();
     }
 
@@ -170,13 +170,10 @@ public class JiggleRigBuilder : MonoBehaviour {
     public virtual void Advance(float deltaTime) {
         if (levelOfDetail!=null && !levelOfDetail.CheckActive(transform.position)) {
             if (wasLODActive) PrepareTeleport();
-            CachedSphereCollider.StartPass();
-            CachedSphereCollider.FinishedPass();
             wasLODActive = false;
             return;
         }
         if (!wasLODActive) FinishTeleport();
-        CachedSphereCollider.StartPass();
         PrepareBone(transform.position, levelOfDetail);
         
         if (dirtyFromEnable) {
@@ -192,23 +189,15 @@ public class JiggleRigBuilder : MonoBehaviour {
         }
         
         Pose(debugDraw);
-        CachedSphereCollider.FinishedPass();
         wasLODActive = true;
     }
 
-    private void LateUpdate() {
-        if (!interpolate) {
-            return;
-        }
-        Advance(Time.deltaTime);
-    }
-
-    private void FixedUpdate() {
-        if (interpolate) {
-            return;
-        }
-        Advance(Time.deltaTime);
-    }
+    //private void LateUpdate() {
+        //if (!interpolate) {
+            //return;
+        //}
+        //Advance(Time.deltaTime);
+    //}
 
     private void OnDrawGizmos() {
         if (!initialized || simulatedPoints == null) {

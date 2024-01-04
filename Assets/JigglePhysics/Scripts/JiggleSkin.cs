@@ -6,7 +6,6 @@ using UnityEngine.Serialization;
 
 namespace JigglePhysics {
 
-[DefaultExecutionOrder(300)]
 public class JiggleSkin : MonoBehaviour {
     [Serializable]
     public class JiggleZone : JiggleRigBuilder.JiggleRig {

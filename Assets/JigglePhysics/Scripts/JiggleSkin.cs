@@ -65,10 +65,12 @@ public class JiggleSkin : MonoBehaviour {
     private void OnEnable() {
         Initialize();
         dirtyFromEnable = true;
+        CachedSphereCollider.AddSkin(this);
     }
     
     private void OnDisable() {
         PrepareTeleport();
+        CachedSphereCollider.RemoveSkin(this);
     }
 
     public void Initialize() {
@@ -125,6 +127,7 @@ public class JiggleSkin : MonoBehaviour {
             zone.DeriveFinalSolve();
         }
         UpdateMesh();
+        CachedSphereCollider.FinishedPass();
         if (!debugDraw) return;
         foreach( JiggleZone zone in jiggleZones) {
             zone.DebugDraw();

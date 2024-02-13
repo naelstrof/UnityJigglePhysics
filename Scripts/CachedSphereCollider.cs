@@ -11,10 +11,16 @@ public static class CachedSphereCollider {
     private static int remainingBuilders = -1;
     private static bool _hasSphere = false;
     private static SphereCollider _sphereCollider;
-    private static readonly HashSet<JiggleRigBuilder> builders = new HashSet<JiggleRigBuilder>();
+    private static readonly HashSet<MonoBehaviour> builders = new HashSet<MonoBehaviour>();
 
     public static void AddBuilder(JiggleRigBuilder builder) {
         builders.Add(builder);
+    }
+    public static void AddSkin(JiggleSkin skin) {
+        builders.Add(skin);
+    }
+    public static void RemoveSkin(JiggleSkin skin) {
+        builders.Remove(skin);
     }
     public static void RemoveBuilder(JiggleRigBuilder builder) {
         builders.Remove(builder);

@@ -181,6 +181,15 @@ public partial class JiggleBone {
         return Vector3.Lerp(newPosition, parent.workingPosition + dir * GetLengthToParent(), elasticity);
     }
 
+    public void SampleAndReset() {
+        var time = Time.timeAsDouble;
+        Vector3 position = GetTransformPosition();
+        particleSignal.FlattenSignal(time, position);
+        if (!hasTransform) return;
+        transform.localPosition = bonePositionChangeCheck;
+        transform.localRotation = boneRotationChangeCheck;
+    }
+
     public void MatchAnimationInstantly() {
         var time = Time.timeAsDouble;
         Vector3 position = GetTransformPosition();

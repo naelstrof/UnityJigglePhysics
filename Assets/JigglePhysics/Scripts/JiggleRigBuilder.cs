@@ -56,6 +56,12 @@ public class JiggleRigBuilder : MonoBehaviour {
             }
         }
 
+        public void SampleAndReset() {
+            foreach (JiggleBone simulatedPoint in simulatedPoints) {
+                simulatedPoint.SampleAndReset();
+            }
+        }
+
         public void Update(Vector3 wind, double time) {
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
                 simulatedPoint.VerletPass(data, wind, time);

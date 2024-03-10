@@ -57,8 +57,8 @@ public class JiggleRigBuilder : MonoBehaviour {
         }
 
         public void SampleAndReset() {
-            foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.SampleAndReset();
+            for (int i = simulatedPoints.Count - 1; i >= 0; i--) {
+                simulatedPoints[i].SampleAndReset();
             }
         }
 

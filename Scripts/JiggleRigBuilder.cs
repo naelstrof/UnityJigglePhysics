@@ -50,12 +50,6 @@ public class JiggleRigBuilder : MonoBehaviour {
             data = jiggleRigLOD!=null?jiggleRigLOD.AdjustJiggleSettingsData(position, data):data;
         }
 
-        public void SetTargetAndReset() {
-            for (int i = simulatedPoints.Count - 1; i >= 0; i--) {
-                simulatedPoints[i].SetTargetAndReset();
-            }
-        }
-
         public void SampleAndReset() {
             for (int i = simulatedPoints.Count - 1; i >= 0; i--) {
                 simulatedPoints[i].SampleAndReset();

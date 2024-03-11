@@ -186,8 +186,8 @@ public partial class JiggleBone {
         Vector3 position = GetTransformPosition();
         particleSignal.FlattenSignal(time, position);
         if (!hasTransform) return;
-        transform.localPosition = lastValidPoseBoneLocalPosition;
-        transform.localRotation = lastValidPoseBoneRotation;
+        transform.localPosition = bonePositionChangeCheck;
+        transform.localRotation = boneRotationChangeCheck;
     }
 
     public void MatchAnimationInstantly() {

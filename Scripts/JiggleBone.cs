@@ -190,6 +190,15 @@ public partial class JiggleBone {
         transform.localRotation = boneRotationChangeCheck;
     }
 
+    public void SetTargetAndReset() {
+        var time = Time.timeAsDouble;
+        Vector3 position = GetTransformPosition();
+        targetAnimatedBoneSignal.FlattenSignal(time, position);
+        if (!hasTransform) return;
+        transform.localPosition = bonePositionChangeCheck;
+        transform.localRotation = boneRotationChangeCheck;
+    }
+
     public void MatchAnimationInstantly() {
         var time = Time.timeAsDouble;
         Vector3 position = GetTransformPosition();

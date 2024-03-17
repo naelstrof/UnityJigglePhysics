@@ -298,20 +298,11 @@ public partial class JiggleBone {
         }
         CacheAnimationPosition();
     }
-
+    
     public void OnDrawGizmos(JiggleSettingsBase jiggleSettings) {
-        if (transform != null && child != null && child.transform != null) {
-            Gizmos.DrawLine(transform.position, child.transform.position);
-        }
-        if (transform != null && child != null && child.transform == null) {
-            Gizmos.DrawLine(transform.position, child.GetProjectedPosition());
-        }
-        if (transform != null && jiggleSettings != null) {
-            Gizmos.DrawWireSphere(transform.position, jiggleSettings.GetRadius(normalizedIndex));
-        }
-        if (transform == null && jiggleSettings != null) {
-            Gizmos.DrawWireSphere(GetProjectedPosition(), jiggleSettings.GetRadius(normalizedIndex));
-        }
+        Vector3 pos = particleSignal.SamplePosition(Time.timeAsDouble);
+        Gizmos.DrawLine(pos, child.particleSignal.SamplePosition(Time.timeAsDouble));
+        Gizmos.DrawWireSphere(pos, jiggleSettings.GetRadius(normalizedIndex));
     }
 
     public void PoseBone(float blend) {

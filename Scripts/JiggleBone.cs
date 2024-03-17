@@ -301,8 +301,12 @@ public partial class JiggleBone {
     
     public void OnDrawGizmos(JiggleSettingsBase jiggleSettings) {
         Vector3 pos = particleSignal.SamplePosition(Time.timeAsDouble);
-        Gizmos.DrawLine(pos, child.particleSignal.SamplePosition(Time.timeAsDouble));
-        Gizmos.DrawWireSphere(pos, jiggleSettings.GetRadius(normalizedIndex));
+        if (child != null) {
+            Gizmos.DrawLine(pos, child.particleSignal.SamplePosition(Time.timeAsDouble));
+        }
+        if (jiggleSettings != null) {
+            Gizmos.DrawWireSphere(pos, jiggleSettings.GetRadius(normalizedIndex));
+        }
     }
 
     public void PoseBone(float blend) {

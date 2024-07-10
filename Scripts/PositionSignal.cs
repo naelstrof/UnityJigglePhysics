@@ -40,11 +40,11 @@ public class PositionSignal {
 	public void FlattenSignal(double time, Vector3 position) {
 		previousFrame = new Frame {
 			position = position,
-			time = time-JiggleRigBuilder.maxCatchupTime*2f,
+			time = time-JiggleRigBuilder.MAX_CATCHUP_TIME*2f,
 		};
 		currentFrame = new Frame {
 			position = position,
-			time = time-JiggleRigBuilder.maxCatchupTime,
+			time = time-JiggleRigBuilder.MAX_CATCHUP_TIME,
 		};
 	}
 

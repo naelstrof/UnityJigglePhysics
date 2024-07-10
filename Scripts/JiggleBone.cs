@@ -89,12 +89,12 @@ public partial class JiggleBone {
         }
         Vector3 localSpaceVelocity = (particleSignal.GetCurrent()-particleSignal.GetPrevious()) - (parent.particleSignal.GetCurrent()-parent.particleSignal.GetPrevious());
         workingPosition = NextPhysicsPosition(
-            particleSignal.GetCurrent(), particleSignal.GetPrevious(), localSpaceVelocity, Time.fixedDeltaTime,
+            particleSignal.GetCurrent(), particleSignal.GetPrevious(), localSpaceVelocity, JiggleRigBuilder.VERLET_TIME_STEP,
             jiggleSettings.gravityMultiplier,
             jiggleSettings.friction,
             jiggleSettings.airDrag
         );
-        workingPosition += wind * (Time.fixedDeltaTime * jiggleSettings.airDrag);
+        workingPosition += wind * (JiggleRigBuilder.VERLET_TIME_STEP * jiggleSettings.airDrag);
     }
 
     public void CollisionPreparePass(JiggleSettingsData jiggleSettings) {

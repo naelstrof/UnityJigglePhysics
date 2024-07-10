@@ -11,7 +11,15 @@ public static class CachedSphereCollider {
     private static int remainingBuilders = -1;
     private static bool _hasSphere = false;
     private static SphereCollider _sphereCollider;
-    private static readonly HashSet<MonoBehaviour> builders = new HashSet<MonoBehaviour>();
+    private static HashSet<MonoBehaviour> builders = new HashSet<MonoBehaviour>();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void Init() {
+        remainingBuilders = -1;
+        _hasSphere = false;
+        _sphereCollider = null;
+        builders = new HashSet<MonoBehaviour>();
+    }
 
     public static void AddBuilder(JiggleRigBuilder builder) {
         builders.Add(builder);

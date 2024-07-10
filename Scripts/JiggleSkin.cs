@@ -115,9 +115,9 @@ public class JiggleSkin : MonoBehaviour {
             dirtyFromEnable = false;
         }
         
-        accumulation = Math.Min(accumulation+deltaTime, Time.fixedDeltaTime*4f);
-        while (accumulation > Time.fixedDeltaTime) {
-            accumulation -= Time.fixedDeltaTime;
+        accumulation = Math.Min(accumulation+deltaTime, JiggleRigBuilder.MAX_CATCHUP_TIME);
+        while (accumulation > JiggleRigBuilder.VERLET_TIME_STEP) {
+            accumulation -= JiggleRigBuilder.VERLET_TIME_STEP;
             double time = Time.timeAsDouble - accumulation;
             foreach( JiggleZone zone in jiggleZones) {
                 zone.Update(wind, time);

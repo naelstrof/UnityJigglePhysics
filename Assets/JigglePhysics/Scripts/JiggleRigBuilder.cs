@@ -7,7 +7,8 @@ using UnityEngine.Serialization;
 namespace JigglePhysics {
     
 public class JiggleRigBuilder : MonoBehaviour {
-    public static float maxCatchupTime => Time.fixedDeltaTime*4;
+    public const float VERLET_TIME_STEP = 0.02f;
+    public const float MAX_CATCHUP_TIME = VERLET_TIME_STEP*4f;
 
     [Serializable]
     public class JiggleRig {
@@ -216,9 +217,9 @@ public class JiggleRigBuilder : MonoBehaviour {
             dirtyFromEnable = false;
         }
 
-        accumulation = Math.Min(accumulation+deltaTime, maxCatchupTime);
-        while (accumulation > Time.fixedDeltaTime) {
-            accumulation -= Time.fixedDeltaTime;
+        accumulation = Math.Min(accumulation+deltaTime, MAX_CATCHUP_TIME);
+        while (accumulation > JiggleRigBuilder.VERLET_TIME_STEP) {
+            accumulation -= JiggleRigBuilder.VERLET_TIME_STEP;
             double time = Time.timeAsDouble - accumulation;
             foreach(JiggleRig rig in jiggleRigs) {
                 rig.Update(wind, time);

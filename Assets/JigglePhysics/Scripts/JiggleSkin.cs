@@ -137,7 +137,7 @@ public class JiggleSkin : MonoBehaviour {
             zone.DebugDraw();
         }
 
-        FinishedPass.Invoke();
+        FinishedPass?.Invoke();
     }
 
     private void LateUpdate() {

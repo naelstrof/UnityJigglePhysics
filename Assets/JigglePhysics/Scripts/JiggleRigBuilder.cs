@@ -236,7 +236,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         CachedSphereCollider.FinishedPass();
         wasLODActive = true;
 
-        FinishedPass.Invoke();
+        FinishedPass?.Invoke();
     }
 
     public JiggleRig GetJiggleRig(Transform rootTransform) {

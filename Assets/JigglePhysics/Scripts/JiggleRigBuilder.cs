@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Serialization;
 
 namespace JigglePhysics {
@@ -171,6 +172,9 @@ public class JiggleRigBuilder : MonoBehaviour {
     [Tooltip("Draws some simple lines to show what the simulation is doing. Generally this should be disabled.")]
     [SerializeField] private bool debugDraw;
 
+    [Tooltip("An event that occurs after the Jiggle Rig Builder is done moving all the bones for the frame.")]
+    public UnityAction FinishedPass;
+
     private double accumulation;
     private bool dirtyFromEnable = false;
     private bool wasLODActive = true;
@@ -231,6 +235,8 @@ public class JiggleRigBuilder : MonoBehaviour {
         }
         CachedSphereCollider.FinishedPass();
         wasLODActive = true;
+
+        FinishedPass?.Invoke();
     }
 
     public JiggleRig GetJiggleRig(Transform rootTransform) {

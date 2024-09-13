@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Serialization;
 
 namespace JigglePhysics {
@@ -44,6 +45,9 @@ public class JiggleSkin : MonoBehaviour {
 
     private bool wasLODActive = true;
     private double accumulation;
+
+    [Tooltip("An event that occurs after the Jiggle Skin is done moving the skin for the frame.")]
+    public UnityAction FinishedPass;
 
     private List<Material> targetMaterials;
     private List<Vector4> packedVectors;
@@ -132,6 +136,8 @@ public class JiggleSkin : MonoBehaviour {
         foreach( JiggleZone zone in jiggleZones) {
             zone.DebugDraw();
         }
+
+        FinishedPass.Invoke();
     }
 
     private void LateUpdate() {

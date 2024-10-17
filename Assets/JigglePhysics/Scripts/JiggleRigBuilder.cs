@@ -26,6 +26,7 @@ public class JiggleRigBuilder : MonoBehaviour {
         public Transform GetRootTransform() => rootTransform;
         public JiggleRig(Transform rootTransform, JiggleSettingsBase jiggleSettings,
             ICollection<Transform> ignoredTransforms, ICollection<Collider> colliders) {
+            // TODO: This class should handle changing settings at runtime (including instantiating only if needed) (follow sharedMaterial functionality)
             this.rootTransform = rootTransform;
             this.jiggleSettings = jiggleSettings;
             this.ignoredTransforms = new List<Transform>(ignoredTransforms);

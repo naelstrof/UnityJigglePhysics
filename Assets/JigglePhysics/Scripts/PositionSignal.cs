@@ -57,7 +57,7 @@ public class PositionSignal {
 			return previousFrame.position;
 		}
 		double t = ((double)(time) - (double)previousFrame.time) / (double)diff;
-		return Vector3.Lerp(previousFrame.position,currentFrame.position, (float)t);
+		return Vector3.LerpUnclamped(previousFrame.position,currentFrame.position, (float)t);
 	}
 }
 

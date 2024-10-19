@@ -279,9 +279,12 @@ public partial class JiggleBone {
         }
         Debug.DrawLine(currentFixedAnimatedBonePosition, parent.currentFixedAnimatedBonePosition, targetColor, 0, false);
     }
-    public Vector3 DeriveFinalSolvePosition(Vector3 offset) {
-        extrapolatedPosition = offset+particleSignal.SamplePosition(Time.timeAsDouble);
-        return extrapolatedPosition;
+    public void DeriveFinalSolvePosition(bool snap = false) {
+        if (!snap) {
+            extrapolatedPosition = particleSignal.SamplePosition(Time.timeAsDouble);
+        } else {
+            extrapolatedPosition = transform.position;
+        }
     }
 
     public Vector3 GetCachedSolvePosition() => extrapolatedPosition;
@@ -299,8 +302,8 @@ public partial class JiggleBone {
         CacheAnimationPosition();
     }
     
-    public void OnDrawGizmos(JiggleSettingsBase jiggleSettings) {
-        Vector3 pos = particleSignal.SamplePosition(Time.timeAsDouble);
+    public void OnDrawGizmos(JiggleSettingsBase jiggleSettings, bool snap = false) {
+        Vector3 pos = snap ? transform.position : particleSignal.SamplePosition(Time.timeAsDouble);
         if (child != null) {
             Gizmos.DrawLine(pos, child.particleSignal.SamplePosition(Time.timeAsDouble));
         }

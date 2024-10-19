@@ -16,14 +16,14 @@ namespace UnityTemplateProjects {
         private Vector2 offset;
         void Simulate() {
             if (Input.GetButton("Fire1") || Input.GetButton("Fire2")) {
-                offset += new Vector2(Input.GetAxis("Mouse X") + Input.GetAxis("Horizontal"), -Input.GetAxis("Mouse Y"))*2f;
+                offset += new Vector2(Input.GetAxis("Mouse X"), -Input.GetAxis("Mouse Y"))*2f;
             } else {
-                offset += new Vector2(Input.GetAxis("Horizontal"), 0f)*2f;
+                //offset += new Vector2(Input.GetAxis("Horizontal"), 0f)*2f;
             }
             transform.rotation = Quaternion.AngleAxis(offset.x,Vector3.up)*Quaternion.AngleAxis(offset.y,Vector3.right);
             transform.position = Vector3.SmoothDamp(transform.position, targetLookat.position - transform.forward*distance, ref vel, 0.04f);
             transform.rotation = Quaternion.LookRotation((targetLookat.position - transform.position).normalized, Vector3.up);
-            distance -= Input.GetAxis("Mouse ScrollWheel") + Input.GetAxis("Vertical")*Time.deltaTime*8f;
+            distance -= Input.GetAxis("Mouse ScrollWheel");
             distance = Mathf.Max(distance, 1f);
         }
         public void LateUpdate() {

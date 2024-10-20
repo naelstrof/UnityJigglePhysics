@@ -203,12 +203,13 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
         if (Application.isPlaying) {
             JiggleRigLateUpdateHandler.RemoveJiggleRigAdvancable(this);
             JiggleRigFixedUpdateHandler.RemoveJiggleRigAdvancable(this);
-            switch (jiggleUpdateMode) {
-                case JiggleUpdateMode.LateUpdate: JiggleRigLateUpdateHandler.AddJiggleRigAdvancable(this); break;
-                case JiggleUpdateMode.FixedUpdate: JiggleRigFixedUpdateHandler.AddJiggleRigAdvancable(this); break;
-                default: throw new ArgumentOutOfRangeException();
+            if (isActiveAndEnabled) {
+                switch (jiggleUpdateMode) {
+                    case JiggleUpdateMode.LateUpdate: JiggleRigLateUpdateHandler.AddJiggleRigAdvancable(this); break;
+                    case JiggleUpdateMode.FixedUpdate: JiggleRigFixedUpdateHandler.AddJiggleRigAdvancable(this); break;
+                    default: throw new ArgumentOutOfRangeException();
+                }
             }
-
             SetJiggleRigLOD(levelOfDetail);
         }
         

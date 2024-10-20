@@ -211,6 +211,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BreastDemo (7)
       objectReference: {fileID: 0}
+    - target: {fileID: 347791583696735252, guid: c868e7ca7ef6f114a9bb8ee6a3c9cb7b, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1123729706318632622, guid: c868e7ca7ef6f114a9bb8ee6a3c9cb7b, type: 3}
       propertyPath: m_RootOrder
       value: 9
@@ -2297,6 +2301,10 @@ PrefabInstance:
     - target: {fileID: 347791583696735252, guid: c868e7ca7ef6f114a9bb8ee6a3c9cb7b, type: 3}
       propertyPath: m_Name
       value: BreastDemo (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 347791583696735252, guid: c868e7ca7ef6f114a9bb8ee6a3c9cb7b, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1123729706318632622, guid: c868e7ca7ef6f114a9bb8ee6a3c9cb7b, type: 3}
       propertyPath: m_RootOrder

@@ -251,19 +251,13 @@ public partial class JiggleBone {
         }
         Debug.DrawLine(currentFixedAnimatedBonePosition, parent.currentFixedAnimatedBonePosition, targetColor, 0, false);
     }
-
-    /// <summary>
-    /// Used specifically to snap the root bone into the exact position it's supposed to be for posing.
-    /// </summary>
-    public void SnapToTransform() {
-        extrapolatedPosition = transform.position;
-    }
     
     /// <summary>
     /// Extrapolates the particle signal from the past, to the current time. This must be done right before Pose.
     /// </summary>
-    public void DeriveFinalSolvePosition() {
-        extrapolatedPosition = particleSignal.SamplePosition(Time.timeAsDouble-JiggleRigBuilder.VERLET_TIME_STEP);
+    public Vector3 DeriveFinalSolvePosition(Vector3 offset) {
+        extrapolatedPosition = particleSignal.SamplePosition(Time.timeAsDouble-JiggleRigBuilder.VERLET_TIME_STEP) + offset;
+        return extrapolatedPosition;
     }
 
     public Vector3 GetCachedSolvePosition() => extrapolatedPosition;

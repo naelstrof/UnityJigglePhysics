@@ -117,9 +117,9 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         /// You normally won't call this.
         /// </summary>
         internal void DeriveFinalSolve() {
-            simulatedPoints[0].SnapToTransform();
-            for (int i = 1; i < simulatedPoints.Count; i++) {
-                simulatedPoints[i].DeriveFinalSolvePosition();
+            Vector3 offset = simulatedPoints[0].DeriveFinalSolvePosition(Vector3.zero) - simulatedPoints[0].transform.position;
+            for (int i = 0; i < simulatedPoints.Count; i++) {
+                simulatedPoints[i].DeriveFinalSolvePosition(-offset);
             }
         }
 

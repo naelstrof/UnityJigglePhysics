@@ -8,44 +8,23 @@ public static class CachedSphereCollider {
             _hasSphere = false;
         }
     }
-    private static int remainingBuilders = -1;
     private static bool _hasSphere = false;
     private static SphereCollider _sphereCollider;
-    private static HashSet<MonoBehaviour> builders = new HashSet<MonoBehaviour>();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void Init() {
-        remainingBuilders = -1;
         _hasSphere = false;
         _sphereCollider = null;
-        builders = new HashSet<MonoBehaviour>();
     }
-
-    public static void AddBuilder(JiggleRigBuilder builder) {
-        builders.Add(builder);
-    }
-    public static void AddSkin(JiggleSkin skin) {
-        builders.Add(skin);
-    }
-    public static void RemoveSkin(JiggleSkin skin) {
-        builders.Remove(skin);
-    }
-    public static void RemoveBuilder(JiggleRigBuilder builder) {
-        builders.Remove(builder);
-    }
-
-    public static void StartPass() {
-        if ((remainingBuilders <= -1 || remainingBuilders >= builders.Count) && TryGet(out SphereCollider collider)) {
+    public static void EnableSphereCollider() {
+        if (TryGet(out SphereCollider collider)) {
             collider.enabled = true;
-            remainingBuilders = 0;
         }
     }
 
-    public static void FinishedPass() {
-        remainingBuilders++;
-        if (remainingBuilders >= builders.Count && TryGet(out SphereCollider collider)) {
-            collider.enabled = false;
-            remainingBuilders = -1;
+    public static void DisableSphereCollider() {
+        if (TryGet(out SphereCollider collider)) {
+            collider.enabled = true;
         }
     }
 
@@ -54,26 +33,28 @@ public static class CachedSphereCollider {
             collider = _sphereCollider;
             return true;
         }
+
+        GameObject obj = null;
         try {
-            var obj = new GameObject("JiggleBoneSphereCollider", typeof(SphereCollider), typeof(DestroyListener)) {
+            obj = new GameObject("JiggleBoneSphereCollider", typeof(SphereCollider), typeof(DestroyListener)) {
                 hideFlags = HideFlags.HideAndDontSave
             };
-            if (Application.isPlaying) {
-                Object.DontDestroyOnLoad(obj);
-            }
+            Object.DontDestroyOnLoad(obj);
 
-            _sphereCollider = obj.GetComponent<SphereCollider>();
+            if (!obj.TryGetComponent(out _sphereCollider)) {
+                throw new UnityException("This should never happen...");
+            }
             collider = _sphereCollider;
             collider.enabled = false;
             _hasSphere = true;
             return true;
         } catch {
             // Something went wrong! Try to clean up and try again next frame. Better throwing an expensive exception than spawning spheres every frame.
-            if (_sphereCollider != null) {
+            if (obj) {
                 if (Application.isPlaying) {
-                    Object.Destroy(_sphereCollider.gameObject);
+                    Object.Destroy(obj);
                 } else {
-                    Object.DestroyImmediate(_sphereCollider.gameObject);
+                    Object.DestroyImmediate(obj);
                 }
             }
             _hasSphere = false;

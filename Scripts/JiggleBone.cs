@@ -162,11 +162,26 @@ public partial class JiggleBone {
     }
 
     /// <summary>
-    /// Matches the particle signal to the current pose, then undoing the pose. This is useful for confining the jiggles, like they got "grabbed".
+    /// Matches the particle signal to the current pose, then undoes the pose. This is useful for confining the jiggles, like they got "grabbed".
     /// I would essentially use IK to set the bones to be grabbed. Then call this function so the virtual jiggle particles also move to the same location.
     /// It would need to be called every frame that the chain is grabbed.
     /// </summary>
+    [Obsolete("Please use SetTargetAndResetToLastValidPose() instead.")]
     public void SampleAndReset() {
+        var time = Time.timeAsDouble;
+        Vector3 position = GetTransformPosition();
+        particleSignal.FlattenSignal(time, position);
+        if (!hasTransform) return;
+        transform.localPosition = bonePositionChangeCheck;
+        transform.localRotation = boneRotationChangeCheck;
+    }
+
+    /// <summary>
+    /// Matches the particle signal to the current pose, then undoes the pose. This is useful for confining the jiggles, like they got "grabbed".
+    /// I would essentially use IK to set the bones to be grabbed. Then call this function so the virtual jiggle particles also move to the same location.
+    /// It would need to be called every frame that the chain is grabbed.
+    /// </summary>
+    public void SetTargetAndResetToLastValidPose() {
         var time = Time.timeAsDouble;
         Vector3 position = GetTransformPosition();
         particleSignal.FlattenSignal(time, position);

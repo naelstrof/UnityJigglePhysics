@@ -1,12 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace JigglePhysics {
 
-public class JiggleSkin : MonoBehaviour {
+public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
     [Serializable]
     public class JiggleZone : JiggleRigBuilder.JiggleRig {
         [Tooltip("How large of a radius the zone should effect, in target-space meters. (Scaling the target will effect the radius.)")]
@@ -30,25 +28,29 @@ public class JiggleSkin : MonoBehaviour {
             Gizmos.DrawWireSphere(GetRootTransform().position, radius*GetRootTransform().lossyScale.x);
         }
     }
-    [Tooltip("Enables interpolation for the simulation, this should be enabled unless you *really* need the simulation to only update on FixedUpdate.")]
-    public bool interpolate = true;
+    [SerializeField] [Tooltip("Enables interpolation for the simulation, this should be LateUpdate unless you *really* need the simulation to only update on FixedUpdate.")]
+    private JiggleUpdateMode jiggleUpdateMode = JiggleUpdateMode.LateUpdate;
     public List<JiggleZone> jiggleZones;
     [SerializeField] [Tooltip("The list of skins to send the deformation data too, they should have JiggleSkin-compatible materials!")]
     public List<SkinnedMeshRenderer> targetSkins;
     [Tooltip("An air force that is applied to the entire rig, this is useful to plug in some wind volumes from external sources.")]
     public Vector3 wind;
-    [Tooltip("Level of detail manager. This system will control how the jiggle skin saves performance cost.")]
-    public JiggleRigLOD levelOfDetail;
+
+    private bool hasLevelOfDetail;
+    [SerializeField] [Tooltip("Level of detail manager. This system will control how the jiggle skin saves performance cost.")]
+    private JiggleRigLOD levelOfDetail;
+    
     [SerializeField] [Tooltip("Draws some simple lines to show what the simulation is doing. Generally this should be disabled.")]
     private bool debugDraw = false;
 
+    private float settleTimer;
+
     private bool wasLODActive = true;
     private double accumulation;
+    private MaterialPropertyBlock materialPropertyBlock;
 
-    private List<Material> targetMaterials;
     private List<Vector4> packedVectors;
     private int jiggleInfoNameID;
-    private bool dirtyFromEnable;
 
     public void PrepareTeleport() {
         foreach (var zone in jiggleZones) {
@@ -61,16 +63,49 @@ public class JiggleSkin : MonoBehaviour {
             zone.FinishTeleport();
         }
     }
+    
+    public void SetJiggleRigLOD(JiggleRigLOD lod) {
+        levelOfDetail = lod;
+        hasLevelOfDetail = levelOfDetail;
+    }
+
+    private void Awake() {
+        Initialize();
+    }
 
     private void OnEnable() {
-        Initialize();
-        dirtyFromEnable = true;
-        CachedSphereCollider.AddSkin(this);
+        switch (jiggleUpdateMode) {
+            case JiggleUpdateMode.LateUpdate: JiggleRigLateUpdateHandler.AddJiggleRigAdvancable(this); break;
+            case JiggleUpdateMode.FixedUpdate: JiggleRigFixedUpdateHandler.AddJiggleRigAdvancable(this); break;
+            default: throw new ArgumentOutOfRangeException();
+        }
+
+        if (settleTimer >= JiggleRigBuilder.SETTLE_TIME) {
+            FinishTeleport();
+        }
     }
     
     private void OnDisable() {
+        switch (jiggleUpdateMode) {
+            case JiggleUpdateMode.LateUpdate: JiggleRigLateUpdateHandler.RemoveJiggleRigAdvancable(this); break;
+            case JiggleUpdateMode.FixedUpdate: JiggleRigFixedUpdateHandler.RemoveJiggleRigAdvancable(this); break;
+            default: throw new ArgumentOutOfRangeException();
+        }
         PrepareTeleport();
-        CachedSphereCollider.RemoveSkin(this);
+    }
+    
+    public void SetJiggleUpdateMode(JiggleUpdateMode mode) {
+        switch (jiggleUpdateMode) {
+            case JiggleUpdateMode.LateUpdate: JiggleRigLateUpdateHandler.RemoveJiggleRigAdvancable(this); break;
+            case JiggleUpdateMode.FixedUpdate: JiggleRigFixedUpdateHandler.RemoveJiggleRigAdvancable(this); break;
+            default: throw new ArgumentOutOfRangeException();
+        }
+        jiggleUpdateMode = mode;
+        switch (jiggleUpdateMode) {
+            case JiggleUpdateMode.LateUpdate: JiggleRigLateUpdateHandler.AddJiggleRigAdvancable(this); break;
+            case JiggleUpdateMode.FixedUpdate: JiggleRigFixedUpdateHandler.AddJiggleRigAdvancable(this); break;
+            default: throw new ArgumentOutOfRangeException();
+        }
     }
 
     public void Initialize() {
@@ -79,9 +114,11 @@ public class JiggleSkin : MonoBehaviour {
         foreach( JiggleZone zone in jiggleZones) {
             zone.Initialize();
         }
-        targetMaterials = new List<Material>();
         jiggleInfoNameID = Shader.PropertyToID("_JiggleInfos");
         packedVectors = new List<Vector4>();
+        settleTimer = 0f;
+        hasLevelOfDetail = levelOfDetail;
+        materialPropertyBlock = new MaterialPropertyBlock();
     }
 
     public JiggleZone GetJiggleZone(Transform target) {
@@ -94,52 +131,49 @@ public class JiggleSkin : MonoBehaviour {
         return null;
     }
 
+    public JiggleUpdateMode GetJiggleUpdateMode() {
+        return jiggleUpdateMode;
+    }
+
     public void Advance(float deltaTime) {
-        if (levelOfDetail!=null && !levelOfDetail.CheckActive(transform.position)) {
+        if (settleTimer < JiggleRigBuilder.SETTLE_TIME) {
+            settleTimer += deltaTime;
+            if (settleTimer >= JiggleRigBuilder.SETTLE_TIME) {
+                FinishTeleport();
+            }
+            return;
+        }
+        
+        if (hasLevelOfDetail && !levelOfDetail.CheckActive(transform.position)) {
             if (wasLODActive) PrepareTeleport();
-            CachedSphereCollider.StartPass();
-            CachedSphereCollider.FinishedPass();
             wasLODActive = false;
             return;
         }
         if (!wasLODActive) FinishTeleport();
-        CachedSphereCollider.StartPass();
+        
+        
         foreach (JiggleZone zone in jiggleZones) {
-            zone.PrepareBone(transform.position, levelOfDetail);
+            zone.ApplyValidPoseThenSampleTargetPose();
         }
-        
-        if (dirtyFromEnable) {
-            foreach (var rig in jiggleZones) {
-                rig.FinishTeleport();
-            }
-            dirtyFromEnable = false;
-        }
-        
         accumulation = Math.Min(accumulation+deltaTime, JiggleRigBuilder.MAX_CATCHUP_TIME);
+        var position = transform.position;
         while (accumulation > JiggleRigBuilder.VERLET_TIME_STEP) {
             accumulation -= JiggleRigBuilder.VERLET_TIME_STEP;
             double time = Time.timeAsDouble - accumulation;
             foreach( JiggleZone zone in jiggleZones) {
-                zone.Update(wind, time);
+                zone.StepSimulation(position, levelOfDetail, wind, time);
             }
         }
         foreach( JiggleZone zone in jiggleZones) {
             zone.DeriveFinalSolve();
         }
         UpdateMesh();
-        CachedSphereCollider.FinishedPass();
         if (!debugDraw) return;
         foreach( JiggleZone zone in jiggleZones) {
             zone.DebugDraw();
         }
     }
 
-    private void LateUpdate() {
-        if (!interpolate) {
-            return;
-        }
-        Advance(Time.deltaTime);
-    }
     private void UpdateMesh() {
         // Pack the data
         packedVectors.Clear();
@@ -159,21 +193,25 @@ public class JiggleSkin : MonoBehaviour {
 
         // Send the data
         foreach(SkinnedMeshRenderer targetSkin in targetSkins) {
-            targetSkin.GetMaterials(targetMaterials);
-            foreach(Material m in targetMaterials) {
-                m.SetVectorArray(jiggleInfoNameID, packedVectors);
-            }
+            targetSkin.GetPropertyBlock(materialPropertyBlock);
+            materialPropertyBlock.SetVectorArray(jiggleInfoNameID, packedVectors);
+            targetSkin.SetPropertyBlock(materialPropertyBlock);
         }
-    }
-
-    private void FixedUpdate() {
-        if (interpolate) {
-            return;
-        }
-        Advance(Time.deltaTime);
     }
     
     void OnValidate() {
+        if (Application.isPlaying) {
+            JiggleRigLateUpdateHandler.RemoveJiggleRigAdvancable(this);
+            JiggleRigFixedUpdateHandler.RemoveJiggleRigAdvancable(this);
+            switch (jiggleUpdateMode) {
+                case JiggleUpdateMode.LateUpdate: JiggleRigLateUpdateHandler.AddJiggleRigAdvancable(this); break;
+                case JiggleUpdateMode.FixedUpdate: JiggleRigFixedUpdateHandler.AddJiggleRigAdvancable(this); break;
+                default: throw new ArgumentOutOfRangeException();
+            }
+
+            SetJiggleRigLOD(levelOfDetail);
+        }
+        
         if (jiggleZones == null) {
             return;
         }
@@ -200,7 +238,7 @@ public class JiggleSkin : MonoBehaviour {
             Vector3 diff = verletPointSkinSpace - targetPointSkinSpace;
             float dist = Vector3.Distance(targetPointSkinSpace, targetSkins[0].rootBone.InverseTransformPoint(toPoint));
             float multi = 1f-Mathf.SmoothStep(0,zone.radius*zone.GetRootTransform().lossyScale.x,dist);
-            result += targetSkins[0].rootBone.TransformVector(diff) * zone.jiggleSettings.GetData().blend * blend;
+            result += targetSkins[0].rootBone.TransformVector(diff) * zone.jiggleSettings.GetData().blend * blend * multi;
         }
         return result;
     }

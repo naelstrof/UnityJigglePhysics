@@ -28,6 +28,7 @@ public partial class JiggleBone {
     private Vector3 workingPosition;
     private Vector3? preTeleportPosition;
     private Vector3 extrapolatedPosition;
+    private Vector3 cachedPosition;
     
     private float GetLengthToParent() {
         if (parent == null) {
@@ -100,42 +101,31 @@ public partial class JiggleBone {
     public void CollisionPreparePass(JiggleSettingsData jiggleSettings) {
         workingPosition = ConstrainLengthBackwards(workingPosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity*0.5f);
     }
-
-    public void ConstraintPass(JiggleSettingsData jiggleSettings) {
+    
+    public void SecondPass(JiggleSettingsBase jiggleSettings, JiggleSettingsData jiggleData, List<Collider> colliders, double time) {
         if (parent == null) {
             return;
         }
-        workingPosition = ConstrainAngle(workingPosition, jiggleSettings.angleElasticity*jiggleSettings.angleElasticity, jiggleSettings.elasticitySoften); 
-        workingPosition = ConstrainLength(workingPosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity);
-    }
+        workingPosition = ConstrainAngle(workingPosition, jiggleData.angleElasticity*jiggleData.angleElasticity, jiggleData.elasticitySoften); 
+        workingPosition = ConstrainLength(workingPosition, jiggleData.lengthElasticity*jiggleData.lengthElasticity);
+        
+        if (colliders.Count != 0 && CachedSphereCollider.TryGet(out SphereCollider sphereCollider)) {
+            foreach (var collider in colliders) {
+                sphereCollider.radius = jiggleSettings.GetRadius(normalizedIndex);
+                if (sphereCollider.radius <= 0) {
+                    continue;
+                }
 
-    public void CollisionPass(JiggleSettingsBase jiggleSettings, List<Collider> colliders) {
-        if (colliders.Count == 0) {
-            return;
-        }
-
-        if (!CachedSphereCollider.TryGet(out SphereCollider sphereCollider)) {
-            return;
-        }
-        foreach (var collider in colliders) {
-            sphereCollider.radius = jiggleSettings.GetRadius(normalizedIndex);
-            if (sphereCollider.radius <= 0) {
-                continue;
-            }
-
-            if (Physics.ComputePenetration(sphereCollider, workingPosition, Quaternion.identity,
-                    collider, collider.transform.position, collider.transform.rotation,
-                    out Vector3 dir, out float dist)) {
-                workingPosition += dir * dist;
+                if (Physics.ComputePenetration(sphereCollider, workingPosition, Quaternion.identity,
+                        collider, collider.transform.position, collider.transform.rotation,
+                        out Vector3 dir, out float dist)) {
+                    workingPosition += dir * dist;
+                }
             }
         }
-    }
-
-    public void SignalWritePosition(double time) {
         particleSignal.SetPosition(workingPosition, time);
     }
-
-
+    
     private Vector3 GetProjectedPosition() {
         Vector3 parentTransformPosition = parent.transform.position;
         return parent.transform.TransformPoint(parent.GetParentTransform().InverseTransformPoint(parentTransformPosition)*projectionAmount);
@@ -155,16 +145,6 @@ public partial class JiggleBone {
         }
         return transform.parent;
     }
-
-    private void CacheAnimationPosition() {
-        if (!hasTransform) {
-            targetAnimatedBoneSignal.SetPosition(GetProjectedPosition(), Time.timeAsDouble);
-            return;
-        }
-        targetAnimatedBoneSignal.SetPosition(transform.position, Time.timeAsDouble);
-        lastValidPoseBoneRotation = transform.localRotation;
-        lastValidPoseBoneLocalPosition = transform.localPosition;
-    }
     
     private Vector3 ConstrainLengthBackwards(Vector3 newPosition, float elasticity) {
         if (child == null) {
@@ -181,6 +161,11 @@ public partial class JiggleBone {
         return Vector3.Lerp(newPosition, parent.workingPosition + dir * GetLengthToParent(), elasticity);
     }
 
+    /// <summary>
+    /// Matches the particle signal to the current pose, then undoing the pose. This is useful for confining the jiggles, like they got "grabbed".
+    /// I would essentially use IK to set the bones to be grabbed. Then call this function so the virtual jiggle particles also move to the same location.
+    /// It would need to be called every frame that the chain is grabbed.
+    /// </summary>
     public void SampleAndReset() {
         var time = Time.timeAsDouble;
         Vector3 position = GetTransformPosition();
@@ -190,6 +175,11 @@ public partial class JiggleBone {
         transform.localRotation = boneRotationChangeCheck;
     }
 
+    /// <summary>
+    /// Matches the particle signal, and the animation signal to the current pose. This eliminates all jiggles, effectively a teleport and velocity reset.
+    /// You should call ApplyTargetPose first if you want to fully reset the character.
+    /// This is mostly for teleportation or one-frame pose changes.
+    /// </summary>
     public void MatchAnimationInstantly() {
         var time = Time.timeAsDouble;
         Vector3 position = GetTransformPosition();
@@ -219,24 +209,6 @@ public partial class JiggleBone {
         targetAnimatedBoneSignal.FlattenSignal(Time.timeAsDouble, position);
         particleSignal.OffsetSignal(diff);
         workingPosition += diff;
-    }
-
-    private Vector3 ConstrainAngleBackward(Vector3 newPosition, float elasticity, float elasticitySoften) {
-        if (child == null || child.child == null) {
-            return newPosition;
-        }
-        Vector3 cToDTargetPose = child.child.currentFixedAnimatedBonePosition - child.currentFixedAnimatedBonePosition;
-        Vector3 cToD = child.child.workingPosition - child.workingPosition;
-        Quaternion neededRotation = Quaternion.FromToRotation(cToDTargetPose, cToD);
-        Vector3 cToB = newPosition - child.workingPosition;
-        Vector3 constraintTarget = neededRotation * cToB;
-
-        Debug.DrawLine(newPosition, child.workingPosition + constraintTarget, Color.cyan);
-        float error = Vector3.Distance(newPosition, child.workingPosition + constraintTarget);
-        error /= child.GetLengthToParent();
-        error = Mathf.Clamp01(error);
-        error = Mathf.Pow(error, elasticitySoften * 2f);
-        return Vector3.Lerp(newPosition, child.workingPosition + constraintTarget, elasticity * error);
     }
 
     private Vector3 ConstrainAngle(Vector3 newPosition, float elasticity, float elasticitySoften) {
@@ -279,49 +251,67 @@ public partial class JiggleBone {
         }
         Debug.DrawLine(currentFixedAnimatedBonePosition, parent.currentFixedAnimatedBonePosition, targetColor, 0, false);
     }
-    public void DeriveFinalSolvePosition(bool snap = false) {
-        if (!snap) {
-            extrapolatedPosition = particleSignal.SamplePosition(Time.timeAsDouble);
-        } else {
-            extrapolatedPosition = transform.position;
-        }
+
+    /// <summary>
+    /// Used specifically to snap the root bone into the exact position it's supposed to be for posing.
+    /// </summary>
+    public void SnapToTransform() {
+        extrapolatedPosition = transform.position;
+    }
+    
+    /// <summary>
+    /// Extrapolates the particle signal from the past, to the current time. This must be done right before Pose.
+    /// </summary>
+    public void DeriveFinalSolvePosition() {
+        extrapolatedPosition = particleSignal.SamplePosition(Time.timeAsDouble-JiggleRigBuilder.VERLET_TIME_STEP);
     }
 
     public Vector3 GetCachedSolvePosition() => extrapolatedPosition;
 
-    public void PrepareBone() {
-        // If bone is not animated, return to last unadulterated pose
-        if (hasTransform) {
-            if (boneRotationChangeCheck == transform.localRotation) {
-                transform.localRotation = lastValidPoseBoneRotation;
-            }
-            if (bonePositionChangeCheck == transform.localPosition) {
-                transform.localPosition = lastValidPoseBoneLocalPosition;
-            }
+    /// <summary>
+    /// Brings the transforms back to their last-known valid state. Valid meaning unjiggled. Either sourced from spawn, Animator, or by manual position sets by the user.
+    /// Then samples the current pose for use later in stepping the simulation. This should be called at the beginning of every frame that Pose is called. It creates the desired "target pose" that the simulation tries to match.
+    /// </summary>
+    public void ApplyValidPoseThenSampleTargetPose() {
+        if (!hasTransform) {
+            targetAnimatedBoneSignal.SetPosition(GetProjectedPosition(), Time.timeAsDouble);
+            return;
         }
-        CacheAnimationPosition();
+        if (boneRotationChangeCheck == transform.localRotation && bonePositionChangeCheck == transform.localPosition) {
+            transform.SetLocalPositionAndRotation(lastValidPoseBoneLocalPosition, lastValidPoseBoneRotation);
+        }
+        targetAnimatedBoneSignal.SetPosition(transform.position, Time.timeAsDouble);
+        
+        lastValidPoseBoneRotation = transform.localRotation;
+        lastValidPoseBoneLocalPosition = transform.localPosition;
     }
     
-    public void OnDrawGizmos(JiggleSettingsBase jiggleSettings, bool snap = false) {
-        Vector3 pos = snap ? transform.position : particleSignal.SamplePosition(Time.timeAsDouble);
+    public void OnDrawGizmos(JiggleSettingsBase jiggleSettings, bool isRoot = false) {
+        var time = Time.timeAsDouble;
+        Vector3 pos = (isRoot || !Application.isPlaying) ? (hasTransform ? transform.position : GetProjectedPosition()) : particleSignal.SamplePosition(time-JiggleRigBuilder.VERLET_TIME_STEP);
         if (child != null) {
-            Gizmos.DrawLine(pos, child.particleSignal.SamplePosition(Time.timeAsDouble));
+            Gizmos.DrawLine(pos, !Application.isPlaying ? (child.hasTransform ? child.transform.position : child.GetProjectedPosition()) : child.particleSignal.SamplePosition(time-JiggleRigBuilder.VERLET_TIME_STEP));
         }
         if (jiggleSettings != null) {
             Gizmos.DrawWireSphere(pos, jiggleSettings.GetRadius(normalizedIndex));
         }
     }
 
+    /// <summary>
+    /// Uses the data from DeriveFinalPosition() to actually generate a pose.
+    /// </summary>
+    /// <param name="blend"></param>
     public void PoseBone(float blend) {
         if (child != null) {
-            Vector3 positionBlend = Vector3.Lerp(targetAnimatedBoneSignal.SamplePosition(Time.timeAsDouble), extrapolatedPosition, blend);
-            Vector3 childPositionBlend = Vector3.Lerp(child.targetAnimatedBoneSignal.SamplePosition(Time.timeAsDouble), child.extrapolatedPosition, blend);
+            var position = transform.position;
+            Vector3 positionBlend = Vector3.Lerp(position, extrapolatedPosition, blend);
+            Vector3 childPositionBlend = Vector3.Lerp(child.GetTransformPosition(), child.extrapolatedPosition, blend);
 
             if (parent != null) {
                 transform.position = positionBlend;
             }
             Vector3 childPosition = child.GetTransformPosition();
-            Vector3 cachedAnimatedVector = childPosition - transform.position;
+            Vector3 cachedAnimatedVector = childPosition - position;
             Vector3 simulatedVector = childPositionBlend - positionBlend;
             Quaternion animPoseToPhysicsPose = Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector);
             transform.rotation = animPoseToPhysicsPose * transform.rotation;

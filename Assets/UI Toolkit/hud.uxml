@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement style="flex-grow: 1;" />
+    <ui:VisualElement style="flex-grow: 0; flex-direction: row;">
+        <ui:Slider label="FPS Limit" high-value="100" name="FPS" low-value="10" show-input-field="false" style="align-self: auto; align-items: stretch; background-color: rgb(125, 125, 125); margin-top: 4px; margin-right: 4px; margin-bottom: 4px; margin-left: 4px; padding-top: 4px; padding-right: 32px; padding-bottom: 4px; padding-left: 4px; flex-grow: 1;" />
+        <ui:Slider label="Timescale" high-value="2" name="Timescale" low-value="0" show-input-field="false" style="align-self: auto; align-items: stretch; background-color: rgb(125, 125, 125); margin-top: 4px; margin-right: 4px; margin-bottom: 4px; margin-left: 4px; padding-top: 4px; padding-right: 32px; padding-bottom: 4px; padding-left: 4px; flex-grow: 1;" />
+    </ui:VisualElement>
+</ui:UXML>

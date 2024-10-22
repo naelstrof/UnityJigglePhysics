@@ -10,11 +10,23 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
         [Tooltip("How large of a radius the zone should effect, in target-space meters. (Scaling the target will effect the radius.)")]
         public float radius;
         public JiggleZone(Transform rootTransform, JiggleSettingsBase jiggleSettings, ICollection<Transform> ignoredTransforms, ICollection<Collider> colliders) : base(rootTransform, jiggleSettings, ignoredTransforms, colliders) { }
-        protected override void CreateSimulatedPoints(ICollection<JiggleBone> outputPoints, ICollection<Transform> ignoredTransforms, Transform currentTransform, JiggleBone parentJiggleBone) {
+        protected override void CreateSimulatedPoints(List<JiggleBone> outputPoints, ICollection<Transform> ignoredTransforms, Transform currentTransform, JiggleBone? parentJiggleBone, int? parentID) {
             //base.CreateSimulatedPoints(outputPoints, ignoredTransforms, currentTransform, parentJiggleBone);
-            var parent = new JiggleBone(currentTransform, null);
+            var parent = new JiggleBone(outputPoints, currentTransform, null, null);
+            parent.SetChildID(1);
             outputPoints.Add(parent);
-            outputPoints.Add(new JiggleBone(null, parent,0f));
+            outputPoints.Add(new JiggleBone(outputPoints, null, parent,0, 0f));
+        }
+
+        public void JiggleZonePrecache() {
+            for (int i = 0; i < simulatedPoints.Length; i++) {
+                var simulatedPoint = simulatedPoints[i];
+                if (simulatedPoint.hasTransform) {
+                    simulatedPoint.cachedPositionForPosing = simulatedPoint.transform.position;
+                } else {
+                    simulatedPoint.cachedPositionForPosing = simulatedPoints[simulatedPoint.parentID].cachedPositionForPosing;
+                }
+            }
         }
         public void DebugDraw() {
             Debug.DrawLine(GetPointSolve(), GetRootTransform().position, Color.cyan, 0, false);
@@ -94,6 +106,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
         PrepareTeleport();
     }
     
+    
     public void SetJiggleUpdateMode(JiggleUpdateMode mode) {
         switch (jiggleUpdateMode) {
             case JiggleUpdateMode.LateUpdate: JiggleRigLateUpdateHandler.RemoveJiggleRigAdvancable(this); break;
@@ -109,7 +122,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
     }
 
     public void Initialize() {
-        accumulation = 0f;
+        accumulation = UnityEngine.Random.Range(0f,JiggleRigBuilder.VERLET_TIME_STEP);
         jiggleZones ??= new List<JiggleZone>();
         foreach( JiggleZone zone in jiggleZones) {
             zone.Initialize();
@@ -135,7 +148,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
         return jiggleUpdateMode;
     }
 
-    public void Advance(float deltaTime) {
+    public void Advance(float deltaTime, Vector3 gravity, double timeAsDouble, double timeAsDoubleOneStepBack, SphereCollider sphereCollider) {
         if (settleTimer < JiggleRigBuilder.SETTLE_TIME) {
             settleTimer += deltaTime;
             if (settleTimer >= JiggleRigBuilder.SETTLE_TIME) {
@@ -153,19 +166,26 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
         
         
         foreach (JiggleZone zone in jiggleZones) {
-            zone.ApplyValidPoseThenSampleTargetPose();
+            zone.ApplyValidPoseThenSampleTargetPose(timeAsDouble);
         }
         accumulation = Math.Min(accumulation+deltaTime, JiggleRigBuilder.MAX_CATCHUP_TIME);
-        var position = transform.position;
         while (accumulation > JiggleRigBuilder.VERLET_TIME_STEP) {
             accumulation -= JiggleRigBuilder.VERLET_TIME_STEP;
-            double time = Time.timeAsDouble - accumulation;
+            double time = timeAsDouble - accumulation;
+            var position = transform.position;
             foreach( JiggleZone zone in jiggleZones) {
-                zone.StepSimulation(position, levelOfDetail, wind, time);
+                var data = levelOfDetail ? levelOfDetail.AdjustJiggleSettingsData(position, zone.jiggleSettings.GetData()) : zone.jiggleSettings.GetData();
+                Vector3 acceleration = gravity * (data.gravityMultiplier * JiggleRigBuilder.SQUARED_VERLET_TIME_STEP) + wind * (JiggleRigBuilder.VERLET_TIME_STEP * data.airDrag);
+                zone.StepSimulation(data, time, acceleration, sphereCollider);
             }
         }
-        foreach( JiggleZone zone in jiggleZones) {
-            zone.DeriveFinalSolve();
+
+        foreach (JiggleZone zone in jiggleZones) {
+            zone.JiggleZonePrecache();
+        }
+
+        foreach(JiggleZone zone in jiggleZones) {
+            zone.DeriveFinalSolve(timeAsDouble);
         }
         UpdateMesh();
         if (!debugDraw) return;
@@ -230,10 +250,10 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
         }
     }
     // CPU version of the skin transformation, untested, can be useful in reconstructing the deformation on the cpu.
-    public Vector3 ApplyJiggle(Vector3 toPoint, float blend) {
+    public Vector3 ApplyJiggle(Vector3 toPoint, float blend, double timeAsDouble) {
         Vector3 result = toPoint;
         foreach( JiggleZone zone in jiggleZones) {
-            zone.DeriveFinalSolve();
+            zone.DeriveFinalSolve(timeAsDouble);
             Vector3 targetPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.GetRootTransform().position);
             Vector3 verletPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.GetPointSolve());
             Vector3 diff = verletPointSkinSpace - targetPointSkinSpace;

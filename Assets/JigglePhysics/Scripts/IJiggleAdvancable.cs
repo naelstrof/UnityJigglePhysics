@@ -7,7 +7,7 @@ public enum JiggleUpdateMode {
     FixedUpdate
 }
 internal interface IJiggleAdvancable {
-    public void Advance(float dt, Vector3 gravity);
+    public void Advance(float dt, Vector3 gravity, double timeAsDouble);
 }
 
 }

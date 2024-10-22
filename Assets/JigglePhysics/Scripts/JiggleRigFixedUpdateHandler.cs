@@ -7,9 +7,10 @@ internal class JiggleRigFixedUpdateHandler : JiggleRigHandler<JiggleRigFixedUpda
     private void FixedUpdate() {
         CachedSphereCollider.EnableSphereCollider();
         var gravity = Physics.gravity;
-        var time = Time.deltaTime;
+        var deltaTime = Time.deltaTime;
+        var timeAsDouble = Time.timeAsDouble;
         foreach (var jiggleRig in jiggleRigs) {
-            jiggleRig.Advance(time, gravity);
+            jiggleRig.Advance(deltaTime, gravity, timeAsDouble);
         }
         CachedSphereCollider.DisableSphereCollider();
     }

@@ -64,10 +64,10 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         /// <summary>
         /// Samples the current pose for use later in stepping the simulation. This should be called fairly regularly. It creates the desired "target pose" that the simulation tries to match.
         /// </summary>
-        public void ApplyValidPoseThenSampleTargetPose() {
+        public void ApplyValidPoseThenSampleTargetPose(double timeAsDouble) {
             for(int i=0;i<boneCount;i++) {
                 var simulatedPoint = simulatedPoints[i];
-                simulatedPoint.ApplyValidPoseThenSampleTargetPose(simulatedPoints);
+                simulatedPoint.ApplyValidPoseThenSampleTargetPose(simulatedPoints, timeAsDouble);
                 simulatedPoints[i] = simulatedPoint;
             }
         }
@@ -104,7 +104,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
                 }
 
                 var parentSimulatedPoint = simulatedPoints[simulatedPoint.parentID.Value];
-                var lengthToParent = simulatedPoint.GetLengthToParent(simulatedPoints);
+                var lengthToParent = simulatedPoint.cachedLengthToParent;
                 Vector3 newPosition = simulatedPoint.particleSignal.GetCurrent();
                 Vector3 delta = newPosition - simulatedPoint.particleSignal.GetPrevious();
                 Vector3 localSpaceVelocity = delta - (parentSimulatedPoint.particleSignal.GetCurrent() - parentSimulatedPoint.particleSignal.GetPrevious());
@@ -133,7 +133,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
                     error /= lengthToParent;
                     error = Mathf.Clamp01(error);
                     error = Mathf.Pow(error, data.elasticitySoften * 2f);
-                    simulatedPoint.workingPosition = Vector3.Lerp(simulatedPoint.workingPosition, parentParentPosition + constraintTarget, squaredAngleElasticity * error);
+                    simulatedPoint.workingPosition = Vector3.LerpUnclamped(simulatedPoint.workingPosition, parentParentPosition + constraintTarget, squaredAngleElasticity * error);
                 }
                 #endregion
 
@@ -152,7 +152,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
                 } else {
                     Vector3 diff = simulatedPoint.workingPosition - parentSimulatedPoint.workingPosition;
                     Vector3 dir = diff.normalized;
-                    simulatedPoint.workingPosition = Vector3.Lerp(simulatedPoint.workingPosition, parentSimulatedPoint.workingPosition + dir * lengthToParent, squaredLengthElasticity);
+                    simulatedPoint.workingPosition = Vector3.LerpUnclamped(simulatedPoint.workingPosition, parentSimulatedPoint.workingPosition + dir * lengthToParent, squaredLengthElasticity);
                 }
                 #endregion
 
@@ -185,11 +185,11 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         /// Calculates where the virtual particles would be at this exact moment in time (the latest simulation state is in the past and must be extrapolated).
         /// You normally won't call this.
         /// </summary>
-        internal void DeriveFinalSolve() {
-            Vector3 offset = simulatedPoints[0].DeriveFinalSolvePosition(Vector3.zero) - simulatedPoints[0].transform.position;
+        internal void DeriveFinalSolve(double timeAsDouble) {
+            Vector3 offset = simulatedPoints[0].DeriveFinalSolvePosition(Vector3.zero, timeAsDouble) - simulatedPoints[0].transform.position;
             for (int i = 0; i < boneCount; i++) {
                 var simulatedPoint = simulatedPoints[i];
-                simulatedPoint.DeriveFinalSolvePosition(-offset);
+                simulatedPoint.DeriveFinalSolvePosition(-offset, timeAsDouble);
                 simulatedPoints[i] = simulatedPoint;
             }
         }
@@ -198,9 +198,16 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         /// Attempts to pose the rig to the virtual particles. The current pose MUST be the last valid pose (set by ApplyValidPoseThenSampleTargetPose usually)
         /// </summary>
         /// <param name="debugDraw">If we should draw the target pose (blue) compared to the virtual particle pose (red).</param>
-        public void Pose(bool debugDraw) {
-            DeriveFinalSolve();
+        public void Pose(bool debugDraw, double timeAsDouble) {
+            DeriveFinalSolve(timeAsDouble);
             var blend = jiggleSettings.GetData().blend;
+            
+            for (int i = 0; i < boneCount; i++) {
+                var simulatedPoint = simulatedPoints[i];
+                simulatedPoint.PoseBonePreCache(simulatedPoints, blend);
+                simulatedPoints[i] = simulatedPoint;
+            }
+            
             for (int i = 0; i < boneCount; i++) {
                 var simulatedPoint = simulatedPoints[i];
                 simulatedPoint.PoseBone(simulatedPoints, blend);
@@ -356,7 +363,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         return jiggleUpdateMode;
     }
 
-    public virtual void Advance(float deltaTime, Vector3 gravity) {
+    public virtual void Advance(float deltaTime, Vector3 gravity, double timeAsDouble) {
         #region Settling on spawn, to prevent instant posing jiggles.
 
         if (settleTimer < SETTLE_TIME) {
@@ -381,20 +388,20 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         #endregion
 
         foreach (JiggleRig rig in jiggleRigs) {
-            rig.ApplyValidPoseThenSampleTargetPose();
+            rig.ApplyValidPoseThenSampleTargetPose(timeAsDouble);
         }
         accumulation = Math.Min(accumulation+deltaTime, MAX_CATCHUP_TIME);
         var position = transform.position;
         while (accumulation > VERLET_TIME_STEP) {
             accumulation -= VERLET_TIME_STEP;
-            double time = Time.timeAsDouble - accumulation;
+            double time = timeAsDouble - accumulation;
             foreach(JiggleRig rig in jiggleRigs) {
                 rig.StepSimulation(position, levelOfDetail, wind, time, gravity);
             }
         }
         
         foreach (JiggleRig rig in jiggleRigs) {
-            rig.Pose(debugDraw);
+            rig.Pose(debugDraw, timeAsDouble);
         }
         wasLODActive = true;
     }

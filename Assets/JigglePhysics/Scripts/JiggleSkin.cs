@@ -137,7 +137,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
         return jiggleUpdateMode;
     }
 
-    public void Advance(float deltaTime, Vector3 gravity) {
+    public void Advance(float deltaTime, Vector3 gravity, double timeAsDouble) {
         if (settleTimer < JiggleRigBuilder.SETTLE_TIME) {
             settleTimer += deltaTime;
             if (settleTimer >= JiggleRigBuilder.SETTLE_TIME) {
@@ -155,19 +155,19 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
         
         
         foreach (JiggleZone zone in jiggleZones) {
-            zone.ApplyValidPoseThenSampleTargetPose();
+            zone.ApplyValidPoseThenSampleTargetPose(timeAsDouble);
         }
         accumulation = Math.Min(accumulation+deltaTime, JiggleRigBuilder.MAX_CATCHUP_TIME);
         var position = transform.position;
         while (accumulation > JiggleRigBuilder.VERLET_TIME_STEP) {
             accumulation -= JiggleRigBuilder.VERLET_TIME_STEP;
-            double time = Time.timeAsDouble - accumulation;
+            double time = timeAsDouble - accumulation;
             foreach( JiggleZone zone in jiggleZones) {
                 zone.StepSimulation(position, levelOfDetail, wind, time, gravity);
             }
         }
         foreach( JiggleZone zone in jiggleZones) {
-            zone.DeriveFinalSolve();
+            zone.DeriveFinalSolve(timeAsDouble);
         }
         UpdateMesh();
         if (!debugDraw) return;
@@ -232,10 +232,10 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
         }
     }
     // CPU version of the skin transformation, untested, can be useful in reconstructing the deformation on the cpu.
-    public Vector3 ApplyJiggle(Vector3 toPoint, float blend) {
+    public Vector3 ApplyJiggle(Vector3 toPoint, float blend, double timeAsDouble) {
         Vector3 result = toPoint;
         foreach( JiggleZone zone in jiggleZones) {
-            zone.DeriveFinalSolve();
+            zone.DeriveFinalSolve(timeAsDouble);
             Vector3 targetPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.GetRootTransform().position);
             Vector3 verletPointSkinSpace = targetSkins[0].rootBone.InverseTransformPoint(zone.GetPointSolve());
             Vector3 diff = verletPointSkinSpace - targetPointSkinSpace;

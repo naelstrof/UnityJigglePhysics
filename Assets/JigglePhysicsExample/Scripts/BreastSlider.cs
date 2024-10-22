@@ -28,10 +28,10 @@ public class BreastSlider : MonoBehaviour {
             renderer.SetBlendShapeWeight(renderer.sharedMesh.GetBlendShapeIndex(blendshapeBig), bigCurve.Evaluate(boobSize)*100f);
         }
         foreach (var breast in jiggleSkinTargets) {
-            ((JiggleSettingsBlend)skinTarget.GetJiggleZone(breast).jiggleSettings).normalizedBlend = boobSize;
+            ((JiggleSettingsBlend)skinTarget.GetJiggleZone(breast).jiggleSettings).SetNormalizedBlend(boobSize);
         }
         foreach (var breast in jiggleRigTargets) {
-            ((JiggleSettingsBlend)rigTarget.GetJiggleRig(breast).jiggleSettings).normalizedBlend = boobSize;
+            ((JiggleSettingsBlend)rigTarget.GetJiggleRig(breast).jiggleSettings).SetNormalizedBlend(boobSize);
         }
     }
 }

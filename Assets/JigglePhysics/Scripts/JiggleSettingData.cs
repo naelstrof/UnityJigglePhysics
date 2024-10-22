@@ -5,15 +5,64 @@ using UnityEngine;
 namespace JigglePhysics {
 
 public struct JiggleSettingsData {
+    private float _friction;
+    public float friction {
+        get => _friction;
+        set {
+            _friction = value;
+            frictionOneMinus = 1f - _friction;
+        }
+    }
+
+    private float _airDrag;
+    public float airDrag {
+        get => _airDrag;
+        set {
+            _airDrag = value;
+            airDragOneMinus = 1f - _airDrag;
+        }
+    }
+
+    private float _angleElasticity;
+
+    public float angleElasticity {
+        get => _angleElasticity;
+        set {
+            _angleElasticity = value;
+            squaredAngleElasticity = _angleElasticity * _angleElasticity;
+        }
+    }
+
+    private float _lengthElasticity;
+
+    public float lengthElasticity {
+        get => _lengthElasticity;
+        set {
+            _lengthElasticity = value;
+            squaredLengthElasticity = _lengthElasticity * _lengthElasticity;
+        }
+    }
+    
+    private float _elasticitySoften;
+
+    public float elasticitySoften {
+        get => _elasticitySoften;
+        set {
+            _elasticitySoften = value;
+            doubleElasticitySoften = _elasticitySoften * 2f;
+        }
+    }
+    
     public float gravityMultiplier;
-    public float friction;
-    public float angleElasticity;
     public float blend;
-    public float airDrag;
-    public float lengthElasticity;
-    public float elasticitySoften;
     public float radiusMultiplier;
 
+    public float squaredAngleElasticity;
+    public float squaredLengthElasticity;
+    public float airDragOneMinus;
+    public float frictionOneMinus;
+    public float doubleElasticitySoften;
+    
     public static JiggleSettingsData Lerp(JiggleSettingsData a, JiggleSettingsData b, float t) {
         return new JiggleSettingsData {
             gravityMultiplier = Mathf.Lerp(a.gravityMultiplier, b.gravityMultiplier, t),

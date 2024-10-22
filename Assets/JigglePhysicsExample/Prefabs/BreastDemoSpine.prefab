@@ -35,6 +35,10 @@ PrefabInstance:
       propertyPath: jiggleRigs.Array.data[3].ignoredTransforms.Array.data[2]
       value: 
       objectReference: {fileID: 1313997527398279275}
+    - target: {fileID: 2786233549984174320, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3733088181354164447, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: m_RootOrder
       value: 0

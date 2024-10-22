@@ -1,6 +1,7 @@
 using UnityEngine;
 
 namespace JigglePhysics {
+// TODO: Fork this into two signal classes, as one position signal has consistent doubles
 public class PositionSignal {
 	private struct Frame {
 		public Vector3 position;

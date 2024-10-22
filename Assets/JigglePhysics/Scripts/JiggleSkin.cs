@@ -178,6 +178,9 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
                 Vector3 acceleration = gravity * (data.gravityMultiplier * JiggleRigBuilder.SQUARED_VERLET_TIME_STEP) + wind * (JiggleRigBuilder.VERLET_TIME_STEP * data.airDrag);
                 zone.StepSimulation(data, time, acceleration, sphereCollider);
             }
+            foreach(JiggleZone zone in jiggleZones) {
+                zone.WriteSimulatedStep(time);
+            }
         }
 
         foreach (JiggleZone zone in jiggleZones) {

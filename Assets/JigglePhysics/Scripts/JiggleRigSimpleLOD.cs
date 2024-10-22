@@ -22,14 +22,14 @@ namespace JigglePhysics {
             #if UNITY_EDITOR
             if (EditorWindow.focusedWindow is SceneView view) {
                 camera = view.camera;
-                return camera != null;
+                return camera;
             }
             #endif
-            if (currentCamera == null || !currentCamera.CompareTag("MainCamera")) {
+            if (!currentCamera || !currentCamera.CompareTag("MainCamera")) {
                 currentCamera = Camera.main;
             }
             camera = currentCamera;
-            return currentCamera != null;
+            return currentCamera;
         }
 
         [NonSerialized] Transform cameraTransform;

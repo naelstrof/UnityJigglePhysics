@@ -10,11 +10,13 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
         [Tooltip("How large of a radius the zone should effect, in target-space meters. (Scaling the target will effect the radius.)")]
         public float radius;
         public JiggleZone(Transform rootTransform, JiggleSettingsBase jiggleSettings, ICollection<Transform> ignoredTransforms, ICollection<Collider> colliders) : base(rootTransform, jiggleSettings, ignoredTransforms, colliders) { }
-        protected override void CreateSimulatedPoints(ICollection<JiggleBone> outputPoints, ICollection<Transform> ignoredTransforms, Transform currentTransform, JiggleBone parentJiggleBone) {
+        protected override void CreateSimulatedPoints(List<JiggleBone> outputPoints, ICollection<Transform> ignoredTransforms, Transform currentTransform, JiggleBone? parentJiggleBone, int? parentID) {
             //base.CreateSimulatedPoints(outputPoints, ignoredTransforms, currentTransform, parentJiggleBone);
-            var parent = new JiggleBone(currentTransform, null);
+            var parent = new JiggleBone(outputPoints, currentTransform, null, null) {
+                childID = 1,
+            };
             outputPoints.Add(parent);
-            outputPoints.Add(new JiggleBone(null, parent,0f));
+            outputPoints.Add(new JiggleBone(outputPoints, null, parent,0, 0f));
         }
         public void DebugDraw() {
             Debug.DrawLine(GetPointSolve(), GetRootTransform().position, Color.cyan, 0, false);

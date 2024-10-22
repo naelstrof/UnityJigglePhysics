@@ -1,36 +1,33 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Assertions;
 
 namespace JigglePhysics {
 
 // Uses Verlet to resolve constraints easily 
 public partial class JiggleBone {
-    private readonly bool hasTransform;
-    private readonly PositionSignal targetAnimatedBoneSignal;
-    private Vector3 currentFixedAnimatedBonePosition;
+    public readonly bool hasTransform;
+    public readonly PositionSignal targetAnimatedBoneSignal;
+    public Vector3 currentFixedAnimatedBonePosition;
 
     public readonly JiggleBone parent;
     private JiggleBone child;
     private Quaternion boneRotationChangeCheck;
     private Vector3 bonePositionChangeCheck;
     private Quaternion lastValidPoseBoneRotation;
-    private float projectionAmount;
+    public float projectionAmount;
 
     private Vector3 lastValidPoseBoneLocalPosition;
-    private float normalizedIndex;
+    public float normalizedIndex;
 
     public readonly Transform transform;
 
-    private readonly PositionSignal particleSignal;
-    private Vector3 workingPosition;
+    public readonly PositionSignal particleSignal;
+    public Vector3 workingPosition;
     private Vector3? preTeleportPosition;
     private Vector3 extrapolatedPosition;
-    private Vector3 cachedPosition;
+    public readonly bool shouldConfineAngle;
     
-    private float GetLengthToParent() {
+    public float GetLengthToParent() {
         if (parent == null) {
             return 0.1f;
         }
@@ -55,6 +52,7 @@ public partial class JiggleBone {
         particleSignal = new PositionSignal(position, Time.timeAsDouble);
 
         hasTransform = transform != null;
+        shouldConfineAngle = hasTransform || this.projectionAmount != 0;
         if (parent == null) {
             return;
         }
@@ -81,51 +79,6 @@ public partial class JiggleBone {
         normalizedIndex = frac;
     }
 
-    public void VerletPass(JiggleSettingsData jiggleSettings, Vector3 wind, double time) {
-        currentFixedAnimatedBonePosition = targetAnimatedBoneSignal.SamplePosition(time);
-        if (parent == null) {
-            workingPosition = currentFixedAnimatedBonePosition;
-            particleSignal.SetPosition(workingPosition, time);
-            return;
-        }
-        Vector3 localSpaceVelocity = (particleSignal.GetCurrent()-particleSignal.GetPrevious()) - (parent.particleSignal.GetCurrent()-parent.particleSignal.GetPrevious());
-        workingPosition = NextPhysicsPosition(
-            particleSignal.GetCurrent(), particleSignal.GetPrevious(), localSpaceVelocity, JiggleRigBuilder.VERLET_TIME_STEP,
-            jiggleSettings.gravityMultiplier,
-            jiggleSettings.friction,
-            jiggleSettings.airDrag
-        );
-        workingPosition += wind * (JiggleRigBuilder.VERLET_TIME_STEP * jiggleSettings.airDrag);
-    }
-
-    public void CollisionPreparePass(JiggleSettingsData jiggleSettings) {
-        workingPosition = ConstrainLengthBackwards(workingPosition, jiggleSettings.lengthElasticity*jiggleSettings.lengthElasticity*0.5f);
-    }
-    
-    public void SecondPass(JiggleSettingsBase jiggleSettings, JiggleSettingsData jiggleData, List<Collider> colliders, double time) {
-        if (parent == null) {
-            return;
-        }
-        workingPosition = ConstrainAngle(workingPosition, jiggleData.angleElasticity*jiggleData.angleElasticity, jiggleData.elasticitySoften); 
-        workingPosition = ConstrainLength(workingPosition, jiggleData.lengthElasticity*jiggleData.lengthElasticity);
-        
-        if (colliders.Count != 0 && CachedSphereCollider.TryGet(out SphereCollider sphereCollider)) {
-            foreach (var collider in colliders) {
-                sphereCollider.radius = jiggleSettings.GetRadius(normalizedIndex);
-                if (sphereCollider.radius <= 0) {
-                    continue;
-                }
-
-                if (Physics.ComputePenetration(sphereCollider, workingPosition, Quaternion.identity,
-                        collider, collider.transform.position, collider.transform.rotation,
-                        out Vector3 dir, out float dist)) {
-                    workingPosition += dir * dist;
-                }
-            }
-        }
-        particleSignal.SetPosition(workingPosition, time);
-    }
-    
     private Vector3 GetProjectedPosition() {
         Vector3 parentTransformPosition = parent.transform.position;
         return parent.transform.TransformPoint(parent.GetParentTransform().InverseTransformPoint(parentTransformPosition)*projectionAmount);
@@ -146,21 +99,6 @@ public partial class JiggleBone {
         return transform.parent;
     }
     
-    private Vector3 ConstrainLengthBackwards(Vector3 newPosition, float elasticity) {
-        if (child == null) {
-            return newPosition;
-        }
-        Vector3 diff = newPosition - child.workingPosition;
-        Vector3 dir = diff.normalized;
-        return Vector3.Lerp(newPosition, child.workingPosition + dir * child.GetLengthToParent(), elasticity);
-    }
-    
-    private Vector3 ConstrainLength(Vector3 newPosition, float elasticity) {
-        Vector3 diff = newPosition - parent.workingPosition;
-        Vector3 dir = diff.normalized;
-        return Vector3.Lerp(newPosition, parent.workingPosition + dir * GetLengthToParent(), elasticity);
-    }
-
     /// <summary>
     /// Matches the particle signal to the current pose, then undoes the pose. This is useful for confining the jiggles, like they got "grabbed".
     /// I would essentially use IK to set the bones to be grabbed. Then call this function so the virtual jiggle particles also move to the same location.
@@ -224,37 +162,6 @@ public partial class JiggleBone {
         targetAnimatedBoneSignal.FlattenSignal(Time.timeAsDouble, position);
         particleSignal.OffsetSignal(diff);
         workingPosition += diff;
-    }
-
-    private Vector3 ConstrainAngle(Vector3 newPosition, float elasticity, float elasticitySoften) {
-        if (!hasTransform && projectionAmount == 0f) {
-            return newPosition;
-        }
-        Vector3 parentParentPosition;
-        Vector3 poseParentParent;
-        if (parent.parent == null) {
-            poseParentParent = parent.currentFixedAnimatedBonePosition + (parent.currentFixedAnimatedBonePosition - currentFixedAnimatedBonePosition);
-            parentParentPosition = poseParentParent;
-        } else {
-            parentParentPosition = parent.parent.workingPosition;
-            poseParentParent = parent.parent.currentFixedAnimatedBonePosition;
-        }
-        Vector3 parentAimTargetPose = parent.currentFixedAnimatedBonePosition - poseParentParent;
-        Vector3 parentAim = parent.workingPosition - parentParentPosition;
-        Quaternion TargetPoseToPose = Quaternion.FromToRotation(parentAimTargetPose, parentAim);
-        Vector3 currentPose = currentFixedAnimatedBonePosition - poseParentParent;
-        Vector3 constraintTarget = TargetPoseToPose * currentPose;
-        float error = Vector3.Distance(newPosition, parentParentPosition + constraintTarget);
-        error /= GetLengthToParent();
-        error = Mathf.Clamp01(error);
-        error = Mathf.Pow(error, elasticitySoften * 2f);
-        return Vector3.Lerp(newPosition, parentParentPosition + constraintTarget, elasticity * error);
-    }
-
-    public static Vector3 NextPhysicsPosition(Vector3 newPosition, Vector3 previousPosition, Vector3 localSpaceVelocity, float deltaTime, float gravityMultiplier, float friction, float airFriction) {
-        float squaredDeltaTime = deltaTime * deltaTime;
-        Vector3 vel = newPosition - previousPosition - localSpaceVelocity;
-        return newPosition + vel * (1f - airFriction) + localSpaceVelocity * (1f - friction) + Physics.gravity * (gravityMultiplier * squaredDeltaTime);
     }
 
     public void DebugDraw(Color simulateColor, Color targetColor, bool interpolated) {

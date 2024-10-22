@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 namespace JigglePhysics {
 
 // Uses Verlet to resolve constraints easily 
-public struct JiggleBone {
+public class JiggleBone {
     public readonly bool hasTransform;
     public readonly PositionSignal targetAnimatedBoneSignal;
     public Vector3 currentFixedAnimatedBonePosition;
@@ -48,8 +48,8 @@ public struct JiggleBone {
             position = transform.position;
         } else {
             Assert.IsTrue(parent != null, "Jiggle bones without a transform MUST have a parent...");
-            Vector3 parentTransformPosition = parent.Value.transform.position;
-            position = parent.Value.transform.TransformPoint(parent.Value.GetParentTransform(bones.ToArray()).InverseTransformPoint(parentTransformPosition)*projectionAmount);
+            Vector3 parentTransformPosition = parent.transform.position;
+            position = parent.transform.TransformPoint(parent.GetParentTransform(bones.ToArray()).InverseTransformPoint(parentTransformPosition)*projectionAmount);
         }
 
         targetAnimatedBoneSignal = new PositionSignal(position, Time.timeAsDouble);

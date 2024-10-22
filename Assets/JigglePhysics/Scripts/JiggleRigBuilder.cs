@@ -71,7 +71,6 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
                 simulatedPoints[i] = simulatedPoint;
             }
         }
-        
 
         /// <summary>
         /// Consumes time into "ticks", from which a verlet simulation is done to simulate the jiggles. Ensure that you've called SampleTargetPose and ApplyTargetPose before this function.
@@ -84,13 +83,17 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         public void StepSimulation(Vector3 rigPosition, JiggleRigLOD jiggleRigLOD, Vector3 wind, double time, Vector3 gravity) {
             //Assert.IsTrue(initialized, "JiggleRig was never initialized. Please call JiggleRig.Initialize() if you're going to manually timestep.");
 
-            var data = jiggleRigLOD ? jiggleRigLOD.AdjustJiggleSettingsData(rigPosition, jiggleSettings.GetData()):jiggleSettings.GetData();
-            
+            var data = jiggleRigLOD ? jiggleRigLOD.AdjustJiggleSettingsData(rigPosition, jiggleSettings.GetData()) : jiggleSettings.GetData();
+
             float squaredAngleElasticity = data.angleElasticity * data.angleElasticity;
             float squaredLengthElasticity = data.lengthElasticity * data.lengthElasticity;
-            
-            for(int i=0;i<boneCount;i++) {
+            Vector3 acceleration = gravity * (data.gravityMultiplier * SQUARED_VERLET_TIME_STEP) + wind * (VERLET_TIME_STEP * data.airDrag);
+            float airDrag = 1f - data.airDrag;
+            float friction = 1f - data.friction;
+
+            for (int i = 0; i < boneCount; i++) {
                 var simulatedPoint = simulatedPoints[i];
+                
                 #region VerletIntegrate
                 simulatedPoint.currentFixedAnimatedBonePosition = simulatedPoint.targetAnimatedBoneSignal.SamplePosition(time);
                 if (simulatedPoint.parentID == null) {
@@ -100,28 +103,29 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
                     continue;
                 }
 
+                var parentSimulatedPoint = simulatedPoints[simulatedPoint.parentID.Value];
                 var lengthToParent = simulatedPoint.GetLengthToParent(simulatedPoints);
                 Vector3 newPosition = simulatedPoint.particleSignal.GetCurrent();
                 Vector3 delta = newPosition - simulatedPoint.particleSignal.GetPrevious();
-                Vector3 localSpaceVelocity = delta - (simulatedPoints[simulatedPoint.parentID.Value].particleSignal.GetCurrent()-simulatedPoints[simulatedPoint.parentID.Value].particleSignal.GetPrevious());
+                Vector3 localSpaceVelocity = delta - (parentSimulatedPoint.particleSignal.GetCurrent() - parentSimulatedPoint.particleSignal.GetPrevious());
                 Vector3 velocity = delta - localSpaceVelocity;
-                simulatedPoint.workingPosition = newPosition + velocity * (1f - data.airDrag) + localSpaceVelocity * (1f - data.friction) + gravity * (data.gravityMultiplier * SQUARED_VERLET_TIME_STEP);
-                simulatedPoint.workingPosition += wind * (VERLET_TIME_STEP * data.airDrag);
+                simulatedPoint.workingPosition = newPosition + velocity * airDrag + localSpaceVelocity * friction + acceleration;
                 #endregion
-                
+
                 #region ConstrainAngle
                 if (simulatedPoint.shouldConfineAngle) {
                     Vector3 parentParentPosition;
                     Vector3 poseParentParent;
-                    if (simulatedPoints[simulatedPoint.parentID.Value].parentID == null) {
-                        poseParentParent = simulatedPoints[simulatedPoint.parentID.Value].currentFixedAnimatedBonePosition + (simulatedPoints[simulatedPoint.parentID.Value].currentFixedAnimatedBonePosition - simulatedPoint.currentFixedAnimatedBonePosition);
+                    if (parentSimulatedPoint.parentID == null) {
+                        poseParentParent = parentSimulatedPoint.currentFixedAnimatedBonePosition + (parentSimulatedPoint.currentFixedAnimatedBonePosition - simulatedPoint.currentFixedAnimatedBonePosition);
                         parentParentPosition = poseParentParent;
                     } else {
-                        parentParentPosition = simulatedPoints[simulatedPoints[simulatedPoint.parentID.Value].parentID.Value].workingPosition;
-                        poseParentParent = simulatedPoints[simulatedPoints[simulatedPoint.parentID.Value].parentID.Value].currentFixedAnimatedBonePosition;
+                        var parentParentSimulatedPoint = simulatedPoints[parentSimulatedPoint.parentID.Value];
+                        parentParentPosition = parentParentSimulatedPoint.workingPosition;
+                        poseParentParent = parentParentSimulatedPoint.currentFixedAnimatedBonePosition;
                     }
-                    Vector3 parentAimTargetPose = simulatedPoints[simulatedPoint.parentID.Value].currentFixedAnimatedBonePosition - poseParentParent;
-                    Vector3 parentAim = simulatedPoints[simulatedPoint.parentID.Value].workingPosition - parentParentPosition;
+                    Vector3 parentAimTargetPose = parentSimulatedPoint.currentFixedAnimatedBonePosition - poseParentParent;
+                    Vector3 parentAim = parentSimulatedPoint.workingPosition - parentParentPosition;
                     Quaternion targetPoseToPose = Quaternion.FromToRotation(parentAimTargetPose, parentAim);
                     Vector3 currentPose = simulatedPoint.currentFixedAnimatedBonePosition - poseParentParent;
                     Vector3 constraintTarget = targetPoseToPose * currentPose;
@@ -133,7 +137,6 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
                 }
                 #endregion
 
-                // TODO: When collisions are enabled, need two-way length calc
                 #region Collisions
                 if (colliders.Count != 0 && CachedSphereCollider.TryGet(out SphereCollider sphereCollider)) {
                     foreach (var collider in colliders) {
@@ -142,19 +145,17 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
                             continue;
                         }
 
-                        if (Physics.ComputePenetration(sphereCollider, simulatedPoint.workingPosition, Quaternion.identity,
-                                collider, collider.transform.position, collider.transform.rotation,
-                                out Vector3 dir, out float dist)) {
+                        if (Physics.ComputePenetration(sphereCollider, simulatedPoint.workingPosition, Quaternion.identity, collider, collider.transform.position, collider.transform.rotation, out Vector3 dir, out float dist)) {
                             simulatedPoint.workingPosition += dir * dist;
                         }
                     }
                 } else {
-                    Vector3 diff = simulatedPoint.workingPosition - simulatedPoints[simulatedPoint.parentID.Value].workingPosition;
+                    Vector3 diff = simulatedPoint.workingPosition - parentSimulatedPoint.workingPosition;
                     Vector3 dir = diff.normalized;
-                    simulatedPoint.workingPosition = Vector3.Lerp(simulatedPoint.workingPosition, simulatedPoints[simulatedPoint.parentID.Value].workingPosition + dir * lengthToParent, squaredLengthElasticity);
+                    simulatedPoint.workingPosition = Vector3.Lerp(simulatedPoint.workingPosition, parentSimulatedPoint.workingPosition + dir * lengthToParent, squaredLengthElasticity);
                 }
                 #endregion
-                
+
                 simulatedPoint.particleSignal.SetPosition(simulatedPoint.workingPosition, time);
                 simulatedPoints[i] = simulatedPoint;
             }

@@ -11,8 +11,21 @@ public class JiggleBone {
     public readonly PositionSignal targetAnimatedBoneSignal;
     public Vector3 currentFixedAnimatedBonePosition;
 
-    public readonly int? parentID;
-    public int? childID;
+    public bool hasParent;
+    public int parentID;
+
+    public void SetParentID(int? id) {
+        hasParent = id.HasValue;
+        parentID = id ?? -1;
+    }
+    
+    public bool hasChild;
+    public int childID;
+    
+    public void SetChildID(int? id) {
+        hasChild = id.HasValue;
+        childID = id ?? -1;
+    }
     
     public Quaternion boneRotationChangeCheck;
     public Vector3 bonePositionChangeCheck;
@@ -29,20 +42,21 @@ public class JiggleBone {
     public Vector3? preTeleportPosition;
     public Vector3 extrapolatedPosition;
     public readonly bool shouldConfineAngle;
-    private Vector3 cachedPositionForPosing;
+    public Vector3 cachedPositionForPosing;
     private Quaternion cachedRotationForPosing;
+    public Vector3 parentPosition;
+    public Vector3 parentPose;
     
     private Vector3 cachedLerpedPositionForPosing;
     public float cachedLengthToParent;
     
-    public JiggleBone(List<JiggleBone> bones, Transform transform, JiggleBone? parent, int? parentID, float projectionAmount = 1f) {
+    public JiggleBone(List<JiggleBone> bones, Transform transform, JiggleBone parent, int? parentID, float projectionAmount = 1f) {
         this.transform = transform;
         this.projectionAmount = projectionAmount;
 
         Vector3 position;
         if (transform != null) {
-            lastValidPoseBoneRotation = transform.localRotation;
-            lastValidPoseBoneLocalPosition = transform.localPosition;
+            transform.GetLocalPositionAndRotation(out lastValidPoseBoneLocalPosition, out lastValidPoseBoneRotation);
             position = transform.position;
         } else {
             Assert.IsTrue(parent != null, "Jiggle bones without a transform MUST have a parent...");
@@ -65,22 +79,28 @@ public class JiggleBone {
         workingPosition = default;
         preTeleportPosition = null;
         extrapolatedPosition = default;
-        this.parentID = parentID;
-        childID = null;
+        
+        //this.parentID = parentID;
+        SetParentID(parentID);
+        SetChildID(null);
     }
 
     public void CalculateNormalizedIndex(List<JiggleBone> bones) {
         int distanceToRoot = 0;
-        int? test = parentID;
-        while (test != null) {
-            test = bones[test.Value].parentID;
+        bool test = hasParent;
+        int testID = parentID;
+        while (test) {
+            test = bones[testID].hasParent;
+            testID = bones[testID].parentID;
             distanceToRoot++;
         }
 
         int distanceToChild = 0;
-        test = childID;
-        while (test != null) {
-            test = bones[test.Value].childID;
+        test = hasChild;
+        testID = childID;
+        while (test) {
+            test = bones[testID].hasChild;
+            testID = bones[testID].childID;
             distanceToChild++;
         }
 
@@ -90,7 +110,7 @@ public class JiggleBone {
     }
     private Vector3 GetRealTransformPosition(JiggleBone[] bones) {
         if (!hasTransform) {
-            var parent = bones[parentID.Value];
+            var parent = bones[parentID];
             var grandfather = parent.GetParentTransform(bones);
             var parentPosition = parent.transform.position;
             var diff = parentPosition - grandfather.transform.position;
@@ -100,8 +120,8 @@ public class JiggleBone {
         }
     }
     private Transform GetParentTransform(JiggleBone[] bones) {
-        if (parentID != null) {
-            return bones[parentID.Value].transform;
+        if (hasParent) {
+            return bones[parentID].transform;
         }
         return transform.parent;
     }
@@ -170,20 +190,20 @@ public class JiggleBone {
     }
 
     public void DebugDraw(JiggleBone[] bones, Color simulateColor, Color targetColor, bool interpolated) {
-        if (parentID == null) return;
+        if (!hasParent) return;
         if (interpolated) {
-            Debug.DrawLine(extrapolatedPosition, bones[parentID.Value].extrapolatedPosition, simulateColor, 0, false);
+            Debug.DrawLine(extrapolatedPosition, bones[parentID].extrapolatedPosition, simulateColor, 0, false);
         } else {
-            Debug.DrawLine(workingPosition, bones[parentID.Value].workingPosition, simulateColor, 0, false);
+            Debug.DrawLine(workingPosition, bones[parentID].workingPosition, simulateColor, 0, false);
         }
-        Debug.DrawLine(currentFixedAnimatedBonePosition, bones[parentID.Value].currentFixedAnimatedBonePosition, targetColor, 0, false);
+        Debug.DrawLine(currentFixedAnimatedBonePosition, bones[parentID].currentFixedAnimatedBonePosition, targetColor, 0, false);
     }
     
     /// <summary>
     /// Extrapolates the particle signal from the past, to the current time. This must be done right before Pose.
     /// </summary>
-    public Vector3 DeriveFinalSolvePosition(Vector3 offset, double timeAsDouble) {
-        extrapolatedPosition = particleSignal.SamplePosition(timeAsDouble-JiggleRigBuilder.VERLET_TIME_STEP) + offset;
+    public Vector3 DeriveFinalSolvePosition(Vector3 offset, double timeAsDoubleOneStepBack) {
+        extrapolatedPosition = particleSignal.SamplePosition(timeAsDoubleOneStepBack) + offset;
         return extrapolatedPosition;
     }
 
@@ -195,8 +215,9 @@ public class JiggleBone {
     /// </summary>
     public void ApplyValidPoseThenSampleTargetPose(JiggleBone[] bones, double timeAsDouble) {
         if (!hasTransform) {
-            targetAnimatedBoneSignal.SetPosition(GetRealTransformPosition(bones), timeAsDouble);
-            cachedLengthToParent = Vector3.Distance(currentFixedAnimatedBonePosition, bones[parentID.Value].currentFixedAnimatedBonePosition);
+            cachedPositionForPosing = GetRealTransformPosition(bones);
+            targetAnimatedBoneSignal.SetPosition(cachedPositionForPosing, timeAsDouble);
+            cachedLengthToParent = Vector3.Distance(cachedPositionForPosing, bones[parentID].cachedPositionForPosing);
             return;
         }
 
@@ -204,20 +225,21 @@ public class JiggleBone {
         if (boneRotationChangeCheck == localRotation && bonePositionChangeCheck == localPosition) {
             transform.SetLocalPositionAndRotation(lastValidPoseBoneLocalPosition, lastValidPoseBoneRotation);
         }
-        targetAnimatedBoneSignal.SetPosition(transform.position, timeAsDouble);
+        cachedPositionForPosing = transform.position;
+        targetAnimatedBoneSignal.SetPosition(cachedPositionForPosing, timeAsDouble);
         transform.GetLocalPositionAndRotation(out lastValidPoseBoneLocalPosition, out lastValidPoseBoneRotation);
-        if (parentID == null) {
+        if (!hasParent) {
             cachedLengthToParent = 0.1f;
         } else {
-            cachedLengthToParent = Vector3.Distance(currentFixedAnimatedBonePosition, bones[parentID.Value].currentFixedAnimatedBonePosition);
+            cachedLengthToParent = Vector3.Distance(cachedPositionForPosing, bones[parentID].cachedPositionForPosing);
         }
     }
     
     public void OnDrawGizmos(JiggleBone[] bones, JiggleSettingsBase jiggleSettings, bool isRoot = false) {
         var time = Time.timeAsDouble;
         Vector3 pos = (isRoot || !Application.isPlaying) ? (hasTransform ? transform.position : GetRealTransformPosition(bones)) : particleSignal.SamplePosition(time-JiggleRigBuilder.VERLET_TIME_STEP);
-        if (childID != null) {
-            Gizmos.DrawLine(pos, !Application.isPlaying ? (bones[childID.Value].hasTransform ? bones[childID.Value].transform.position : bones[childID.Value].GetRealTransformPosition(bones)) : bones[childID.Value].particleSignal.SamplePosition(time-JiggleRigBuilder.VERLET_TIME_STEP));
+        if (hasChild) {
+            Gizmos.DrawLine(pos, !Application.isPlaying ? (bones[childID].hasTransform ? bones[childID].transform.position : bones[childID].GetRealTransformPosition(bones)) : bones[childID].particleSignal.SamplePosition(time-JiggleRigBuilder.VERLET_TIME_STEP));
         }
         if (jiggleSettings != null) {
             Gizmos.DrawWireSphere(pos, jiggleSettings.GetRadius(normalizedIndex));
@@ -228,9 +250,9 @@ public class JiggleBone {
         if (hasTransform) {
             transform.GetPositionAndRotation(out cachedPositionForPosing, out cachedRotationForPosing);
         } else {
-            var parent = bones[parentID.Value];
-            if (parent.parentID != null) {
-                var grandfather = bones[parent.parentID.Value];
+            var parent = bones[parentID];
+            if (hasParent) {
+                var grandfather = bones[parent.parentID];
                 var parentPosition = parent.cachedPositionForPosing;
                 var diff = parentPosition - grandfather.cachedPositionForPosing;
                 cachedPositionForPosing = parentPosition + diff * projectionAmount;
@@ -248,14 +270,15 @@ public class JiggleBone {
     /// </summary>
     /// <param name="blend"></param>
     public void PoseBone(JiggleBone[] bones, float blend) {
-        if (childID != null) {
+        if (hasChild) {
             Vector3 positionBlend = cachedLerpedPositionForPosing;
-            var childPosition = bones[childID.Value].cachedPositionForPosing;
-            Vector3 childPositionBlend = bones[childID.Value].cachedLerpedPositionForPosing;
+            var child = bones[childID];
+            var childPosition = child.cachedPositionForPosing;
+            Vector3 childPositionBlend = child.cachedLerpedPositionForPosing;
             Vector3 cachedAnimatedVector = childPosition - cachedPositionForPosing;
             Vector3 simulatedVector = childPositionBlend - positionBlend;
             Quaternion animPoseToPhysicsPose = Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector);
-            if (parentID != null) {
+            if (hasParent) {
                 transform.SetPositionAndRotation(positionBlend, animPoseToPhysicsPose * cachedRotationForPosing);
             } else {
                 transform.rotation = animPoseToPhysicsPose * cachedRotationForPosing;

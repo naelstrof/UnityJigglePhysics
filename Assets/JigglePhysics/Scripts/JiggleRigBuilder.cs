@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -9,7 +10,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
     public const float VERLET_TIME_STEP = 0.02f;
     public const float MAX_CATCHUP_TIME = VERLET_TIME_STEP*4f;
     internal const float SETTLE_TIME = 0.2f;
-    private const float SQUARED_VERLET_TIME_STEP = VERLET_TIME_STEP * VERLET_TIME_STEP;
+    internal const float SQUARED_VERLET_TIME_STEP = VERLET_TIME_STEP * VERLET_TIME_STEP;
 
     [Serializable]
     public class JiggleRig {
@@ -19,8 +20,11 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         public JiggleSettingsBase jiggleSettings;
         [SerializeField][Tooltip("The list of transforms to ignore during the jiggle. Each bone listed will also ignore all the children of the specified bone.")]
         private List<Transform> ignoredTransforms;
-        public List<Collider> colliders;
+        // TODO: Add ability to add/remove colliders at runtime
+        private Collider[] colliders;
         private int boneCount;
+        private bool needsCollisions;
+        private int colliderCount;
 
         private bool initialized => simulatedPoints != null;
 
@@ -39,11 +43,11 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
             this.rootTransform = rootTransform;
             this.jiggleSettings = jiggleSettings;
             this.ignoredTransforms = new List<Transform>(ignoredTransforms);
-            this.colliders = new List<Collider>(colliders);
+            this.colliders = colliders.ToArray();
+            colliderCount = colliders.Count;
+            needsCollisions = colliders.Count != 0;
             Initialize();
         }
-
-        private bool NeedsCollisions => colliders.Count != 0;
 
         [HideInInspector]
         protected JiggleBone[] simulatedPoints;
@@ -55,9 +59,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         /// </summary>
         public void SampleAndReset() {
             for (int i = boneCount - 1; i >= 0; i--) {
-                var simulatedPoint = simulatedPoints[i];
-                simulatedPoint.SampleAndReset(simulatedPoints);
-                simulatedPoints[i] = simulatedPoint;
+                simulatedPoints[i].SampleAndReset(simulatedPoints);
             }
         }
 
@@ -66,9 +68,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         /// </summary>
         public void ApplyValidPoseThenSampleTargetPose(double timeAsDouble) {
             for(int i=0;i<boneCount;i++) {
-                var simulatedPoint = simulatedPoints[i];
-                simulatedPoint.ApplyValidPoseThenSampleTargetPose(simulatedPoints, timeAsDouble);
-                simulatedPoints[i] = simulatedPoint;
+                simulatedPoints[i].ApplyValidPoseThenSampleTargetPose(simulatedPoints, timeAsDouble);
             }
         }
 
@@ -80,84 +80,72 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         /// <param name="jiggleRigLOD">The JiggleRigLOD object used for disabling the rig if its too far. Can be null.</param>
         /// <param name="wind">How much wind to apply to every particle.</param>
         /// <param name="time">How much time to simulate forward by.</param>
-        public void StepSimulation(Vector3 rigPosition, JiggleRigLOD jiggleRigLOD, Vector3 wind, double time, Vector3 gravity) {
+        public void StepSimulation(JiggleSettingsData data, double time, Vector3 acceleration, SphereCollider sphereCollider) {
             //Assert.IsTrue(initialized, "JiggleRig was never initialized. Please call JiggleRig.Initialize() if you're going to manually timestep.");
-
-            var data = jiggleRigLOD ? jiggleRigLOD.AdjustJiggleSettingsData(rigPosition, jiggleSettings.GetData()) : jiggleSettings.GetData();
-
-            float squaredAngleElasticity = data.angleElasticity * data.angleElasticity;
-            float squaredLengthElasticity = data.lengthElasticity * data.lengthElasticity;
-            Vector3 acceleration = gravity * (data.gravityMultiplier * SQUARED_VERLET_TIME_STEP) + wind * (VERLET_TIME_STEP * data.airDrag);
-            float airDrag = 1f - data.airDrag;
-            float friction = 1f - data.friction;
 
             for (int i = 0; i < boneCount; i++) {
                 var simulatedPoint = simulatedPoints[i];
                 
                 #region VerletIntegrate
                 simulatedPoint.currentFixedAnimatedBonePosition = simulatedPoint.targetAnimatedBoneSignal.SamplePosition(time);
-                if (simulatedPoint.parentID == null) {
+                if (!simulatedPoint.hasParent) {
                     simulatedPoint.workingPosition = simulatedPoint.currentFixedAnimatedBonePosition;
                     simulatedPoint.particleSignal.SetPosition(simulatedPoint.workingPosition, time);
-                    simulatedPoints[i] = simulatedPoint;
+                    simulatedPoint.parentPose = 2f*simulatedPoint.currentFixedAnimatedBonePosition - simulatedPoints[simulatedPoint.childID].currentFixedAnimatedBonePosition;
+                    simulatedPoint.parentPosition = simulatedPoint.parentPose;
                     continue;
                 }
+                var parentSimulatedPoint = simulatedPoints[simulatedPoint.parentID];
+                simulatedPoint.parentPose = parentSimulatedPoint.currentFixedAnimatedBonePosition;
+                simulatedPoint.parentPosition = parentSimulatedPoint.workingPosition;
 
-                var parentSimulatedPoint = simulatedPoints[simulatedPoint.parentID.Value];
                 var lengthToParent = simulatedPoint.cachedLengthToParent;
                 Vector3 newPosition = simulatedPoint.particleSignal.GetCurrent();
                 Vector3 delta = newPosition - simulatedPoint.particleSignal.GetPrevious();
                 Vector3 localSpaceVelocity = delta - (parentSimulatedPoint.particleSignal.GetCurrent() - parentSimulatedPoint.particleSignal.GetPrevious());
                 Vector3 velocity = delta - localSpaceVelocity;
-                simulatedPoint.workingPosition = newPosition + velocity * airDrag + localSpaceVelocity * friction + acceleration;
+                simulatedPoint.workingPosition = newPosition + velocity * data.airDragOneMinus + localSpaceVelocity * data.frictionOneMinus + acceleration;
                 #endregion
 
                 #region ConstrainAngle
                 if (simulatedPoint.shouldConfineAngle) {
-                    Vector3 parentParentPosition;
-                    Vector3 poseParentParent;
-                    if (parentSimulatedPoint.parentID == null) {
-                        poseParentParent = parentSimulatedPoint.currentFixedAnimatedBonePosition + (parentSimulatedPoint.currentFixedAnimatedBonePosition - simulatedPoint.currentFixedAnimatedBonePosition);
-                        parentParentPosition = poseParentParent;
-                    } else {
-                        var parentParentSimulatedPoint = simulatedPoints[parentSimulatedPoint.parentID.Value];
-                        parentParentPosition = parentParentSimulatedPoint.workingPosition;
-                        poseParentParent = parentParentSimulatedPoint.currentFixedAnimatedBonePosition;
-                    }
-                    Vector3 parentAimTargetPose = parentSimulatedPoint.currentFixedAnimatedBonePosition - poseParentParent;
-                    Vector3 parentAim = parentSimulatedPoint.workingPosition - parentParentPosition;
+                    Vector3 parentAimTargetPose = parentSimulatedPoint.currentFixedAnimatedBonePosition - parentSimulatedPoint.parentPose;
+                    Vector3 parentAim = parentSimulatedPoint.workingPosition - parentSimulatedPoint.parentPosition;
                     Quaternion targetPoseToPose = Quaternion.FromToRotation(parentAimTargetPose, parentAim);
-                    Vector3 currentPose = simulatedPoint.currentFixedAnimatedBonePosition - poseParentParent;
+                    Vector3 currentPose = simulatedPoint.currentFixedAnimatedBonePosition - parentSimulatedPoint.parentPose;
                     Vector3 constraintTarget = targetPoseToPose * currentPose;
-                    float error = Vector3.Distance(simulatedPoint.workingPosition, parentParentPosition + constraintTarget);
+                    float error = Vector3.Distance(simulatedPoint.workingPosition, parentSimulatedPoint.parentPosition + constraintTarget);
                     error /= lengthToParent;
-                    error = Mathf.Clamp01(error);
-                    error = Mathf.Pow(error, data.elasticitySoften * 2f);
-                    simulatedPoint.workingPosition = Vector3.LerpUnclamped(simulatedPoint.workingPosition, parentParentPosition + constraintTarget, squaredAngleElasticity * error);
+                    error = Mathf.Min(error,1f);
+                    error = Mathf.Pow(error, data.doubleElasticitySoften);
+                    simulatedPoint.workingPosition = Vector3.LerpUnclamped(simulatedPoint.workingPosition, parentSimulatedPoint.parentPosition + constraintTarget, data.squaredAngleElasticity * error);
                 }
                 #endregion
 
                 #region Collisions
-                if (colliders.Count != 0 && CachedSphereCollider.TryGet(out SphereCollider sphereCollider)) {
-                    foreach (var collider in colliders) {
+                if (needsCollisions) {
+                    for (var j = 0; j < colliderCount; j++) {
+                        var collider = colliders[j];
                         sphereCollider.radius = jiggleSettings.GetRadius(simulatedPoint.normalizedIndex);
                         if (sphereCollider.radius <= 0) {
                             continue;
                         }
 
-                        if (Physics.ComputePenetration(sphereCollider, simulatedPoint.workingPosition, Quaternion.identity, collider, collider.transform.position, collider.transform.rotation, out Vector3 dir, out float dist)) {
+                        collider.transform.GetPositionAndRotation(out var colliderPosition, out var colliderRotation);
+                        if (Physics.ComputePenetration(sphereCollider, simulatedPoint.workingPosition,
+                                Quaternion.identity, collider, colliderPosition, colliderRotation,
+                                out Vector3 dir, out float dist)) {
                             simulatedPoint.workingPosition += dir * dist;
                         }
                     }
                 } else {
                     Vector3 diff = simulatedPoint.workingPosition - parentSimulatedPoint.workingPosition;
                     Vector3 dir = diff.normalized;
-                    simulatedPoint.workingPosition = Vector3.LerpUnclamped(simulatedPoint.workingPosition, parentSimulatedPoint.workingPosition + dir * lengthToParent, squaredLengthElasticity);
+                    simulatedPoint.workingPosition = Vector3.LerpUnclamped(simulatedPoint.workingPosition, parentSimulatedPoint.workingPosition + dir * lengthToParent, data.squaredLengthElasticity);
                 }
                 #endregion
 
                 simulatedPoint.particleSignal.SetPosition(simulatedPoint.workingPosition, time);
-                simulatedPoints[i] = simulatedPoint;
             }
         }
 
@@ -173,9 +161,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
 
             CreateSimulatedPoints(jiggleBoneList, ignoredTransforms, rootTransform, null, null);
             for (int i = 0; i < jiggleBoneList.Count; i++) {
-                var simulatedPoint = jiggleBoneList[i];
-                simulatedPoint.CalculateNormalizedIndex(jiggleBoneList);
-                jiggleBoneList[i] = simulatedPoint;
+                jiggleBoneList[i].CalculateNormalizedIndex(jiggleBoneList);
             }
             simulatedPoints = jiggleBoneList.ToArray();
             boneCount = simulatedPoints.Length;
@@ -185,12 +171,10 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         /// Calculates where the virtual particles would be at this exact moment in time (the latest simulation state is in the past and must be extrapolated).
         /// You normally won't call this.
         /// </summary>
-        internal void DeriveFinalSolve(double timeAsDouble) {
-            Vector3 offset = simulatedPoints[0].DeriveFinalSolvePosition(Vector3.zero, timeAsDouble) - simulatedPoints[0].transform.position;
+        internal void DeriveFinalSolve(double timeAsDoubleOneStepBack) {
+            Vector3 offset = simulatedPoints[0].cachedPositionForPosing - simulatedPoints[0].DeriveFinalSolvePosition(Vector3.zero, timeAsDoubleOneStepBack);
             for (int i = 0; i < boneCount; i++) {
-                var simulatedPoint = simulatedPoints[i];
-                simulatedPoint.DeriveFinalSolvePosition(-offset, timeAsDouble);
-                simulatedPoints[i] = simulatedPoint;
+                simulatedPoints[i].DeriveFinalSolvePosition(offset, timeAsDoubleOneStepBack);
             }
         }
 
@@ -198,14 +182,13 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         /// Attempts to pose the rig to the virtual particles. The current pose MUST be the last valid pose (set by ApplyValidPoseThenSampleTargetPose usually)
         /// </summary>
         /// <param name="debugDraw">If we should draw the target pose (blue) compared to the virtual particle pose (red).</param>
-        public void Pose(bool debugDraw, double timeAsDouble) {
-            DeriveFinalSolve(timeAsDouble);
+        public void Pose(bool debugDraw, double timeAsDoubleOneStepBack) {
             var blend = jiggleSettings.GetData().blend;
             
+            DeriveFinalSolve(timeAsDoubleOneStepBack);
+            
             for (int i = 0; i < boneCount; i++) {
-                var simulatedPoint = simulatedPoints[i];
-                simulatedPoint.PoseBonePreCache(simulatedPoints, blend);
-                simulatedPoints[i] = simulatedPoint;
+                simulatedPoints[i].PoseBonePreCache(simulatedPoints, blend);
             }
             
             for (int i = 0; i < boneCount; i++) {
@@ -214,7 +197,6 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
                 if (debugDraw) {
                     simulatedPoint.DebugDraw(simulatedPoints, Color.red, Color.blue, true);
                 }
-                simulatedPoints[i] = simulatedPoint;
             }
         }
 
@@ -223,9 +205,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         /// </summary>
         public void PrepareTeleport() {
             for (int i = 0; i < boneCount; i++) {
-                var simulatedPoint = simulatedPoints[i];
-                simulatedPoint.PrepareTeleport(simulatedPoints);
-                simulatedPoints[i] = simulatedPoint;
+                simulatedPoints[i].PrepareTeleport(simulatedPoints);
             }
         }
 
@@ -234,9 +214,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         /// </summary>
         public void FinishTeleport() {
             for (int i = 0; i < boneCount; i++) {
-                var simulatedPoint = simulatedPoints[i];
-                simulatedPoint.FinishTeleport(simulatedPoints);
-                simulatedPoints[i] = simulatedPoint;
+                simulatedPoints[i].FinishTeleport(simulatedPoints);
             }
         }
 
@@ -256,29 +234,21 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
             outputPoints.Add(newJiggleBone);
             var currentID = outputPoints.Count - 1;
             if (parentJiggleBoneID != null) {
-                var parent = outputPoints[parentJiggleBoneID.Value];
-                parent.childID = outputPoints.Count-1;
-                outputPoints[parentJiggleBoneID.Value] = parent;
+                outputPoints[parentJiggleBoneID.Value].SetChildID(outputPoints.Count - 1);
             }
             // Create an extra purely virtual point if we have no children.
             if (currentTransform.childCount == 0) {
-                if (newJiggleBone.parentID == null) {
+                if (!newJiggleBone.hasParent) {
                     if (newJiggleBone.transform.parent == null) {
                         throw new UnityException("Can't have a singular jiggle bone with no parents. That doesn't even make sense!");
                     } else {
                         outputPoints.Add(new JiggleBone(outputPoints, null, newJiggleBone, currentID));
-                        var parent = outputPoints[currentID];
-                        parent.childID = outputPoints.Count-1;
-                        outputPoints[currentID] = parent;
+                        outputPoints[currentID].SetChildID(outputPoints.Count - 1);
                         return;
                     }
                 }
                 outputPoints.Add(new JiggleBone(outputPoints, null, newJiggleBone, currentID));
-                {
-                    var parent = outputPoints[currentID];
-                    parent.childID = outputPoints.Count-1;
-                    outputPoints[currentID] = parent;
-                }
+                outputPoints[currentID].SetChildID(outputPoints.Count - 1);
                 return;
             }
             for (int i = 0; i < currentTransform.childCount; i++) {
@@ -328,6 +298,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
     private bool wasLODActive = true;
     private void Awake() {
         Initialize();
+        accumulation = UnityEngine.Random.Range(0f,VERLET_TIME_STEP);
     }
     void OnEnable() {
         switch (jiggleUpdateMode) {
@@ -363,7 +334,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         return jiggleUpdateMode;
     }
 
-    public virtual void Advance(float deltaTime, Vector3 gravity, double timeAsDouble) {
+    public virtual void Advance(float deltaTime, Vector3 gravity, double timeAsDouble, double timeAsDoubleOneStepBack, SphereCollider sphereCollider) {
         #region Settling on spawn, to prevent instant posing jiggles.
 
         if (settleTimer < SETTLE_TIME) {
@@ -391,17 +362,19 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
             rig.ApplyValidPoseThenSampleTargetPose(timeAsDouble);
         }
         accumulation = Math.Min(accumulation+deltaTime, MAX_CATCHUP_TIME);
-        var position = transform.position;
         while (accumulation > VERLET_TIME_STEP) {
             accumulation -= VERLET_TIME_STEP;
             double time = timeAsDouble - accumulation;
+            var position = transform.position;
             foreach(JiggleRig rig in jiggleRigs) {
-                rig.StepSimulation(position, levelOfDetail, wind, time, gravity);
+                var data = levelOfDetail ? levelOfDetail.AdjustJiggleSettingsData(position, rig.jiggleSettings.GetData()) : rig.jiggleSettings.GetData();
+                Vector3 acceleration = gravity * (data.gravityMultiplier * SQUARED_VERLET_TIME_STEP) + wind * (VERLET_TIME_STEP * data.airDrag);
+                rig.StepSimulation(data, time, acceleration, sphereCollider);
             }
         }
         
         foreach (JiggleRig rig in jiggleRigs) {
-            rig.Pose(debugDraw, timeAsDouble);
+            rig.Pose(debugDraw, timeAsDoubleOneStepBack);
         }
         wasLODActive = true;
     }

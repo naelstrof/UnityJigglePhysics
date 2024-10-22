@@ -12,11 +12,21 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
         public JiggleZone(Transform rootTransform, JiggleSettingsBase jiggleSettings, ICollection<Transform> ignoredTransforms, ICollection<Collider> colliders) : base(rootTransform, jiggleSettings, ignoredTransforms, colliders) { }
         protected override void CreateSimulatedPoints(List<JiggleBone> outputPoints, ICollection<Transform> ignoredTransforms, Transform currentTransform, JiggleBone? parentJiggleBone, int? parentID) {
             //base.CreateSimulatedPoints(outputPoints, ignoredTransforms, currentTransform, parentJiggleBone);
-            var parent = new JiggleBone(outputPoints, currentTransform, null, null) {
-                childID = 1,
-            };
+            var parent = new JiggleBone(outputPoints, currentTransform, null, null);
+            parent.SetChildID(1);
             outputPoints.Add(parent);
             outputPoints.Add(new JiggleBone(outputPoints, null, parent,0, 0f));
+        }
+
+        public void JiggleZonePrecache() {
+            for (int i = 0; i < simulatedPoints.Length; i++) {
+                var simulatedPoint = simulatedPoints[i];
+                if (simulatedPoint.hasTransform) {
+                    simulatedPoint.cachedPositionForPosing = simulatedPoint.transform.position;
+                } else {
+                    simulatedPoint.cachedPositionForPosing = simulatedPoints[simulatedPoint.parentID].cachedPositionForPosing;
+                }
+            }
         }
         public void DebugDraw() {
             Debug.DrawLine(GetPointSolve(), GetRootTransform().position, Color.cyan, 0, false);
@@ -96,6 +106,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
         PrepareTeleport();
     }
     
+    
     public void SetJiggleUpdateMode(JiggleUpdateMode mode) {
         switch (jiggleUpdateMode) {
             case JiggleUpdateMode.LateUpdate: JiggleRigLateUpdateHandler.RemoveJiggleRigAdvancable(this); break;
@@ -111,7 +122,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
     }
 
     public void Initialize() {
-        accumulation = 0f;
+        accumulation = UnityEngine.Random.Range(0f,JiggleRigBuilder.VERLET_TIME_STEP);
         jiggleZones ??= new List<JiggleZone>();
         foreach( JiggleZone zone in jiggleZones) {
             zone.Initialize();
@@ -137,7 +148,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
         return jiggleUpdateMode;
     }
 
-    public void Advance(float deltaTime, Vector3 gravity, double timeAsDouble) {
+    public void Advance(float deltaTime, Vector3 gravity, double timeAsDouble, double timeAsDoubleOneStepBack, SphereCollider sphereCollider) {
         if (settleTimer < JiggleRigBuilder.SETTLE_TIME) {
             settleTimer += deltaTime;
             if (settleTimer >= JiggleRigBuilder.SETTLE_TIME) {
@@ -158,15 +169,22 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
             zone.ApplyValidPoseThenSampleTargetPose(timeAsDouble);
         }
         accumulation = Math.Min(accumulation+deltaTime, JiggleRigBuilder.MAX_CATCHUP_TIME);
-        var position = transform.position;
         while (accumulation > JiggleRigBuilder.VERLET_TIME_STEP) {
             accumulation -= JiggleRigBuilder.VERLET_TIME_STEP;
             double time = timeAsDouble - accumulation;
+            var position = transform.position;
             foreach( JiggleZone zone in jiggleZones) {
-                zone.StepSimulation(position, levelOfDetail, wind, time, gravity);
+                var data = levelOfDetail ? levelOfDetail.AdjustJiggleSettingsData(position, zone.jiggleSettings.GetData()) : zone.jiggleSettings.GetData();
+                Vector3 acceleration = gravity * (data.gravityMultiplier * JiggleRigBuilder.SQUARED_VERLET_TIME_STEP) + wind * (JiggleRigBuilder.VERLET_TIME_STEP * data.airDrag);
+                zone.StepSimulation(data, time, acceleration, sphereCollider);
             }
         }
-        foreach( JiggleZone zone in jiggleZones) {
+
+        foreach (JiggleZone zone in jiggleZones) {
+            zone.JiggleZonePrecache();
+        }
+
+        foreach(JiggleZone zone in jiggleZones) {
             zone.DeriveFinalSolve(timeAsDouble);
         }
         UpdateMesh();

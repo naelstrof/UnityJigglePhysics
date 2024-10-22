@@ -30,6 +30,7 @@ internal class JiggleRigHandler<T> : MonoBehaviour where T : MonoBehaviour {
         } else {
             DestroyImmediate(instance.gameObject);
         }
+        instance = null;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

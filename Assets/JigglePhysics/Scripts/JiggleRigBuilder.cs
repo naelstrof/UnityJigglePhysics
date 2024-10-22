@@ -62,9 +62,16 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         /// I would essentially use IK to set the bones to be grabbed. Then call this function so the virtual jiggle particles also move to the same location.
         /// It would need to be called every frame that the chain is grabbed.
         /// </summary>
+        [Obsolete("Please use SetTargetAndResetToLastValidPose() instead.")]
         public void SampleAndReset() {
             for (int i = boneCount - 1; i >= 0; i--) {
-                simulatedPoints[i].SampleAndReset(simulatedPoints);
+                simulatedPoints[i].SetTargetAndResetToLastValidPose(simulatedPoints);
+            }
+        }
+
+        public void SetTargetAndResetToLastValidPose() {
+            for (int i = boneCount - 1; i >= 0; i--) {
+                simulatedPoints[i].SetTargetAndResetToLastValidPose(simulatedPoints);
             }
         }
 

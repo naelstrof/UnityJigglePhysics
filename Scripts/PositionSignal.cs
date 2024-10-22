@@ -1,5 +1,3 @@
-using System;
-using JigglePhysics;
 using UnityEngine;
 
 namespace JigglePhysics {

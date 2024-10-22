@@ -79,21 +79,77 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         public void StepSimulation(Vector3 rigPosition, JiggleRigLOD jiggleRigLOD, Vector3 wind, double time) {
             Assert.IsTrue(initialized, "JiggleRig was never initialized. Please call JiggleRig.Initialize() if you're going to manually timestep.");
 
-            var data = jiggleSettings.GetData();
-            data = jiggleRigLOD ? jiggleRigLOD.AdjustJiggleSettingsData(rigPosition, data):data;
+            var data = jiggleRigLOD ? jiggleRigLOD.AdjustJiggleSettingsData(rigPosition, jiggleSettings.GetData()):jiggleSettings.GetData();
+            
+            float squaredDeltaTime = VERLET_TIME_STEP * VERLET_TIME_STEP;
+            float squaredAngleElasticity = data.angleElasticity * data.angleElasticity;
+            float squaredLengthElasticity = data.lengthElasticity * data.lengthElasticity;
             
             foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.VerletPass(data, wind, time);
-            }
-
-            if (NeedsCollisions) {
-                for (int i = simulatedPoints.Count - 1; i >= 0; i--) {
-                    simulatedPoints[i].CollisionPreparePass(data);
+                #region VerletIntegrate
+                simulatedPoint.currentFixedAnimatedBonePosition = simulatedPoint.targetAnimatedBoneSignal.SamplePosition(time);
+                if (simulatedPoint.parent == null) {
+                    simulatedPoint.workingPosition = simulatedPoint.currentFixedAnimatedBonePosition;
+                    simulatedPoint.particleSignal.SetPosition(simulatedPoint.workingPosition, time);
+                    continue;
                 }
-            }
-            
-            foreach (JiggleBone simulatedPoint in simulatedPoints) {
-                simulatedPoint.SecondPass(jiggleSettings, data, colliders, time);
+
+                var lengthToParent = simulatedPoint.GetLengthToParent();
+                Vector3 newPosition = simulatedPoint.particleSignal.GetCurrent();
+                Vector3 delta = newPosition - simulatedPoint.particleSignal.GetPrevious();
+                Vector3 localSpaceVelocity = delta - (simulatedPoint.parent.particleSignal.GetCurrent()-simulatedPoint.parent.particleSignal.GetPrevious());
+                Vector3 velocity = delta - localSpaceVelocity;
+                simulatedPoint.workingPosition = newPosition + velocity * (1f - data.airDrag) + localSpaceVelocity * (1f - data.friction) + Physics.gravity * (data.gravityMultiplier * squaredDeltaTime);
+                simulatedPoint.workingPosition += wind * (VERLET_TIME_STEP * data.airDrag);
+                #endregion
+                
+                #region ConstrainAngle
+                if (simulatedPoint.shouldConfineAngle) {
+                    Vector3 parentParentPosition;
+                    Vector3 poseParentParent;
+                    if (simulatedPoint.parent.parent == null) {
+                        poseParentParent = simulatedPoint.parent.currentFixedAnimatedBonePosition + (simulatedPoint.parent.currentFixedAnimatedBonePosition - simulatedPoint.currentFixedAnimatedBonePosition);
+                        parentParentPosition = poseParentParent;
+                    } else {
+                        parentParentPosition = simulatedPoint.parent.parent.workingPosition;
+                        poseParentParent = simulatedPoint.parent.parent.currentFixedAnimatedBonePosition;
+                    }
+                    Vector3 parentAimTargetPose = simulatedPoint.parent.currentFixedAnimatedBonePosition - poseParentParent;
+                    Vector3 parentAim = simulatedPoint.parent.workingPosition - parentParentPosition;
+                    Quaternion targetPoseToPose = Quaternion.FromToRotation(parentAimTargetPose, parentAim);
+                    Vector3 currentPose = simulatedPoint.currentFixedAnimatedBonePosition - poseParentParent;
+                    Vector3 constraintTarget = targetPoseToPose * currentPose;
+                    float error = Vector3.Distance(simulatedPoint.workingPosition, parentParentPosition + constraintTarget);
+                    error /= lengthToParent;
+                    error = Mathf.Clamp01(error);
+                    error = Mathf.Pow(error, data.elasticitySoften * 2f);
+                    simulatedPoint.workingPosition = Vector3.Lerp(simulatedPoint.workingPosition, parentParentPosition + constraintTarget, squaredAngleElasticity * error);
+                }
+                #endregion
+
+                // TODO: When collisions are enabled, need two-way length calc
+                #region Collisions
+                if (colliders.Count != 0 && CachedSphereCollider.TryGet(out SphereCollider sphereCollider)) {
+                    foreach (var collider in colliders) {
+                        sphereCollider.radius = jiggleSettings.GetRadius(simulatedPoint.normalizedIndex);
+                        if (sphereCollider.radius <= 0) {
+                            continue;
+                        }
+
+                        if (Physics.ComputePenetration(sphereCollider, simulatedPoint.workingPosition, Quaternion.identity,
+                                collider, collider.transform.position, collider.transform.rotation,
+                                out Vector3 dir, out float dist)) {
+                            simulatedPoint.workingPosition += dir * dist;
+                        }
+                    }
+                } else {
+                    Vector3 diff = simulatedPoint.workingPosition - simulatedPoint.parent.workingPosition;
+                    Vector3 dir = diff.normalized;
+                    simulatedPoint.workingPosition = Vector3.Lerp(simulatedPoint.workingPosition, simulatedPoint.parent.workingPosition + dir * lengthToParent, squaredLengthElasticity);
+                }
+                #endregion
+                
+                simulatedPoint.particleSignal.SetPosition(simulatedPoint.workingPosition, time);
             }
         }
 

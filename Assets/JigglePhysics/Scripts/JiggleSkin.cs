@@ -137,7 +137,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
         return jiggleUpdateMode;
     }
 
-    public void Advance(float deltaTime) {
+    public void Advance(float deltaTime, Vector3 gravity) {
         if (settleTimer < JiggleRigBuilder.SETTLE_TIME) {
             settleTimer += deltaTime;
             if (settleTimer >= JiggleRigBuilder.SETTLE_TIME) {
@@ -163,7 +163,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
             accumulation -= JiggleRigBuilder.VERLET_TIME_STEP;
             double time = Time.timeAsDouble - accumulation;
             foreach( JiggleZone zone in jiggleZones) {
-                zone.StepSimulation(position, levelOfDetail, wind, time);
+                zone.StepSimulation(position, levelOfDetail, wind, time, gravity);
             }
         }
         foreach( JiggleZone zone in jiggleZones) {

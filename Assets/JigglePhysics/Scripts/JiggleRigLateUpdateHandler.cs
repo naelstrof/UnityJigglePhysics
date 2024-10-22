@@ -6,8 +6,10 @@ namespace JigglePhysics {
 internal class JiggleRigLateUpdateHandler : JiggleRigHandler<JiggleRigLateUpdateHandler> {
     private void LateUpdate() {
         CachedSphereCollider.EnableSphereCollider();
+        var gravity = Physics.gravity;
+        var time = Time.deltaTime;
         foreach (var jiggleRig in jiggleRigs) {
-            jiggleRig.Advance(Time.deltaTime);
+            jiggleRig.Advance(time, gravity);
         }
         CachedSphereCollider.DisableSphereCollider();
     }

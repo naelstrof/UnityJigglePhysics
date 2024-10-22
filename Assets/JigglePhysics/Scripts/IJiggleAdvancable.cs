@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace JigglePhysics {
 [System.Serializable]
 public enum JiggleUpdateMode {
@@ -5,7 +7,7 @@ public enum JiggleUpdateMode {
     FixedUpdate
 }
 internal interface IJiggleAdvancable {
-    public void Advance(float dt);
+    public void Advance(float dt, Vector3 gravity);
 }
 
 }

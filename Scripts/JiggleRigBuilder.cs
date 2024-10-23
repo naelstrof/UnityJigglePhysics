@@ -7,7 +7,7 @@ using UnityEngine.Serialization;
 
 namespace JigglePhysics {
     
-public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
+public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
     public const float VERLET_TIME_STEP = 0.02f;
     public const float MAX_CATCHUP_TIME = VERLET_TIME_STEP*4f;
     internal const float SETTLE_TIME = 0.2f;
@@ -210,9 +210,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         /// Attempts to pose the rig to the virtual particles. The current pose MUST be the last valid pose (set by ApplyValidPoseThenSampleTargetPose usually)
         /// </summary>
         /// <param name="debugDraw">If we should draw the target pose (blue) compared to the virtual particle pose (red).</param>
-        public void Pose(bool debugDraw, double timeAsDoubleOneStepBack) {
-            var blend = jiggleSettings.GetData().blend;
-            
+        public void Pose(bool debugDraw, double timeAsDoubleOneStepBack, float blend) {
             DeriveFinalSolve(timeAsDoubleOneStepBack);
             
             for (int i = 0; i < boneCount; i++) {
@@ -291,22 +289,36 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
     [SerializeField]
     private JiggleUpdateMode jiggleUpdateMode = JiggleUpdateMode.LateUpdate;
 
+    private JiggleRigLOD jiggleRigLOD;
+
+    [field: SerializeField, Range(0f,1f)] public float blend { get; set; } = 1f;
+
     public List<JiggleRig> jiggleRigs;
 
     [Tooltip("An air force that is applied to the entire rig, this is useful to plug in some wind volumes from external sources.")]
     public Vector3 wind;
-    [Tooltip("Level of detail manager. This system will control how the jiggle rig saves performance cost.")]
-    [SerializeField]
-    private JiggleRigLOD levelOfDetail;
-    private bool hasLevelOfDetail;
     
     [Tooltip("Draws some simple lines to show what the simulation is doing. Generally this should be disabled.")]
     [SerializeField] private bool debugDraw;
-
+    
     public void SetJiggleRigLOD(JiggleRigLOD lod) {
-        levelOfDetail = lod;
-        hasLevelOfDetail = levelOfDetail;
+        if (jiggleRigLOD != null) {
+            jiggleRigLOD.RemoveTrackedJiggleRig(this);
+        }
+        jiggleRigLOD = lod;
+        if (jiggleRigLOD != null) {
+            jiggleRigLOD.AddTrackedJiggleRig(this);
+        }
     }
+
+    public JiggleRigLOD GetJiggleRigLOD() => jiggleRigLOD;
+
+    private void Start() {
+        if (TryGetComponent(out JiggleRigLOD lod)) {
+            SetJiggleRigLOD(lod);
+        }
+    }
+
     public void SetJiggleUpdateMode(JiggleUpdateMode mode) {
         switch (jiggleUpdateMode) {
             case JiggleUpdateMode.LateUpdate: JiggleRigLateUpdateHandler.RemoveJiggleRigAdvancable(this); break;
@@ -354,7 +366,6 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         foreach(JiggleRig rig in jiggleRigs) {
             rig.Initialize();
         }
-        hasLevelOfDetail = levelOfDetail;
         settleTimer = 0f;
     }
 
@@ -375,18 +386,6 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
 
         #endregion
 
-        #region Level of detail handling
-
-        if (hasLevelOfDetail && !levelOfDetail.CheckActive(transform.position)) {
-            if (wasLODActive) PrepareTeleport();
-            wasLODActive = false;
-            return;
-        }
-        if (!wasLODActive) FinishTeleport();
-        wasLODActive = true;
-
-        #endregion
-
         foreach (JiggleRig rig in jiggleRigs) {
             rig.ApplyValidPoseThenSampleTargetPose(timeAsDouble);
         }
@@ -394,9 +393,9 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         while (accumulation > VERLET_TIME_STEP) {
             accumulation -= VERLET_TIME_STEP;
             double time = timeAsDouble - accumulation;
-            var position = transform.position;
             foreach(JiggleRig rig in jiggleRigs) {
-                var data = levelOfDetail ? levelOfDetail.AdjustJiggleSettingsData(position, rig.jiggleSettings.GetData()) : rig.jiggleSettings.GetData();
+                var data = rig.jiggleSettings.GetData();
+                data.blend *= blend;
                 Vector3 acceleration = gravity * (data.gravityMultiplier * SQUARED_VERLET_TIME_STEP) + wind * (VERLET_TIME_STEP * data.airDrag);
                 rig.StepSimulation(data, time, acceleration, sphereCollider);
             }
@@ -406,7 +405,8 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         }
         
         foreach (JiggleRig rig in jiggleRigs) {
-            rig.Pose(debugDraw, timeAsDoubleOneStepBack);
+            var data = rig.jiggleSettings.GetData();
+            rig.Pose(debugDraw, timeAsDoubleOneStepBack,data.blend * blend);
         }
     }
 
@@ -439,6 +439,12 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
             rig.OnDrawGizmos();
         }
     }
+    
+    private void OnDestroy() {
+        if (jiggleRigLOD != null) {
+            jiggleRigLOD.RemoveTrackedJiggleRig(this);
+        }
+    }
 
     private void OnValidate() {
         if (Application.isPlaying) {
@@ -450,7 +456,6 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
                     case JiggleUpdateMode.FixedUpdate: JiggleRigFixedUpdateHandler.AddJiggleRigAdvancable(this); break;
                     default: throw new ArgumentOutOfRangeException();
                 }
-                SetJiggleRigLOD(levelOfDetail);
             }
         } else {
             if (jiggleRigs == null) return;

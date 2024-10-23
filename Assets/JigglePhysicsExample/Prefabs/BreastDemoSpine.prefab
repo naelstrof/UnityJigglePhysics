@@ -11,6 +11,10 @@ PrefabInstance:
       propertyPath: levelOfDetail
       value: 
       objectReference: {fileID: 11400000, guid: bf79e2aa73ad69b4982963f9649fe1a9, type: 2}
+    - target: {fileID: 790571755588454276, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+      propertyPath: <blend>k__BackingField
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2051312510685350412, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: levelOfDetail
       value: 
@@ -18,6 +22,10 @@ PrefabInstance:
     - target: {fileID: 2051312510685350412, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: jiggleRigs.Array.size
       value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 2051312510685350412, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+      propertyPath: <blend>k__BackingField
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2051312510685350412, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: jiggleRigs.Array.data[3].rootTransform
@@ -99,8 +107,34 @@ PrefabInstance:
       propertyPath: levelOfDetail
       value: 
       objectReference: {fileID: 11400000, guid: bf79e2aa73ad69b4982963f9649fe1a9, type: 2}
+    - target: {fileID: 4792074260981591440, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+      propertyPath: <blend>k__BackingField
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+--- !u!1 &347791583696735252 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4072739780618791525, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+  m_PrefabInstance: {fileID: 4347906421942118001}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7510948452736469185
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 347791583696735252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9dd32c33758450940b888c7923a130a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  distance: 30
+  blend: 5
+  Visible: 
+  LastVisiblity: 0
+  VisibleCount: 0
 --- !u!4 &1313997527398279275 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3344657269369277978, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}

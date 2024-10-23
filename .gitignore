@@ -39,3 +39,5 @@ sysinfo.txt
 *.apk
 *.unitypackage
 Assets/KoboldKare.meta
+Assets/AmplifyShaderEditor.meta
+ProjectSettings/AmplifyShaderEditor.asset

@@ -163,6 +163,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable {
             return;
         }
         if (!wasLODActive) FinishTeleport();
+        wasLODActive = true;
         
         
         foreach (JiggleZone zone in jiggleZones) {

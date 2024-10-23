@@ -383,6 +383,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
             return;
         }
         if (!wasLODActive) FinishTeleport();
+        wasLODActive = true;
 
         #endregion
 
@@ -407,7 +408,6 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable {
         foreach (JiggleRig rig in jiggleRigs) {
             rig.Pose(debugDraw, timeAsDoubleOneStepBack);
         }
-        wasLODActive = true;
     }
 
     public JiggleRig GetJiggleRig(Transform rootTransform) {

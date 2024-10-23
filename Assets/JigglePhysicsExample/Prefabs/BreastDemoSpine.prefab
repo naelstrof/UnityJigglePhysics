@@ -7,6 +7,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 790571755588454276, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+      propertyPath: levelOfDetail
+      value: 
+      objectReference: {fileID: 11400000, guid: bf79e2aa73ad69b4982963f9649fe1a9, type: 2}
+    - target: {fileID: 2051312510685350412, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+      propertyPath: levelOfDetail
+      value: 
+      objectReference: {fileID: 11400000, guid: bf79e2aa73ad69b4982963f9649fe1a9, type: 2}
     - target: {fileID: 2051312510685350412, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: jiggleRigs.Array.size
       value: 4
@@ -87,6 +95,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: BreastDemoSpine
       objectReference: {fileID: 0}
+    - target: {fileID: 4792074260981591440, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+      propertyPath: levelOfDetail
+      value: 
+      objectReference: {fileID: 11400000, guid: bf79e2aa73ad69b4982963f9649fe1a9, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
 --- !u!4 &1313997527398279275 stripped

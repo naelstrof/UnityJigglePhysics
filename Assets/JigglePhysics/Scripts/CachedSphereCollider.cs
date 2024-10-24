@@ -24,7 +24,7 @@ public static class CachedSphereCollider {
 
     public static void DisableSphereCollider() {
         if (TryGet(out SphereCollider collider)) {
-            collider.enabled = true;
+            collider.enabled = false;
         }
     }
 

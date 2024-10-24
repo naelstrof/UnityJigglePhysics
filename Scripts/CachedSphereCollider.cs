@@ -37,7 +37,7 @@ public static class CachedSphereCollider {
         GameObject obj = null;
         try {
             obj = new GameObject("JiggleBoneSphereCollider", typeof(SphereCollider), typeof(DestroyListener)) {
-                hideFlags = HideFlags.HideAndDontSave
+                hideFlags = HideFlags.DontSave
             };
             Object.DontDestroyOnLoad(obj);
 

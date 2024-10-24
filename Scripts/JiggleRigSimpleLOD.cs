@@ -33,12 +33,13 @@ namespace JigglePhysics {
             }
 
             var position = transform.position;
-            var currentBlend = (Vector3.Distance(camera.transform.position, position) - distance + blend) / blend;
+            var cameraDistance = Vector3.Distance(camera.transform.position, position);
+            var currentBlend = (cameraDistance - distance + blend) / blend;
             currentBlend = Mathf.Clamp01(1f-currentBlend);
             foreach (var jiggle in jiggles) {
                 jiggle.blend = currentBlend;
             }
-            return Vector3.Distance(camera.transform.position, position) < distance;
+            return cameraDistance < distance;
         }
 
     }

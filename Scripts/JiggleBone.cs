@@ -258,7 +258,7 @@ public class JiggleBone {
             transform.GetPositionAndRotation(out cachedPositionForPosing, out cachedRotationForPosing);
         } else {
             var parent = bones[parentID];
-            if (hasParent) {
+            if (parent.hasParent) {
                 var grandfather = bones[parent.parentID];
                 var parentPosition = parent.cachedPositionForPosing;
                 var diff = parentPosition - grandfather.cachedPositionForPosing;

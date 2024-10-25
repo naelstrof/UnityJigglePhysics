@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+using System;
 using UnityEngine;
 
 namespace JigglePhysics {
@@ -12,42 +13,65 @@ namespace JigglePhysics {
         [SerializeField] float blend = 5f;
         
         private static Camera currentCamera;
+
+        private class RendererSubscription {
+            public bool visible;
+            public Action<bool> action;
+            public MonoBehaviorHider.JiggleRigLODRenderComponent rendererSubscription;
+        }
         
-        private bool[] visible;
+        private RendererSubscription[] subscriptions;
+        private int subscriptionCount;
         private bool lastVisibility;
-        private int visibleCount;
-        
-        protected override void Awake() {
-            base.Awake();
+
+        public void ClearRenderers() {
+            for (int i = 0; i < subscriptionCount; i++) {
+                subscriptions[i].rendererSubscription.VisibilityChange -= subscriptions[i].action;
+            }
+            subscriptions = null;
+            subscriptionCount = 0;
+        }
+        public void SetRenderers(Renderer[] renderers) {
+            ClearRenderers();
             MonoBehaviorHider.JiggleRigLODRenderComponent jiggleRigVisibleFlag = null;
-            var renderers = GetComponentsInChildren<Renderer>();
-            visibleCount = renderers.Length;
-            visible = new bool[visibleCount];
-            for (int i = 0; i < visibleCount; i++) {
+            subscriptionCount = renderers.Length;
+            subscriptions = new RendererSubscription[subscriptionCount];
+            for (int i = 0; i < subscriptionCount; i++) {
                 Renderer renderer = renderers[i];
                 if (!renderer) continue;
                 if (!renderer.TryGetComponent(out jiggleRigVisibleFlag)) {
                     jiggleRigVisibleFlag = renderer.gameObject.AddComponent<MonoBehaviorHider.JiggleRigLODRenderComponent>();
                 }
-                visible[i] = renderer.isVisible;
+
                 var index = i;
-                jiggleRigVisibleFlag.VisibilityChange += (visible) => {
+                Action<bool> action = (visible) => {
                     // Check if the index is out of bounds
-                    if (index < 0 || index >= this.visible.Length) {
-                        Debug.LogError("Index out of bounds: " + index + ". Valid range is 0 to " + (this.visible.Length - 1));
+                    if (index < 0 || index >= subscriptionCount) {
+                        Debug.LogError("Index out of bounds: " + index + ". Valid range is 0 to " + (subscriptionCount - 1));
                         return;
                     }
                     // Update the visibility at the specified index
-                    this.visible[index] = visible;
+                    subscriptions[index].visible = visible;
                     // Re-evaluate visibility
                     RevalulateVisiblity();
                 };
+                subscriptions[i] = new RendererSubscription() {
+                    visible = renderer.isVisible,
+                    action = action,
+                    rendererSubscription = jiggleRigVisibleFlag
+                };
+                jiggleRigVisibleFlag.VisibilityChange += action;
             }
             RevalulateVisiblity();
         }
+        
+        protected override void Awake() {
+            base.Awake();
+            SetRenderers(GetComponentsInChildren<Renderer>());
+        }
         private void RevalulateVisiblity() {
-            for (int visibleIndex = 0; visibleIndex < visibleCount; visibleIndex++) {
-                if (visible[visibleIndex]) {
+            for (int visibleIndex = 0; visibleIndex < subscriptionCount; visibleIndex++) {
+                if (subscriptions[visibleIndex].visible) {
                     lastVisibility = true;
                     return;
                 }

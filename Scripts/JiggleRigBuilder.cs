@@ -22,7 +22,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
         [SerializeField][Tooltip("The list of transforms to ignore during the jiggle. Each bone listed will also ignore all the children of the specified bone.")]
         private List<Transform> ignoredTransforms;
         [SerializeField] private Collider[] colliders;
-        [Tooltip("If these bones get modified and need to update the base pose of the jiggle physics. Expensive so keep it off if possible!")]
+        [Tooltip("Turn this on if you animate the jiggle bones via Animator (or through script). ")]
         public bool animated = false;
         private int boneCount;
         private bool needsCollisions;

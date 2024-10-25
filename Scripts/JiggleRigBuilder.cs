@@ -22,6 +22,8 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
         [SerializeField][Tooltip("The list of transforms to ignore during the jiggle. Each bone listed will also ignore all the children of the specified bone.")]
         private List<Transform> ignoredTransforms;
         [SerializeField] private Collider[] colliders;
+        [Tooltip("If these bones get modified and need to update the base pose of the jiggle physics. Expensive so keep it off if possible!")]
+        public bool animated = false;
         private int boneCount;
         private bool needsCollisions;
         private int colliderCount;
@@ -80,7 +82,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
         /// </summary>
         public void ApplyValidPoseThenSampleTargetPose(double timeAsDouble) {
             for(int i=0;i<boneCount;i++) {
-                simulatedPoints[i].ApplyValidPoseThenSampleTargetPose(simulatedPoints, timeAsDouble);
+                simulatedPoints[i].ApplyValidPoseThenSampleTargetPose(simulatedPoints, timeAsDouble, animated);
             }
         }
 
@@ -219,7 +221,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
             
             for (int i = 0; i < boneCount; i++) {
                 var simulatedPoint = simulatedPoints[i];
-                simulatedPoint.PoseBone(simulatedPoints, blend);
+                simulatedPoint.PoseBone(simulatedPoints, animated);
                 if (debugDraw) {
                     simulatedPoint.DebugDraw(simulatedPoints, Color.red, Color.blue, true);
                 }

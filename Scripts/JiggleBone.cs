@@ -61,7 +61,10 @@ public class JiggleBone {
         } else {
             Assert.IsTrue(parent != null, "Jiggle bones without a transform MUST have a parent...");
             Vector3 parentTransformPosition = parent.transform.position;
-            position = parent.transform.TransformPoint(parent.GetParentTransform(bones.ToArray()).InverseTransformPoint(parentTransformPosition)*projectionAmount);
+            var localPosition = parent.GetParentTransform(bones.ToArray()).InverseTransformPoint(parentTransformPosition) * projectionAmount;
+            position = parent.transform.TransformPoint(localPosition);
+            lastValidPoseBoneLocalPosition = localPosition;
+            lastValidPoseBoneRotation = Quaternion.identity;
         }
 
         targetAnimatedBoneSignal = new PositionSignal(position, Time.timeAsDouble);
@@ -73,8 +76,6 @@ public class JiggleBone {
         currentFixedAnimatedBonePosition = default;
         boneRotationChangeCheck = default;
         bonePositionChangeCheck = default;
-        lastValidPoseBoneRotation = default;
-        lastValidPoseBoneLocalPosition = default;
         normalizedIndex = 0;
         workingPosition = default;
         preTeleportPosition = null;
@@ -213,7 +214,7 @@ public class JiggleBone {
     /// Brings the transforms back to their last-known valid state. Valid meaning unjiggled. Either sourced from spawn, Animator, or by manual position sets by the user.
     /// Then samples the current pose for use later in stepping the simulation. This should be called at the beginning of every frame that Pose is called. It creates the desired "target pose" that the simulation tries to match.
     /// </summary>
-    public void ApplyValidPoseThenSampleTargetPose(JiggleBone[] bones, double timeAsDouble) {
+    public void ApplyValidPoseThenSampleTargetPose(JiggleBone[] bones, double timeAsDouble, bool animated) {
         if (!hasTransform) {
             cachedPositionForPosing = GetRealTransformPosition(bones);
             targetAnimatedBoneSignal.SetPosition(cachedPositionForPosing, timeAsDouble);
@@ -221,13 +222,19 @@ public class JiggleBone {
             return;
         }
 
-        transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
-        if (boneRotationChangeCheck == localRotation && bonePositionChangeCheck == localPosition) {
+        if (animated) {
+            transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
+            if (boneRotationChangeCheck == localRotation && bonePositionChangeCheck == localPosition) {
+                transform.SetLocalPositionAndRotation(lastValidPoseBoneLocalPosition, lastValidPoseBoneRotation);
+            } else {
+                transform.GetLocalPositionAndRotation(out lastValidPoseBoneLocalPosition, out lastValidPoseBoneRotation);
+            }
+        } else {
             transform.SetLocalPositionAndRotation(lastValidPoseBoneLocalPosition, lastValidPoseBoneRotation);
         }
+
         cachedPositionForPosing = transform.position;
         targetAnimatedBoneSignal.SetPosition(cachedPositionForPosing, timeAsDouble);
-        transform.GetLocalPositionAndRotation(out lastValidPoseBoneLocalPosition, out lastValidPoseBoneRotation);
         if (!hasParent) {
             cachedLengthToParent = 0.1f;
         } else {
@@ -268,8 +275,8 @@ public class JiggleBone {
     /// <summary>
     /// Uses the data from DeriveFinalPosition() to actually generate a pose.
     /// </summary>
-    /// <param name="blend"></param>
-    public void PoseBone(JiggleBone[] bones, float blend) {
+    /// <param name="animated">If the bones are anticipated to be animated by either Animators or manually by the user through script.</param>
+    public void PoseBone(JiggleBone[] bones, bool animated) {
         if (hasChild) {
             Vector3 positionBlend = cachedLerpedPositionForPosing;
             var child = bones[childID];
@@ -284,7 +291,7 @@ public class JiggleBone {
                 transform.rotation = animPoseToPhysicsPose * cachedRotationForPosing;
             }
         }
-        if (hasTransform) {
+        if (hasTransform && animated) {
             transform.GetLocalPositionAndRotation(out bonePositionChangeCheck, out boneRotationChangeCheck);
         }
     }

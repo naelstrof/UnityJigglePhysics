@@ -14,7 +14,7 @@ namespace JigglePhysics {
         private static Camera currentCamera;
 
 
-        private bool TryGetCamera(out Camera camera) {
+        protected virtual bool TryGetCamera(out Camera camera) {
             #if UNITY_EDITOR
             if (EditorWindow.focusedWindow is SceneView view) {
                 camera = view.camera;

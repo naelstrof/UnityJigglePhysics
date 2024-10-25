@@ -5,15 +5,7 @@ using System;
 using UnityEngine;
 
 namespace JigglePhysics {
-    public class JiggleRigRendererLOD : JiggleRigLOD {
-
-        [Tooltip("Distance to disable the jiggle rig.")]
-        [SerializeField] float distance = 20f;
-        [Tooltip("Distance past distance from which it blends out rather than instantly disabling.")]
-        [SerializeField] float blend = 5f;
-        
-        private static Camera currentCamera;
-
+    public class JiggleRigRendererLOD : JiggleRigSimpleLOD {
         private class RendererSubscription {
             public bool visible;
             public Action<bool> action;
@@ -78,36 +70,11 @@ namespace JigglePhysics {
             }
             lastVisibility = false;
         }
-
-        private bool TryGetCamera(out Camera camera) {
-            #if UNITY_EDITOR
-            if (EditorWindow.focusedWindow is SceneView view) {
-                camera = view.camera;
-                return camera;
-            }
-            #endif
-            if (!currentCamera || !currentCamera.CompareTag("MainCamera")) {
-                currentCamera = Camera.main;
-            }
-            camera = currentCamera;
-            return currentCamera;
-        }
         protected override bool CheckActive() {
             if (lastVisibility == false) {
                 return false;
             }
-            if (!TryGetCamera(out Camera camera)) {
-                return false;
-            }
-
-            var position = transform.position;
-            var cameraDistance = Vector3.Distance(camera.transform.position, position);
-            var currentBlend = (cameraDistance - distance + blend) / blend;
-            currentBlend = Mathf.Clamp01(1f-currentBlend);
-            foreach (var jiggle in jiggles) {
-                jiggle.blend = currentBlend;
-            }
-            return cameraDistance < distance;
+            return base.CheckActive();
         }
 
     }

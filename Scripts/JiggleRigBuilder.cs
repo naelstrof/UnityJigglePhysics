@@ -99,27 +99,42 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
 
             for (int i = 0; i < boneCount; i++) {
                 var simulatedPoint = simulatedPoints[i];
-                
+
                 #region VerletIntegrate
-                simulatedPoint.currentFixedAnimatedBonePosition = simulatedPoint.targetAnimatedBoneSignal.SamplePosition(time);
+
+                simulatedPoint.currentFixedAnimatedBonePosition =
+                    simulatedPoint.targetAnimatedBoneSignal.SamplePosition(time);
                 if (!simulatedPoint.hasParent) {
                     simulatedPoint.workingPosition = simulatedPoint.currentFixedAnimatedBonePosition;
-                    simulatedPoint.parentPose = 2f*simulatedPoint.currentFixedAnimatedBonePosition - simulatedPoints[simulatedPoint.childID].currentFixedAnimatedBonePosition;
+                    simulatedPoint.parentPose = 2f * simulatedPoint.currentFixedAnimatedBonePosition -
+                                                simulatedPoints[simulatedPoint.childID]
+                                                    .currentFixedAnimatedBonePosition;
                     simulatedPoint.parentPosition = simulatedPoint.parentPose;
                     continue;
                 }
+
                 var parentSimulatedPoint = simulatedPoints[simulatedPoint.parentID];
                 simulatedPoint.parentPose = parentSimulatedPoint.currentFixedAnimatedBonePosition;
                 simulatedPoint.parentPosition = parentSimulatedPoint.workingPosition;
 
-                var lengthToParent = simulatedPoint.cachedLengthToParent;
                 Vector3 newPosition = simulatedPoint.particleSignal.GetCurrent();
                 Vector3 delta = newPosition - simulatedPoint.particleSignal.GetPrevious();
-                Vector3 localSpaceVelocity = delta - (parentSimulatedPoint.particleSignal.GetCurrent() - parentSimulatedPoint.particleSignal.GetPrevious());
+                Vector3 localSpaceVelocity = delta - (parentSimulatedPoint.particleSignal.GetCurrent() -
+                                                      parentSimulatedPoint.particleSignal.GetPrevious());
                 Vector3 velocity = delta - localSpaceVelocity;
-                simulatedPoint.workingPosition = newPosition + velocity * data.airDragOneMinus + localSpaceVelocity * data.frictionOneMinus + acceleration;
-                #endregion
+                simulatedPoint.workingPosition = newPosition + velocity * data.airDragOneMinus +
+                                                 localSpaceVelocity * data.frictionOneMinus + acceleration;
 
+                #endregion
+            }
+
+            for (int i = 0; i < boneCount; i++) {
+                var simulatedPoint = simulatedPoints[i];
+                if (!simulatedPoint.hasParent) {
+                    continue;
+                }
+                var parentSimulatedPoint = simulatedPoints[simulatedPoint.parentID];
+                var lengthToParent = simulatedPoint.cachedLengthToParent;
                 #region ConstrainAngle
                 if (simulatedPoint.shouldConfineAngle) {
                     Vector3 parentAimTargetPose = parentSimulatedPoint.currentFixedAnimatedBonePosition - parentSimulatedPoint.parentPose;
@@ -137,6 +152,19 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
 
                 #region Collisions
                 if (needsCollisions) {
+                    Vector3 diff = simulatedPoint.workingPosition - parentSimulatedPoint.workingPosition;
+                    Vector3 dir = diff.normalized;
+                    var constraintResolution = Vector3.LerpUnclamped(simulatedPoint.workingPosition,
+                        parentSimulatedPoint.workingPosition + dir * lengthToParent, data.squaredLengthElasticity);
+                    if (simulatedPoint.hasChild) { // HAS CHILD POINT
+                        var childSimulatedPoint = simulatedPoints[simulatedPoint.childID];
+                        Vector3 cdiff = simulatedPoint.workingPosition - childSimulatedPoint.workingPosition;
+                        Vector3 cdir = cdiff.normalized;
+                        var backConstraintResolution = Vector3.LerpUnclamped(simulatedPoint.workingPosition,
+                            childSimulatedPoint.workingPosition + cdir * childSimulatedPoint.cachedLengthToParent, data.squaredLengthElasticity);
+                        constraintResolution = (constraintResolution+backConstraintResolution)/2f;
+                    }
+                    simulatedPoint.workingPosition = constraintResolution;
                     for (var j = 0; j < colliderCount; j++) {
                         var collider = colliders[j];
                         sphereCollider.radius = jiggleSettings.GetRadius(simulatedPoint.normalizedIndex);
@@ -151,14 +179,6 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
                             simulatedPoint.workingPosition += penetrationDir * dist;
                         }
                     }
-                    Vector3 diff = simulatedPoint.workingPosition - parentSimulatedPoint.workingPosition;
-                    Vector3 dir = diff.normalized;
-                    // TODO: This is a jank way to have back-propagated motion, need to run it by Raliv to see if there's a more intelligent way to do so. (Normally you'd have 8+ iterations of constraints pushing and pulling from both ends)
-                    if (parentSimulatedPoint.hasParent) {
-                        parentSimulatedPoint.workingPosition = Vector3.LerpUnclamped( parentSimulatedPoint.workingPosition, simulatedPoint.workingPosition - dir * lengthToParent, data.squaredLengthElasticity * 0.5f);
-                        parentSimulatedPoint.particleSignal.SetPosition(parentSimulatedPoint.workingPosition, time);
-                    }
-                    simulatedPoint.workingPosition = Vector3.LerpUnclamped(simulatedPoint.workingPosition, parentSimulatedPoint.workingPosition + dir * lengthToParent, data.squaredLengthElasticity);
                 } else {
                     Vector3 diff = simulatedPoint.workingPosition - parentSimulatedPoint.workingPosition;
                     Vector3 dir = diff.normalized;

@@ -224,10 +224,20 @@ public class JiggleBone {
 
         if (animated) {
             transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
-            if (boneRotationChangeCheck == localRotation && bonePositionChangeCheck == localPosition) {
+            bool rotationChanged = boneRotationChangeCheck != localRotation;
+            bool positionChanged = bonePositionChangeCheck != localPosition;
+            if (!rotationChanged && !positionChanged) {
                 transform.SetLocalPositionAndRotation(lastValidPoseBoneLocalPosition, lastValidPoseBoneRotation);
             } else {
-                transform.GetLocalPositionAndRotation(out lastValidPoseBoneLocalPosition, out lastValidPoseBoneRotation);
+                if (rotationChanged && positionChanged) {
+                    transform.GetLocalPositionAndRotation(out lastValidPoseBoneLocalPosition, out lastValidPoseBoneRotation);
+                } else if (rotationChanged) {
+                    lastValidPoseBoneRotation = transform.localRotation;
+                    transform.localPosition = lastValidPoseBoneLocalPosition;
+                } else {
+                    lastValidPoseBoneLocalPosition = transform.localPosition;
+                    transform.localRotation = lastValidPoseBoneRotation;
+                }
             }
         } else {
             transform.SetLocalPositionAndRotation(lastValidPoseBoneLocalPosition, lastValidPoseBoneRotation);

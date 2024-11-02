@@ -13,6 +13,13 @@ public static class CachedSphereCollider {
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void Init() {
+        if (_sphereCollider != null) {
+            if (Application.isPlaying) {
+                Object.Destroy(_sphereCollider);
+            } else {
+                Object.DestroyImmediate(_sphereCollider);
+            }
+        }
         _hasSphere = false;
         _sphereCollider = null;
     }

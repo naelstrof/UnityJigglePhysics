@@ -284,27 +284,30 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
             if (parentJiggleBoneID != null) {
                 outputPoints[parentJiggleBoneID.Value].SetChildID(outputPoints.Count - 1);
             }
-            // Create an extra purely virtual point if we have no children.
-            if (currentTransform.childCount == 0) {
-                if (!newJiggleBone.hasParent) {
-                    if (newJiggleBone.transform.parent == null) {
-                        throw new UnityException("Can't have a singular jiggle bone with no parents. That doesn't even make sense!");
-                    } else {
-                        outputPoints.Add(new JiggleBone(outputPoints, null, newJiggleBone, currentID));
-                        outputPoints[currentID].SetChildID(outputPoints.Count - 1);
-                        return;
-                    }
-                }
-                outputPoints.Add(new JiggleBone(outputPoints, null, newJiggleBone, currentID));
-                outputPoints[currentID].SetChildID(outputPoints.Count - 1);
-                return;
-            }
+
+            bool hasChild = false;
             for (int i = 0; i < currentTransform.childCount; i++) {
                 if (ignoredTransforms.Contains(currentTransform.GetChild(i))) {
                     continue;
                 }
+
+                hasChild = true;
                 CreateSimulatedPoints(outputPoints, ignoredTransforms, currentTransform.GetChild(i), newJiggleBone, currentID);
             }
+            
+            // Create an extra purely virtual point if we have no children.
+            if (hasChild) return;
+            if (!newJiggleBone.hasParent) {
+                if (newJiggleBone.transform.parent == null) {
+                    throw new UnityException("Can't have a singular jiggle bone with no parents. That doesn't even make sense!");
+                } else {
+                    outputPoints.Add(new JiggleBone(outputPoints, null, newJiggleBone, currentID));
+                    outputPoints[currentID].SetChildID(outputPoints.Count - 1);
+                    return;
+                }
+            }
+            outputPoints.Add(new JiggleBone(outputPoints, null, newJiggleBone, currentID));
+            outputPoints[currentID].SetChildID(outputPoints.Count - 1);
         }
     }
     [Tooltip("Enables interpolation for the simulation, this should be set to LateUpdate unless you *really* need the simulation to only update on FixedUpdate.")]

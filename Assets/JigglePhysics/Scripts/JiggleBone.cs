@@ -57,6 +57,8 @@ public class JiggleBone {
         Vector3 position;
         if (transform != null) {
             transform.GetLocalPositionAndRotation(out lastValidPoseBoneLocalPosition, out lastValidPoseBoneRotation);
+            boneRotationChangeCheck = lastValidPoseBoneRotation;
+            bonePositionChangeCheck = lastValidPoseBoneLocalPosition;
             position = transform.position;
         } else {
             Assert.IsTrue(parent != null, "Jiggle bones without a transform MUST have a parent...");
@@ -65,6 +67,8 @@ public class JiggleBone {
             position = parent.transform.TransformPoint(localPosition);
             lastValidPoseBoneLocalPosition = localPosition;
             lastValidPoseBoneRotation = Quaternion.identity;
+            boneRotationChangeCheck = default;
+            bonePositionChangeCheck = default;
         }
 
         targetAnimatedBoneSignal = new PositionSignal(position, Time.timeAsDouble);
@@ -74,8 +78,6 @@ public class JiggleBone {
         shouldConfineAngle = hasTransform || this.projectionAmount != 0;
         
         currentFixedAnimatedBonePosition = default;
-        boneRotationChangeCheck = default;
-        bonePositionChangeCheck = default;
         normalizedIndex = 0;
         workingPosition = default;
         preTeleportPosition = null;

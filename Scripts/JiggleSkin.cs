@@ -137,7 +137,9 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
         accumulation = UnityEngine.Random.Range(0f,JiggleRigBuilder.VERLET_TIME_STEP);
         jiggleZones ??= new List<JiggleZone>();
         foreach( JiggleZone zone in jiggleZones) {
-            zone.Initialize();
+            if (!zone.GetInitialized()) {
+                zone.Initialize();
+            }
         }
         jiggleInfoNameID = Shader.PropertyToID("_JiggleInfos");
         packedVectors = new List<Vector4>();

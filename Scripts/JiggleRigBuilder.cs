@@ -24,7 +24,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
         [SerializeField] private Collider[] colliders;
         [Tooltip("Turn this on if you animate the jiggle bones via Animator (or through script). ")]
         public bool animated = false;
-        private int boneCount;
+        private int boneCount = 0;
         private bool needsCollisions;
         private int colliderCount;
 
@@ -70,6 +70,8 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
                 simulatedPoints[i].SetTargetAndResetToLastValidPose(simulatedPoints);
             }
         }
+
+        public bool GetInitialized() => boneCount != 0;
 
         public void SetTargetAndResetToLastValidPose() {
             for (int i = boneCount - 1; i >= 0; i--) {
@@ -389,7 +391,9 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
         accumulation = 0f;
         jiggleRigs ??= new List<JiggleRig>();
         foreach(JiggleRig rig in jiggleRigs) {
-            rig.Initialize();
+            if (!rig.GetInitialized()) {
+                rig.Initialize();
+            }
         }
         settleTimer = 0f;
     }

@@ -505,8 +505,8 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
                 rig.Initialize();
             }
         }
-    }
 #endif
+    }
 }
 
 }

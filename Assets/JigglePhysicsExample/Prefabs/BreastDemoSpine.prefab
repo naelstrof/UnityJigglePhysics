@@ -8,6 +8,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 790571755588454276, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 790571755588454276, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: levelOfDetail
       value: 
       objectReference: {fileID: 11400000, guid: bf79e2aa73ad69b4982963f9649fe1a9, type: 2}
@@ -21,10 +25,14 @@ PrefabInstance:
       objectReference: {fileID: 11400000, guid: bf79e2aa73ad69b4982963f9649fe1a9, type: 2}
     - target: {fileID: 2051312510685350412, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: jiggleRigs.Array.size
-      value: 4
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2051312510685350412, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
       propertyPath: <blend>k__BackingField
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2051312510685350412, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
+      propertyPath: jiggleRigs.Array.data[0].animated
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2051312510685350412, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}
@@ -130,11 +138,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9dd32c33758450940b888c7923a130a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  distance: 30
+  distance: 1000
   blend: 5
-  Visible: 
-  LastVisiblity: 0
-  VisibleCount: 0
 --- !u!4 &1313997527398279275 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3344657269369277978, guid: 0a481637b88939c4784d2f3d4d5cb350, type: 3}

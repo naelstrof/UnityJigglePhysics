@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,12 +7,14 @@ namespace JigglePhysics {
 internal class JiggleRigHandler<T> : MonoBehaviour where T : MonoBehaviour {
     private static T instance;
 
-    protected static List<IJiggleAdvancable> jiggleRigs = new();
+    protected static List<IJiggleAdvancable> jiggleRigs;
 
     private static void CreateInstanceIfNeeded() {
         if (instance) {
             return;
         }
+
+        jiggleRigs ??= new List<IJiggleAdvancable>();
         
         var obj = new GameObject("JiggleRigHandler", typeof(T)) {
             hideFlags = HideFlags.DontSave
@@ -25,17 +28,13 @@ internal class JiggleRigHandler<T> : MonoBehaviour where T : MonoBehaviour {
     private static void RemoveInstanceIfNeeded() {
         if (jiggleRigs.Count != 0) return;
         if (!instance) return;
+        jiggleRigs = null;
         if (Application.isPlaying) {
             Destroy(instance.gameObject);
         } else {
             DestroyImmediate(instance.gameObject);
         }
         instance = null;
-    }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void Initialize() {
-        jiggleRigs.Clear();
     }
 
     internal static void AddJiggleRigAdvancable(IJiggleAdvancable advancable) {
@@ -55,9 +54,19 @@ internal class JiggleRigHandler<T> : MonoBehaviour where T : MonoBehaviour {
         RemoveInstanceIfNeeded();
     }
 
-    private void OnDestroy() {
+    private void OnDisable() {
         if (instance == this) {
             instance = null;
+        }
+    }
+
+    private void OnEnable() {
+        if (instance != this && instance != null) {
+            if (Application.isPlaying) {
+                Destroy(gameObject);
+            } else {
+                DestroyImmediate(gameObject);
+            }
         }
     }
 }

@@ -4,5 +4,11 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/BlankScene.unity
+    guid: 96255cd9bc048d14e9eb47843ef00c23
+  - enabled: 1
+    path: Assets/JigglePhysicsExample/Scenes/DancingDemo.unity
+    guid: c161defe1381de34f81ad6330e58691d
   m_configObjects: {}

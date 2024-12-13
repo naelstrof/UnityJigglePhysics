@@ -14,7 +14,7 @@ public class Elevator : MonoBehaviour {
     }
     void FixedUpdate() {
         float vel = curve.Differentiate(Mathf.Repeat(Time.time*0.25f, 1f));
-        body.velocity = -Vector3.up*vel*multiplier;
+        body.linearVelocity = -Vector3.up*vel*multiplier;
     }
     void OnValidate() {
         curve.preWrapMode = WrapMode.Loop;

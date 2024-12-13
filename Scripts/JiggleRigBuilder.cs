@@ -12,6 +12,15 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
     public const float MAX_CATCHUP_TIME = VERLET_TIME_STEP*4f;
     internal const float SETTLE_TIME = 0.2f;
     internal const float SQUARED_VERLET_TIME_STEP = VERLET_TIME_STEP * VERLET_TIME_STEP;
+    internal static bool unitySubsystemFixedUpdateRegistration = false;
+    internal static bool unitySubsystemLateUpdateRegistration = false;
+    internal static bool GetUnityCurrentlyInitializingSubsystems() => unitySubsystemFixedUpdateRegistration || unitySubsystemLateUpdateRegistration;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void Init() {
+        unitySubsystemFixedUpdateRegistration = true;
+        unitySubsystemLateUpdateRegistration = true;
+    }
 
     [Serializable]
     public class JiggleRig {
@@ -203,12 +212,10 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
         /// Creates the virtual particle tree that is used to simulate the jiggles!
         /// </summary>
         public void Initialize() {
-            var jiggleBoneList = new List<JiggleBone>();
-            //simulatedPoints = new List<JiggleBone>();
             if (rootTransform == null) {
                 return;
             }
-
+            var jiggleBoneList = new List<JiggleBone>();
             CreateSimulatedPoints(jiggleBoneList, ignoredTransforms, rootTransform, null, null);
             for (int i = 0; i < jiggleBoneList.Count; i++) {
                 jiggleBoneList[i].CalculateNormalizedIndex(jiggleBoneList);
@@ -279,7 +286,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
             }
         }
 
-        protected virtual void CreateSimulatedPoints(List<JiggleBone> outputPoints, ICollection<Transform> ignoredTransforms, Transform currentTransform, JiggleBone? parentJiggleBone, int? parentJiggleBoneID) {
+        protected virtual void CreateSimulatedPoints(List<JiggleBone> outputPoints, ICollection<Transform> ignoredTransforms, Transform currentTransform, JiggleBone parentJiggleBone, int? parentJiggleBoneID) {
             JiggleBone newJiggleBone = new JiggleBone(outputPoints, currentTransform, parentJiggleBone, parentJiggleBoneID);
             outputPoints.Add(newJiggleBone);
             var currentID = outputPoints.Count - 1;
@@ -345,7 +352,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
             SetJiggleRigLOD(lod);
         }
     }
-
+    
     public void SetJiggleUpdateMode(JiggleUpdateMode mode) {
         switch (jiggleUpdateMode) {
             case JiggleUpdateMode.LateUpdate: JiggleRigLateUpdateHandler.RemoveJiggleRigAdvancable(this); break;
@@ -362,10 +369,13 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
     
     private double accumulation;
     private float settleTimer;
-    private bool wasLODActive = true;
     private void Awake() {
-        Initialize();
-        accumulation = UnityEngine.Random.Range(0f,VERLET_TIME_STEP);
+        Initialize(jiggleUpdateMode switch {
+            JiggleUpdateMode.LateUpdate => unitySubsystemLateUpdateRegistration,
+            JiggleUpdateMode.FixedUpdate => unitySubsystemFixedUpdateRegistration,
+            _ => throw new ArgumentOutOfRangeException()
+        });
+        settleTimer = 0f;
     }
     void OnEnable() {
         switch (jiggleUpdateMode) {
@@ -384,18 +394,20 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
             case JiggleUpdateMode.FixedUpdate: JiggleRigFixedUpdateHandler.RemoveJiggleRigAdvancable(this); break;
             default: throw new ArgumentOutOfRangeException();
         }
-        PrepareTeleport();
+
+        if (settleTimer > SETTLE_TIME) {
+            PrepareTeleport();
+        }
     }
 
-    public void Initialize() {
-        accumulation = 0f;
+    public void Initialize(bool forceRegenerateJiggleTree = false) {
+        accumulation = UnityEngine.Random.Range(0f,VERLET_TIME_STEP);
         jiggleRigs ??= new List<JiggleRig>();
         foreach(JiggleRig rig in jiggleRigs) {
-            if (!rig.GetInitialized()) {
+            if (forceRegenerateJiggleTree || !rig.GetInitialized()) {
                 rig.Initialize();
             }
         }
-        settleTimer = 0f;
     }
 
     public JiggleUpdateMode GetJiggleUpdateMode() {
@@ -476,7 +488,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
     }
 
     private void OnValidate() {
-        if (Application.isPlaying) {
+        if (Application.isPlaying && !GetUnityCurrentlyInitializingSubsystems()) {
             JiggleRigLateUpdateHandler.RemoveJiggleRigAdvancable(this);
             JiggleRigFixedUpdateHandler.RemoveJiggleRigAdvancable(this);
             if (isActiveAndEnabled) {
@@ -486,7 +498,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
                     default: throw new ArgumentOutOfRangeException();
                 }
             }
-        } else {
+        } else if (!Application.isPlaying) {
             if (jiggleRigs == null) return;
             foreach (JiggleRig rig in jiggleRigs) {
                 rig.Initialize();

@@ -10,7 +10,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
         [Tooltip("How large of a radius the zone should effect, in target-space meters. (Scaling the target will effect the radius.)")]
         public float radius;
         public JiggleZone(Transform rootTransform, JiggleSettingsBase jiggleSettings, ICollection<Transform> ignoredTransforms, ICollection<Collider> colliders) : base(rootTransform, jiggleSettings, ignoredTransforms, colliders) { }
-        protected override void CreateSimulatedPoints(List<JiggleBone> outputPoints, ICollection<Transform> ignoredTransforms, Transform currentTransform, JiggleBone? parentJiggleBone, int? parentID) {
+        protected override void CreateSimulatedPoints(List<JiggleBone> outputPoints, ICollection<Transform> ignoredTransforms, Transform currentTransform, JiggleBone parentJiggleBone, int? parentID) {
             //base.CreateSimulatedPoints(outputPoints, ignoredTransforms, currentTransform, parentJiggleBone);
             var parent = new JiggleBone(outputPoints, currentTransform, null, null);
             parent.SetChildID(1);
@@ -55,7 +55,6 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
     
     private float settleTimer;
 
-    private bool wasLODActive = true;
     private double accumulation;
     private MaterialPropertyBlock materialPropertyBlock;
 
@@ -88,6 +87,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
     }
 
     private void Awake() {
+        settleTimer = 0f;
         Initialize();
     }
 
@@ -115,7 +115,10 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
             case JiggleUpdateMode.FixedUpdate: JiggleRigFixedUpdateHandler.RemoveJiggleRigAdvancable(this); break;
             default: throw new ArgumentOutOfRangeException();
         }
-        PrepareTeleport();
+
+        if (settleTimer >= JiggleRigBuilder.SETTLE_TIME) {
+            PrepareTeleport();
+        }
     }
     
     
@@ -143,7 +146,6 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
         }
         jiggleInfoNameID = Shader.PropertyToID("_JiggleInfos");
         packedVectors = new List<Vector4>();
-        settleTimer = 0f;
         materialPropertyBlock = new MaterialPropertyBlock();
     }
 
@@ -227,7 +229,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
     }
     
     void OnValidate() {
-        if (Application.isPlaying) {
+        if (Application.isPlaying && !JiggleRigBuilder.GetUnityCurrentlyInitializingSubsystems()) {
             JiggleRigLateUpdateHandler.RemoveJiggleRigAdvancable(this);
             JiggleRigFixedUpdateHandler.RemoveJiggleRigAdvancable(this);
             if (isActiveAndEnabled) {

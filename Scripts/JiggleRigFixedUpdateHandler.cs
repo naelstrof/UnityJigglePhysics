@@ -17,6 +17,7 @@ internal class JiggleRigFixedUpdateHandler : JiggleRigHandler<JiggleRigFixedUpda
             jiggleRig.Advance(deltaTime, gravity, timeAsDouble, timeAsDoubleOneStepBack, sphereCollider);
         }
         CachedSphereCollider.DisableSphereCollider();
+        JiggleRigBuilder.unitySubsystemFixedUpdateRegistration = false;
     }
 }
 

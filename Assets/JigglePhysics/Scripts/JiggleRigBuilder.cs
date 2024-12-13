@@ -488,6 +488,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
     }
 
     private void OnValidate() {
+#if UNITY_EDITOR
         if (Application.isPlaying && !GetUnityCurrentlyInitializingSubsystems()) {
             JiggleRigLateUpdateHandler.RemoveJiggleRigAdvancable(this);
             JiggleRigFixedUpdateHandler.RemoveJiggleRigAdvancable(this);
@@ -505,6 +506,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
             }
         }
     }
+#endif
 }
 
 }

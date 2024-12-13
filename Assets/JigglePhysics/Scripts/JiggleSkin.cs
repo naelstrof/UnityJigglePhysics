@@ -229,6 +229,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
     }
     
     void OnValidate() {
+#if UNITY_EDITOR
         if (Application.isPlaying && !JiggleRigBuilder.GetUnityCurrentlyInitializingSubsystems()) {
             JiggleRigLateUpdateHandler.RemoveJiggleRigAdvancable(this);
             JiggleRigFixedUpdateHandler.RemoveJiggleRigAdvancable(this);
@@ -240,7 +241,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
                 }
             }
         }
-        
+#endif
         if (jiggleZones == null) {
             return;
         }

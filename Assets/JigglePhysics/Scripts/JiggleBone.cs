@@ -184,7 +184,6 @@ public class JiggleBone {
             MatchAnimationInstantly(bones);
             return;
         }
-
         var position = GetRealTransformPosition(bones);
         Vector3 diff = position - preTeleportPosition.Value;
         targetAnimatedBoneSignal.FlattenSignal(Time.timeAsDouble, position);

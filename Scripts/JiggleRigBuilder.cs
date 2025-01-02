@@ -32,7 +32,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
         private List<Transform> ignoredTransforms;
         [SerializeField] private Collider[] colliders;
         [Tooltip("Turn this on if you animate the jiggle bones via Animator (or through script). ")]
-        public bool animated = false;
+        public bool animated = true;
         private int boneCount = 0;
         private bool needsCollisions;
         private int colliderCount;

@@ -57,10 +57,10 @@ namespace JigglePhysics {
             RevalulateVisiblity();
         }
         
-        protected override void Awake() {
-            base.Awake();
-            SetRenderers(GetComponentsInChildren<Renderer>());
+        void Start() {
+            SetRenderers(GetComponentsInChildren<Renderer>(true));
         }
+        
         private void RevalulateVisiblity() {
             for (int visibleIndex = 0; visibleIndex < subscriptionCount; visibleIndex++) {
                 if (subscriptions[visibleIndex].visible) {

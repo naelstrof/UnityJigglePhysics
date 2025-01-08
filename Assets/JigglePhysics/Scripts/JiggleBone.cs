@@ -254,6 +254,10 @@ public class JiggleBone {
     }
     
     public void OnDrawGizmos(JiggleBone[] bones, JiggleSettingsBase jiggleSettings, bool isRoot = false) {
+        // Prevent editor spam when transforms are deleted.
+        if (hasTransform && transform == null) {
+            return;
+        }
         var time = Time.timeAsDouble;
         Vector3 pos = (isRoot || !Application.isPlaying) ? (hasTransform ? transform.position : GetRealTransformPosition(bones)) : particleSignal.SamplePosition(time-JiggleRigBuilder.VERLET_TIME_STEP);
         if (hasChild) {

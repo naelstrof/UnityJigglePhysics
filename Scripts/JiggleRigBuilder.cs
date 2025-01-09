@@ -279,7 +279,17 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
             if (!initialized) {
                 Initialize();
             }
-            
+
+            if (simulatedPoints == null || simulatedPoints.Length == 0) {
+                return;
+            }
+
+            for (int i = 0; i < boneCount; i++) {
+                if (simulatedPoints[i] == null) {
+                    return;
+                }
+            }
+
             simulatedPoints[0].OnDrawGizmos(simulatedPoints, jiggleSettings, true);
             for (int i = 1; i < boneCount; i++) {
                 simulatedPoints[i].OnDrawGizmos(simulatedPoints, jiggleSettings);

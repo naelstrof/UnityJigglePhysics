@@ -58,7 +58,9 @@ namespace JigglePhysics {
         }
         
         void Start() {
-            SetRenderers(GetComponentsInChildren<Renderer>(true));
+            if (subscriptions == null || subscriptionCount == 0) {
+                SetRenderers(GetComponentsInChildren<Renderer>(true));
+            }
         }
         
         private void RevalulateVisiblity() {

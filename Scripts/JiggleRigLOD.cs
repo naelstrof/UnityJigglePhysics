@@ -6,7 +6,7 @@ namespace JigglePhysics {
     [DisallowMultipleComponent]
     public abstract class JiggleRigLOD : MonoBehaviour {
         protected List<IJiggleBlendable> jiggles;
-        protected bool wasActive;
+        protected bool? wasActive;
 
         protected virtual void Awake() {
             jiggles = new List<IJiggleBlendable>();
@@ -23,7 +23,7 @@ namespace JigglePhysics {
 
         private void Update() {
             if (!CheckActive()) {
-                if (wasActive) {
+                if (wasActive ?? true) {
                     foreach (var jiggle in jiggles) {
                         jiggle.enabled = false;
                     }
@@ -31,7 +31,7 @@ namespace JigglePhysics {
                 wasActive = false;
                 return;
             }
-            if (!wasActive) {
+            if ((!wasActive) ?? true) {
                 foreach (var jiggle in jiggles) {
                     jiggle.enabled = true;
                 }

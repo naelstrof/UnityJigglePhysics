@@ -143,6 +143,11 @@ public class JiggleBone {
         transform.SetLocalPositionAndRotation(bonePositionChangeCheck, boneRotationChangeCheck);
     }
 
+    public void ResetToLastValidPose() {
+        if (!hasTransform) return;
+        transform.SetLocalPositionAndRotation(lastValidPoseBoneLocalPosition, lastValidPoseBoneRotation);
+    }
+
     /// <summary>
     /// Matches the particle signal to the current pose, then undoes the pose. This is useful for confining the jiggles, like they got "grabbed".
     /// I would essentially use IK to set the bones to be grabbed. Then call this function so the virtual jiggle particles also move to the same location.

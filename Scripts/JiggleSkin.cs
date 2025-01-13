@@ -134,6 +134,12 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
         if (settleTimer >= JiggleRigBuilder.SETTLE_TIME) {
             PrepareTeleport();
         }
+
+        if (jiggleZones != null) {
+            foreach (JiggleZone zone in jiggleZones) {
+                zone?.ResetToLastValidPose();
+            }
+        }
     }
     
     

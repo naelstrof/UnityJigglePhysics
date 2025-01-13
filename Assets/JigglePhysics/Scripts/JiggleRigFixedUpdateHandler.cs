@@ -14,10 +14,16 @@ internal class JiggleRigFixedUpdateHandler : JiggleRigHandler<JiggleRigFixedUpda
             throw new UnityException( "Failed to create a sphere collider, this should never happen! Is a scene not loaded but a jiggle rig is?");
         }
         foreach (var jiggleRig in jiggleRigs) {
-            jiggleRig.Advance(deltaTime, gravity, timeAsDouble, timeAsDoubleOneStepBack, sphereCollider);
+            try {
+                jiggleRig.Advance(deltaTime, gravity, timeAsDouble, timeAsDoubleOneStepBack, sphereCollider);
+            } catch (System.Exception e) {
+                Debug.LogException(e);
+                invalidAdvancables.Add(jiggleRig);
+            }
         }
         CachedSphereCollider.DisableSphereCollider();
         JiggleRigBuilder.unitySubsystemFixedUpdateRegistration = false;
+        CommitRemovalOfInvalidAdvancables();
     }
 }
 

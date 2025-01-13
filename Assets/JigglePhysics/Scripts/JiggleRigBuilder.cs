@@ -420,9 +420,6 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
         if (settleTimer > SETTLE_TIME) {
             PrepareTeleport();
         }
-        foreach (JiggleRig rig in jiggleRigs) {
-            rig.ResetToLastValidPose();
-        }
     }
 
     public void Initialize(bool forceRegenerateJiggleTree = false) {

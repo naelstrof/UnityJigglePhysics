@@ -135,11 +135,6 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
             PrepareTeleport();
         }
 
-        if (jiggleZones != null) {
-            foreach (JiggleZone zone in jiggleZones) {
-                zone?.ResetToLastValidPose();
-            }
-        }
     }
     
     

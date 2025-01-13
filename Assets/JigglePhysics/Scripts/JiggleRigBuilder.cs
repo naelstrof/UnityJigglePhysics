@@ -86,6 +86,12 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
             }
         }
 
+        public void ResetToLastValidPose() {
+            for (int i = boneCount - 1; i >= 0; i--) {
+                simulatedPoints[i].ResetToLastValidPose();
+            }
+        }
+
         public bool GetInitialized() => boneCount != 0;
 
         public void SetTargetAndResetToLastValidPose() {
@@ -413,6 +419,9 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
 
         if (settleTimer > SETTLE_TIME) {
             PrepareTeleport();
+        }
+        foreach (JiggleRig rig in jiggleRigs) {
+            rig.ResetToLastValidPose();
         }
     }
 

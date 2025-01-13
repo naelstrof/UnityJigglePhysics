@@ -13,6 +13,13 @@ namespace JigglePhysics {
         
         private static Camera currentCamera;
 
+        public void SetDistance(float newDistance) {
+            distance = newDistance;
+        }
+
+        public void SetBlendDistance(float blendDistance) {
+            blend = blendDistance;
+        }
 
         protected virtual bool TryGetCamera(out Camera camera) {
             #if UNITY_EDITOR

@@ -8,6 +8,18 @@ internal class JiggleRigHandler<T> : MonoBehaviour where T : MonoBehaviour {
     private static T instance;
 
     protected static List<IJiggleAdvancable> jiggleRigs;
+    protected static HashSet<IJiggleAdvancable> invalidAdvancables;
+
+    protected void CommitRemovalOfInvalidAdvancables() {
+        if (invalidAdvancables.Count == 0) {
+            return;
+        }
+        jiggleRigs.RemoveAll(IsInvalid);
+    }
+
+    private bool IsInvalid(IJiggleAdvancable jiggleRig) {
+        return invalidAdvancables.Contains(jiggleRig);
+    }
 
     private static void CreateInstanceIfNeeded() {
         if (instance) {
@@ -15,7 +27,8 @@ internal class JiggleRigHandler<T> : MonoBehaviour where T : MonoBehaviour {
         }
 
         jiggleRigs ??= new List<IJiggleAdvancable>();
-        
+        invalidAdvancables ??= new HashSet<IJiggleAdvancable>();
+
         var obj = new GameObject("JiggleRigHandler", typeof(T)) {
             hideFlags = HideFlags.DontSave
         };
@@ -29,6 +42,7 @@ internal class JiggleRigHandler<T> : MonoBehaviour where T : MonoBehaviour {
         if (jiggleRigs.Count != 0) return;
         if (!instance) return;
         jiggleRigs = null;
+        invalidAdvancables = null;
         if (Application.isPlaying) {
             Destroy(instance.gameObject);
         } else {

@@ -9,8 +9,10 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
     public class JiggleZone : JiggleRigBuilder.JiggleRig {
         [Tooltip("How large of a radius the zone should effect, in target-space meters. (Scaling the target will effect the radius.)")]
         public float radius;
+        
+        // Legacy name for rootTransform, uses OnValidate to update, and on initialization tries to check for it.
         [HideInInspector, SerializeField]
-        public Transform target;
+        private Transform target;
         public JiggleZone(Transform rootTransform, JiggleSettingsBase jiggleSettings, ICollection<Transform> ignoredTransforms, ICollection<Collider> colliders) : base(rootTransform, jiggleSettings, ignoredTransforms, colliders) { }
         protected override void CreateSimulatedPoints(List<JiggleBone> outputPoints, ICollection<Transform> ignoredTransforms, Transform currentTransform, JiggleBone parentJiggleBone, int? parentID) {
             //base.CreateSimulatedPoints(outputPoints, ignoredTransforms, currentTransform, parentJiggleBone);
@@ -18,6 +20,17 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
             parent.SetChildID(1);
             outputPoints.Add(parent);
             outputPoints.Add(new JiggleBone(outputPoints, null, parent,0, 0f));
+        }
+
+        public void TryUpdateOldSerialization() {
+            if (target != null && GetRootTransform() == null) {
+                SetRootTransform(target);
+            }
+        }
+
+        public override void Initialize() {
+            TryUpdateOldSerialization();
+            base.Initialize();
         }
 
         public void JiggleZonePrecache() {
@@ -142,9 +155,6 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
         accumulation = UnityEngine.Random.Range(0f,JiggleRigBuilder.VERLET_TIME_STEP);
         jiggleZones ??= new List<JiggleZone>();
         foreach( JiggleZone zone in jiggleZones) {
-            if (zone.target != null && zone.GetRootTransform() == null) {
-                zone.SetRootTransform(zone.target);
-            }
             if (!zone.GetInitialized()) {
                 zone.Initialize();
             }
@@ -251,9 +261,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
         }
 
         foreach (var zone in jiggleZones) {
-            if (zone.target != null && zone.GetRootTransform() == null) {
-                zone.SetRootTransform(zone.target);
-            }
+            zone?.TryUpdateOldSerialization();
         }
 #endif
     }

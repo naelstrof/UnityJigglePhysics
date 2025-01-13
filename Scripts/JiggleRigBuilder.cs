@@ -46,9 +46,11 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
 
         private bool initialized => simulatedPoints != null;
 
-        public void SetRootTransform(Transform newTransform) {
+        protected void SetRootTransform(Transform newTransform) {
             rootTransform = newTransform;
+            if (!initialized) return;
             simulatedPoints = null;
+            Initialize();
         }
         public Transform GetRootTransform() => rootTransform;
         
@@ -215,7 +217,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
         /// <summary>
         /// Creates the virtual particle tree that is used to simulate the jiggles!
         /// </summary>
-        public void Initialize() {
+        public virtual void Initialize() {
             if (rootTransform == null) {
                 return;
             }

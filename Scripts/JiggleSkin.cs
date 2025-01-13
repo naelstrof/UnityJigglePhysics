@@ -9,6 +9,8 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
     public class JiggleZone : JiggleRigBuilder.JiggleRig {
         [Tooltip("How large of a radius the zone should effect, in target-space meters. (Scaling the target will effect the radius.)")]
         public float radius;
+        [HideInInspector, SerializeField]
+        public Transform target;
         public JiggleZone(Transform rootTransform, JiggleSettingsBase jiggleSettings, ICollection<Transform> ignoredTransforms, ICollection<Collider> colliders) : base(rootTransform, jiggleSettings, ignoredTransforms, colliders) { }
         protected override void CreateSimulatedPoints(List<JiggleBone> outputPoints, ICollection<Transform> ignoredTransforms, Transform currentTransform, JiggleBone parentJiggleBone, int? parentID) {
             //base.CreateSimulatedPoints(outputPoints, ignoredTransforms, currentTransform, parentJiggleBone);
@@ -140,6 +142,9 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
         accumulation = UnityEngine.Random.Range(0f,JiggleRigBuilder.VERLET_TIME_STEP);
         jiggleZones ??= new List<JiggleZone>();
         foreach( JiggleZone zone in jiggleZones) {
+            if (zone.target != null && zone.GetRootTransform() == null) {
+                zone.SetRootTransform(zone.target);
+            }
             if (!zone.GetInitialized()) {
                 zone.Initialize();
             }
@@ -241,13 +246,16 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
                 }
             }
         }
-#endif
         if (jiggleZones == null) {
             return;
         }
-        for(int i=jiggleZones.Count-1;i>8;i--) {
-            jiggleZones.RemoveAt(i);
+
+        foreach (var zone in jiggleZones) {
+            if (zone.target != null && zone.GetRootTransform() == null) {
+                zone.SetRootTransform(zone.target);
+            }
         }
+#endif
     }
 
     private void OnDestroy() {
@@ -265,6 +273,7 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
             zone.OnDrawGizmosSelected();
         }
     }
+    
     // CPU version of the skin transformation, untested, can be useful in reconstructing the deformation on the cpu.
     public Vector3 ApplyJiggle(Vector3 toPoint, float blend, double timeAsDouble) {
         Vector3 result = toPoint;

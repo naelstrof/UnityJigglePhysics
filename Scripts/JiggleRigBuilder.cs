@@ -46,6 +46,10 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
 
         private bool initialized => simulatedPoints != null;
 
+        public void SetRootTransform(Transform newTransform) {
+            rootTransform = newTransform;
+            simulatedPoints = null;
+        }
         public Transform GetRootTransform() => rootTransform;
         
         /// <summary>

@@ -221,8 +221,8 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
 
     private void UpdateMesh() {
         // Pack the data
-        packedVectors.Clear();
         foreach( var targetSkin in targetSkins) {
+            packedVectors.Clear();
             foreach (var zone in jiggleZones) {
                 Vector3 targetPointSkinSpace = targetSkin.rootBone.InverseTransformPoint(zone.GetRootTransform().position);
                 Vector3 verletPointSkinSpace = targetSkin.rootBone.InverseTransformPoint(zone.GetPointSolve());
@@ -231,13 +231,10 @@ public class JiggleSkin : MonoBehaviour, IJiggleAdvancable, IJiggleBlendable {
                 packedVectors.Add(new Vector4(verletPointSkinSpace.x, verletPointSkinSpace.y, verletPointSkinSpace.z,
                     zone.jiggleSettings.GetData().blend * blend));
             }
-        }
-        for(int i=packedVectors.Count;i<16;i++) {
-            packedVectors.Add(Vector4.zero);
-        }
-
-        // Send the data
-        foreach(SkinnedMeshRenderer targetSkin in targetSkins) {
+            for(int i=packedVectors.Count;i<16;i++) {
+                packedVectors.Add(Vector4.zero);
+            }
+            
             targetSkin.GetPropertyBlock(materialPropertyBlock);
             materialPropertyBlock.SetVectorArray(jiggleInfoNameID, packedVectors);
             targetSkin.SetPropertyBlock(materialPropertyBlock);

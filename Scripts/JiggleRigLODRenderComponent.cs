@@ -15,6 +15,10 @@ public class MonoBehaviorHider {
         public void OnBecameVisible() {
             VisibilityChange?.Invoke(true);
         }
+
+        private void OnDisable() {
+            VisibilityChange?.Invoke(false);
+        }
     }
 }
 

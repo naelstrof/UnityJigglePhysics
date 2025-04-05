@@ -18,7 +18,9 @@ namespace JigglePhysics {
 
         public void ClearRenderers() {
             for (int i = 0; i < subscriptionCount; i++) {
-                subscriptions[i].rendererSubscription.VisibilityChange -= subscriptions[i].action;
+                if (subscriptions[i].rendererSubscription != null) {
+                    subscriptions[i].rendererSubscription.VisibilityChange -= subscriptions[i].action;
+                }
             }
             subscriptions = null;
             subscriptionCount = 0;

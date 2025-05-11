@@ -460,6 +460,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
             foreach(JiggleRig rig in jiggleRigs) {
                 var data = rig.jiggleSettings.GetData();
                 data.blend *= blend;
+                data.blend *= rig.blend;
                 Vector3 acceleration = gravity * (data.gravityMultiplier * SQUARED_VERLET_TIME_STEP) + wind * (VERLET_TIME_STEP * data.airDrag);
                 rig.StepSimulation(data, time, acceleration, sphereCollider);
             }

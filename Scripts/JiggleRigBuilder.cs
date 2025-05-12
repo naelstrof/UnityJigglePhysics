@@ -93,6 +93,12 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
             }
         }
 
+        public void MatchAnimationInstantly() {
+            for (int i = boneCount - 1; i >= 0; i--) {
+                simulatedPoints[i].MatchAnimationInstantly(simulatedPoints);
+            }
+        }
+
         public bool GetInitialized() => boneCount != 0;
 
         public void SetTargetAndResetToLastValidPose() {
@@ -496,6 +502,12 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
         }
     }
 
+    public void MatchAnimationInstantly() {
+        foreach (JiggleRig rig in jiggleRigs) {
+            rig.MatchAnimationInstantly();
+        }
+    }
+    
     private void OnDrawGizmos() {
         if (jiggleRigs == null || !enabled) {
             return;

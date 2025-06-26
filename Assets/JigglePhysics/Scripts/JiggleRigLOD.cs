@@ -45,6 +45,7 @@ namespace JigglePhysics {
         protected abstract bool CheckActive();
 
         private void OnDisable() {
+            wasActive = false;
             foreach (var jiggle in jiggles) {
                 jiggle.enabled = false;
             }

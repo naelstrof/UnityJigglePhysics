@@ -1,2 +1,2 @@
 deploy:
-	git subtree push --prefix Assets/JigglePhysics origin upm
+	git subtree push --prefix Assets/JigglePhysics origin cv-upm

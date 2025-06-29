@@ -24,7 +24,6 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
 
     [Serializable]
     public class JiggleRig {
-        [field: SerializeField, Range(0f,1f)] public float blend { get; set; } = 1f;
         [SerializeField][Tooltip("The root bone from which an individual JiggleRig will be constructed. The JiggleRig encompasses all children of the specified root.")][FormerlySerializedAs("target")]
         private Transform rootTransform;
         [Tooltip("The settings that the rig should update with, create them using the Create->JigglePhysics->Settings menu option.")]
@@ -466,7 +465,6 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
             foreach(JiggleRig rig in jiggleRigs) {
                 var data = rig.jiggleSettings.GetData();
                 data.blend *= blend;
-                data.blend *= rig.blend;
                 Vector3 acceleration = gravity * (data.gravityMultiplier * SQUARED_VERLET_TIME_STEP) + wind * (VERLET_TIME_STEP * data.airDrag);
                 rig.StepSimulation(data, time, acceleration, sphereCollider);
             }
@@ -477,7 +475,7 @@ public class JiggleRigBuilder : MonoBehaviour, IJiggleAdvancable, IJiggleBlendab
         
         foreach (JiggleRig rig in jiggleRigs) {
             var data = rig.jiggleSettings.GetData();
-            rig.Pose(debugDraw, timeAsDoubleOneStepBack,data.blend * blend * rig.blend);
+            rig.Pose(debugDraw, timeAsDoubleOneStepBack,data.blend * blend);
         }
     }
 

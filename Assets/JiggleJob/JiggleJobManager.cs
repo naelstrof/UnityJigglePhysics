@@ -57,8 +57,12 @@ public static class JiggleJobManager {
                     return;
                 }
 
-                float timeCorrection = Time.fixedDeltaTime;
+                // TODO: Revisit this issue after FEELING the solve in VR in context
+                // The issue here is that we are having to operate 3 full frames in the past
+                // which might be noticable latency
+                var timeCorrection = FIXED_DELTA_TIME * 2f;
                 double t = ((Time.timeAsDouble-timeCorrection) - job.previousTimeStamp) / diff;
+                Debug.Log(t);
                 var position = Vector3.LerpUnclamped(prevPosition, newPosition, (float)t);
                 var rotation = Quaternion.SlerpUnclamped(prevRotation, newRotation, (float)t);
                 if (frame % 2 == 0) {

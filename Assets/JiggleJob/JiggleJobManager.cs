@@ -11,10 +11,10 @@ public static class JiggleJobManager {
     private static List<JiggleTree> jiggleTrees;
 
     public static void AddJiggleTree(Transform[] bones) {
-        jiggleTrees.Add(new JiggleTree() {
-            bones = bones,
-            jiggleJob = new JiggleJobDoubleBuffer(bones.Length)
-        });
+        //jiggleTrees.Add(new JiggleTree() {
+            //bones = bones,
+            //jiggleJob = new JiggleJobDoubleBuffer(bones)
+        //});
     }
     
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

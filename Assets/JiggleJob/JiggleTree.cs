@@ -5,16 +5,22 @@ using UnityEngine;
 // NOT an IJobParallelForTransform for each bone
 public class JiggleTree {
     public Transform[] bones;
+    public JiggleBoneParameters[] data;
+    
     public JiggleJobDoubleBuffer jiggleJob;
     public bool hasJobHandle;
     public JobHandle jobHandle;
+
+    public JiggleTree(Transform[] bones, JiggleBoneParameters[] data) {
+        
+    }
 
     public void Simulate() {
         if (hasJobHandle) {
             jobHandle.Complete();
         }
         jiggleJob.Flip();
-        jiggleJob.SetBones(bones);
+        jiggleJob.ReadBones();
         jobHandle = jiggleJob.Schedule();
         hasJobHandle = true;
     }

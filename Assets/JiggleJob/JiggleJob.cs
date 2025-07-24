@@ -105,8 +105,8 @@ public struct JiggleJob : IJob {
             var current_pose_dir = (point.pose - point.parentPose).normalized;
             var constraintTarget = from_to_rot * (current_pose_dir * currentLength);
 
-            var error = (point.workingPosition - (parent.desiredConstraint + constraintTarget)).magnitude;
-            error /= point.desiredLengthToParent;
+            var error = Vector3.Distance(point.workingPosition, parent.desiredConstraint + constraintTarget);
+            error /= currentLength;
             error = Mathf.Min(error, 1.0f);
             error = Mathf.Pow(error, parent.parameters.elasticitySoften * parent.parameters.elasticitySoften);
             point.desiredConstraint = Vector3.Lerp(point.workingPosition, parent.desiredConstraint + constraintTarget, parent.parameters.angleElasticity * parent.parameters.angleElasticity * error);

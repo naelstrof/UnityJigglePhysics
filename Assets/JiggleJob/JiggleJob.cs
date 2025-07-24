@@ -12,6 +12,7 @@ public struct JiggleJob : IJob {
     public NativeArray<Matrix4x4> transformMatrices;
     public NativeArray<JiggleBoneSimulatedPoint> simulatedPoints;
     public NativeArray<Vector3> debug;
+    public NativeArray<Vector3> targets;
     public NativeArray<Matrix4x4> output;
 
     private unsafe void Cache() {
@@ -177,6 +178,7 @@ public struct JiggleJob : IJob {
         int simulatedPointCount = simulatedPoints.Length;
         for (int i = 0; i < simulatedPointCount; i++) {
             var point = simulatedPoints[i];
+            targets[i] = point.pose;
             if (point.childenCount == 0) {
                 continue;
             }

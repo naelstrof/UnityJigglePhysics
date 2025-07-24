@@ -77,4 +77,45 @@ public class JiggleJobDoubleBuffer {
         flips++;
         flipped = !flipped;
     }
+
+    public void DrawDebug() {
+        Debug.Log("DEBUG DRAWING");
+        for (var index = 0; index < finishedJob.simulatedPoints.Length; index++) {
+            var simulatedPoint = finishedJob.simulatedPoints[index];
+            if (simulatedPoint.parentIndex == -1) continue;
+            DebugDrawSphere(finishedJob.debug[simulatedPoint.parentIndex], 0.2f, Color.cyan);
+            Debug.DrawLine(finishedJob.debug[index], finishedJob.debug[simulatedPoint.parentIndex], Color.cyan);
+        }
+    }
+    
+    public static void DebugDrawSphere(Vector3 origin, float radius, Color color, int segments = 32) {
+        float angleStep = 360f / segments;
+        Vector3 prevPoint = Vector3.zero;
+        Vector3 currPoint = Vector3.zero;
+
+        // Draw circle in XY plane
+        for (int i = 0; i <= segments; i++) {
+            float angle = Mathf.Deg2Rad * i * angleStep;
+            currPoint = origin + new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0);
+            if (i > 0) Debug.DrawLine(prevPoint, currPoint, color);
+            prevPoint = currPoint;
+        }
+
+        // Draw circle in XZ plane
+        for (int i = 0; i <= segments; i++) {
+            float angle = Mathf.Deg2Rad * i * angleStep;
+            currPoint = origin + new Vector3(Mathf.Cos(angle) * radius, 0, Mathf.Sin(angle) * radius);
+            if (i > 0) Debug.DrawLine(prevPoint, currPoint, color);
+            prevPoint = currPoint;
+        }
+
+        // Draw circle in YZ plane
+        for (int i = 0; i <= segments; i++) {
+            float angle = Mathf.Deg2Rad * i * angleStep;
+            currPoint = origin + new Vector3(0, Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius);
+            if (i > 0) Debug.DrawLine(prevPoint, currPoint, color);
+            prevPoint = currPoint;
+        }
+    }
+    
 }

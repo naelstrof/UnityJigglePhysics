@@ -54,7 +54,7 @@ public static class JiggleJobManager {
                 double t = ((Time.timeAsDouble-timeCorrection) - jiggleJob.previousJobOutput.timeStamp) / diff;
                 var position = Vector3.LerpUnclamped(prevPosition, newPosition, (float)t);
                 var rotation = Quaternion.SlerpUnclamped(prevRotation, newRotation, (float)t);
-                Debug.DrawRay(position + Vector3.up*Mathf.Repeat(Time.timeSinceLevelLoad,5f), Vector3.up, Color.magenta, 5f);
+                //Debug.DrawRay(position + Vector3.up*Mathf.Repeat(Time.timeSinceLevelLoad,5f), Vector3.up, Color.magenta, 5f);
 
                 jiggleTree.bones[i].SetPositionAndRotation(position, rotation);
             }
@@ -66,10 +66,17 @@ public static class JiggleJobManager {
             jiggleTree.Simulate();
         }
     }
+
+    private static void DebugDraw() {
+        foreach (var jiggleTree in jiggleTrees) {
+            jiggleTree.DebugDraw();
+        }
+    }
     
     public static void Update(double deltaTime) {
         accumulatedTime += deltaTime;
         if (accumulatedTime < FIXED_DELTA_TIME) {
+            DebugDraw();
             return;
         }
         while (accumulatedTime >= FIXED_DELTA_TIME) {
@@ -77,5 +84,6 @@ public static class JiggleJobManager {
             time += FIXED_DELTA_TIME;
         }
         Simulate();
+        DebugDraw();
     }
 }

@@ -35,4 +35,9 @@ public class JiggleTree {
         jobHandle = jiggleJob.Schedule();
         hasJobHandle = true;
     }
+
+    public void DebugDraw() {
+        jiggleJob.DrawDebug();
+    }
+    
 }

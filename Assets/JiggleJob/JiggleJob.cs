@@ -48,6 +48,7 @@ public struct JiggleJob : IJob {
         int simulatedPointCount = simulatedPoints.Length;
         for (int i = 0; i < simulatedPointCount; i++) {
             var point = simulatedPoints[i];
+            if (point.parentIndex==-1) continue;
             var parent = simulatedPoints[point.parentIndex];
             
             var delta = point.position - point.lastPosition;

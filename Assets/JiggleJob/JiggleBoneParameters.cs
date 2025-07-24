@@ -35,7 +35,7 @@ public struct JiggleBoneInputParameters {
             lengthElasticity = advancedToggle?1f-stretch:0f,
             elasticitySoften = advancedToggle?soften:0f,
             gravityMultiplier = gravity,
-            blend = blend,
+            blend = 1f,
             drag = drag,
             airDrag = airDrag
         };

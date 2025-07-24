@@ -32,30 +32,24 @@ public class JiggleRig : MonoBehaviour {
         var tails = 0;
         for (var index = 0; index < transforms.Length; index++) {
             var transform = transforms[index];
-            if (transform.childCount == 0) {
-                childlessTransformIndices.Add(index);
-                tails++;
-            }
+            if (transform.childCount != 0) continue;
+            childlessTransformIndices.Add(index);
+            tails++;
         }
 
         var points = new JiggleBoneSimulatedPoint[1+transforms.Length+tails];
-        for (int i = 0; i < points.Length; i++) {
-            unsafe {
+        Debug.Log($"Tails: {tails}");
+        unsafe {
+            for (int i = 0; i < points.Length; i++) {
                 var transformIndex = i - 1;
             
                 // BACK PROJECTED VIRTUAL ROOT
                 if (transformIndex < 0) {
                     points[i] = new JiggleBoneSimulatedPoint {
                         parentIndex = -1,
-                        childenCount = 1,
                         parameters = _jiggleBoneInputParameters.ToJiggleBoneParameters(),
-                        transformIndex = i
+                        transformIndex = -1
                     };
-                    fixed (int* children = points[i].childrenIndices) {
-                        for (int j = 0; j < JiggleBoneSimulatedPoint.MAX_CHILDREN; j++) {
-                            children[i] = j == 0 ? 0 : -1;
-                        }
-                    }
                     continue;
                 }
             
@@ -63,52 +57,57 @@ public class JiggleRig : MonoBehaviour {
                 var tailIndex = transformIndex - transforms.Length;
                 if (tailIndex >= 0) {
                     points[i] = new JiggleBoneSimulatedPoint {
-                        parentIndex = childlessTransformIndices[tailIndex],
-                        childenCount = 0,
+                        parentIndex = childlessTransformIndices[tailIndex]+1,
                         parameters = _jiggleBoneInputParameters.ToJiggleBoneParameters(),
-                        transformIndex = i
+                        transformIndex = -1
                     };
-                    fixed (int* children = points[i].childrenIndices) {
-                        for (int j = 0; j < JiggleBoneSimulatedPoint.MAX_CHILDREN; j++) {
-                            children[i] = -1;
-                        }
-                    }
                     continue;
                 }
             
                 // TRANSFORMS
-                var childIndexes = new List<int>();
-                for (int childSearchIndex = 0; childSearchIndex < transforms.Length; childSearchIndex++) {
-                    if (transforms[childSearchIndex].parent == transforms[transformIndex]) {
-                        childIndexes.Add(childSearchIndex);
-                    }
-                }
-                int childCount = childIndexes.Count;
-                while (childIndexes.Count < JiggleBoneSimulatedPoint.MAX_CHILDREN) {
-                    childIndexes.Add(-1);
-                }
                 var parentIndex = -1;
-                if (transforms[transformIndex].parent != null) {
+                if (transformIndex == 0) {
+                    parentIndex = 0;
+                } else {
                     for (int parentSearchIndex = 0; parentSearchIndex < transforms.Length; parentSearchIndex++) {
-                        if (transforms[parentSearchIndex] == transforms[transformIndex].parent) {
-                            parentIndex = parentSearchIndex;
-                            break;
-                        }
+                        if (transforms[parentSearchIndex] != transforms[transformIndex].parent) continue;
+                        parentIndex = parentSearchIndex + 1;
+                        break;
                     }
                 }
                 points[i] = new JiggleBoneSimulatedPoint {
                     parentIndex = parentIndex,
-                    childenCount = childCount,
                     parameters = _jiggleBoneInputParameters.ToJiggleBoneParameters(),
-                    transformIndex = i
+                    transformIndex = transformIndex
                 };
-                fixed (int* children = points[i].childrenIndices) {
-                    for (int j = 0; j < JiggleBoneSimulatedPoint.MAX_CHILDREN; j++) {
-                        children[i] = childIndexes[i];
+            }
+            
+            // Assign child indices by searching for parents
+            for (int i = 0; i < points.Length; i++) {
+                int childIndex = 0;
+                if (i < points.Length - tails) {
+                    for (int childCheckIndex = i+1; childCheckIndex < points.Length; childCheckIndex++) {
+                        if (points[childCheckIndex].parentIndex == i) {
+                            points[i].childrenIndices[childIndex] = childCheckIndex;
+                            childIndex++;
+                        }
                     }
                 }
+                points[i].childenCount = childIndex;
+                while (childIndex < JiggleBoneSimulatedPoint.MAX_CHILDREN) {
+                    points[i].childrenIndices[childIndex] = -1;
+                    childIndex++;
+                }
             }
+
+            //for (int i = 0; i < points.Length; i++) {
+            //    for (int j = 0; j < JiggleBoneSimulatedPoint.MAX_CHILDREN; j++) {
+            //        Debug.Log(points[i].childrenIndices[j]);
+            //    }
+            //    Debug.Log("----");
+            //}
         }
+
         return points;
     }
 

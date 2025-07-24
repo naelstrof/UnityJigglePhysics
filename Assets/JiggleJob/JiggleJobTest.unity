@@ -146,14 +146,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 22281265}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0.015245962, w: 0.9998838}
   m_LocalPosition: {x: 0, y: 1.054, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1063328646}
   m_Father: {fileID: 668882788}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -1.747}
 --- !u!65 &22281267
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -773,7 +773,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1988809529}
-  m_Enabled: 0
+  m_Enabled: 1
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: b0dc6fb14377c228aaccbf22b98515a8, type: 2}
   m_CullingMode: 0
@@ -818,13 +818,13 @@ MonoBehaviour:
   _rootBone: {fileID: 668882788}
   _jiggleBoneInputParameters:
     advancedToggle: 1
-    stiffness: 0.424
-    soften: 0.438
+    stiffness: 0.482
+    soften: 1
     angleLimit: 0
-    rootStretch: 0.43
-    stretch: 0.44
-    drag: 0.432
-    airDrag: 0.446
+    rootStretch: 0.074
+    stretch: 0.073
+    drag: 0.057
+    airDrag: 0.557
     gravity: 0
     blend: 0
 --- !u!1660057539 &9223372036854775807

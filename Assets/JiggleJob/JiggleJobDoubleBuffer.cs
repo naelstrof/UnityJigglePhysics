@@ -18,6 +18,8 @@ public class JiggleJobDoubleBuffer {
     public JiggleJob jobB;
     public JiggleBulkTransformRead bulkRead;
     public TransformAccessArray transformAccessArray;
+    public Transform[] bones;
+    public Matrix4x4[] boneMatrices;
     public JiggleJobOutput previousJobOutput;
     private ref JiggleJob inProgressJob => ref flipped ? ref jobB : ref jobA;
     private ref JiggleJob finishedJob => ref flipped ? ref jobA : ref jobB;
@@ -27,9 +29,12 @@ public class JiggleJobDoubleBuffer {
     public NativeArray<Matrix4x4> finishedOutput => finishedJob.output;
 
     public void ReadBones() {
-        var handle = bulkRead.Schedule(transformAccessArray);
-        handle.Complete();
-        inProgressJob.transformMatrices.CopyFrom(bulkRead.matrices);
+        //var handle = bulkRead.Schedule(transformAccessArray);
+        //handle.Complete();
+        for (int i = 0; i < boneMatrices.Length; i++) {
+            boneMatrices[i] = bones[i].localToWorldMatrix;
+        }
+        inProgressJob.transformMatrices.CopyFrom(boneMatrices);
         inProgressJob.timeStamp = Time.timeAsDouble;
         inProgressJob.gravity = Physics.gravity;
     }
@@ -67,6 +72,12 @@ public class JiggleJobDoubleBuffer {
         
         transformAccessArray = new TransformAccessArray(bones);
         flipped = false;
+        
+        this.bones = new Transform[bones.Length];
+        for(int i=0;i<bones.Length;i++) {
+            this.bones[i] = bones[i];
+        }
+        boneMatrices = new Matrix4x4[bones.Length];
     }
 
     public void Flip() {

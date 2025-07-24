@@ -26,7 +26,7 @@ public struct JiggleJob : IJob {
                     point.parentPose = transformMatrices[child.transformIndex].GetPosition() - Vector3.up*0.5f;
                     point.desiredLengthToParent = 0.25f;
                 } else {
-                    var diff = transformMatrices[childChild.transformIndex].GetPosition() - transformMatrices[child.transformIndex].GetPosition();
+                    var diff = transformMatrices[child.transformIndex].GetPosition() - transformMatrices[childChild.transformIndex].GetPosition();
                     point.pose = transformMatrices[child.transformIndex].GetPosition() + diff;
                     point.parentPose = transformMatrices[child.transformIndex].GetPosition() + diff*2f;
                     point.desiredLengthToParent = diff.magnitude;
@@ -37,7 +37,7 @@ public struct JiggleJob : IJob {
                 var parent = simulatedPoints[point.parentIndex];
                 point.pose = transformMatrices[point.transformIndex].GetPosition();
                 point.parentPose = parent.pose;
-                point.desiredLengthToParent = Vector3.Distance(point.pose, point.parentPose);
+                point.desiredLengthToParent = Vector3.Distance(point.pose, parent.pose);
             } else { // virtual end particles
                 var parent = simulatedPoints[point.parentIndex];
                 point.pose = (parent.pose*2f - parent.parentPose);

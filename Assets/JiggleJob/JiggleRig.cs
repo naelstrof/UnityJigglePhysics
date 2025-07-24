@@ -79,7 +79,7 @@ public class JiggleRig : MonoBehaviour {
                 // TRANSFORMS
                 var childIndexes = new List<int>();
                 for (int childSearchIndex = 0; childSearchIndex < transforms.Length; childSearchIndex++) {
-                    if (transforms[childSearchIndex].parent == transforms[i]) {
+                    if (transforms[childSearchIndex].parent == transforms[transformIndex]) {
                         childIndexes.Add(childSearchIndex);
                     }
                 }
@@ -88,9 +88,9 @@ public class JiggleRig : MonoBehaviour {
                     childIndexes.Add(-1);
                 }
                 var parentIndex = -1;
-                if (transforms[i].parent != null) {
+                if (transforms[transformIndex].parent != null) {
                     for (int parentSearchIndex = 0; parentSearchIndex < transforms.Length; parentSearchIndex++) {
-                        if (transforms[parentSearchIndex] == transforms[i].parent) {
+                        if (transforms[parentSearchIndex] == transforms[transformIndex].parent) {
                             parentIndex = parentSearchIndex;
                             break;
                         }

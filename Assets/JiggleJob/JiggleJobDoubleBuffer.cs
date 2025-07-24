@@ -29,6 +29,7 @@ public class JiggleJobDoubleBuffer {
     public void ReadBones() {
         var handle = bulkRead.Schedule(transformAccessArray);
         handle.Complete();
+        inProgressJob.simulatedPoints.CopyFrom(finishedJob.simulatedPoints);
         inProgressJob.transformMatrices.CopyFrom(bulkRead.matrices);
         inProgressJob.timeStamp = Time.timeAsDouble;
         inProgressJob.gravity = Physics.gravity;

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.Jobs;
 
 public class JiggleJobDoubleBuffer {
@@ -28,22 +29,26 @@ public class JiggleJobDoubleBuffer {
     public void ReadBones() {
         var handle = bulkRead.Schedule(transformAccessArray);
         handle.Complete();
-        inProgressJob.bones.CopyFrom(bulkRead.matrices);
+        inProgressJob.transformMatrices.CopyFrom(bulkRead.matrices);
         inProgressJob.timeStamp = Time.timeAsDouble;
+        inProgressJob.gravity = Physics.gravity;
     }
 
     public JobHandle Schedule() {
         return inProgressJob.Schedule();
     }
     
-    public JiggleJobDoubleBuffer(Transform[] bones) {
+    public JiggleJobDoubleBuffer(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
         var boneCount = bones.Length;
+        var pointCount = points.Length;
         jobA = new JiggleJob() {
-            bones = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
+            transformMatrices = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
+            simulatedPoints = new NativeArray<JiggleBoneSimulatedPoint>(pointCount, Allocator.Persistent),
             output = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
         };
         jobB = new JiggleJob() {
-            bones = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
+            transformMatrices = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
+            simulatedPoints = new NativeArray<JiggleBoneSimulatedPoint>(pointCount, Allocator.Persistent),
             output = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
         };
         previousJobOutput = new JiggleJobOutput() {
@@ -54,6 +59,10 @@ public class JiggleJobDoubleBuffer {
         bulkRead = new JiggleBulkTransformRead() {
             matrices = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
         };
+        
+        jobA.simulatedPoints.CopyFrom(points);
+        jobB.simulatedPoints.CopyFrom(points);
+        
         transformAccessArray = new TransformAccessArray(bones);
         flipped = false;
     }

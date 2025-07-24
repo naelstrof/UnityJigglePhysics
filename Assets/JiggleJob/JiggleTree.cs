@@ -5,14 +5,25 @@ using UnityEngine;
 // NOT an IJobParallelForTransform for each bone
 public class JiggleTree {
     public Transform[] bones;
-    public JiggleBoneParameters[] data;
+    public JiggleBoneSimulatedPoint[] points;
     
     public JiggleJobDoubleBuffer jiggleJob;
     public bool hasJobHandle;
     public JobHandle jobHandle;
 
-    public JiggleTree(Transform[] bones, JiggleBoneParameters[] data) {
-        
+    public JiggleTree(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
+        var boneCount = bones.Length;
+        var pointCount = points.Length;
+        this.bones = new Transform[boneCount];
+        this.points = new JiggleBoneSimulatedPoint[pointCount];
+        for (int i = 0; i < pointCount; i++) {
+            this.points[i] = points[i];
+        }
+        for (int i = 0; i < boneCount; i++) {
+            this.bones[i] = bones[i];
+        }
+
+        jiggleJob = new JiggleJobDoubleBuffer(this.bones, this.points);
     }
 
     public void Simulate() {

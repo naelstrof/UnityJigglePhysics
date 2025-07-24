@@ -41,6 +41,7 @@ public struct JiggleJob : IJob {
                 point.parentPose = parent.pose;
                 point.desiredLengthToParent = Vector3.Distance(point.pose, point.parentPose);
             }
+            
             simulatedPoints[i] = point;
         }
     }
@@ -231,8 +232,8 @@ public struct JiggleJob : IJob {
     public void Execute() {
         try {
             Cache();
-            //VerletIntegrate();
-            //Constrain();
+            VerletIntegrate();
+            Constrain();
             FinishStep();
             ApplyPose();
         } catch (Exception e) {

@@ -757,7 +757,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1988809532}
   - component: {fileID: 1988809531}
-  - component: {fileID: 1988809530}
   - component: {fileID: 1988809533}
   m_Layer: 0
   m_Name: AnimatedThing
@@ -766,18 +765,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1988809530
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1988809529}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 22017fcb0378a2f3882ef20e6991035e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!95 &1988809531
 Animator:
   serializedVersion: 7
@@ -786,7 +773,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1988809529}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: b0dc6fb14377c228aaccbf22b98515a8, type: 2}
   m_CullingMode: 0
@@ -831,13 +818,13 @@ MonoBehaviour:
   _rootBone: {fileID: 668882788}
   _jiggleBoneInputParameters:
     advancedToggle: 1
-    stiffness: 47.1
-    soften: 47.9
+    stiffness: 0.424
+    soften: 0.438
     angleLimit: 0
-    rootStretch: 47.7
-    stretch: 47.5
-    drag: 48.2
-    airDrag: 48.4
+    rootStretch: 0.43
+    stretch: 0.44
+    drag: 0.432
+    airDrag: 0.446
     gravity: 0
     blend: 0
 --- !u!1660057539 &9223372036854775807

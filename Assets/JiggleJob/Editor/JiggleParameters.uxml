@@ -1,0 +1,16 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Assets/JiggleJob/Editor/JiggleStyles.uss?fileID=7433441132597879392&amp;guid=9a2f78f6a51166c4ca0e12830ed7e7ab&amp;type=3#JiggleStyles" />
+    <ui:Label text="Jiggle Parameters" class="title" style="margin-bottom: 20px;" />
+    <ui:VisualElement name="VisualElement">
+        <ui:Toggle label="Toggle" name="AdvancedToggle" />
+        <ui:Slider label="Slider" value="42" high-value="100" name="StiffnessSlider" />
+        <ui:VisualElement name="AdvancedSection" style="flex-grow: 1;">
+            <ui:Slider label="Slider" value="42" high-value="100" name="SoftenSlider" />
+            <ui:Slider label="Slider" value="42" high-value="100" name="RootStretchSlider" />
+            <ui:Slider label="Slider" value="42" high-value="100" name="StretchSlider" />
+        </ui:VisualElement>
+        <ui:Slider label="Slider" value="42" high-value="100" name="DragSlider" />
+        <ui:Slider label="Slider" value="42" high-value="100" name="AirDragSlider" />
+        <ui:FloatField label="Float Field" value="42.2" name="GravityField" />
+    </ui:VisualElement>
+</ui:UXML>

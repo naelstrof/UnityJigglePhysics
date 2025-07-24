@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class JiggleBoneSimulatedPoint {
+public struct JiggleBoneSimulatedPoint {
     public JiggleBoneParameters parameters;
     public JiggleBoneIntrinsic intrinsic;
     public int transformIndex;

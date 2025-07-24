@@ -27,7 +27,6 @@ public class JiggleTree {
     }
 
     public void Simulate() {
-        Debug.Log("hello?");
         if (hasJobHandle) {
             jobHandle.Complete();
         }

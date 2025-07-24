@@ -38,7 +38,6 @@ public class JiggleRig : MonoBehaviour {
         }
 
         var points = new JiggleBoneSimulatedPoint[1+transforms.Length+tails];
-        Debug.Log($"Tails: {tails}");
         unsafe {
             for (int i = 0; i < points.Length; i++) {
                 var transformIndex = i - 1;

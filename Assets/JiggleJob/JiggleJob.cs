@@ -41,6 +41,7 @@ public struct JiggleJob : IJob {
                 point.parentPose = parent.pose;
                 point.desiredLengthToParent = Vector3.Distance(point.pose, point.parentPose);
             }
+            simulatedPoints[i] = point;
         }
     }
 
@@ -48,7 +49,9 @@ public struct JiggleJob : IJob {
         int simulatedPointCount = simulatedPoints.Length;
         for (int i = 0; i < simulatedPointCount; i++) {
             var point = simulatedPoints[i];
-            if (point.parentIndex==-1) continue;
+            if (point.parentIndex == -1) {
+                continue;
+            }
             var parent = simulatedPoints[point.parentIndex];
             
             var delta = point.position - point.lastPosition;
@@ -59,6 +62,7 @@ public struct JiggleJob : IJob {
             } else {
                 point.workingPosition = point.position + velocity * (1f-point.parameters.airDrag) + localSpaceVelocity * (1f-point.parameters.drag) + gravity * point.parameters.gravityMultiplier * (float)JiggleJobManager.FIXED_DELTA_TIME_SQUARED;
             }
+            simulatedPoints[i] = point;
         }
     }
 
@@ -78,6 +82,7 @@ public struct JiggleJob : IJob {
                 var tail = transformMatrices[child.transformIndex].GetPosition();
                 var diffasdf = head - tail;
                 parent.desiredConstraint = point.desiredConstraint + diffasdf;
+                simulatedPoints[i] = point;
                 continue;
             }
             #endregion
@@ -105,6 +110,7 @@ public struct JiggleJob : IJob {
             
             // DO COLLISIONS HERE
 
+
             #region Length Constraint
             var length_elasticity = parent.parameters.lengthElasticity * parent.parameters.lengthElasticity;
             var diff = point.desiredConstraint - parent.desiredConstraint;
@@ -112,10 +118,11 @@ public struct JiggleJob : IJob {
             forwardConstraint = Vector3.Lerp(point.desiredConstraint, parent.desiredConstraint + dir * point.desiredLengthToParent, length_elasticity);
             point.desiredConstraint = forwardConstraint;
             #endregion
-
+            
             #region Back-propagated motion for collisions
             if (parent.parameters is { angleElasticity: 1f, lengthElasticity: 1f }) { // FIXME: Also check if collisions are disabled
                 point.workingPosition = forwardConstraint;
+                simulatedPoints[i] = point;
                 continue;
             }
 
@@ -143,6 +150,7 @@ public struct JiggleJob : IJob {
             } else {
                 point.workingPosition = forwardConstraint;
             }
+            simulatedPoints[i] = point;
             #endregion
         }
     }
@@ -153,6 +161,7 @@ public struct JiggleJob : IJob {
             var point = simulatedPoints[i];
             point.lastPosition = point.position;
             point.position = point.workingPosition;
+            simulatedPoints[i] = point;
         }
     }
 
@@ -173,6 +182,7 @@ public struct JiggleJob : IJob {
 
             if (point.parentIndex == -1) {
                 point.rollingError = Quaternion.identity;
+                simulatedPoints[i] = point;
                 continue;
             }
 
@@ -214,14 +224,15 @@ public struct JiggleJob : IJob {
             loc += (prot * diff) * point.parameters.blend;
             output[point.transformIndex] = Matrix4x4.Translate(loc) * Matrix4x4.Rotate(prot) * Matrix4x4.Rotate(animPoseToPhysicsPose) * Matrix4x4.Rotate(rot) * Matrix4x4.Scale(scale);
             point.rollingError = Quaternion.Slerp(parent.rollingError, Quaternion.identity, point.parameters.blend) * animPoseToPhysicsPose;
+            simulatedPoints[i] = point;
         }  
     }
     
     public void Execute() {
         try {
             Cache();
-            VerletIntegrate();
-            Constrain();
+            //VerletIntegrate();
+            //Constrain();
             FinishStep();
             ApplyPose();
         } catch (Exception e) {

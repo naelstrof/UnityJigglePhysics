@@ -31,6 +31,8 @@ public struct JiggleJob : IJob {
                     point.parentPose = transformMatrices[child.transformIndex].GetPosition() + diff*2f;
                     point.desiredLengthToParent = diff.magnitude;
                 }
+                point.desiredConstraint = point.pose;
+                point.workingPosition = point.pose;
             } else if (point.transformIndex != -1) { // "real" particles
                 var parent = simulatedPoints[point.parentIndex];
                 point.pose = transformMatrices[point.transformIndex].GetPosition();
@@ -38,7 +40,7 @@ public struct JiggleJob : IJob {
                 point.desiredLengthToParent = Vector3.Distance(point.pose, point.parentPose);
             } else { // virtual end particles
                 var parent = simulatedPoints[point.parentIndex];
-                point.pose = parent.pose - parent.parentPose;
+                point.pose = (parent.pose*2f - parent.parentPose);
                 point.parentPose = parent.pose;
                 point.desiredLengthToParent = Vector3.Distance(point.pose, point.parentPose);
             }
@@ -121,6 +123,10 @@ public struct JiggleJob : IJob {
             point.desiredConstraint = forwardConstraint;
             #endregion
             
+            point.workingPosition = forwardConstraint;
+            simulatedPoints[i] = point;
+            continue;
+            
             #region Back-propagated motion for collisions
             if (parent.parameters is { angleElasticity: 1f, lengthElasticity: 1f }) { // FIXME: Also check if collisions are disabled
                 point.workingPosition = forwardConstraint;
@@ -183,8 +189,6 @@ public struct JiggleJob : IJob {
             var local_working_position = point.workingPosition;
 
             if (point.parentIndex == -1) {
-                point.rollingError = Quaternion.identity;
-                simulatedPoints[i] = point;
                 continue;
             }
 
@@ -211,21 +215,9 @@ public struct JiggleJob : IJob {
             var animPoseToPhysicsPose = Quaternion.Slerp(Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector), Quaternion.identity, 1f - point.parameters.blend);
 
             var mat = transformMatrices[point.transformIndex];
-            
-            var loc = mat.GetPosition();
             var rot = mat.rotation;
             var scale = mat.lossyScale;
-            
-            var parent = simulatedPoints[point.parentIndex];
-            var prot = Quaternion.Slerp(Quaternion.Inverse(parent.rollingError), Quaternion.identity, 1f-point.parameters.blend);
-
-            var parent_pose_aim = local_pose - point.parentPose;
-            var adjusted_pose = parent.workingPosition + (parent.rollingError * parent_pose_aim);
-            var diff = (point.workingPosition) - adjusted_pose;
-
-            loc += (prot * diff) * point.parameters.blend;
-            output[point.transformIndex] = Matrix4x4.Translate(loc) * Matrix4x4.Rotate(prot) * Matrix4x4.Rotate(animPoseToPhysicsPose) * Matrix4x4.Rotate(rot) * Matrix4x4.Scale(scale);
-            point.rollingError = Quaternion.Slerp(parent.rollingError, Quaternion.identity, point.parameters.blend) * animPoseToPhysicsPose;
+            output[point.transformIndex] = Matrix4x4.TRS(point.workingPosition, rot*animPoseToPhysicsPose, scale);
             simulatedPoints[i] = point;
         }  
     }

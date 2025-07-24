@@ -10,7 +10,6 @@ public unsafe struct JiggleBoneSimulatedPoint {
     public Vector3 parentPose;
     public Vector3 pose;
     public float desiredLengthToParent;
-    public Quaternion rollingError;
     
     // Set at initialization
     public JiggleBoneParameters parameters;

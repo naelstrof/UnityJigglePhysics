@@ -79,7 +79,6 @@ public class JiggleJobDoubleBuffer {
     }
 
     public void DrawDebug() {
-        Debug.Log("DEBUG DRAWING");
         for (var index = 0; index < finishedJob.simulatedPoints.Length; index++) {
             var simulatedPoint = finishedJob.simulatedPoints[index];
             if (simulatedPoint.parentIndex == -1) continue;

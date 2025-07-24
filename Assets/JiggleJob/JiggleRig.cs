@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,6 +12,10 @@ public class JiggleRig : MonoBehaviour {
 
     [SerializeField] protected Transform _rootBone;
     [SerializeField] protected JiggleBoneInputParameters _jiggleBoneInputParameters;
+
+    private void OnEnable() {
+        JiggleJobManager.AddJiggleTree(new JiggleTree(GetJiggleBoneTransforms(), GetJiggleBoneSimulatedPoints()));
+    }
 
     public Transform[] GetJiggleBoneTransforms() {
         var transforms = _rootBone.GetComponentsInChildren<Transform>();
@@ -41,14 +46,13 @@ public class JiggleRig : MonoBehaviour {
                 // BACK PROJECTED VIRTUAL ROOT
                 if (transformIndex < 0) {
                     points[i] = new JiggleBoneSimulatedPoint {
-                        intrinsic = new JiggleBoneIntrinsic() {
-                            parentIndex = -1
-                        },
+                        parentIndex = -1,
+                        childenCount = 1,
                         parameters = _jiggleBoneInputParameters.ToJiggleBoneParameters(),
                         transformIndex = i
                     };
-                    fixed (int* children = points[i].intrinsic.childrenIndices) {
-                        for (int j = 0; j < JiggleBoneIntrinsic.MAX_CHILDREN; j++) {
+                    fixed (int* children = points[i].childrenIndices) {
+                        for (int j = 0; j < JiggleBoneSimulatedPoint.MAX_CHILDREN; j++) {
                             children[i] = j == 0 ? 0 : -1;
                         }
                     }
@@ -59,14 +63,13 @@ public class JiggleRig : MonoBehaviour {
                 var tailIndex = transformIndex - transforms.Length;
                 if (tailIndex >= 0) {
                     points[i] = new JiggleBoneSimulatedPoint {
-                        intrinsic = new JiggleBoneIntrinsic() {
-                            parentIndex = childlessTransformIndices[tailIndex]
-                        },
+                        parentIndex = childlessTransformIndices[tailIndex],
+                        childenCount = 0,
                         parameters = _jiggleBoneInputParameters.ToJiggleBoneParameters(),
                         transformIndex = i
                     };
-                    fixed (int* children = points[i].intrinsic.childrenIndices) {
-                        for (int j = 0; j < JiggleBoneIntrinsic.MAX_CHILDREN; j++) {
+                    fixed (int* children = points[i].childrenIndices) {
+                        for (int j = 0; j < JiggleBoneSimulatedPoint.MAX_CHILDREN; j++) {
                             children[i] = -1;
                         }
                     }
@@ -80,7 +83,8 @@ public class JiggleRig : MonoBehaviour {
                         childIndexes.Add(childSearchIndex);
                     }
                 }
-                while (childIndexes.Count < JiggleBoneIntrinsic.MAX_CHILDREN) {
+                int childCount = childIndexes.Count;
+                while (childIndexes.Count < JiggleBoneSimulatedPoint.MAX_CHILDREN) {
                     childIndexes.Add(-1);
                 }
                 var parentIndex = -1;
@@ -93,14 +97,13 @@ public class JiggleRig : MonoBehaviour {
                     }
                 }
                 points[i] = new JiggleBoneSimulatedPoint {
-                    intrinsic = new JiggleBoneIntrinsic() {
-                        parentIndex = parentIndex
-                    },
+                    parentIndex = parentIndex,
+                    childenCount = childCount,
                     parameters = _jiggleBoneInputParameters.ToJiggleBoneParameters(),
                     transformIndex = i
                 };
-                fixed (int* children = points[i].intrinsic.childrenIndices) {
-                    for (int j = 0; j < JiggleBoneIntrinsic.MAX_CHILDREN; j++) {
+                fixed (int* children = points[i].childrenIndices) {
+                    for (int j = 0; j < JiggleBoneSimulatedPoint.MAX_CHILDREN; j++) {
                         children[i] = childIndexes[i];
                     }
                 }
@@ -108,7 +111,12 @@ public class JiggleRig : MonoBehaviour {
         }
         return points;
     }
-    
+
+    private void LateUpdate() {
+        JiggleJobManager.Update(Time.deltaTime);
+        JiggleJobManager.Pose();
+    }
+
 #if UNITY_EDITOR
     public VisualElement GetInspectorVisualElement(SerializedProperty serializedProperty) {
         var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AssetDatabase.GUIDToAssetPath("c35a2123f4d44dd469ccb24af7a0ce20"));

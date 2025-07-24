@@ -11,7 +11,8 @@ public static class JiggleJobManager {
     
     private static List<JiggleTree> jiggleTrees;
 
-    public static void AddJiggleTree(Transform[] bones) {
+    public static void AddJiggleTree(JiggleTree tree) {
+        jiggleTrees.Add(tree);
         //jiggleTrees.Add(new JiggleTree() {
             //bones = bones,
             //jiggleJob = new JiggleJobDoubleBuffer(bones)

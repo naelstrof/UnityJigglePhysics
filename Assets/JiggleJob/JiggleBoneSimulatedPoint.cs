@@ -1,6 +1,7 @@
 using UnityEngine;
 
-public struct JiggleBoneSimulatedPoint {
+public unsafe struct JiggleBoneSimulatedPoint {
+    public const int MAX_CHILDREN = 16;
     // Generated at runtime
     public Vector3 lastPosition;
     public Vector3 position;
@@ -13,6 +14,8 @@ public struct JiggleBoneSimulatedPoint {
     
     // Set at initialization
     public JiggleBoneParameters parameters;
-    public JiggleBoneIntrinsic intrinsic;
+    public int parentIndex;
+    public fixed int childrenIndices[MAX_CHILDREN];
+    public int childenCount;
     public int transformIndex;
 }

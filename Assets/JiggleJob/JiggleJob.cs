@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Jobs;
@@ -16,9 +17,9 @@ public struct JiggleJob : IJob {
         int simulatedPointCount = simulatedPoints.Length;
         for (int i = 0; i < simulatedPointCount; i++) {
             var point = simulatedPoints[i];
-            if (point.intrinsic.parentIndex == -1) { // virtual root particles
-                var child = simulatedPoints[point.intrinsic.childrenIndices[0]];
-                var childChild = simulatedPoints[child.intrinsic.childrenIndices[0]];
+            if (point.parentIndex == -1) { // virtual root particles
+                var child = simulatedPoints[point.childrenIndices[0]];
+                var childChild = simulatedPoints[child.childrenIndices[0]];
                 if (childChild.transformIndex == -1) { // edge case where it's a singular isolated root bone
                     point.pose = transformMatrices[child.transformIndex].GetPosition() - Vector3.up*0.25f;
                     point.parentPose = transformMatrices[child.transformIndex].GetPosition() - Vector3.up*0.5f;
@@ -30,12 +31,12 @@ public struct JiggleJob : IJob {
                     point.desiredLengthToParent = diff.magnitude;
                 }
             } else if (point.transformIndex != -1) { // "real" particles
-                var parent = simulatedPoints[point.intrinsic.parentIndex];
+                var parent = simulatedPoints[point.parentIndex];
                 point.pose = transformMatrices[point.transformIndex].GetPosition();
                 point.parentPose = parent.pose;
                 point.desiredLengthToParent = Vector3.Distance(point.pose, point.parentPose);
             } else { // virtual end particles
-                var parent = simulatedPoints[point.intrinsic.parentIndex];
+                var parent = simulatedPoints[point.parentIndex];
                 point.pose = parent.pose - parent.parentPose;
                 point.parentPose = parent.pose;
                 point.desiredLengthToParent = Vector3.Distance(point.pose, point.parentPose);
@@ -47,12 +48,12 @@ public struct JiggleJob : IJob {
         int simulatedPointCount = simulatedPoints.Length;
         for (int i = 0; i < simulatedPointCount; i++) {
             var point = simulatedPoints[i];
-            var parent = simulatedPoints[point.intrinsic.parentIndex];
+            var parent = simulatedPoints[point.parentIndex];
             
             var delta = point.position - point.lastPosition;
             var localSpaceVelocity = delta - (parent.position - parent.lastPosition);
             var velocity = delta - localSpaceVelocity;
-            if (parent.intrinsic.parentIndex != -1) {
+            if (parent.parentIndex != -1) {
                 point.workingPosition = point.position + velocity * (1f - parent.parameters.airDrag) + localSpaceVelocity * (1f - parent.parameters.drag) + gravity * parent.parameters.gravityMultiplier * (float)JiggleJobManager.FIXED_DELTA_TIME_SQUARED;
             } else {
                 point.workingPosition = point.position + velocity * (1f-point.parameters.airDrag) + localSpaceVelocity * (1f-point.parameters.drag) + gravity * point.parameters.gravityMultiplier * (float)JiggleJobManager.FIXED_DELTA_TIME_SQUARED;
@@ -64,13 +65,13 @@ public struct JiggleJob : IJob {
         int simulatedPointCount = simulatedPoints.Length;
         for (int i = 0; i < simulatedPointCount; i++) {
             var point = simulatedPoints[i];
-            if (point.intrinsic.parentIndex == -1) {
+            if (point.parentIndex == -1) {
                 continue;
             }
-            var parent = simulatedPoints[point.intrinsic.parentIndex];
+            var parent = simulatedPoints[point.parentIndex];
             #region Special root particle solve
-            if (parent.intrinsic.parentIndex == -1) {
-                var child = simulatedPoints[point.intrinsic.childrenIndices[0]];
+            if (parent.parentIndex == -1) {
+                var child = simulatedPoints[point.childrenIndices[0]];
                 point.desiredConstraint = point.workingPosition = Vector3.Lerp(point.workingPosition, point.pose, point.parameters.rootElasticity * point.parameters.rootElasticity);
                 var head = transformMatrices[point.transformIndex].GetPosition();
                 var tail = transformMatrices[child.transformIndex].GetPosition();
@@ -84,7 +85,7 @@ public struct JiggleJob : IJob {
             var parentAimPose = (parent.pose - parent.parentPose).normalized;
             var parentAim = (parent.desiredConstraint - parent.parentPose).normalized;
             if (parent.transformIndex != -1) {
-                var parentParent = simulatedPoints[parent.intrinsic.parentIndex];
+                var parentParent = simulatedPoints[parent.parentIndex];
                 parentAim = (parent.desiredConstraint - parentParent.desiredConstraint).normalized;
             }
 
@@ -117,8 +118,8 @@ public struct JiggleJob : IJob {
                 continue;
             }
 
-            if (point.intrinsic.childenCount > 0) { // Back-propagated motion specifically for collision enabled chains
-                var child = simulatedPoints[point.intrinsic.childrenIndices[0]];
+            if (point.childenCount > 0) { // Back-propagated motion specifically for collision enabled chains
+                var child = simulatedPoints[point.childrenIndices[0]];
                 var aim_pose = (child.pose - point.parentPose).normalized;
                 var aim = (child.workingPosition - parent.workingPosition).normalized;
                 var from_to_rot_also = Quaternion.FromToRotation(aim_pose, aim);
@@ -158,18 +159,18 @@ public struct JiggleJob : IJob {
         int simulatedPointCount = simulatedPoints.Length;
         for (int i = 0; i < simulatedPointCount; i++) {
             var point = simulatedPoints[i];
-            if (point.intrinsic.childenCount == 0) {
+            if (point.childenCount == 0) {
                 continue;
             }
 
-            var child = simulatedPoints[point.intrinsic.childrenIndices[0]];
+            var child = simulatedPoints[point.childrenIndices[0]];
 
             var local_pose = point.pose;
             var local_child_pose = child.pose;
             var local_child_working_position = child.workingPosition;
             var local_working_position = point.workingPosition;
 
-            if (point.intrinsic.parentIndex == -1) {
+            if (point.parentIndex == -1) {
                 point.rollingError = Quaternion.identity;
                 continue;
             }
@@ -177,21 +178,21 @@ public struct JiggleJob : IJob {
             Vector3 cachedAnimatedVector = Vector3.zero;
             Vector3 simulatedVector = Vector3.zero;
 
-            if (point.intrinsic.childenCount == 1) {
+            if (point.childenCount == 1) {
                 cachedAnimatedVector = (local_child_pose - local_pose).normalized;
                 simulatedVector = (local_child_working_position - local_working_position).normalized;
             } else {
                 var cachedAnimatedVectorSum = Vector3.zero;
                 var simulatedVectorSum = Vector3.zero;
-                for (var j = 0; j < point.intrinsic.childenCount; j++) {
-                    var child_also = simulatedPoints[point.intrinsic.childrenIndices[j]];
+                for (var j = 0; j < point.childenCount; j++) {
+                    var child_also = simulatedPoints[point.childrenIndices[j]];
                     var local_child_pose_also = child_also.pose;
                     var local_child_working_position_also = child_also.workingPosition;
                     cachedAnimatedVectorSum += (local_child_pose_also - local_pose).normalized;
                     simulatedVectorSum += (local_child_working_position_also - local_working_position).normalized;
-                    cachedAnimatedVector = (cachedAnimatedVectorSum * (1f / point.intrinsic.childenCount)).normalized;
+                    cachedAnimatedVector = (cachedAnimatedVectorSum * (1f / point.childenCount)).normalized;
                 }
-                simulatedVector = (simulatedVectorSum * (1f / point.intrinsic.childenCount)).normalized;
+                simulatedVector = (simulatedVectorSum * (1f / point.childenCount)).normalized;
             }
 
             var animPoseToPhysicsPose = Quaternion.Slerp(Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector), Quaternion.identity, 1f - point.parameters.blend);
@@ -202,7 +203,7 @@ public struct JiggleJob : IJob {
             var rot = mat.rotation;
             var scale = mat.lossyScale;
             
-            var parent = simulatedPoints[point.intrinsic.parentIndex];
+            var parent = simulatedPoints[point.parentIndex];
             var prot = Quaternion.Slerp(Quaternion.Inverse(parent.rollingError), Quaternion.identity, 1f-point.parameters.blend);
 
             var parent_pose_aim = local_pose - point.parentPose;
@@ -216,10 +217,15 @@ public struct JiggleJob : IJob {
     }
     
     public void Execute() {
-        Cache();
-        VerletIntegrate();
-        Constrain();
-        FinishStep();
-        ApplyPose();
+        try {
+            Cache();
+            VerletIntegrate();
+            Constrain();
+            FinishStep();
+            ApplyPose();
+        } catch (Exception e) {
+            Debug.LogException(e);
+            throw;
+        }
     }
 }

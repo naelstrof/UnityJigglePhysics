@@ -75,6 +75,8 @@ public class JiggleRig : MonoBehaviour {
                     }
                 }
                 points[i] = new JiggleBoneSimulatedPoint {
+                    position = transforms[transformIndex].position,
+                    lastPosition = transforms[transformIndex].position,
                     parentIndex = parentIndex,
                     parameters = _jiggleBoneInputParameters.ToJiggleBoneParameters(),
                     transformIndex = transformIndex

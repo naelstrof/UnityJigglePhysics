@@ -146,7 +146,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 22281265}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 1.054, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -436,7 +436,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 668882787}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -666,7 +666,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1063328645}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 1.034, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -778,8 +778,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22017fcb0378a2f3882ef20e6991035e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bones:
-  - {fileID: 668882788}
 --- !u!95 &1988809531
 Animator:
   serializedVersion: 7
@@ -833,13 +831,13 @@ MonoBehaviour:
   _rootBone: {fileID: 668882788}
   _jiggleBoneInputParameters:
     advancedToggle: 1
-    stiffness: 33.8
-    soften: 19.3
+    stiffness: 47.1
+    soften: 47.9
     angleLimit: 0
-    rootStretch: 9
-    stretch: 32.8
-    drag: 6.4
-    airDrag: 60
+    rootStretch: 47.7
+    stretch: 47.5
+    drag: 48.2
+    airDrag: 48.4
     gravity: 0
     blend: 0
 --- !u!1660057539 &9223372036854775807

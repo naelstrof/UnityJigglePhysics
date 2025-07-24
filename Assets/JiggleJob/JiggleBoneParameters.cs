@@ -31,9 +31,9 @@ public struct JiggleBoneInputParameters {
     public JiggleBoneParameters ToJiggleBoneParameters() {
         return new JiggleBoneParameters {
             rootElasticity = advancedToggle?1f-rootStretch:0f,
-            angleElasticity = stiffness,
-            lengthElasticity = advancedToggle?1f-stretch:0f,
-            elasticitySoften = advancedToggle?soften:0f,
+            angleElasticity = Mathf.Pow(stiffness, 2f),
+            lengthElasticity = advancedToggle?Mathf.Pow(1f-stretch,2f):0f,
+            elasticitySoften = advancedToggle?Mathf.Pow(soften,2f):0f,
             gravityMultiplier = gravity,
             blend = 1f,
             drag = drag,

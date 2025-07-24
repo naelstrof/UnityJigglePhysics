@@ -109,15 +109,15 @@ public struct JiggleJob : IJob {
             var error = Vector3.Distance(point.workingPosition, parent.desiredConstraint + constraintTarget);
             error /= currentLength;
             error = Mathf.Min(error, 1.0f);
-            error = Mathf.Pow(error, parent.parameters.elasticitySoften * parent.parameters.elasticitySoften);
-            point.desiredConstraint = Vector3.Lerp(point.workingPosition, parent.desiredConstraint + constraintTarget, parent.parameters.angleElasticity * parent.parameters.angleElasticity * error);
+            error = Mathf.Pow(error, parent.parameters.elasticitySoften);
+            point.desiredConstraint = Vector3.Lerp(point.workingPosition, parent.desiredConstraint + constraintTarget, parent.parameters.angleElasticity * error);
             #endregion
             
             // DO COLLISIONS HERE
 
 
             #region Length Constraint
-            var length_elasticity = parent.parameters.lengthElasticity * parent.parameters.lengthElasticity;
+            var length_elasticity = parent.parameters.lengthElasticity;
             var diff = point.desiredConstraint - parent.desiredConstraint;
             var dir = diff.normalized;
             var forwardConstraint = Vector3.Lerp(point.desiredConstraint, parent.desiredConstraint + dir * point.desiredLengthToParent, length_elasticity);
@@ -147,7 +147,7 @@ public struct JiggleJob : IJob {
                 var error_also = (point.workingPosition - targetPos).magnitude;
                 error_also /= point.desiredLengthToParent;
                 error_also = Mathf.Min(error_also, 1.0f);
-                error_also = Mathf.Pow(error_also, parent.parameters.elasticitySoften * parent.parameters.elasticitySoften);
+                error_also = Mathf.Pow(error_also, parent.parameters.elasticitySoften);
                 var backward_constraint = Vector3.Lerp(point.workingPosition, targetPos, (parent.parameters.angleElasticity * parent.parameters.angleElasticity * error_also));
 
                 var child_length_elasticity = point.parameters.lengthElasticity * point.parameters.lengthElasticity;

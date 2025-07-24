@@ -86,15 +86,16 @@ public struct JiggleJob : IJob {
                 var tail = transformMatrices[child.transformIndex].GetPosition();
                 var diffasdf = head - tail;
                 parent.desiredConstraint = point.desiredConstraint + diffasdf;
+                simulatedPoints[point.parentIndex] = parent;
                 simulatedPoints[i] = point;
                 continue;
             }
             #endregion
 
             #region Angle Constraint
-            var parentAimPose = (parent.pose - parent.parentPose).normalized;
+            var parentAimPose = (point.parentPose - parent.parentPose).normalized;
             var parentAim = (parent.desiredConstraint - parent.parentPose).normalized;
-            if (parent.transformIndex != -1) {
+            if (parent.parentIndex != -1) {
                 var parentParent = simulatedPoints[parent.parentIndex];
                 parentAim = (parent.desiredConstraint - parentParent.desiredConstraint).normalized;
             }
@@ -109,7 +110,6 @@ public struct JiggleJob : IJob {
             error = Mathf.Min(error, 1.0f);
             error = Mathf.Pow(error, parent.parameters.elasticitySoften * parent.parameters.elasticitySoften);
             point.desiredConstraint = Vector3.Lerp(point.workingPosition, parent.desiredConstraint + constraintTarget, parent.parameters.angleElasticity * parent.parameters.angleElasticity * error);
-            var forwardConstraint = parent.desiredConstraint + constraintTarget;
             #endregion
             
             // DO COLLISIONS HERE
@@ -119,7 +119,7 @@ public struct JiggleJob : IJob {
             var length_elasticity = parent.parameters.lengthElasticity * parent.parameters.lengthElasticity;
             var diff = point.desiredConstraint - parent.desiredConstraint;
             var dir = diff.normalized;
-            forwardConstraint = Vector3.Lerp(point.desiredConstraint, parent.desiredConstraint + dir * point.desiredLengthToParent, length_elasticity);
+            var forwardConstraint = Vector3.Lerp(point.desiredConstraint, parent.desiredConstraint + dir * point.desiredLengthToParent, length_elasticity);
             point.desiredConstraint = forwardConstraint;
             #endregion
             

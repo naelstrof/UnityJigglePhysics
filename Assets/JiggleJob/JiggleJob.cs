@@ -11,6 +11,7 @@ public struct JiggleJob : IJob {
     
     public NativeArray<Matrix4x4> transformMatrices;
     public NativeArray<JiggleBoneSimulatedPoint> simulatedPoints;
+    public NativeArray<Vector3> debug;
     public NativeArray<Matrix4x4> output;
 
     private unsafe void Cache() {
@@ -228,6 +229,14 @@ public struct JiggleJob : IJob {
             simulatedPoints[i] = point;
         }  
     }
+
+    void UpdateDebug() {
+        int simulatedPointCount = simulatedPoints.Length;
+        for (int i = 0; i < simulatedPointCount; i++) {
+            var point = simulatedPoints[i];
+            debug[i] = point.position;
+        }
+    }
     
     public void Execute() {
         try {
@@ -236,6 +245,7 @@ public struct JiggleJob : IJob {
             Constrain();
             FinishStep();
             ApplyPose();
+            UpdateDebug();
         } catch (Exception e) {
             Debug.LogException(e);
             throw;

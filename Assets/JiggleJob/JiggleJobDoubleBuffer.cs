@@ -43,11 +43,13 @@ public class JiggleJobDoubleBuffer {
         var pointCount = points.Length;
         jobA = new JiggleJob() {
             transformMatrices = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
+            debug = new NativeArray<Vector3>(pointCount, Allocator.Persistent),
             simulatedPoints = new NativeArray<JiggleBoneSimulatedPoint>(pointCount, Allocator.Persistent),
             output = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
         };
         jobB = new JiggleJob() {
             transformMatrices = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
+            debug = new NativeArray<Vector3>(pointCount, Allocator.Persistent),
             simulatedPoints = new NativeArray<JiggleBoneSimulatedPoint>(pointCount, Allocator.Persistent),
             output = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
         };

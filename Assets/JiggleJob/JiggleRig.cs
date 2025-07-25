@@ -128,6 +128,11 @@ public class JiggleRig : MonoBehaviour {
             "Stiffness"
         );
         SetSlider(visualElement, serializedProperty,
+            "AngleLimitSlider",
+            nameof(JiggleBoneInputParameters.angleLimit),
+            "Angle Limit"
+        );
+        SetSlider(visualElement, serializedProperty,
             "SoftenSlider",
             nameof(JiggleBoneInputParameters.soften),
             "Soften"

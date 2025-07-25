@@ -105,15 +105,37 @@ public struct JiggleJob : IJob {
             var current_pose_dir = (point.pose - point.parentPose).normalized;
             var constraintTarget = from_to_rot * (current_pose_dir * currentLength);
 
+            var desiredPosition = parent.desiredConstraint + constraintTarget;
+
+            
             var error = Vector3.Distance(point.workingPosition, parent.desiredConstraint + constraintTarget);
             error /= currentLength;
             error = Mathf.Min(error, 1.0f);
             error = Mathf.Pow(error, parent.parameters.elasticitySoften);
-            point.desiredConstraint = Vector3.Lerp(point.workingPosition, parent.desiredConstraint + constraintTarget, parent.parameters.angleElasticity * error);
+            point.desiredConstraint = Vector3.Lerp(point.workingPosition, desiredPosition, parent.parameters.angleElasticity * error);
             #endregion
             
             // DO COLLISIONS HERE
 
+            // --- Angle Limit Constraint
+            float angleA_deg = 10f;
+            float angleC_deg = Vector3.Angle(point.desiredConstraint - desiredPosition, point.parentPose - desiredPosition); // known included angle C
+
+            float b = Vector3.Distance(point.parentPose, desiredPosition); // known side opposite angle B
+
+            float angleB_deg = 180f - angleA_deg - angleC_deg;
+
+            float angleA_rad = angleA_deg * Mathf.Deg2Rad;
+            float angleB_rad = angleB_deg * Mathf.Deg2Rad;
+
+            float a = b * Mathf.Sin(angleA_rad) / Mathf.Sin(angleB_rad);
+
+            var correctionDir = (desiredPosition - point.desiredConstraint).normalized;
+            var correctionDistance = (desiredPosition - point.desiredConstraint).magnitude;
+
+            var angleCorrectionDistance = Mathf.Max(0f,correctionDistance - a);
+            point.desiredConstraint += (correctionDir * angleCorrectionDistance) * 0.8f;
+            // ---
 
             #region Length Constraint
             var length_elasticity = parent.parameters.lengthElasticity;

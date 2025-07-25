@@ -818,13 +818,13 @@ MonoBehaviour:
   _rootBone: {fileID: 668882788}
   _jiggleBoneInputParameters:
     advancedToggle: 1
-    stiffness: 0.482
-    soften: 1
-    angleLimit: 0
-    rootStretch: 0.074
-    stretch: 0.073
-    drag: 0.057
-    airDrag: 0.557
+    stiffness: 0.158
+    soften: 0.651
+    angleLimit: 57.4
+    rootStretch: 0
+    stretch: 0.033
+    drag: 0.249
+    airDrag: 0.028
     gravity: 0
     blend: 0
 --- !u!1660057539 &9223372036854775807

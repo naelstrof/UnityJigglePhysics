@@ -6,7 +6,7 @@ public static class JiggleJobManager {
     private static double accumulatedTime = 0f;
     private static double time = 0f;
     private static int frame = 0;
-    private const double FIXED_DELTA_TIME = 1.0 / 15.0;
+    public const double FIXED_DELTA_TIME = 1.0 / 15.0;
     public const double FIXED_DELTA_TIME_SQUARED = FIXED_DELTA_TIME * FIXED_DELTA_TIME;
     
     private static List<JiggleTree> jiggleTrees;
@@ -28,20 +28,16 @@ public static class JiggleJobManager {
 
     public static void Pose() {
         foreach (var jiggleTree in jiggleTrees) {
-            var jiggleJob = jiggleTree.jiggleJob;
-            if (!jiggleJob.HasData()) {
-                return;
-            }
             var boneCount = jiggleTree.bones.Length;
             frame++;
             for (int i = 0; i < boneCount; i++) {
-                var prevPosition = jiggleJob.previousJobOutput.output[i].GetPosition();
-                var prevRotation = jiggleJob.previousJobOutput.output[i].rotation;
-            
-                var newPosition = jiggleJob.finishedOutput[i].GetPosition();
-                var newRotation = jiggleJob.finishedOutput[i].rotation;
+                var prevPosition = jiggleTree.previousSolve[i].GetPosition();
+                var prevRotation = jiggleTree.previousSolve[i].rotation;
 
-                var diff = jiggleJob.finishedTimestamp - jiggleJob.previousJobOutput.timeStamp;
+                var newPosition = jiggleTree.currentSolve[i].GetPosition();
+                var newRotation = jiggleTree.currentSolve[i].rotation;
+
+                var diff = jiggleTree.timeStamp - jiggleTree.previousTimeStamp;
                 if (diff == 0) {
                     throw new UnityException("Time difference is zero, cannot interpolate.");
                     return;
@@ -51,7 +47,7 @@ public static class JiggleJobManager {
                 // The issue here is that we are having to operate 3 full frames in the past
                 // which might be noticable latency
                 var timeCorrection = FIXED_DELTA_TIME * 2f;
-                double t = ((Time.timeAsDouble-timeCorrection) - jiggleJob.previousJobOutput.timeStamp) / diff;
+                double t = ((Time.timeAsDouble-timeCorrection) - jiggleTree.previousTimeStamp) / diff;
                 var position = Vector3.LerpUnclamped(prevPosition, newPosition, (float)t);
                 var rotation = Quaternion.SlerpUnclamped(prevRotation, newRotation, (float)t);
                 //Debug.DrawRay(position + Vector3.up*Mathf.Repeat(Time.timeSinceLevelLoad,5f), Vector3.up, Color.magenta, 5f);
@@ -66,17 +62,10 @@ public static class JiggleJobManager {
             jiggleTree.Simulate();
         }
     }
-
-    private static void DebugDraw() {
-        foreach (var jiggleTree in jiggleTrees) {
-            jiggleTree.DebugDraw();
-        }
-    }
     
     public static void Update(double deltaTime) {
         accumulatedTime += deltaTime;
         if (accumulatedTime < FIXED_DELTA_TIME) {
-            DebugDraw();
             return;
         }
         while (accumulatedTime >= FIXED_DELTA_TIME) {
@@ -84,6 +73,5 @@ public static class JiggleJobManager {
             time += FIXED_DELTA_TIME;
         }
         Simulate();
-        DebugDraw();
     }
 }

@@ -10,6 +10,8 @@ public class MonobehaviourHider {
         private static bool dirty = false;
         private static List<JiggleTree> jiggleTrees;
         public JiggleRig rig;
+        
+        public static void SetDirty() => dirty = true;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Initialize() {
@@ -67,15 +69,29 @@ public class MonobehaviourHider {
                 }
             }
         }
-
+        
         public static List<JiggleTree> GetJiggleTrees() {
             if (!dirty) {
                 return jiggleTrees;
             }
             // TODO: Cleanup previous trees, or reuse them.
-            jiggleTrees.Clear();
+            //jiggleTrees.Clear();
+            var newJiggleTrees = new List<JiggleTree>();
             var superRoots = GetSuperRoots();
             foreach (var superRoot in superRoots) {
+                // TODO: CHECK FOR DIRTY MEMBER, USE OLD JIGGLE TREE IF NOT DIRTY
+                var found = false;
+                foreach (var jiggleTree in jiggleTrees) {
+                    if (jiggleTree.bones[0] == superRoot.transform) {
+                        Debug.Log("FOUND EXISTING JIGGLE TREE");
+                        if (!jiggleTree.dirty) {
+                            newJiggleTrees.Add(jiggleTree);
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                if (found) continue;
                 List<Transform> jiggleTreeTransforms = new List<Transform>();
                 List<JiggleBoneSimulatedPoint> jiggleTreePoints = new List<JiggleBoneSimulatedPoint>();
                 jiggleTreePoints.Add(new JiggleBoneSimulatedPoint() { // Back projected virtual root
@@ -91,9 +107,11 @@ public class MonobehaviourHider {
                     rootPoint.childrenIndices[0] = childIndex;
                     jiggleTreePoints[0] = rootPoint;
                 }
-                jiggleTrees.Add(new JiggleTree(jiggleTreeTransforms.ToArray(), jiggleTreePoints.ToArray()));
+                newJiggleTrees.Add(new JiggleTree(jiggleTreeTransforms.ToArray(), jiggleTreePoints.ToArray()));
+                newJiggleTrees[^1].dirty = false;
             }
             dirty = false;
+            jiggleTrees = newJiggleTrees;
             return jiggleTrees;
         }
         private void OnEnable() {

@@ -24,7 +24,12 @@ public class JiggleTree {
     public Vector3[] previousLocalPositions;
     public Quaternion[] previousLocalRotations;
 
+    Matrix4x4[] matrices;
+
+    public bool dirty;
+
     public JiggleTree(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
+        dirty = true;
         var boneCount = bones.Length;
         var pointCount = points.Length;
         this.bones = new Transform[boneCount];
@@ -51,12 +56,17 @@ public class JiggleTree {
         jiggleJob.simulatedPoints.CopyFrom(points);
         bulkRead = new JiggleBulkTransformRead() {
             matrices = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
+            restPoseMatrices = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
+            previousLocalPositions = new NativeArray<Vector3>(boneCount, Allocator.Persistent),
+            previousLocalRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent),
+            animated = new NativeArray<bool>(boneCount, Allocator.Persistent)
         };
         transformAccessArray = new TransformAccessArray(bones);
         previousLocalPositions = new Vector3[boneCount];
         previousLocalRotations = new Quaternion[boneCount];
         restPoseTransforms = new Matrix4x4[boneCount];
         RecordAllRestPoseTransforms();
+        matrices = new Matrix4x4[bones.Length];
     }
 
     private void PushBack(JiggleJob job) {
@@ -67,19 +77,22 @@ public class JiggleTree {
     }
 
     public void Simulate() {
+        if (dirty) return;
         if (hasJobHandle) {
             jobHandle.Complete();
-            DrawDebug(jiggleJob);
+            //DrawDebug(jiggleJob);
             PushBack(jiggleJob);
         }
         
-        ResetUnanimatedTransforms();
+        bulkRead.restPoseMatrices.CopyFrom(restPoseTransforms);
+        bulkRead.previousLocalPositions.CopyFrom(previousLocalPositions);
+        bulkRead.previousLocalRotations.CopyFrom(previousLocalRotations);
         var handle = bulkRead.Schedule(transformAccessArray);
         handle.Complete();
-        //var matrices = new Matrix4x4[bones.Length];
         //for (int i = 0; i < bones.Length; i++) {
         //    matrices[i] = bones[i].localToWorldMatrix;
         //}
+        //jiggleJob.transformMatrices.CopyFrom(matrices);
         jiggleJob.transformMatrices.CopyFrom(bulkRead.matrices);
         jiggleJob.timeStamp = Time.timeAsDouble;
         jiggleJob.gravity = Physics.gravity;
@@ -111,30 +124,18 @@ public class JiggleTree {
             var position = Vector3.LerpUnclamped(prevPosition, newPosition, (float)t);
             var rotation = Quaternion.SlerpUnclamped(prevRotation, newRotation, (float)t);
             //Debug.DrawRay(position + Vector3.up*Mathf.Repeat(Time.timeSinceLevelLoad,5f), Vector3.up, Color.magenta, 5f);
+            // NULL CHECK (OPTIONAL IF YOU WANT TO BE REALLY CAREFUL)
+            if (!bones[i]) {
+                dirty = true;
+                MonobehaviourHider.JiggleRoot.SetDirty();
+                return;
+            }
             bones[i].SetPositionAndRotation(position, rotation);
         }
         for (int i = 0; i < boneCount; i++) {
             bones[i].GetLocalPositionAndRotation(out var localPosition, out var localRotation);
             previousLocalPositions[i] = localPosition;
             previousLocalRotations[i] = localRotation;
-        }
-    }
-
-    private void ResetUnanimatedTransforms() {
-        for (var index = 0; index < points.Length; index++) {
-            var boneIndex = points[index].transformIndex;
-            if (boneIndex == -1) continue;
-            bones[boneIndex].GetLocalPositionAndRotation(out var localPosition, out var localRotation);
-            if (!points[index].animated) {
-                bones[boneIndex].SetLocalPositionAndRotation(restPoseTransforms[boneIndex].GetPosition(), restPoseTransforms[boneIndex].rotation);
-                continue;
-            }
-            if (localPosition == previousLocalPositions[boneIndex] &&
-                localRotation == previousLocalRotations[boneIndex]) {
-                bones[boneIndex].SetLocalPositionAndRotation(restPoseTransforms[boneIndex].GetPosition(), restPoseTransforms[boneIndex].rotation);
-            } else {
-                restPoseTransforms[boneIndex] = Matrix4x4.TRS(localPosition, localRotation, Vector3.one);
-            }
         }
     }
     

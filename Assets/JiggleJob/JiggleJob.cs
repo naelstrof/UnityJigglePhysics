@@ -82,8 +82,8 @@ public struct JiggleJob : IJob {
             if (parent.parentIndex == -1) {
                 var child = simulatedPoints[point.childrenIndices[0]];
                 point.desiredConstraint = point.workingPosition = Vector3.Lerp(point.workingPosition, point.pose, point.parameters.rootElasticity * point.parameters.rootElasticity);
-                var head = transformMatrices[point.transformIndex].GetPosition();
-                var tail = transformMatrices[child.transformIndex].GetPosition();
+                var head = point.pose;
+                var tail = child.pose;
                 var diffasdf = head - tail;
                 parent.desiredConstraint = point.desiredConstraint + diffasdf;
                 simulatedPoints[point.parentIndex] = parent;

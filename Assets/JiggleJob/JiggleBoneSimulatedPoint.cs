@@ -10,6 +10,7 @@ public unsafe struct JiggleBoneSimulatedPoint {
     public Vector3 parentPose;
     public Vector3 pose;
     public float desiredLengthToParent;
+    public bool animated;
     
     // Set at initialization
     public JiggleBoneParameters parameters;

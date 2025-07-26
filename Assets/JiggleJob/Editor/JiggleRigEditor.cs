@@ -18,7 +18,16 @@ public class JiggleRigEditor : Editor {
         var rootElement = visualElement.Q<ObjectField>("RootField");
         rootElement.BindProperty(serializedObject.FindProperty("_rootBone"));
         rootElement.Q<Label>().text = "Root Transform";
-        
+        var errorSection = visualElement.Q<VisualElement>("RootTransformErrorSection");
+        rootElement.RegisterValueChangedCallback(evt => {
+            errorSection.style.display = script.rootTransformError ? DisplayStyle.Flex : DisplayStyle.None;
+        });
+        errorSection.style.display = script.rootTransformError ? DisplayStyle.Flex : DisplayStyle.None;
+
+        var animatedToggleElement = visualElement.Q<Toggle>("AnimatedToggle");
+        animatedToggleElement.BindProperty(serializedObject.FindProperty("_animated"));
+        animatedToggleElement.Q<Label>().text = "Animated";
+
         visualElement.Add(script.GetInspectorVisualElement(serializedObject.FindProperty("_jiggleBoneInputParameters")));
 
         return visualElement;

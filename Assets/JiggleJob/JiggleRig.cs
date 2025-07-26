@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -11,7 +12,12 @@ using UnityEngine.UIElements;
 public class JiggleRig : MonoBehaviour {
 
     [SerializeField] protected Transform _rootBone;
+    [SerializeField] protected bool _animated;
     [SerializeField] protected JiggleBoneInputParameters _jiggleBoneInputParameters;
+
+    bool isValid = false;
+
+    public bool rootTransformError => !(_rootBone == null || isValid);
 
     private void OnEnable() {
         JiggleJobManager.AddJiggleTree(new JiggleTree(GetJiggleBoneTransforms(), GetJiggleBoneSimulatedPoints()));
@@ -20,6 +26,19 @@ public class JiggleRig : MonoBehaviour {
     public Transform[] GetJiggleBoneTransforms() {
         var transforms = _rootBone.GetComponentsInChildren<Transform>();
         return transforms;
+    }
+
+    void OnValidate() {
+        isValid = false;
+        if (_rootBone == null) return;
+        var transformSearch = _rootBone;
+        while (transformSearch != null) {
+            if (transformSearch == gameObject.transform) {
+                isValid = true;
+                return;
+            }
+            transformSearch = transformSearch.parent;
+        }
     }
     
     public JiggleBoneSimulatedPoint[] GetJiggleBoneSimulatedPoints() {
@@ -47,7 +66,8 @@ public class JiggleRig : MonoBehaviour {
                     points[i] = new JiggleBoneSimulatedPoint {
                         parentIndex = -1,
                         parameters = _jiggleBoneInputParameters.ToJiggleBoneParameters(),
-                        transformIndex = -1
+                        transformIndex = -1,
+                        animated = false
                     };
                     continue;
                 }
@@ -58,7 +78,8 @@ public class JiggleRig : MonoBehaviour {
                     points[i] = new JiggleBoneSimulatedPoint {
                         parentIndex = childlessTransformIndices[tailIndex]+1,
                         parameters = _jiggleBoneInputParameters.ToJiggleBoneParameters(),
-                        transformIndex = -1
+                        transformIndex = -1,
+                        animated = false
                     };
                     continue;
                 }
@@ -79,7 +100,8 @@ public class JiggleRig : MonoBehaviour {
                     lastPosition = transforms[transformIndex].position,
                     parentIndex = parentIndex,
                     parameters = _jiggleBoneInputParameters.ToJiggleBoneParameters(),
-                    transformIndex = transformIndex
+                    transformIndex = transformIndex,
+                    animated = _animated
                 };
             }
             

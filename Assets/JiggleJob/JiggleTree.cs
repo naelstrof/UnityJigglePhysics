@@ -1,5 +1,6 @@
 using Unity.Collections;
 using Unity.Jobs;
+using UnityEditor.TerrainTools;
 using UnityEngine;
 using UnityEngine.Jobs;
 
@@ -19,6 +20,9 @@ public class JiggleTree {
     public Matrix4x4[] previousSolve;
     public double timeStamp;
     public Matrix4x4[] currentSolve;
+    public Matrix4x4[] restPoseTransforms;
+    public Vector3[] previousLocalPositions;
+    public Quaternion[] previousLocalRotations;
 
     public JiggleTree(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
         var boneCount = bones.Length;
@@ -49,6 +53,10 @@ public class JiggleTree {
             matrices = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
         };
         transformAccessArray = new TransformAccessArray(bones);
+        previousLocalPositions = new Vector3[boneCount];
+        previousLocalRotations = new Quaternion[boneCount];
+        restPoseTransforms = new Matrix4x4[boneCount];
+        RecordAllRestPoseTransforms();
     }
 
     private void PushBack(JiggleJob job) {
@@ -65,14 +73,76 @@ public class JiggleTree {
             PushBack(jiggleJob);
         }
         
+        ResetUnanimatedTransforms();
         var handle = bulkRead.Schedule(transformAccessArray);
         handle.Complete();
+        //var matrices = new Matrix4x4[bones.Length];
+        //for (int i = 0; i < bones.Length; i++) {
+        //    matrices[i] = bones[i].localToWorldMatrix;
+        //}
         jiggleJob.transformMatrices.CopyFrom(bulkRead.matrices);
         jiggleJob.timeStamp = Time.timeAsDouble;
         jiggleJob.gravity = Physics.gravity;
         
         jobHandle = jiggleJob.Schedule();
         hasJobHandle = true;
+    }
+
+    public void Pose() {
+        var boneCount = bones.Length;
+        for (int i = 0; i < boneCount; i++) {
+            var prevPosition = previousSolve[i].GetPosition();
+            var prevRotation = previousSolve[i].rotation;
+
+            var newPosition = currentSolve[i].GetPosition();
+            var newRotation = currentSolve[i].rotation;
+
+            var diff = timeStamp - previousTimeStamp;
+            if (diff == 0) {
+                throw new UnityException("Time difference is zero, cannot interpolate.");
+                return;
+            }
+
+            // TODO: Revisit this issue after FEELING the solve in VR in context
+            // The issue here is that we are having to operate 3 full frames in the past
+            // which might be noticable latency
+            var timeCorrection = JiggleJobManager.FIXED_DELTA_TIME * 2f;
+            var t = (Time.timeAsDouble-timeCorrection - previousTimeStamp) / diff;
+            var position = Vector3.LerpUnclamped(prevPosition, newPosition, (float)t);
+            var rotation = Quaternion.SlerpUnclamped(prevRotation, newRotation, (float)t);
+            //Debug.DrawRay(position + Vector3.up*Mathf.Repeat(Time.timeSinceLevelLoad,5f), Vector3.up, Color.magenta, 5f);
+            bones[i].SetPositionAndRotation(position, rotation);
+        }
+        for (int i = 0; i < boneCount; i++) {
+            bones[i].GetLocalPositionAndRotation(out var localPosition, out var localRotation);
+            previousLocalPositions[i] = localPosition;
+            previousLocalRotations[i] = localRotation;
+        }
+    }
+
+    private void ResetUnanimatedTransforms() {
+        for (var index = 0; index < points.Length; index++) {
+            var boneIndex = points[index].transformIndex;
+            if (boneIndex == -1) continue;
+            bones[boneIndex].GetLocalPositionAndRotation(out var localPosition, out var localRotation);
+            if (!points[index].animated) {
+                bones[boneIndex].SetLocalPositionAndRotation(restPoseTransforms[boneIndex].GetPosition(), restPoseTransforms[boneIndex].rotation);
+                continue;
+            }
+            if (localPosition == previousLocalPositions[boneIndex] &&
+                localRotation == previousLocalRotations[boneIndex]) {
+                bones[boneIndex].SetLocalPositionAndRotation(restPoseTransforms[boneIndex].GetPosition(), restPoseTransforms[boneIndex].rotation);
+            } else {
+                restPoseTransforms[boneIndex] = Matrix4x4.TRS(localPosition, localRotation, Vector3.one);
+            }
+        }
+    }
+    
+    private void RecordAllRestPoseTransforms() {
+        for (var index = 0; index < bones.Length; index++) {
+            bones[index].GetLocalPositionAndRotation(out var localPosition, out var localRotation);
+            restPoseTransforms[index] = Matrix4x4.TRS(localPosition, localRotation, Vector3.one);
+        }
     }
     
     private static void DrawDebug(JiggleJob job) {

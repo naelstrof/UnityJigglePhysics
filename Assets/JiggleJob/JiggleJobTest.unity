@@ -1088,7 +1088,7 @@ GameObject:
   - component: {fileID: 1953464962}
   - component: {fileID: 1953464961}
   m_Layer: 0
-  m_Name: Cube (4)
+  m_Name: SuspiciousBone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1252,6 +1252,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _rootBone: {fileID: 668882788}
+  _animated: 1
   _jiggleBoneInputParameters:
     advancedToggle: 1
     stiffness: 0.158

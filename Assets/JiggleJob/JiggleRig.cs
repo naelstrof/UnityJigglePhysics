@@ -14,16 +14,53 @@ public class JiggleRig : MonoBehaviour {
     [SerializeField] protected Transform _rootBone;
     [SerializeField] protected bool _animated;
     [SerializeField] protected JiggleBoneInputParameters _jiggleBoneInputParameters;
-
+    
+    private MonobehaviourHider.JiggleRoot _root;
     bool isValid = false;
 
     public bool rootTransformError => !(_rootBone == null || isValid);
 
     private void OnEnable() {
+        if (transform.parent != null) {
+            var parentRig = transform.parent.GetComponentInParent<JiggleRig>();
+            if (parentRig != null) {
+                return;
+            }
+        }
         JiggleJobManager.AddJiggleTree(new JiggleTree(GetJiggleBoneTransforms(), GetJiggleBoneSimulatedPoints()));
+        /*JiggleRig parentMostRootBone = null;
+        var childRigs = GetComponentsInChildren<JiggleRig>();
+        while (childRigs.Length > 0) {
+            var rig = childRigs[0];
+            parentMostRootBone = rig;
+            for (Transform t = rig._rootBone; t != transform; t = t.parent) {
+                for (int i = 0; i < childRigs.Length; i++) {
+                    if (childRigs[i] == rig) {
+                        continue;
+                    }
+                    if (t == childRigs[i]._rootBone) {
+                        parentMostRootBone = childRigs[i];
+                    }
+                }
+            }
+            List<JiggleRig> finished = new List<JiggleRig>();
+            // DO DFS HERE
+        }*/
+        _root = _rootBone.gameObject.AddComponent<MonobehaviourHider.JiggleRoot>();
+        _root.rig = this;
     }
 
-    public Transform[] GetJiggleBoneTransforms() {
+    private void OnDisable() {
+        if (_root != null) {
+            Destroy(_root);
+        }
+    }
+
+    public JiggleBoneParameters GetJiggleBoneParameter(float normalizedDistance) {
+        return _jiggleBoneInputParameters.ToJiggleBoneParameters();
+    }
+
+    private Transform[] GetJiggleBoneTransforms() {
         var transforms = _rootBone.GetComponentsInChildren<Transform>();
         return transforms;
     }
@@ -201,5 +238,5 @@ public class JiggleRig : MonoBehaviour {
         sliderElement.Q<Label>().text = name;
     }
 #endif
-
+    
 }

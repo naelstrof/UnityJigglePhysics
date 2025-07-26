@@ -6,7 +6,7 @@ public static class JiggleJobManager {
     private static double accumulatedTime = 0f;
     private static double time = 0f;
     private static int frame = 0;
-    public const double FIXED_DELTA_TIME = 1.0 / 15.0;
+    public const double FIXED_DELTA_TIME = 1.0 / 30.0;
     public const double FIXED_DELTA_TIME_SQUARED = FIXED_DELTA_TIME * FIXED_DELTA_TIME;
     
     private static List<JiggleTree> jiggleTrees;

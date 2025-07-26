@@ -21,13 +21,7 @@ public class JiggleRig : MonoBehaviour {
     public bool rootTransformError => !(_rootBone == null || isValid);
 
     private void OnEnable() {
-        if (transform.parent != null) {
-            var parentRig = transform.parent.GetComponentInParent<JiggleRig>();
-            if (parentRig != null) {
-                return;
-            }
-        }
-        JiggleJobManager.AddJiggleTree(new JiggleTree(GetJiggleBoneTransforms(), GetJiggleBoneSimulatedPoints()));
+        //JiggleJobManager.AddJiggleTree(new JiggleTree(GetJiggleBoneTransforms(), GetJiggleBoneSimulatedPoints()));
         /*JiggleRig parentMostRootBone = null;
         var childRigs = GetComponentsInChildren<JiggleRig>();
         while (childRigs.Length > 0) {
@@ -66,16 +60,7 @@ public class JiggleRig : MonoBehaviour {
     }
 
     void OnValidate() {
-        isValid = false;
-        if (_rootBone == null) return;
-        var transformSearch = _rootBone;
-        while (transformSearch != null) {
-            if (transformSearch == gameObject.transform) {
-                isValid = true;
-                return;
-            }
-            transformSearch = transformSearch.parent;
-        }
+        isValid = _rootBone.IsChildOf(gameObject.transform);
     }
     
     public JiggleBoneSimulatedPoint[] GetJiggleBoneSimulatedPoints() {
@@ -169,11 +154,6 @@ public class JiggleRig : MonoBehaviour {
         }
 
         return points;
-    }
-
-    private void LateUpdate() {
-        JiggleJobManager.Update(Time.deltaTime);
-        JiggleJobManager.Pose();
     }
 
 #if UNITY_EDITOR

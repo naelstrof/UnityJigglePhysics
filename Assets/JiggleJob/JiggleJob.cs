@@ -253,16 +253,11 @@ public struct JiggleJob : IJob {
     }
     
     public void Execute() {
-        try {
-            Cache();
-            VerletIntegrate();
-            Constrain();
-            FinishStep();
-            ApplyPose();
-            UpdateDebug();
-        } catch (Exception e) {
-            Debug.LogException(e);
-            throw;
-        }
+        Cache();
+        VerletIntegrate();
+        Constrain();
+        FinishStep();
+        ApplyPose();
+        UpdateDebug();
     }
 }

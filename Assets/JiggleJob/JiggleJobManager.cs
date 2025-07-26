@@ -9,32 +9,23 @@ public static class JiggleJobManager {
     public const double FIXED_DELTA_TIME = 1.0 / 30.0;
     public const double FIXED_DELTA_TIME_SQUARED = FIXED_DELTA_TIME * FIXED_DELTA_TIME;
     
-    private static List<JiggleTree> jiggleTrees;
-
-    public static void AddJiggleTree(JiggleTree tree) {
-        jiggleTrees.Add(tree);
-        //jiggleTrees.Add(new JiggleTree() {
-            //bones = bones,
-            //jiggleJob = new JiggleJobDoubleBuffer(bones)
-        //});
-    }
-    
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void Initialize() {
         accumulatedTime = 0f;
-        jiggleTrees = new List<JiggleTree>();
         frame = 0;
     }
 
     public static void Pose() {
-        foreach (var jiggleTree in jiggleTrees) {
+        var trees = MonobehaviourHider.JiggleRoot.GetJiggleTrees();
+        foreach (var jiggleTree in trees) {
             frame++;
             jiggleTree.Pose();
         }
     }
 
     private static void Simulate() {
-        foreach (var jiggleTree in jiggleTrees) {
+        var trees = MonobehaviourHider.JiggleRoot.GetJiggleTrees();
+        foreach (var jiggleTree in trees) {
             jiggleTree.Simulate();
         }
     }

@@ -83,21 +83,23 @@ public class JiggleTree {
             //DrawDebug(jiggleJob);
             PushBack(jiggleJob);
         }
-        
+        var sharedMatrices = new NativeArray<Matrix4x4>(bones.Length, Allocator.Persistent);
+        bulkRead.matrices = sharedMatrices;
+        jiggleJob.transformMatrices = sharedMatrices;
+        jiggleJob.timeStamp = Time.timeAsDouble;
+        jiggleJob.gravity = Physics.gravity;
         bulkRead.restPoseMatrices.CopyFrom(restPoseTransforms);
         bulkRead.previousLocalPositions.CopyFrom(previousLocalPositions);
         bulkRead.previousLocalRotations.CopyFrom(previousLocalRotations);
         var handle = bulkRead.Schedule(transformAccessArray);
-        handle.Complete();
+        //handle.Complete();
         //for (int i = 0; i < bones.Length; i++) {
         //    matrices[i] = bones[i].localToWorldMatrix;
         //}
         //jiggleJob.transformMatrices.CopyFrom(matrices);
-        jiggleJob.transformMatrices.CopyFrom(bulkRead.matrices);
-        jiggleJob.timeStamp = Time.timeAsDouble;
-        jiggleJob.gravity = Physics.gravity;
+        //jiggleJob.transformMatrices.CopyFrom(bulkRead.matrices);
         
-        jobHandle = jiggleJob.Schedule();
+        jobHandle = jiggleJob.Schedule(handle);
         hasJobHandle = true;
     }
 

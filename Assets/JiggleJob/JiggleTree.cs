@@ -162,6 +162,20 @@ public class JiggleTree {
             restPoseTransforms[index] = Matrix4x4.TRS(localPosition, localRotation, Vector3.one);
         }
     }
+
+    public void Dispose() {
+        jiggleJob.transformMatrices.Dispose();
+        jiggleJob.debug.Dispose();
+        jiggleJob.simulatedPoints.Dispose();
+        jiggleJob.output.Dispose();
+        bulkRead.matrices.Dispose();
+        bulkRead.restPoseMatrices.Dispose();
+        bulkRead.previousLocalPositions.Dispose();
+        bulkRead.previousLocalRotations.Dispose();
+        bulkRead.animated.Dispose();
+        jigglePoseJob.previousSolve.Dispose();
+        jigglePoseJob.currentSolve.Dispose();
+    }
     
     private static void DrawDebug(JiggleJob job) {
         for (var index = 0; index < job.simulatedPoints.Length; index++) {

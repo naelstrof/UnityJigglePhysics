@@ -16,6 +16,11 @@ public class MonobehaviourHider {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Initialize() {
             jiggleRoots = new List<JiggleRoot>();
+            if (jiggleTrees != null) {
+                foreach (var tree in jiggleTrees) {
+                    tree.Dispose();
+                }
+            }
             jiggleTrees = new List<JiggleTree>();
         }
 

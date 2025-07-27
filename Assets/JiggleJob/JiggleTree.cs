@@ -13,18 +13,15 @@ public class JiggleTree {
     public JiggleBulkTransformRead bulkRead;
     public TransformAccessArray transformAccessArray;
     public JiggleJob jiggleJob;
+    public JigglePoseJob jigglePoseJob;
     public bool hasJobHandle;
     public JobHandle jobHandle;
+    public JobHandle bulkReadHandle;
+    public bool hasBulkReadHandle;
+    public JobHandle poseHandle;
+    public bool hasPoseHandle;
 
-    public double previousTimeStamp;
-    public Matrix4x4[] previousSolve;
-    public double timeStamp;
-    public Matrix4x4[] currentSolve;
     public Matrix4x4[] restPoseTransforms;
-    public Vector3[] previousLocalPositions;
-    public Quaternion[] previousLocalRotations;
-    public Vector3 positionTimeOffset;
-    public Vector3 lastPositionTimeOffset;
 
     Matrix4x4[] matrices;
 
@@ -36,18 +33,14 @@ public class JiggleTree {
         var pointCount = points.Length;
         this.bones = new Transform[boneCount];
         this.points = new JiggleBoneSimulatedPoint[pointCount];
-        previousSolve = new Matrix4x4[boneCount];
-        currentSolve = new Matrix4x4[boneCount];
+        var currentSolve = new Matrix4x4[boneCount];
         for (int i = 0; i < pointCount; i++) {
             this.points[i] = points[i];
         }
         for (int i = 0; i < boneCount; i++) {
             this.bones[i] = bones[i];
-            previousSolve[i] = bones[i].localToWorldMatrix;
-            currentSolve[i] = previousSolve[i];
+            currentSolve[i] = bones[i].localToWorldMatrix;
         }
-        timeStamp = Time.timeAsDouble;
-        previousTimeStamp = Time.timeAsDouble-JiggleJobManager.FIXED_DELTA_TIME;
 
         jiggleJob = new JiggleJob() {
             transformMatrices = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
@@ -63,21 +56,34 @@ public class JiggleTree {
             previousLocalRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent),
             animated = new NativeArray<bool>(boneCount, Allocator.Persistent)
         };
+        jigglePoseJob = new JigglePoseJob() {
+            previousSolve = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
+            currentSolve = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
+            previousLocalPositions = bulkRead.previousLocalPositions,
+            previousLocalRotations = bulkRead.previousLocalRotations,
+            timeStamp = Time.timeAsDouble,
+            previousTimeStamp = Time.timeAsDouble-JiggleJobManager.FIXED_DELTA_TIME,
+        };
+        jigglePoseJob.currentSolve.CopyFrom(currentSolve);
+        jigglePoseJob.previousSolve.CopyFrom(currentSolve);
+        
         transformAccessArray = new TransformAccessArray(bones);
-        previousLocalPositions = new Vector3[boneCount];
-        previousLocalRotations = new Quaternion[boneCount];
         restPoseTransforms = new Matrix4x4[boneCount];
         RecordAllRestPoseTransforms();
         matrices = new Matrix4x4[bones.Length];
     }
 
     private void PushBack(JiggleJob job) {
-        previousTimeStamp = timeStamp;
-        currentSolve.CopyTo(previousSolve, 0);
-        timeStamp = job.timeStamp;
-        job.output.CopyTo(currentSolve);
-        lastPositionTimeOffset = positionTimeOffset;
-        positionTimeOffset = (currentSolve[0].GetPosition() - previousSolve[0].GetPosition())*2f;
+        if (hasPoseHandle) {
+            poseHandle.Complete();
+        }
+        jigglePoseJob.previousTimeStamp = jigglePoseJob.timeStamp;
+        jigglePoseJob.currentSolve.CopyTo(jigglePoseJob.previousSolve);
+        jigglePoseJob.timeStamp = job.timeStamp;
+        job.output.CopyTo(jigglePoseJob.currentSolve);
+        jigglePoseJob.lastPositionTimeOffset = jigglePoseJob.positionTimeOffset;
+        // TODO: This is slow, double traversal of native arrays
+        jigglePoseJob.positionTimeOffset = jigglePoseJob.currentSolve[0].GetPosition() - jigglePoseJob.previousSolve[0].GetPosition();
     }
 
     public void Simulate() {
@@ -93,20 +99,22 @@ public class JiggleTree {
         jiggleJob.timeStamp = Time.timeAsDouble;
         jiggleJob.gravity = Physics.gravity;
         bulkRead.restPoseMatrices.CopyFrom(restPoseTransforms);
-        bulkRead.previousLocalPositions.CopyFrom(previousLocalPositions);
-        bulkRead.previousLocalRotations.CopyFrom(previousLocalRotations);
-        var handle = bulkRead.Schedule(transformAccessArray);
-        //handle.Complete();
-        //for (int i = 0; i < bones.Length; i++) {
-        //    matrices[i] = bones[i].localToWorldMatrix;
-        //}
-        //jiggleJob.transformMatrices.CopyFrom(matrices);
-        //jiggleJob.transformMatrices.CopyFrom(bulkRead.matrices);
-        
-        jobHandle = jiggleJob.Schedule(handle);
+        bulkReadHandle = hasPoseHandle ? bulkRead.Schedule(transformAccessArray, poseHandle) : bulkRead.Schedule(transformAccessArray);
+        hasBulkReadHandle = true;
+        jobHandle = jiggleJob.Schedule(bulkReadHandle);
         hasJobHandle = true;
     }
 
+    public void Pose() {
+        if (hasPoseHandle) {
+            poseHandle.Complete();
+        }
+        jigglePoseJob.currentTime = Time.timeAsDouble;
+        poseHandle = hasBulkReadHandle ? jigglePoseJob.Schedule(transformAccessArray, bulkReadHandle) : jigglePoseJob.Schedule(transformAccessArray);
+        hasPoseHandle = true;
+    }
+
+    /*
     public void Pose() {
         var boneCount = bones.Length;
         for (int i = 0; i < boneCount; i++) {
@@ -146,6 +154,7 @@ public class JiggleTree {
             previousLocalRotations[i] = localRotation;
         }
     }
+    */
     
     private void RecordAllRestPoseTransforms() {
         for (var index = 0; index < bones.Length; index++) {

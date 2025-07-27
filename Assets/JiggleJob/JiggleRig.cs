@@ -13,6 +13,7 @@ public class JiggleRig : MonoBehaviour {
 
     [SerializeField] protected Transform _rootBone;
     [SerializeField] protected bool _animated;
+    [SerializeField] protected bool _excludeRoot;
     [SerializeField] protected JiggleBoneInputParameters _jiggleBoneInputParameters;
     
     private MonobehaviourHider.JiggleRoot _root;

@@ -477,6 +477,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _rootBone: {fileID: 1035809983}
   _animated: 1
+  _excludeRoot: 0
   _jiggleBoneInputParameters:
     advancedToggle: 1
     stiffness: 0.158
@@ -3258,6 +3259,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _rootBone: {fileID: 754569565}
   _animated: 1
+  _excludeRoot: 0
   _jiggleBoneInputParameters:
     advancedToggle: 1
     stiffness: 0.158
@@ -3483,17 +3485,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c222ab56bf694d74096e6d709752b25f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _rootBone: {fileID: 668882788}
+  _rootBone: {fileID: 1063328646}
   _animated: 1
+  _excludeRoot: 0
   _jiggleBoneInputParameters:
     advancedToggle: 1
-    stiffness: 1
-    soften: 0
-    angleLimit: 1.5
-    rootStretch: 0.653
-    stretch: 0.033
-    drag: 0.249
-    airDrag: 0.028
+    stiffness: 0.373
+    soften: 0.402
+    angleLimit: 77.7
+    rootStretch: 0
+    stretch: 0
+    drag: 0
+    airDrag: 0
     gravity: 0
     blend: 0
 --- !u!1 &2012373356
@@ -3636,6 +3639,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _rootBone: {fileID: 655385928}
   _animated: 1
+  _excludeRoot: 0
   _jiggleBoneInputParameters:
     advancedToggle: 1
     stiffness: 0.158

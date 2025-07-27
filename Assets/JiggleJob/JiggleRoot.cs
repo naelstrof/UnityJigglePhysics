@@ -36,11 +36,20 @@ public class MonobehaviourHider {
                 lastRoot = newRoot;
             }
             transforms.Add(t);
+            var parameters = lastRoot.rig.GetJiggleBoneParameter(0.5f);
+            if (t == lastRoot.transform) {
+                parameters = new JiggleBoneParameters() {
+                    angleElasticity = 1f,
+                    lengthElasticity = 1f,
+                    rootElasticity = 1f,
+                    elasticitySoften = 0f
+                };
+            }
             points.Add(new JiggleBoneSimulatedPoint() { // Regular point
                 position = t.position,
                 lastPosition = t.position,
                 childenCount = t.childCount == 0 ? 1 : t.childCount,
-                parameters = lastRoot.rig.GetJiggleBoneParameter(0.5f),
+                parameters = parameters,
                 parentIndex = parentIndex,
                 transformIndex = transforms.Count-1,
                 animated = true,

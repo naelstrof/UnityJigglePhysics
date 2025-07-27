@@ -118,7 +118,7 @@ public struct JiggleJob : IJob {
             // DO COLLISIONS HERE
 
             // --- Angle Limit Constraint
-            float angleA_deg = 10f;
+            /*float angleA_deg = point.parameters.angleLimit;
             float angleC_deg = Vector3.Angle(point.desiredConstraint - desiredPosition, point.parentPose - desiredPosition); // known included angle C
 
             float b = Vector3.Distance(point.parentPose, desiredPosition); // known side opposite angle B
@@ -135,6 +135,7 @@ public struct JiggleJob : IJob {
 
             var angleCorrectionDistance = Mathf.Max(0f,correctionDistance - a);
             point.desiredConstraint += (correctionDir * angleCorrectionDistance) * 0.8f;
+            */
             // ---
 
             #region Length Constraint
@@ -241,7 +242,7 @@ public struct JiggleJob : IJob {
             var scale = mat.lossyScale;
             output[point.transformIndex] = Matrix4x4.TRS(point.workingPosition, rot*animPoseToPhysicsPose, scale);
             simulatedPoints[i] = point;
-        }  
+        }
     }
 
     void UpdateDebug() {

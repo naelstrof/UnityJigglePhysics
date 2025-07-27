@@ -23,6 +23,8 @@ public class JiggleTree {
     public Matrix4x4[] restPoseTransforms;
     public Vector3[] previousLocalPositions;
     public Quaternion[] previousLocalRotations;
+    public Vector3 positionTimeOffset;
+    public Vector3 lastPositionTimeOffset;
 
     Matrix4x4[] matrices;
 
@@ -74,6 +76,8 @@ public class JiggleTree {
         currentSolve.CopyTo(previousSolve, 0);
         timeStamp = job.timeStamp;
         job.output.CopyTo(currentSolve);
+        lastPositionTimeOffset = positionTimeOffset;
+        positionTimeOffset = (currentSolve[0].GetPosition() - previousSolve[0].GetPosition())*2f;
     }
 
     public void Simulate() {
@@ -112,6 +116,7 @@ public class JiggleTree {
             var newPosition = currentSolve[i].GetPosition();
             var newRotation = currentSolve[i].rotation;
 
+
             var diff = timeStamp - previousTimeStamp;
             if (diff == 0) {
                 throw new UnityException("Time difference is zero, cannot interpolate.");
@@ -132,7 +137,8 @@ public class JiggleTree {
                 MonobehaviourHider.JiggleRoot.SetDirty();
                 return;
             }
-            bones[i].SetPositionAndRotation(position, rotation);
+            var timeOffset = Vector3.LerpUnclamped(lastPositionTimeOffset, positionTimeOffset, (float)t);
+            bones[i].SetPositionAndRotation(position + timeOffset, rotation);
         }
         for (int i = 0; i < boneCount; i++) {
             bones[i].GetLocalPositionAndRotation(out var localPosition, out var localRotation);

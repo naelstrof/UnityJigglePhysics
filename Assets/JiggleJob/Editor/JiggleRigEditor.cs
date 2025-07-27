@@ -28,6 +28,10 @@ public class JiggleRigEditor : Editor {
         animatedToggleElement.BindProperty(serializedObject.FindProperty("_animated"));
         animatedToggleElement.Q<Label>().text = "Animated";
 
+        var excludeRootToggleElement = visualElement.Q<Toggle>("ExcludeRootToggle");
+        excludeRootToggleElement.BindProperty(serializedObject.FindProperty("_excludeRoot"));
+        excludeRootToggleElement.Q<Label>().text = "Exclude Root";
+
         visualElement.Add(script.GetInspectorVisualElement(serializedObject.FindProperty("_jiggleBoneInputParameters")));
 
         return visualElement;

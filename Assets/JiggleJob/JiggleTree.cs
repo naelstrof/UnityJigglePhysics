@@ -178,19 +178,87 @@ public class JiggleTree {
     }
 
     public void Dispose() {
-        jiggleJob.transformMatrices.Dispose();
-        jiggleJob.debug.Dispose();
-        jiggleJob.simulatedPoints.Dispose();
-        jiggleJob.output.Dispose();
-        bulkRead.matrices.Dispose();
-        bulkRead.restPoseMatrices.Dispose();
-        bulkRead.previousLocalPositions.Dispose();
-        bulkRead.previousLocalRotations.Dispose();
-        bulkRead.animated.Dispose();
-        jigglePoseJob.previousSolve.Dispose();
-        jigglePoseJob.currentSolve.Dispose();
+        if (jiggleJob.transformMatrices.IsCreated) {
+            if (hasJobHandle) {
+                jiggleJob.transformMatrices.Dispose(jobHandle);
+            } else {
+                jiggleJob.transformMatrices.Dispose();
+            }
+        }
+
+        if (jiggleJob.debug.IsCreated) {
+            if (hasJobHandle) {
+                jiggleJob.debug.Dispose(jobHandle);
+            } else {
+                jiggleJob.debug.Dispose();
+            }
+        }
+
+        if (jiggleJob.simulatedPoints.IsCreated) {
+            if (hasJobHandle) {
+                jiggleJob.simulatedPoints.Dispose(jobHandle);
+            } else {
+                jiggleJob.simulatedPoints.Dispose();
+            }
+        }
+
+        if (jiggleJob.output.IsCreated) {
+            if (hasJobHandle) {
+                jiggleJob.output.Dispose(jobHandle);
+            } else {
+                jiggleJob.output.Dispose();
+            }
+        }
+
+        if (bulkRead.restPoseMatrices.IsCreated) {
+            if (hasBulkReadHandle) {
+                bulkRead.restPoseMatrices.Dispose(bulkReadHandle);
+            } else {
+                bulkRead.restPoseMatrices.Dispose();
+            }
+        }
+
+        if (bulkRead.previousLocalPositions.IsCreated) {
+            if (hasPoseHandle) {
+                bulkRead.previousLocalPositions.Dispose(poseHandle);
+            } else {
+                bulkRead.previousLocalPositions.Dispose();
+            }
+        }
+
+        if (bulkRead.previousLocalRotations.IsCreated) {
+            if (hasPoseHandle) {
+                bulkRead.previousLocalRotations.Dispose(poseHandle);
+            } else {
+                bulkRead.previousLocalRotations.Dispose();
+            }
+        }
+
+        if (bulkRead.animated.IsCreated) {
+            if (hasBulkReadHandle) {
+                bulkRead.animated.Dispose(bulkReadHandle);
+            } else {
+                bulkRead.animated.Dispose();
+            }
+        }
+
+        if (jigglePoseJob.previousSolve.IsCreated) {
+            if (hasPoseHandle) {
+                jigglePoseJob.previousSolve.Dispose(poseHandle);
+            } else {
+                jigglePoseJob.previousSolve.Dispose();
+            }
+        }
+
+        if (jigglePoseJob.currentSolve.IsCreated) {
+            if (hasPoseHandle) {
+                jigglePoseJob.currentSolve.Dispose(poseHandle);
+            } else {
+                jigglePoseJob.currentSolve.Dispose();
+            }
+        }
     }
-    
+
     private static void DrawDebug(JiggleJob job) {
         for (var index = 0; index < job.simulatedPoints.Length; index++) {
             var simulatedPoint = job.simulatedPoints[index];

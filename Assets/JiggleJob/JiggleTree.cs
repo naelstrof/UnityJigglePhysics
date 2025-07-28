@@ -3,6 +3,7 @@ using Unity.Jobs;
 using UnityEditor.TerrainTools;
 using UnityEngine;
 using UnityEngine.Jobs;
+using UnityEngine.Profiling;
 
 // TODO: One IJobParallelForTransform for each jiggle tree so that it represents a single transform root
 // NOT an IJobParallelForTransform for each bone
@@ -23,7 +24,7 @@ public class JiggleTree {
 
     public Matrix4x4[] restPoseTransforms;
 
-    Matrix4x4[] matrices;
+    NativeArray<Matrix4x4> sharedMatrices;
 
     public bool dirty;
 
@@ -70,10 +71,13 @@ public class JiggleTree {
         transformAccessArray = new TransformAccessArray(bones);
         restPoseTransforms = new Matrix4x4[boneCount];
         RecordAllRestPoseTransforms();
-        matrices = new Matrix4x4[bones.Length];
+        sharedMatrices = new NativeArray<Matrix4x4>(bones.Length, Allocator.Persistent);
+        bulkRead.matrices = sharedMatrices;
+        jiggleJob.transformMatrices = sharedMatrices;
     }
 
     private void PushBack(JiggleJob job) {
+        Profiler.BeginSample("JiggleTree.Pushback");
         if (hasPoseHandle) {
             poseHandle.Complete();
         }
@@ -84,34 +88,42 @@ public class JiggleTree {
         jigglePoseJob.lastPositionTimeOffset = jigglePoseJob.positionTimeOffset;
         // TODO: This is slow, double traversal of native arrays
         jigglePoseJob.positionTimeOffset = jigglePoseJob.currentSolve[0].GetPosition() - jigglePoseJob.previousSolve[0].GetPosition();
+        Profiler.EndSample();
     }
 
     public void Simulate() {
         if (dirty) return;
+        Profiler.BeginSample("JiggleTree.Simulate");
+        Profiler.BeginSample("JiggleTree.CompletePreviousJob");
         if (hasJobHandle) {
             jobHandle.Complete();
             //DrawDebug(jiggleJob);
             PushBack(jiggleJob);
         }
-        var sharedMatrices = new NativeArray<Matrix4x4>(bones.Length, Allocator.Persistent);
-        bulkRead.matrices = sharedMatrices;
-        jiggleJob.transformMatrices = sharedMatrices;
+        Profiler.EndSample();
+        Profiler.BeginSample("JiggleTree.PrepareJobs");
         jiggleJob.timeStamp = Time.timeAsDouble;
         jiggleJob.gravity = Physics.gravity;
         bulkRead.restPoseMatrices.CopyFrom(restPoseTransforms);
+        Profiler.EndSample();
+        Profiler.BeginSample("JiggleTree.ScheduleJobs");
         bulkReadHandle = hasPoseHandle ? bulkRead.Schedule(transformAccessArray, poseHandle) : bulkRead.Schedule(transformAccessArray);
         hasBulkReadHandle = true;
         jobHandle = jiggleJob.Schedule(bulkReadHandle);
         hasJobHandle = true;
+        Profiler.EndSample();
+        Profiler.EndSample();
     }
 
     public void Pose() {
+        Profiler.BeginSample("JiggleTree.Pose");
         if (hasPoseHandle) {
             poseHandle.Complete();
         }
         jigglePoseJob.currentTime = Time.timeAsDouble;
         poseHandle = hasBulkReadHandle ? jigglePoseJob.Schedule(transformAccessArray, bulkReadHandle) : jigglePoseJob.Schedule(transformAccessArray);
         hasPoseHandle = true;
+        Profiler.EndSample();
     }
 
     /*

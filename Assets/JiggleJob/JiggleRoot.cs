@@ -121,6 +121,11 @@ public class MonobehaviourHider {
                 newJiggleTrees[^1].dirty = false;
             }
             dirty = false;
+            foreach (var jiggleTree in jiggleTrees) {
+                if (!newJiggleTrees.Contains(jiggleTree)) {
+                    jiggleTree.Dispose();
+                }
+            }
             jiggleTrees = newJiggleTrees;
             return jiggleTrees;
         }

@@ -10,8 +10,14 @@ public struct JigglePoseJob : IJobParallelForTransform {
     public double timeStamp;
     public double previousTimeStamp;
     public double currentTime;
-    public Vector3 lastPositionTimeOffset;
-    public Vector3 positionTimeOffset;
+    
+    public Vector3 previousSimulatedRootOffset;
+    public Vector3 currentSimulatedRootOffset;
+    
+    public Vector3 previousSimulatedRootPosition;
+    public Vector3 currentSimulatedRootPosition;
+    
+    public Vector3 realRootPosition;
     
     public void Execute(int index, TransformAccess transform) {
         var prevPosition = previousSolve[index].GetPosition();
@@ -33,8 +39,11 @@ public struct JigglePoseJob : IJobParallelForTransform {
         var position = Vector3.LerpUnclamped(prevPosition, newPosition, (float)t);
         var rotation = Quaternion.SlerpUnclamped(prevRotation, newRotation, (float)t);
         
-        var timeOffset = Vector3.LerpUnclamped(lastPositionTimeOffset, positionTimeOffset, (float)t);
-        transform.SetPositionAndRotation(position + timeOffset, rotation);
+        var simulatedRootPosition = Vector3.LerpUnclamped(previousSimulatedRootPosition, currentSimulatedRootPosition, (float)t);
+        var simulatedRootOffset = Vector3.LerpUnclamped(previousSimulatedRootOffset, currentSimulatedRootOffset, (float)t);
+        
+        var snapToReal = realRootPosition-simulatedRootPosition;
+        transform.SetPositionAndRotation(position + snapToReal + simulatedRootOffset, rotation);
         transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
         previousLocalPositions[index] = localPosition;
         previousLocalRotations[index] = localRotation;

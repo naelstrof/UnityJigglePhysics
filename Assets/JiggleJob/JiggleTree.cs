@@ -21,6 +21,9 @@ public class JiggleTree {
     public bool hasBulkReadHandle;
     public JobHandle poseHandle;
     public bool hasPoseHandle;
+    
+    private Vector3 previousRootPosition;
+    private Vector3 currentRootPosition;
 
     public Matrix4x4[] restPoseTransforms;
 
@@ -62,6 +65,10 @@ public class JiggleTree {
             currentSolve = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
             previousLocalPositions = bulkRead.previousLocalPositions,
             previousLocalRotations = bulkRead.previousLocalRotations,
+            previousSimulatedRootOffset = Vector3.zero,
+            currentSimulatedRootOffset = Vector3.zero,
+            previousSimulatedRootPosition = bones[0].position,
+            currentSimulatedRootPosition = bones[0].position,
             timeStamp = Time.timeAsDouble,
             previousTimeStamp = Time.timeAsDouble-JiggleJobManager.FIXED_DELTA_TIME,
         };
@@ -86,10 +93,13 @@ public class JiggleTree {
         //jigglePoseJob.currentSolve.CopyTo(jigglePoseJob.previousSolve);
         jigglePoseJob.timeStamp = job.timeStamp;
         job.output.CopyTo(jigglePoseJob.currentSolve);
-        jigglePoseJob.lastPositionTimeOffset = jigglePoseJob.positionTimeOffset;
-        // TODO: This is slow, double traversal of native arrays
-        // TODO: This is also bad.. It not not accurately lock the root bone
-        jigglePoseJob.positionTimeOffset = jigglePoseJob.currentSolve[0].GetPosition() - jigglePoseJob.previousSolve[0].GetPosition();
+        
+        jigglePoseJob.previousSimulatedRootOffset = jigglePoseJob.currentSimulatedRootOffset;
+        jigglePoseJob.currentSimulatedRootOffset = job.simulatedPoints[1].position - job.simulatedPoints[1].pose;
+        
+        jigglePoseJob.previousSimulatedRootPosition = jigglePoseJob.currentSimulatedRootPosition;
+        jigglePoseJob.currentSimulatedRootPosition = job.simulatedPoints[1].position;
+        
         Profiler.EndSample();
     }
 
@@ -122,6 +132,7 @@ public class JiggleTree {
         if (hasPoseHandle) {
             poseHandle.Complete();
         }
+        jigglePoseJob.realRootPosition = bones[0].position;
         jigglePoseJob.currentTime = Time.timeAsDouble;
         poseHandle = hasBulkReadHandle ? jigglePoseJob.Schedule(transformAccessArray, bulkReadHandle) : jigglePoseJob.Schedule(transformAccessArray);
         hasPoseHandle = true;

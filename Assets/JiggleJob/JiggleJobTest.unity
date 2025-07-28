@@ -3499,7 +3499,7 @@ MonoBehaviour:
     soften: 0.402
     angleLimit: 64.1
     angleLimitSoften: 0.634
-    rootStretch: 0
+    rootStretch: 0.44
     stretch: 0
     drag: 0
     airDrag: 0

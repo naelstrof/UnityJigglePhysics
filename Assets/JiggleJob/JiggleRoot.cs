@@ -44,7 +44,7 @@ public class MonobehaviourHider {
             }
             transforms.Add(t);
             var parameters = lastRoot.rig.GetJiggleBoneParameter(0.5f);
-            if (t == lastRoot.transform) {
+            if (lastRoot.rig.rootExcluded && t == lastRoot.transform) {
                 parameters = new JiggleBoneParameters() {
                     angleElasticity = 1f,
                     lengthElasticity = 1f,

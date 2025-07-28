@@ -18,6 +18,7 @@ public class JiggleRig : MonoBehaviour {
     
     private MonobehaviourHider.JiggleRoot _root;
     bool isValid = false;
+    public bool rootExcluded => _excludeRoot;
 
     public bool rootTransformError => !(_rootBone == null || isValid);
 

@@ -167,10 +167,25 @@ public class JiggleRig : MonoBehaviour {
             nameof(JiggleBoneInputParameters.stiffness),
             "Stiffness"
         );
+        
+        var angleLimitToggleElement = visualElement.Q<Toggle>("AngleLimitToggle");
+        angleLimitToggleElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.angleLimitToggle)));
+        angleLimitToggleElement.Q<Label>().text = "Angle Limit";
+        
+        var angleLimitSection = visualElement.Q<VisualElement>("AngleLimitSection");
+        angleLimitToggleElement.RegisterValueChangedCallback(evt => {
+            angleLimitSection.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
+        });
+
         SetSlider(visualElement, serializedProperty,
             "AngleLimitSlider",
             nameof(JiggleBoneInputParameters.angleLimit),
             "Angle Limit"
+        );
+        SetSlider(visualElement, serializedProperty,
+            "AngleLimitSoftenSlider",
+            nameof(JiggleBoneInputParameters.angleLimitSoften),
+            "Angle Limit Soften"
         );
         SetSlider(visualElement, serializedProperty,
             "SoftenSlider",

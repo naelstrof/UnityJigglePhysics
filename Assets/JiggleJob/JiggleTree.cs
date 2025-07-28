@@ -82,11 +82,13 @@ public class JiggleTree {
             poseHandle.Complete();
         }
         jigglePoseJob.previousTimeStamp = jigglePoseJob.timeStamp;
-        jigglePoseJob.currentSolve.CopyTo(jigglePoseJob.previousSolve);
+        (jigglePoseJob.currentSolve, jigglePoseJob.previousSolve) = (jigglePoseJob.previousSolve, jigglePoseJob.currentSolve);
+        //jigglePoseJob.currentSolve.CopyTo(jigglePoseJob.previousSolve);
         jigglePoseJob.timeStamp = job.timeStamp;
         job.output.CopyTo(jigglePoseJob.currentSolve);
         jigglePoseJob.lastPositionTimeOffset = jigglePoseJob.positionTimeOffset;
         // TODO: This is slow, double traversal of native arrays
+        // TODO: This is also bad.. It not not accurately lock the root bone
         jigglePoseJob.positionTimeOffset = jigglePoseJob.currentSolve[0].GetPosition() - jigglePoseJob.previousSolve[0].GetPosition();
         Profiler.EndSample();
     }

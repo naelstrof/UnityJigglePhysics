@@ -480,9 +480,11 @@ MonoBehaviour:
   _excludeRoot: 0
   _jiggleBoneInputParameters:
     advancedToggle: 1
+    angleLimitToggle: 0
     stiffness: 0.158
     soften: 0.651
     angleLimit: 31
+    angleLimitSoften: 0
     rootStretch: 0
     stretch: 0.033
     drag: 0.249
@@ -3262,9 +3264,11 @@ MonoBehaviour:
   _excludeRoot: 0
   _jiggleBoneInputParameters:
     advancedToggle: 1
+    angleLimitToggle: 0
     stiffness: 0.158
     soften: 0.651
     angleLimit: 31
+    angleLimitSoften: 0
     rootStretch: 0
     stretch: 0.033
     drag: 0.249
@@ -3490,9 +3494,11 @@ MonoBehaviour:
   _excludeRoot: 0
   _jiggleBoneInputParameters:
     advancedToggle: 1
-    stiffness: 0.373
+    angleLimitToggle: 1
+    stiffness: 0.214
     soften: 0.402
-    angleLimit: 77.7
+    angleLimit: 64.1
+    angleLimitSoften: 0.634
     rootStretch: 0
     stretch: 0
     drag: 0
@@ -3642,9 +3648,11 @@ MonoBehaviour:
   _excludeRoot: 0
   _jiggleBoneInputParameters:
     advancedToggle: 1
+    angleLimitToggle: 0
     stiffness: 0.158
     soften: 0.651
     angleLimit: 31
+    angleLimitSoften: 0
     rootStretch: 0
     stretch: 0.033
     drag: 0.249

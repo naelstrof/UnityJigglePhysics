@@ -7,7 +7,9 @@ using UnityEngine.Serialization;
 public struct JiggleBoneParameters {
     public float rootElasticity;
     public float angleElasticity;
+    public bool angleLimited;
     public float angleLimit;
+    public float angleLimitSoften;
     public float lengthElasticity;
     public float elasticitySoften;
     public float gravityMultiplier;
@@ -19,9 +21,11 @@ public struct JiggleBoneParameters {
 [Serializable]
 public struct JiggleBoneInputParameters {
     public bool advancedToggle;
+    public bool angleLimitToggle;
     public float stiffness;
     public float soften;
     public float angleLimit;
+    public float angleLimitSoften;
     public float rootStretch;
     public float stretch;
     public float drag;
@@ -36,7 +40,9 @@ public struct JiggleBoneInputParameters {
             lengthElasticity = advancedToggle?Mathf.Pow(1f-stretch,2f):0f,
             elasticitySoften = advancedToggle?Mathf.Pow(soften,2f):0f,
             gravityMultiplier = gravity,
+            angleLimited = angleLimitToggle,
             angleLimit = angleLimit,
+            angleLimitSoften = angleLimitSoften,
             blend = 1f,
             drag = drag,
             airDrag = airDrag

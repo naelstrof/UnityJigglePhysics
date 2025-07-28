@@ -18,12 +18,14 @@ public class MonobehaviourHider {
             jiggleRoots = new List<JiggleRoot>();
             if (jiggleTrees != null) {
                 foreach (var tree in jiggleTrees) {
-                    tree.Dispose();
+                    //tree.Dispose();
                 }
             }
             jiggleTrees = new List<JiggleTree>();
+            dirty = true;
         }
 
+        
         private static List<JiggleRoot> GetSuperRoots() {
             List<JiggleRoot> roots = new List<JiggleRoot>();
             List<JiggleRoot> parents = new List<JiggleRoot>();

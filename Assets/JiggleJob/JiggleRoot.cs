@@ -16,6 +16,11 @@ public class MonobehaviourHider {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Initialize() {
             jiggleRoots = new List<JiggleRoot>();
+            if (jiggleTrees != null) {
+                foreach (var tree in jiggleTrees) {
+                    tree.Dispose();
+                }
+            }
             jiggleTrees = new List<JiggleTree>();
             dirty = true;
         }
@@ -130,10 +135,16 @@ public class MonobehaviourHider {
             return jiggleTrees;
         }
         private void OnEnable() {
+            if (jiggleRoots.Contains(this)) {
+                return;
+            }
             jiggleRoots.Add(this);
             dirty = true;
         }
         private void OnDisable() {
+            if (!jiggleRoots.Contains(this)) {
+                return;
+            }
             jiggleRoots.Remove(this);
             dirty = true;
             if (jiggleRoots.Count == 0) {

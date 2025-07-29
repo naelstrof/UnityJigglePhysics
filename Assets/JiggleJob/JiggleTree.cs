@@ -52,9 +52,12 @@ public class JiggleTree {
             simulatedPoints = new NativeArray<JiggleBoneSimulatedPoint>(pointCount, Allocator.Persistent),
             output = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
         };
+        jiggleJob.transformMatrices.CopyFrom(currentSolve);
         jiggleJob.simulatedPoints.CopyFrom(points);
+        jiggleJob.output.CopyFrom(currentSolve);
+        
         bulkRead = new JiggleBulkTransformRead() {
-            matrices = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
+            matrices = jiggleJob.transformMatrices,
             restPoseMatrices = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
             previousLocalPositions = new NativeArray<Vector3>(boneCount, Allocator.Persistent),
             previousLocalRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent),
@@ -77,10 +80,8 @@ public class JiggleTree {
         
         transformAccessArray = new TransformAccessArray(bones);
         restPoseTransforms = new Matrix4x4[boneCount];
-        RecordAllRestPoseTransforms();
-        sharedMatrices = new NativeArray<Matrix4x4>(bones.Length, Allocator.Persistent);
-        bulkRead.matrices = sharedMatrices;
-        jiggleJob.transformMatrices = sharedMatrices;
+        RecordAllRestPoseTransforms(bones, restPoseTransforms);
+        bulkRead.restPoseMatrices.CopyFrom(restPoseTransforms);
     }
 
     private void PushBack(JiggleJob job) {
@@ -102,8 +103,8 @@ public class JiggleTree {
         
         Profiler.EndSample();
     }
-
-    public void Simulate() {
+    
+    public void Simulate(double currentTime) {
         if (dirty) return;
         Profiler.BeginSample("JiggleTree.Simulate");
         Profiler.BeginSample("JiggleTree.CompletePreviousJob");
@@ -114,7 +115,7 @@ public class JiggleTree {
         }
         Profiler.EndSample();
         Profiler.BeginSample("JiggleTree.PrepareJobs");
-        jiggleJob.timeStamp = Time.timeAsDouble;
+        jiggleJob.timeStamp = currentTime;
         jiggleJob.gravity = Physics.gravity;
         bulkRead.restPoseMatrices.CopyFrom(restPoseTransforms);
         Profiler.EndSample();
@@ -127,15 +128,20 @@ public class JiggleTree {
         Profiler.EndSample();
     }
 
-    public void Pose() {
-        Profiler.BeginSample("JiggleTree.Pose");
-        if (hasPoseHandle) {
-            poseHandle.Complete();
-        }
+    public void SchedulePose() {
+        Profiler.BeginSample("JiggleTree.SchedulePose");
         jigglePoseJob.realRootPosition = bones[0].position;
         jigglePoseJob.currentTime = Time.timeAsDouble;
         poseHandle = hasBulkReadHandle ? jigglePoseJob.Schedule(transformAccessArray, bulkReadHandle) : jigglePoseJob.Schedule(transformAccessArray);
         hasPoseHandle = true;
+        Profiler.EndSample();
+    }
+
+    public void CompletePose() {
+        Profiler.BeginSample("JiggleTree.CompletePose");
+        if (hasPoseHandle) {
+            poseHandle.Complete();
+        }
         Profiler.EndSample();
     }
 
@@ -181,92 +187,55 @@ public class JiggleTree {
     }
     */
     
-    private void RecordAllRestPoseTransforms() {
+    private static void RecordAllRestPoseTransforms(Transform[] bones, Matrix4x4[] output) {
         for (var index = 0; index < bones.Length; index++) {
             bones[index].GetLocalPositionAndRotation(out var localPosition, out var localRotation);
-            restPoseTransforms[index] = Matrix4x4.TRS(localPosition, localRotation, Vector3.one);
+            output[index] = Matrix4x4.TRS(localPosition, localRotation, Vector3.one);
         }
     }
 
     public void Dispose() {
+        if (hasJobHandle) {
+            jobHandle.Complete();
+        }
+        if (hasBulkReadHandle) {
+            bulkReadHandle.Complete();
+        }
+        if (hasPoseHandle) {
+            poseHandle.Complete();
+        }
+        
+        transformAccessArray.Dispose();
+        
         if (jiggleJob.transformMatrices.IsCreated) {
-            if (hasJobHandle) {
-                jiggleJob.transformMatrices.Dispose(jobHandle);
-            } else {
-                jiggleJob.transformMatrices.Dispose();
-            }
+            jiggleJob.transformMatrices.Dispose();
         }
-
         if (jiggleJob.debug.IsCreated) {
-            if (hasJobHandle) {
-                jiggleJob.debug.Dispose(jobHandle);
-            } else {
-                jiggleJob.debug.Dispose();
-            }
+            jiggleJob.debug.Dispose();
         }
-
         if (jiggleJob.simulatedPoints.IsCreated) {
-            if (hasJobHandle) {
-                jiggleJob.simulatedPoints.Dispose(jobHandle);
-            } else {
-                jiggleJob.simulatedPoints.Dispose();
-            }
+            jiggleJob.simulatedPoints.Dispose();
         }
-
         if (jiggleJob.output.IsCreated) {
-            if (hasJobHandle) {
-                jiggleJob.output.Dispose(jobHandle);
-            } else {
-                jiggleJob.output.Dispose();
-            }
+            jiggleJob.output.Dispose();
         }
-
         if (bulkRead.restPoseMatrices.IsCreated) {
-            if (hasBulkReadHandle) {
-                bulkRead.restPoseMatrices.Dispose(bulkReadHandle);
-            } else {
-                bulkRead.restPoseMatrices.Dispose();
-            }
+            bulkRead.restPoseMatrices.Dispose();
         }
-
         if (bulkRead.previousLocalPositions.IsCreated) {
-            if (hasPoseHandle) {
-                bulkRead.previousLocalPositions.Dispose(poseHandle);
-            } else {
-                bulkRead.previousLocalPositions.Dispose();
-            }
+            bulkRead.previousLocalPositions.Dispose();
         }
-
         if (bulkRead.previousLocalRotations.IsCreated) {
-            if (hasPoseHandle) {
-                bulkRead.previousLocalRotations.Dispose(poseHandle);
-            } else {
-                bulkRead.previousLocalRotations.Dispose();
-            }
+            bulkRead.previousLocalRotations.Dispose();
         }
-
         if (bulkRead.animated.IsCreated) {
-            if (hasBulkReadHandle) {
-                bulkRead.animated.Dispose(bulkReadHandle);
-            } else {
-                bulkRead.animated.Dispose();
-            }
+            bulkRead.animated.Dispose();
         }
-
         if (jigglePoseJob.previousSolve.IsCreated) {
-            if (hasPoseHandle) {
-                jigglePoseJob.previousSolve.Dispose(poseHandle);
-            } else {
-                jigglePoseJob.previousSolve.Dispose();
-            }
+            jigglePoseJob.previousSolve.Dispose();
         }
-
         if (jigglePoseJob.currentSolve.IsCreated) {
-            if (hasPoseHandle) {
-                jigglePoseJob.currentSolve.Dispose(poseHandle);
-            } else {
-                jigglePoseJob.currentSolve.Dispose();
-            }
+            jigglePoseJob.currentSolve.Dispose();
         }
     }
 

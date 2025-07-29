@@ -4,15 +4,15 @@ using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 
-public struct JiggleJob : IJob {
+public struct JiggleJobSimulate : IJob {
     // TODO: doubles are strictly a bad way to track time, probably should be ints or longs.
     public double timeStamp;
     public Vector3 gravity;
     
     public NativeArray<Matrix4x4> transformMatrices;
     public NativeArray<JiggleBoneSimulatedPoint> simulatedPoints;
-    public NativeArray<Vector3> debug;
-    public NativeArray<Matrix4x4> output;
+    //public NativeArray<Vector3> debug;
+    public NativeArray<Matrix4x4> outputPoses;
 
     private unsafe void Cache() {
         int simulatedPointCount = simulatedPoints.Length;
@@ -242,18 +242,18 @@ public struct JiggleJob : IJob {
             var mat = transformMatrices[point.transformIndex];
             var rot = mat.rotation;
             var scale = mat.lossyScale;
-            output[point.transformIndex] = Matrix4x4.TRS(point.workingPosition, rot*animPoseToPhysicsPose, scale);
+            outputPoses[point.transformIndex] = Matrix4x4.TRS(point.workingPosition, rot*animPoseToPhysicsPose, scale);
             simulatedPoints[i] = point;
         }
     }
 
-    void UpdateDebug() {
+    /*void UpdateDebug() {
         int simulatedPointCount = simulatedPoints.Length;
         for (int i = 0; i < simulatedPointCount; i++) {
             var point = simulatedPoints[i];
             debug[i] = point.position;
         }
-    }
+    }*/
     
     public void Execute() {
         Cache();
@@ -261,6 +261,6 @@ public struct JiggleJob : IJob {
         Constrain();
         FinishStep();
         ApplyPose();
-        UpdateDebug();
+        //UpdateDebug();
     }
 }

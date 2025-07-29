@@ -2,7 +2,7 @@ using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Jobs;
 
-public struct JigglePoseJob : IJobParallelForTransform {
+public struct JiggleJobPose : IJobParallelForTransform {
     public NativeArray<Matrix4x4> previousSolve;
     public NativeArray<Matrix4x4> currentSolve;
     public NativeArray<Vector3> previousLocalPositions;
@@ -11,14 +11,13 @@ public struct JigglePoseJob : IJobParallelForTransform {
     public double previousTimeStamp;
     public double currentTime;
     
-    public Vector3 previousSimulatedRootOffset;
-    public Vector3 currentSimulatedRootOffset;
+    public NativeArray<Vector3> previousSimulatedRootOffsets;
+    public NativeArray<Vector3> currentSimulatedRootOffsets;
     
-    public Vector3 previousSimulatedRootPosition;
-    public Vector3 currentSimulatedRootPosition;
+    public NativeArray<Vector3> previousSimulatedRootPositions;
+    public NativeArray<Vector3> currentSimulatedRootPositions;
     
-    public Vector3 realRootPosition;
-    
+    public NativeArray<Vector3> realRootPositions;
     public void Execute(int index, TransformAccess transform) {
         var prevPosition = previousSolve[index].GetPosition();
         var prevRotation = previousSolve[index].rotation;
@@ -39,8 +38,16 @@ public struct JigglePoseJob : IJobParallelForTransform {
         var position = Vector3.LerpUnclamped(prevPosition, newPosition, (float)t);
         var rotation = Quaternion.SlerpUnclamped(prevRotation, newRotation, (float)t);
         
+        var previousSimulatedRootPosition = previousSimulatedRootPositions[index];
+        var currentSimulatedRootPosition = currentSimulatedRootPositions[index];
+        
+        var previousSimulatedRootOffset = previousSimulatedRootOffsets[index];
+        var currentSimulatedRootOffset = currentSimulatedRootOffsets[index];
+        
         var simulatedRootPosition = Vector3.LerpUnclamped(previousSimulatedRootPosition, currentSimulatedRootPosition, (float)t);
         var simulatedRootOffset = Vector3.LerpUnclamped(previousSimulatedRootOffset, currentSimulatedRootOffset, (float)t);
+        
+        var realRootPosition = realRootPositions[index];
         
         var snapToReal = realRootPosition-simulatedRootPosition;
         transform.SetPositionAndRotation(position + snapToReal + simulatedRootOffset, rotation);

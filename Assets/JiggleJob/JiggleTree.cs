@@ -8,9 +8,23 @@ using UnityEngine.Profiling;
 // TODO: One IJobParallelForTransform for each jiggle tree so that it represents a single transform root
 // NOT an IJobParallelForTransform for each bone
 public class JiggleTree {
+    public bool dirty;
     public Transform[] bones;
     public JiggleBoneSimulatedPoint[] points;
+
+    public JiggleTree(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
+        this.bones = new Transform[bones.Length];
+        this.points = new JiggleBoneSimulatedPoint[points.Length];
+        for (int i = 0; i < bones.Length; i++) {
+            this.bones[i] = bones[i];
+        }
+        for (int i = 0; i < points.Length; i++) {
+            this.points[i] = points[i];
+        }
+    }
     
+    /*
+
     public JiggleBulkTransformRead bulkRead;
     public TransformAccessArray transformAccessArray;
     public JiggleJob jiggleJob;
@@ -21,7 +35,7 @@ public class JiggleTree {
     public bool hasBulkReadHandle;
     public JobHandle poseHandle;
     public bool hasPoseHandle;
-    
+
     private Vector3 previousRootPosition;
     private Vector3 currentRootPosition;
 
@@ -55,7 +69,7 @@ public class JiggleTree {
         jiggleJob.transformMatrices.CopyFrom(currentSolve);
         jiggleJob.simulatedPoints.CopyFrom(points);
         jiggleJob.output.CopyFrom(currentSolve);
-        
+
         bulkRead = new JiggleBulkTransformRead() {
             matrices = jiggleJob.transformMatrices,
             restPoseMatrices = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
@@ -77,7 +91,7 @@ public class JiggleTree {
         };
         jigglePoseJob.currentSolve.CopyFrom(currentSolve);
         jigglePoseJob.previousSolve.CopyFrom(currentSolve);
-        
+
         transformAccessArray = new TransformAccessArray(bones);
         restPoseTransforms = new Matrix4x4[boneCount];
         RecordAllRestPoseTransforms(bones, restPoseTransforms);
@@ -94,16 +108,16 @@ public class JiggleTree {
         //jigglePoseJob.currentSolve.CopyTo(jigglePoseJob.previousSolve);
         jigglePoseJob.timeStamp = job.timeStamp;
         job.output.CopyTo(jigglePoseJob.currentSolve);
-        
+
         jigglePoseJob.previousSimulatedRootOffset = jigglePoseJob.currentSimulatedRootOffset;
         jigglePoseJob.currentSimulatedRootOffset = job.simulatedPoints[1].position - job.simulatedPoints[1].pose;
-        
+
         jigglePoseJob.previousSimulatedRootPosition = jigglePoseJob.currentSimulatedRootPosition;
         jigglePoseJob.currentSimulatedRootPosition = job.simulatedPoints[1].position;
-        
+
         Profiler.EndSample();
     }
-    
+
     public void Simulate(double currentTime) {
         if (dirty) return;
         Profiler.BeginSample("JiggleTree.Simulate");
@@ -145,48 +159,6 @@ public class JiggleTree {
         Profiler.EndSample();
     }
 
-    /*
-    public void Pose() {
-        var boneCount = bones.Length;
-        for (int i = 0; i < boneCount; i++) {
-            var prevPosition = previousSolve[i].GetPosition();
-            var prevRotation = previousSolve[i].rotation;
-
-            var newPosition = currentSolve[i].GetPosition();
-            var newRotation = currentSolve[i].rotation;
-
-
-            var diff = timeStamp - previousTimeStamp;
-            if (diff == 0) {
-                throw new UnityException("Time difference is zero, cannot interpolate.");
-                return;
-            }
-
-            // TODO: Revisit this issue after FEELING the solve in VR in context
-            // The issue here is that we are having to operate 3 full frames in the past
-            // which might be noticable latency
-            var timeCorrection = JiggleJobManager.FIXED_DELTA_TIME * 2f;
-            var t = (Time.timeAsDouble-timeCorrection - previousTimeStamp) / diff;
-            var position = Vector3.LerpUnclamped(prevPosition, newPosition, (float)t);
-            var rotation = Quaternion.SlerpUnclamped(prevRotation, newRotation, (float)t);
-            //Debug.DrawRay(position + Vector3.up*Mathf.Repeat(Time.timeSinceLevelLoad,5f), Vector3.up, Color.magenta, 5f);
-            // NULL CHECK (OPTIONAL IF YOU WANT TO BE REALLY CAREFUL)
-            if (!bones[i]) {
-                dirty = true;
-                MonobehaviourHider.JiggleRoot.SetDirty();
-                return;
-            }
-            var timeOffset = Vector3.LerpUnclamped(lastPositionTimeOffset, positionTimeOffset, (float)t);
-            bones[i].SetPositionAndRotation(position + timeOffset, rotation);
-        }
-        for (int i = 0; i < boneCount; i++) {
-            bones[i].GetLocalPositionAndRotation(out var localPosition, out var localRotation);
-            previousLocalPositions[i] = localPosition;
-            previousLocalRotations[i] = localRotation;
-        }
-    }
-    */
-    
     private static void RecordAllRestPoseTransforms(Transform[] bones, Matrix4x4[] output) {
         for (var index = 0; index < bones.Length; index++) {
             bones[index].GetLocalPositionAndRotation(out var localPosition, out var localRotation);
@@ -204,9 +176,9 @@ public class JiggleTree {
         if (hasPoseHandle) {
             poseHandle.Complete();
         }
-        
+
         transformAccessArray.Dispose();
-        
+
         if (jiggleJob.transformMatrices.IsCreated) {
             jiggleJob.transformMatrices.Dispose();
         }
@@ -247,7 +219,7 @@ public class JiggleTree {
             Debug.DrawLine(job.debug[index], job.debug[simulatedPoint.parentIndex], Color.cyan, (float)JiggleJobManager.FIXED_DELTA_TIME);
         }
     }
-    
+
     private static void DebugDrawSphere(Vector3 origin, float radius, Color color, float duration, int segments = 32) {
         float angleStep = 360f / segments;
         Vector3 prevPoint = Vector3.zero;
@@ -276,6 +248,6 @@ public class JiggleTree {
             if (i > 0) Debug.DrawLine(prevPoint, currPoint, color, duration);
             prevPoint = currPoint;
         }
-    }
-    
+    } */
+
 }

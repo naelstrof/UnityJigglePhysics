@@ -17,24 +17,15 @@ public static class JiggleJobManager {
     }
 
     public static void SchedulePose() {
-        var trees = MonobehaviourHider.JiggleRoot.GetJiggleTrees();
-        foreach (var jiggleTree in trees) {
-            jiggleTree.SchedulePose();
-        }
+        MonobehaviourHider.JiggleRoot.SchedulePose();
     }
     
     public static void CompletePose() {
-        var trees = MonobehaviourHider.JiggleRoot.GetJiggleTrees();
-        foreach (var jiggleTree in trees) {
-            jiggleTree.CompletePose();
-        }
+        MonobehaviourHider.JiggleRoot.CompletePose();
     }
 
     private static void Simulate(double currentTime) {
-        var trees = MonobehaviourHider.JiggleRoot.GetJiggleTrees();
-        foreach (var jiggleTree in trees) {
-            jiggleTree.Simulate(currentTime);
-        }
+        MonobehaviourHider.JiggleRoot.Simulate(currentTime);
     }
     
     public static void SampleAndStepSimulation(double deltaTime) {

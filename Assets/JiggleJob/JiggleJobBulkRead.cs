@@ -2,7 +2,7 @@ using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Jobs;
 
-public struct JiggleBulkTransformRead : IJobParallelForTransform {
+public struct JiggleJobBulkRead : IJobParallelForTransform {
     public NativeArray<Matrix4x4> matrices;
     public NativeArray<Matrix4x4> restPoseMatrices;
     public NativeArray<Vector3> previousLocalPositions;

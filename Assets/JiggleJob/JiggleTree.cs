@@ -24,7 +24,6 @@ public class JiggleTree {
     }
     
     /*
-
     public JiggleBulkTransformRead bulkRead;
     public TransformAccessArray transformAccessArray;
     public JiggleJob jiggleJob;

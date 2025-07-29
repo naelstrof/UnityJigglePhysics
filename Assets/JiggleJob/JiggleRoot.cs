@@ -46,6 +46,7 @@ public class MonobehaviourHider {
         public JiggleJobData(IList<JiggleTree> trees) {
             List<Transform> transforms = new List<Transform>();
             List<Matrix4x4> transformMatrices = new List<Matrix4x4>();
+            List<Matrix4x4> localTransformMatrices = new List<Matrix4x4>();
             List<JiggleBoneSimulatedPoint> simulatedPoints = new List<JiggleBoneSimulatedPoint>();
             List<Vector3> previousLocalPositions = new List<Vector3>();
             List<Quaternion> previousLocalRotations = new List<Quaternion>();
@@ -57,11 +58,17 @@ public class MonobehaviourHider {
                 var currentPointIndexOffset = simulatedPoints.Count;
                 for (int i = 0; i < tree.points.Length; i++) {
                     var point = tree.points[i];
-                    point.transformIndex += currentTransformIndexOffset;
-                    point.parentIndex += currentPointIndexOffset;
+                    if (point.transformIndex != -1) {
+                        point.transformIndex += currentTransformIndexOffset;
+                    }
+                    if (point.parentIndex != -1) {
+                        point.parentIndex += currentPointIndexOffset;
+                    }
                     unsafe {
                         for(int j = 0; j < point.childenCount; j++) {
-                            point.childrenIndices[j] += currentPointIndexOffset;
+                            if (point.childrenIndices[j] != -1) {
+                                point.childrenIndices[j] += currentPointIndexOffset;
+                            }
                         }
                     }
                     animated.Add(point.animated);
@@ -70,11 +77,13 @@ public class MonobehaviourHider {
                 }
                 
                 transforms.AddRange(tree.bones);
-                for (int i = 0; i < transforms.Count; i++) {
-                    transformMatrices.Add(transforms[i].localToWorldMatrix);
-                    previousLocalPositions.Add(transforms[i].localPosition);
-                    previousLocalRotations.Add(transforms[i].localRotation);
+                for (int i = 0; i < tree.bones.Length; i++) {
+                    transformMatrices.Add(tree.bones[i].localToWorldMatrix);
+                    previousLocalPositions.Add(tree.bones[i].localPosition);
+                    previousLocalRotations.Add(tree.bones[i].localRotation);
                     rootTransformIndices.Add(currentTransformIndexOffset);
+                    tree.bones[i].GetLocalPositionAndRotation(out var localPosition, out var localRotation);
+                    localTransformMatrices.Add(Matrix4x4.TRS(localPosition, localRotation, Vector3.one));
                 }
             }
 
@@ -84,19 +93,29 @@ public class MonobehaviourHider {
             this.transformMatrices = new NativeArray<Matrix4x4>(transformMatricesArray, Allocator.Persistent);
             this.simulatedPoints = new NativeArray<JiggleBoneSimulatedPoint>(simulatedPoints.ToArray(), Allocator.Persistent);
             outputPoses = new NativeArray<Matrix4x4>(transformMatricesArray, Allocator.Persistent);
-            restPoseMatrices = new NativeArray<Matrix4x4>(transformMatricesArray, Allocator.Persistent);
+            restPoseMatrices = new NativeArray<Matrix4x4>(localTransformMatrices.ToArray(), Allocator.Persistent);
             this.previousLocalPositions = new NativeArray<Vector3>(previousLocalPositions.ToArray(), Allocator.Persistent);
             this.previousLocalRotations = new NativeArray<Quaternion>(previousLocalRotations.ToArray(), Allocator.Persistent);
             this.animated = new NativeArray<bool>(animated.ToArray(), Allocator.Persistent);
             previousPoses = new NativeArray<Matrix4x4>(transformMatricesArray, Allocator.Persistent);
             currentPoses = new NativeArray<Matrix4x4>(transformMatricesArray, Allocator.Persistent);
-            previousSimulatedRootOffsets = new NativeArray<Vector3>(this.simulatedPoints.Length, Allocator.Persistent);
-            currentSimulatedRootOffsets = new NativeArray<Vector3>(this.simulatedPoints.Length, Allocator.Persistent);
-            previousSimulatedRootPositions = new NativeArray<Vector3>(this.simulatedPoints.Length, Allocator.Persistent);
-            currentSimulatedRootPositions = new NativeArray<Vector3>(this.simulatedPoints.Length, Allocator.Persistent);
+            
+            previousSimulatedRootOffsets = new NativeArray<Vector3>(this.transforms.Length, Allocator.Persistent);
+            currentSimulatedRootOffsets = new NativeArray<Vector3>(this.transforms.Length, Allocator.Persistent);
+            previousSimulatedRootPositions = new NativeArray<Vector3>(this.transforms.Length, Allocator.Persistent);
+            currentSimulatedRootPositions = new NativeArray<Vector3>(this.transforms.Length, Allocator.Persistent);
+            
             realRootPositions = new NativeArray<Vector3>(this.simulatedPoints.Length, Allocator.Persistent);
             this.rootPointIndices = new NativeArray<int>(rootPointIndices.ToArray(), Allocator.Persistent);
             this.rootTransformIndices = new NativeArray<int>(rootTransformIndices.ToArray(), Allocator.Persistent);
+
+            //for(int i=0;i<simulatedPoints.Count; i++) {
+                //unsafe {
+                    //var point = simulatedPoints[i];
+                    //Debug.Log($"transformCount: {transforms.Count}, transformIndex: {point.transformIndex}, point.transformIndex: {point.transformIndex}, parentIndex: {point.parentIndex}, childrenCount: {point.childenCount}, childIndex: {point.childrenIndices[0]}");
+                //}
+                //Debug.Log($"Root Point Index: {rootPointIndices[i]}, point parent: {simulatedPoints[rootPointIndices[i]].parentIndex}, point transformIndex: {simulatedPoints[rootPointIndices[i]].transformIndex}");
+            //}
 
             jiggleJobSimulate = new JiggleJobSimulate() {
                 gravity = Physics.gravity,
@@ -122,7 +141,9 @@ public class MonobehaviourHider {
                 previousSolve = previousPoses,
                 currentSolve = currentPoses,
                 previousLocalPositions = this.previousLocalPositions,
-                currentTime = Time.timeAsDouble
+                previousLocalRotations = this.previousLocalRotations,
+                currentTime = Time.timeAsDouble,
+                previousTimeStamp = Time.timeAsDouble - JiggleJobManager.FIXED_DELTA_TIME,
             };
         }
         private void PushBack() {
@@ -139,11 +160,19 @@ public class MonobehaviourHider {
             jiggleJobPose.previousSimulatedRootOffsets.CopyFrom(jiggleJobPose.currentSimulatedRootOffsets);
             // TODO: JOBIFY THIS vvv
             for (int i = 0; i < simulatedPoints.Length; i++) {
-                jiggleJobPose.currentSimulatedRootOffsets[i] = simulatedPoints[rootPointIndices[i]].position - simulatedPoints[rootPointIndices[i]].pose;
+                var point = simulatedPoints[i];
+                if (point.transformIndex == -1) {
+                    continue;
+                }
+                jiggleJobPose.currentSimulatedRootOffsets[point.transformIndex] = simulatedPoints[rootPointIndices[i]].position - simulatedPoints[rootPointIndices[i]].pose;
             }
             jiggleJobPose.previousSimulatedRootPositions.CopyFrom(jiggleJobPose.currentSimulatedRootPositions);
             for (int i = 0; i < simulatedPoints.Length; i++) {
-                jiggleJobPose.currentSimulatedRootPositions[i] = simulatedPoints[rootPointIndices[i]].position;
+                var point = simulatedPoints[i];
+                if (point.transformIndex == -1) {
+                    continue;
+                }
+                jiggleJobPose.currentSimulatedRootPositions[point.transformIndex] = simulatedPoints[rootPointIndices[i]].position;
             }
             // TODO: JOBIFY THIS ^^^
             Profiler.EndSample();
@@ -256,6 +285,11 @@ public class MonobehaviourHider {
                     transformIndex = -1,
                     animated = false,
                 });
+                unsafe { // WEIRD
+                    var mem = points[newIndex];
+                    mem.childrenIndices[0] = points.Count - 1;
+                    points[newIndex] = mem;
+                }
             } else {
                 for (int i = 0; i < t.childCount; i++) {
                     var child = t.GetChild(i);

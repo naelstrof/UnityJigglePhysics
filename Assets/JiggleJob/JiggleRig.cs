@@ -15,10 +15,13 @@ public class JiggleRig : MonoBehaviour {
     [SerializeField] protected bool _animated;
     [SerializeField] protected bool _excludeRoot;
     [SerializeField] protected JiggleBoneInputParameters _jiggleBoneInputParameters;
+    [SerializeField] protected List<Transform> _excludedTransforms = new List<Transform>();
     
     private MonobehaviourHider.JiggleRoot _root;
     bool isValid = false;
     public bool rootExcluded => _excludeRoot;
+    public Transform rootBone => _rootBone;
+    public bool CheckExcluded(Transform t) => _excludedTransforms.Contains(t);
 
     public bool rootTransformError => !(_rootBone == null || isValid);
 
@@ -63,6 +66,7 @@ public class JiggleRig : MonoBehaviour {
 
     void OnValidate() {
         isValid = _rootBone.IsChildOf(gameObject.transform);
+        if (_excludedTransforms == null) _excludedTransforms = new List<Transform>();
     }
     
     public JiggleBoneSimulatedPoint[] GetJiggleBoneSimulatedPoints() {

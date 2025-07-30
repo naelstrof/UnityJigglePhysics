@@ -3489,7 +3489,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c222ab56bf694d74096e6d709752b25f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _rootBone: {fileID: 1063328646}
+  _rootBone: {fileID: 22281266}
   _animated: 1
   _excludeRoot: 0
   _jiggleBoneInputParameters:

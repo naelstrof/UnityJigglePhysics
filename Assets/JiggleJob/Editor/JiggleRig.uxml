@@ -8,5 +8,6 @@
     </ui:VisualElement>
     <ui:Toggle label="Toggle" name="AnimatedToggle" />
     <ui:Toggle label="Toggle" name="ExcludeRootToggle" />
+    <uie:PropertyField name="IgnoredTransformsField" />
     <ui:VisualElement style="height: 10px;" />
 </ui:UXML>

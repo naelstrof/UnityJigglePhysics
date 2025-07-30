@@ -101,6 +101,7 @@ public class JiggleTree {
         if (hasPoseHandle) {
             poseHandle.Complete();
         }
+        DrawDebug(job);
         JiggleInterpolationJob.previousTimeStamp = JiggleInterpolationJob.timeStamp;
         (JiggleInterpolationJob.currentSolve, JiggleInterpolationJob.previousSolve) = (JiggleInterpolationJob.previousSolve, JiggleInterpolationJob.currentSolve);
         //jigglePoseJob.currentSolve.CopyTo(jigglePoseJob.previousSolve);
@@ -257,12 +258,12 @@ public class JiggleTree {
         for (var index = 0; index < job.simulatedPoints.Length; index++) {
             var simulatedPoint = job.simulatedPoints[index];
             if (simulatedPoint.parentIndex == -1) continue;
-            DebugDrawSphere(job.debug[simulatedPoint.parentIndex], 0.2f, Color.cyan, (float)JiggleJobManager.FIXED_DELTA_TIME);
+            DebugDrawSphere(job.debug[simulatedPoint.parentIndex], 0.05f, Color.cyan, (float)JiggleJobManager.FIXED_DELTA_TIME);
             Debug.DrawLine(job.debug[index], job.debug[simulatedPoint.parentIndex], Color.cyan, (float)JiggleJobManager.FIXED_DELTA_TIME);
         }
     }
     
-    private static void DebugDrawSphere(Vector3 origin, float radius, Color color, float duration, int segments = 32) {
+    private static void DebugDrawSphere(Vector3 origin, float radius, Color color, float duration, int segments = 8) {
         float angleStep = 360f / segments;
         Vector3 prevPoint = Vector3.zero;
         Vector3 currPoint = Vector3.zero;

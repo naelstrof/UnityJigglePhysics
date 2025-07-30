@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class MonobehaviourHider {
@@ -42,48 +43,69 @@ public class MonobehaviourHider {
             if (t.TryGetComponent(out JiggleRoot newRoot)) {
                 lastRoot = newRoot;
             }
-            transforms.Add(t);
-            var parameters = lastRoot.rig.GetJiggleBoneParameter(0.5f);
-            if (lastRoot.rig.rootExcluded && t == lastRoot.transform) {
-                parameters = new JiggleBoneParameters() {
-                    angleElasticity = 1f,
-                    lengthElasticity = 1f,
-                    rootElasticity = 1f,
-                    elasticitySoften = 0f
-                };
-            }
-            points.Add(new JiggleBoneSimulatedPoint() { // Regular point
-                position = t.position,
-                lastPosition = t.position,
-                childenCount = t.childCount == 0 ? 1 : t.childCount,
-                parameters = parameters,
-                parentIndex = parentIndex,
-                transformIndex = transforms.Count-1,
-                animated = true,
-            });
-            newIndex = points.Count - 1;
-            
-            if (t.childCount == 0) {
-                points.Add(new JiggleBoneSimulatedPoint() { // virtual projected tip
+            if (!lastRoot.rig.CheckExcluded(t)) {
+                transforms.Add(t);
+                var parameters = lastRoot.rig.GetJiggleBoneParameter(0.5f);
+                if ((lastRoot.rig.rootExcluded && t == lastRoot.transform) || lastRoot.rig.CheckExcluded(t)) {
+                    parameters = new JiggleBoneParameters() {
+                        angleElasticity = 1f,
+                        lengthElasticity = 1f,
+                        rootElasticity = 1f,
+                        elasticitySoften = 0f
+                    };
+                }
+
+                var validChildren = GetValidChildren(t, lastRoot.rig);
+                points.Add(new JiggleBoneSimulatedPoint() { // Regular point
                     position = t.position,
                     lastPosition = t.position,
-                    childenCount = 0,
-                    parameters = lastRoot.rig.GetJiggleBoneParameter(1f),
-                    parentIndex = newIndex,
-                    transformIndex = -1,
-                    animated = false,
+                    childenCount = validChildren.Count == 0 ? 1 : validChildren.Count,
+                    parameters = parameters,
+                    parentIndex = parentIndex,
+                    transformIndex = transforms.Count-1,
+                    animated = true,
                 });
-            } else {
-                for (int i = 0; i < t.childCount; i++) {
-                    var child = t.GetChild(i);
-                    Visit(child, transforms, points, newIndex, lastRoot, out int childIndex);
+                newIndex = points.Count - 1;
+                
+                if (validChildren.Count == 0) {
+                    points.Add(new JiggleBoneSimulatedPoint() { // virtual projected tip
+                        position = t.position,
+                        lastPosition = t.position,
+                        childenCount = 0,
+                        parameters = lastRoot.rig.GetJiggleBoneParameter(1f),
+                        parentIndex = newIndex,
+                        transformIndex = -1,
+                        animated = false,
+                    });
                     unsafe { // WEIRD
                         var record = points[newIndex];
-                        record.childrenIndices[i] = childIndex;
+                        record.childrenIndices[0] = points.Count - 1;
                         points[newIndex] = record;
                     }
+                } else {
+                    for (int i = 0; i < validChildren.Count; i++) {
+                        var child = validChildren[i];
+                        Visit(child, transforms, points, newIndex, lastRoot, out int childIndex);
+                        unsafe { // WEIRD
+                            var record = points[newIndex];
+                            record.childrenIndices[i] = childIndex;
+                            points[newIndex] = record;
+                        }
+                    }
                 }
+            } else {
+                newIndex = points.Count - 1;
             }
+
+        }
+
+        private static List<Transform> GetValidChildren(Transform t, JiggleRig jiggleRig) {
+            var validChildren = new List<Transform>();
+            foreach (Transform child in t) {
+                if (jiggleRig.CheckExcluded(child)) continue;
+                validChildren.Add(child);
+            }
+            return validChildren;
         }
         
         public static List<JiggleTree> GetJiggleTrees() {
@@ -107,6 +129,7 @@ public class MonobehaviourHider {
                     }
                 }
                 if (found) continue;
+                
                 List<Transform> jiggleTreeTransforms = new List<Transform>();
                 List<JiggleBoneSimulatedPoint> jiggleTreePoints = new List<JiggleBoneSimulatedPoint>();
                 jiggleTreePoints.Add(new JiggleBoneSimulatedPoint() { // Back projected virtual root

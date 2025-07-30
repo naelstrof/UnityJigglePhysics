@@ -187,17 +187,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _rootBone: {fileID: 576193118}
   _animated: 0
+  _excludeRoot: 0
   _jiggleBoneInputParameters:
     advancedToggle: 1
+    angleLimitToggle: 0
     stiffness: 0.762
     soften: 0.231
     angleLimit: 0
+    angleLimitSoften: 0
     rootStretch: 0.02
     stretch: 0.127
     drag: 0.079
     airDrag: 0
     gravity: 1
     blend: 0
+  _excludedTransforms: []
+--- !u!4 &1196167013 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -2335751251223409185, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+  m_PrefabInstance: {fileID: 1571801574}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1273270108
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -263,6 +272,63 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+--- !u!1001 &1302824309
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4293952688135239115, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -2.009
+      objectReference: {fileID: 0}
+    - target: {fileID: 4293952688135239115, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4293952688135239115, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -1.971
+      objectReference: {fileID: 0}
+    - target: {fileID: 4293952688135239115, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4293952688135239115, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4293952688135239115, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4293952688135239115, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4293952688135239115, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4293952688135239115, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4293952688135239115, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5285643494549829687, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: m_Name
+      value: StanfordArmadilloLOD
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
 --- !u!1 &1369353048
 GameObject:
   m_ObjectHideFlags: 0
@@ -355,6 +421,104 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1571801574
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -4.009
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -2.005
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+      propertyPath: m_Name
+      value: StanfordArmadillo_no_ignore_bones
+      objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: e784559d578896fa4beaf84fada4c31d, type: 2}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1571801577}
+  m_SourcePrefab: {fileID: 100100000, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+--- !u!1 &1571801575 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+  m_PrefabInstance: {fileID: 1571801574}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1571801577
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1571801575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c222ab56bf694d74096e6d709752b25f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _rootBone: {fileID: 1196167013}
+  _animated: 1
+  _excludeRoot: 0
+  _jiggleBoneInputParameters:
+    advancedToggle: 1
+    angleLimitToggle: 1
+    stiffness: 0.426
+    soften: 0.328
+    angleLimit: 39.7
+    angleLimitSoften: 0.501
+    rootStretch: 0.058
+    stretch: 0.07
+    drag: 0.067
+    airDrag: 0
+    gravity: 0
+    blend: 0
+  _excludedTransforms: []
 --- !u!1001 &1825603893
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -525,3 +689,5 @@ SceneRoots:
   - {fileID: 1825603893}
   - {fileID: 1273270108}
   - {fileID: 162126675}
+  - {fileID: 1302824309}
+  - {fileID: 1571801574}

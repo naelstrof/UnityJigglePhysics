@@ -33,6 +33,7 @@ public class MonobehaviourHider {
         private JiggleJobSimulate jiggleJobSimulate;
         private JiggleJobBulkRead jiggleJobBulkRead;
         private JiggleJobPose jiggleJobPose;
+        private JiggleJobPreparePose jiggleJobPreparePose;
         
         private bool hasSimulateHandle = false;
         private JobHandle simulateHandle;
@@ -132,6 +133,15 @@ public class MonobehaviourHider {
                 animated = this.animated
             };
 
+            jiggleJobPreparePose = new JiggleJobPreparePose() {
+                simulatedPoints = this.simulatedPoints,
+                currentSimulatedRootOffsets = this.currentSimulatedRootOffsets,
+                previousSimulatedRootOffsets = this.previousSimulatedRootOffsets,
+                currentSimulatedRootPositions = this.currentSimulatedRootPositions,
+                previousSimulatedRootPositions = this.previousSimulatedRootPositions,
+                rootPointIndices = this.rootPointIndices,
+            };
+                
             jiggleJobPose = new JiggleJobPose() {
                 currentSimulatedRootOffsets = currentSimulatedRootOffsets,
                 previousSimulatedRootOffsets = previousSimulatedRootOffsets,
@@ -147,7 +157,7 @@ public class MonobehaviourHider {
             };
         }
         private void PushBack() {
-            Profiler.BeginSample("JiggleTree.Pushback");
+            Profiler.BeginSample("JiggleRoot.Pushback");
             if (hasPoseHandle) {
                 poseHandle.Complete();
             }
@@ -156,42 +166,25 @@ public class MonobehaviourHider {
             //jigglePoseJob.currentSolve.CopyTo(jigglePoseJob.previousSolve);
             jiggleJobPose.timeStamp = jiggleJobSimulate.timeStamp;
             jiggleJobSimulate.outputPoses.CopyTo(jiggleJobPose.currentSolve);
-
-            jiggleJobPose.previousSimulatedRootOffsets.CopyFrom(jiggleJobPose.currentSimulatedRootOffsets);
-            // TODO: JOBIFY THIS vvv
-            for (int i = 0; i < simulatedPoints.Length; i++) {
-                var point = simulatedPoints[i];
-                if (point.transformIndex == -1) {
-                    continue;
-                }
-                jiggleJobPose.currentSimulatedRootOffsets[point.transformIndex] = simulatedPoints[rootPointIndices[i]].position - simulatedPoints[rootPointIndices[i]].pose;
-            }
-            jiggleJobPose.previousSimulatedRootPositions.CopyFrom(jiggleJobPose.currentSimulatedRootPositions);
-            for (int i = 0; i < simulatedPoints.Length; i++) {
-                var point = simulatedPoints[i];
-                if (point.transformIndex == -1) {
-                    continue;
-                }
-                jiggleJobPose.currentSimulatedRootPositions[point.transformIndex] = simulatedPoints[rootPointIndices[i]].position;
-            }
-            // TODO: JOBIFY THIS ^^^
+            var handle = jiggleJobPreparePose.Schedule();
+            handle.Complete();
             Profiler.EndSample();
         }
 
         public void Simulate(double currentTime) {
-            Profiler.BeginSample("JiggleTree.Simulate");
-            Profiler.BeginSample("JiggleTree.CompletePreviousJob");
+            Profiler.BeginSample("JiggleRoot.Simulate");
             if (hasSimulateHandle) {
+                Profiler.BeginSample("JiggleRoot.CompletePreviousJob");
                 simulateHandle.Complete();
                 //DrawDebug(jiggleJob);
                 PushBack();
+                Profiler.EndSample();
             }
-            Profiler.EndSample();
-            Profiler.BeginSample("JiggleTree.PrepareJobs");
+            Profiler.BeginSample("JiggleRoot.PrepareJobs");
             jiggleJobSimulate.timeStamp = currentTime;
             jiggleJobSimulate.gravity = Physics.gravity;
             Profiler.EndSample();
-            Profiler.BeginSample("JiggleTree.ScheduleJobs");
+            Profiler.BeginSample("JiggleRoot.ScheduleJobs");
             readHandle = hasPoseHandle ? jiggleJobBulkRead.Schedule(transformAccess, poseHandle) : jiggleJobBulkRead.Schedule(transformAccess);
             hasReadHandle = true;
             simulateHandle = jiggleJobSimulate.Schedule(readHandle);
@@ -201,7 +194,7 @@ public class MonobehaviourHider {
         }
         
         public void SchedulePose() {
-            Profiler.BeginSample("JiggleTree.SchedulePose");
+            Profiler.BeginSample("JiggleRoot.SchedulePose");
             // TODO: THIS SUCKS, PLEASE JOBIFY OR SOMETHIN
             for(int i=0;i<transforms.Length; i++) {
                 realRootPositions[i] = transforms[rootTransformIndices[i]].position;
@@ -213,7 +206,7 @@ public class MonobehaviourHider {
         }
 
         public void CompletePose() {
-            Profiler.BeginSample("JiggleTree.CompletePose");
+            Profiler.BeginSample("JiggleRoot.CompletePose");
             if (hasPoseHandle) {
                 poseHandle.Complete();
             }

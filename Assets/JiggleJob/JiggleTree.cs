@@ -106,12 +106,14 @@ public class JiggleTree {
         //jigglePoseJob.currentSolve.CopyTo(jigglePoseJob.previousSolve);
         JiggleInterpolationJob.timeStamp = job.timeStamp;
         job.output.CopyTo(JiggleInterpolationJob.currentSolve);
+
+        var simulatedPoint = job.simulatedPoints[1];
         
         JiggleInterpolationJob.previousSimulatedRootOffset = JiggleInterpolationJob.currentSimulatedRootOffset;
-        JiggleInterpolationJob.currentSimulatedRootOffset = job.simulatedPoints[1].position - job.simulatedPoints[1].pose;
+        JiggleInterpolationJob.currentSimulatedRootOffset = simulatedPoint.position - simulatedPoint.pose;
         
         JiggleInterpolationJob.previousSimulatedRootPosition = JiggleInterpolationJob.currentSimulatedRootPosition;
-        JiggleInterpolationJob.currentSimulatedRootPosition = job.simulatedPoints[1].position;
+        JiggleInterpolationJob.currentSimulatedRootPosition = simulatedPoint.position;
         
         Profiler.EndSample();
     }

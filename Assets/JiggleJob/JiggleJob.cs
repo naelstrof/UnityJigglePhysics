@@ -218,6 +218,8 @@ public struct JiggleJob : IJob {
             if (point.parentIndex == -1) {
                 continue;
             }
+            
+            var parent = simulatedPoints[point.parentIndex];
 
             Vector3 cachedAnimatedVector = Vector3.zero;
             Vector3 simulatedVector = Vector3.zero;
@@ -234,17 +236,18 @@ public struct JiggleJob : IJob {
                     var local_child_working_position_also = child_also.workingPosition;
                     cachedAnimatedVectorSum += (local_child_pose_also - local_pose).normalized;
                     simulatedVectorSum += (local_child_working_position_also - local_working_position).normalized;
-                    cachedAnimatedVector = (cachedAnimatedVectorSum * (1f / point.childenCount)).normalized;
                 }
+                cachedAnimatedVector = (cachedAnimatedVectorSum * (1f / point.childenCount)).normalized;
                 simulatedVector = (simulatedVectorSum * (1f / point.childenCount)).normalized;
             }
-
+            
             var animPoseToPhysicsPose = Quaternion.Slerp(Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector), Quaternion.identity, 1f - point.parameters.blend);
+            point.rollingError = animPoseToPhysicsPose;
 
             var mat = transformMatrices[point.transformIndex];
             var rot = mat.rotation;
             var scale = mat.lossyScale;
-            output[point.transformIndex] = Matrix4x4.TRS(point.workingPosition, rot*animPoseToPhysicsPose, scale);
+            output[point.transformIndex] = Matrix4x4.TRS(point.workingPosition, Quaternion.Inverse(parent.rollingError)*animPoseToPhysicsPose*rot, scale);
             simulatedPoints[i] = point;
         }
     }

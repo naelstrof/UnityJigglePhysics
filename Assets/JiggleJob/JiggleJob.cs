@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using UnityEngine;
 
+[BurstCompile]
 public struct JiggleJob : IJob {
     // TODO: doubles are strictly a bad way to track time, probably should be ints or longs.
     public double timeStamp;

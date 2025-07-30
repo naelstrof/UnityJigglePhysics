@@ -3,6 +3,7 @@ using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Jobs;
 
+[BurstCompiled]
 public struct JiggleJobTransformWrite : IJobParallelForTransform {
     public NativeArray<Vector3> previousLocalPositions;
     public NativeArray<Quaternion> previousLocalRotations;

@@ -3,6 +3,7 @@ using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Jobs;
 
+[BurstCompiled]
 public struct JiggleInterpolationJob : IJobParallelFor {
     public NativeArray<Matrix4x4> previousSolve;
     public NativeArray<Matrix4x4> currentSolve;

@@ -1,7 +1,9 @@
+using System;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Jobs;
 
+[BurstCompiled]
 public struct JiggleBulkTransformRead : IJobParallelForTransform {
     public NativeArray<Matrix4x4> matrices;
     public NativeArray<Matrix4x4> restPoseMatrices;
@@ -24,4 +26,7 @@ public struct JiggleBulkTransformRead : IJobParallelForTransform {
         matrices[index] = transform.localToWorldMatrix;
     }
     
+}
+
+public class BurstCompiledAttribute : Attribute {
 }

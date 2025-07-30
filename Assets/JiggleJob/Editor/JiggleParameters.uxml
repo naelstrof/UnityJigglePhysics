@@ -5,14 +5,16 @@
         <ui:Toggle label="Toggle" name="AdvancedToggle" />
         <ui:Slider label="Slider" value="42" high-value="1" name="StiffnessSlider" />
         <ui:VisualElement name="AdvancedSection" style="flex-grow: 1;">
+            <ui:Slider label="Slider" value="42" high-value="1" name="SoftenSlider" />
+            <ui:Slider label="Slider" value="42" high-value="1" name="StretchSlider" />
+            <ui:VisualElement name="RootSection" style="flex-grow: 1;">
+                <ui:Slider label="Slider" value="42" high-value="1" name="RootStretchSlider" />
+            </ui:VisualElement>
             <ui:Toggle label="Toggle" name="AngleLimitToggle" />
             <ui:VisualElement name="AngleLimitSection" style="flex-grow: 1;">
                 <ui:Slider label="Slider" value="42" high-value="90" name="AngleLimitSlider" />
                 <ui:Slider label="Slider" value="42" high-value="1" name="AngleLimitSoftenSlider" />
             </ui:VisualElement>
-            <ui:Slider label="Slider" value="42" high-value="1" name="SoftenSlider" />
-            <ui:Slider label="Slider" value="42" high-value="1" name="RootStretchSlider" />
-            <ui:Slider label="Slider" value="42" high-value="1" name="StretchSlider" />
         </ui:VisualElement>
         <ui:Slider label="Slider" value="42" high-value="1" name="DragSlider" />
         <ui:Slider label="Slider" value="42" high-value="1" name="AirDragSlider" />

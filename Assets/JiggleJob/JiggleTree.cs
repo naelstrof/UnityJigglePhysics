@@ -1,6 +1,5 @@
 using Unity.Collections;
 using Unity.Jobs;
-using UnityEditor.TerrainTools;
 using UnityEngine;
 using UnityEngine.Jobs;
 using UnityEngine.Profiling;
@@ -178,6 +177,18 @@ public class JiggleTree {
     */
 
     public void Dispose() {
+        if (hasHandleBulkRead) {
+            handleBulkRead.Complete();
+        }
+        if (hasHandleSimulate) {
+            handleSimulate.Complete();
+        }
+        if (hasHandleInterpolate) {
+            handleInterpolate.Complete();
+        }
+        if (hasHandleTrasnformWrite) {
+            handleTransformWrite.Complete();
+        }
         jobSimulate.Dispose();
         jobBulkRead.Dispose();
         jobInterpolation.Dispose();

@@ -11,6 +11,16 @@ public struct JiggleJobTransformWrite : IJobParallelForTransform {
     public NativeArray<Vector3> outputInterpolatedPositions;
     [ReadOnly]
     public NativeArray<Quaternion> outputInterpolatedRotations;
+
+    public JiggleJobTransformWrite(JiggleJobBulkTransformRead jobBulkRead, JiggleJobInterpolation jobInterpolation) {
+        previousLocalPositions = jobBulkRead.previousLocalPositions;
+        previousLocalRotations = jobBulkRead.previousLocalRotations;
+        outputInterpolatedPositions = jobInterpolation.outputInterpolatedPositions;
+        outputInterpolatedRotations = jobInterpolation.outputInterpolatedRotations;
+    }
+    
+    public void Dispose() {
+    }
     
     public void Execute(int index, TransformAccess transform) {
         transform.SetPositionAndRotation(outputInterpolatedPositions[index], outputInterpolatedRotations[index]);

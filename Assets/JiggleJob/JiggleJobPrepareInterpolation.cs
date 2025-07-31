@@ -16,6 +16,22 @@ public struct JiggleJobPrepareInterpolation : IJob {
     public NativeReference<Vector3> currentSimulatedRootOffset;
     public NativeReference<Vector3> previousSimulatedRootPosition;
     public NativeReference<Vector3> currentSimulatedRootPosition;
+
+    public JiggleJobPrepareInterpolation(JiggleJobSimulate jobSimulateSimulate, JiggleJobInterpolation jobInterpolation) {
+        incomingTimeStamp = Time.timeAsDouble;
+        outputPoses = jobSimulateSimulate.output;
+        inputPoses = jobSimulateSimulate.transformMatrices;
+        currentSolve = jobInterpolation.currentSolve;
+        previousSimulatedRootOffset = jobInterpolation.previousSimulatedRootOffset;
+        currentSimulatedRootOffset = jobInterpolation.currentSimulatedRootOffset;
+        previousSimulatedRootPosition = jobInterpolation.previousSimulatedRootPosition;
+        currentSimulatedRootPosition = jobInterpolation.currentSimulatedRootPosition;
+        previousTimeStamp = jobInterpolation.previousTimeStamp;
+        currentTimeStamp = jobInterpolation.timeStamp;
+    }
+
+    public void Dispose() {
+    }
     
     public void Execute() {
         previousTimeStamp.Value = currentTimeStamp.Value;

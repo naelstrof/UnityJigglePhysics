@@ -6,15 +6,39 @@ using Unity.Jobs;
 using UnityEngine;
 
 [BurstCompile]
-public struct JiggleJob : IJob {
+public struct JiggleJobSimulate : IJob {
     // TODO: doubles are strictly a bad way to track time, probably should be ints or longs.
     public double timeStamp;
     public Vector3 gravity;
     
     public NativeArray<Matrix4x4> transformMatrices;
     public NativeArray<JiggleBoneSimulatedPoint> simulatedPoints;
-    public NativeArray<Vector3> debug;
     public NativeArray<Matrix4x4> output;
+
+    public JiggleJobSimulate(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
+        var boneCount = bones.Length;
+        var currentSolve = new Matrix4x4[boneCount];
+        for (int i = 0; i < boneCount; i++) {
+            currentSolve[i] = bones[i].localToWorldMatrix;
+        }
+        transformMatrices = new NativeArray<Matrix4x4>(currentSolve, Allocator.Persistent);
+        simulatedPoints = new NativeArray<JiggleBoneSimulatedPoint>(points, Allocator.Persistent);
+        output = new NativeArray<Matrix4x4>(currentSolve, Allocator.Persistent);
+        timeStamp = Time.timeAsDouble;
+        gravity = Physics.gravity;
+    }
+
+    public void Dispose() {
+        if (transformMatrices.IsCreated) {
+            transformMatrices.Dispose();
+        }
+        if (simulatedPoints.IsCreated) {
+            simulatedPoints.Dispose();
+        }
+        if (output.IsCreated) {
+            output.Dispose();
+        }
+    }
 
     private unsafe void Cache() {
         int simulatedPointCount = simulatedPoints.Length;
@@ -254,14 +278,6 @@ public struct JiggleJob : IJob {
             simulatedPoints[i] = point;
         }
     }
-
-    void UpdateDebug() {
-        int simulatedPointCount = simulatedPoints.Length;
-        for (int i = 0; i < simulatedPointCount; i++) {
-            var point = simulatedPoints[i];
-            debug[i] = point.position;
-        }
-    }
     
     public void Execute() {
         Cache();
@@ -269,6 +285,5 @@ public struct JiggleJob : IJob {
         Constrain();
         FinishStep();
         ApplyPose();
-        UpdateDebug();
     }
 }

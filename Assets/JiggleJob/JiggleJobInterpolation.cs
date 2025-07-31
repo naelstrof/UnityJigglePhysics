@@ -23,6 +23,57 @@ public struct JiggleJobInterpolation : IJobFor {
     
     public NativeArray<Vector3> outputInterpolatedPositions;
     public NativeArray<Quaternion> outputInterpolatedRotations;
+
+    public JiggleJobInterpolation(JiggleJobSimulate jobSimulate, Transform[] bones) {
+        var boneCount = bones.Length;
+        previousSolve = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent);
+        currentSolve = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent);
+        jobSimulate.output.CopyTo(previousSolve);
+        jobSimulate.output.CopyTo(currentSolve);
+        previousSimulatedRootOffset = new NativeReference<Vector3>(Vector3.zero, Allocator.Persistent);
+        currentSimulatedRootOffset = new NativeReference<Vector3>(Vector3.zero, Allocator.Persistent);
+        realRootPosition = bones[0].position;
+        previousSimulatedRootPosition = new NativeReference<Vector3>(realRootPosition, Allocator.Persistent);
+        currentSimulatedRootPosition = new NativeReference<Vector3>(realRootPosition, Allocator.Persistent);
+        currentTime = Time.timeAsDouble;
+        timeStamp = new NativeReference<double>(currentTime, Allocator.Persistent);
+        previousTimeStamp = new NativeReference<double>(currentTime - JiggleJobManager.FIXED_DELTA_TIME, Allocator.Persistent);
+        outputInterpolatedPositions = new NativeArray<Vector3>(boneCount, Allocator.Persistent);
+        outputInterpolatedRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent);
+    }
+    
+    public void Dispose() {
+        if (previousSolve.IsCreated) {
+            previousSolve.Dispose();
+        }
+        if (currentSolve.IsCreated) {
+            currentSolve.Dispose();
+        }
+        if (previousSimulatedRootOffset.IsCreated) {
+            previousSimulatedRootOffset.Dispose();
+        }
+        if (currentSimulatedRootOffset.IsCreated) {
+            currentSimulatedRootOffset.Dispose();
+        }
+        if (previousSimulatedRootPosition.IsCreated) {
+            previousSimulatedRootPosition.Dispose();
+        }
+        if (currentSimulatedRootPosition.IsCreated) {
+            currentSimulatedRootPosition.Dispose();
+        }
+        if (timeStamp.IsCreated) {
+            timeStamp.Dispose();
+        }
+        if (previousTimeStamp.IsCreated) {
+            previousTimeStamp.Dispose();
+        }
+        if (outputInterpolatedPositions.IsCreated) {
+            outputInterpolatedPositions.Dispose();
+        }
+        if (outputInterpolatedRotations.IsCreated) {
+            outputInterpolatedRotations.Dispose();
+        }
+    }
     
     public void Execute(int index) {
         var prevPosition = previousSolve[index].GetPosition();

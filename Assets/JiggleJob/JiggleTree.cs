@@ -16,7 +16,7 @@ public class JiggleTree {
     public JobHandle handleBulkRead;
     public bool hasHandleBulkRead;
     
-    public JiggleJob jobSimulate;
+    public JiggleJobSimulate jobSimulate;
     public bool hasHandleSimulate;
     public JobHandle handleSimulate;
     
@@ -31,8 +31,6 @@ public class JiggleTree {
     public JobHandle handlePrepareInterpolation;
     public bool hasHandlePrepareInterpolation;
 
-    public Matrix4x4[] restPoseTransforms;
-
     public bool dirty;
 
     public JiggleTree(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
@@ -41,71 +39,23 @@ public class JiggleTree {
         var pointCount = points.Length;
         this.bones = new Transform[boneCount];
         this.points = new JiggleBoneSimulatedPoint[pointCount];
-        var currentSolve = new Matrix4x4[boneCount];
-        for (int i = 0; i < pointCount; i++) {
+        for(int i=0; i < boneCount; i++) {
+            this.bones[i] = bones[i];
+        }
+        for(int i=0; i < pointCount; i++) {
             this.points[i] = points[i];
         }
-        for (int i = 0; i < boneCount; i++) {
-            this.bones[i] = bones[i];
-            currentSolve[i] = bones[i].localToWorldMatrix;
-        }
 
-        jobSimulate = new JiggleJob() {
-            transformMatrices = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
-            debug = new NativeArray<Vector3>(pointCount, Allocator.Persistent),
-            simulatedPoints = new NativeArray<JiggleBoneSimulatedPoint>(pointCount, Allocator.Persistent),
-            output = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
-        };
-        jobSimulate.transformMatrices.CopyFrom(currentSolve);
-        jobSimulate.simulatedPoints.CopyFrom(points);
-        jobSimulate.output.CopyFrom(currentSolve);
+        jobSimulate = new JiggleJobSimulate(bones, points);
+        jobBulkRead = new JiggleJobBulkTransformRead(jobSimulate, bones);
+
+        jobInterpolation = new JiggleJobInterpolation(jobSimulate, bones);
         
-        jobBulkRead = new JiggleJobBulkTransformRead() {
-            matrices = jobSimulate.transformMatrices,
-            restPoseMatrices = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
-            previousLocalPositions = new NativeArray<Vector3>(boneCount, Allocator.Persistent),
-            previousLocalRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent),
-            animated = new NativeArray<bool>(boneCount, Allocator.Persistent)
-        };
-        jobInterpolation = new JiggleJobInterpolation() {
-            previousSolve = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
-            currentSolve = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
-            previousSimulatedRootOffset = new NativeReference<Vector3>(Vector3.zero, Allocator.Persistent),
-            currentSimulatedRootOffset = new NativeReference<Vector3>(Vector3.zero, Allocator.Persistent),
-            previousSimulatedRootPosition = new NativeReference<Vector3>(bones[0].position, Allocator.Persistent),
-            currentSimulatedRootPosition = new NativeReference<Vector3>(bones[0].position, Allocator.Persistent),
-            timeStamp = new NativeReference<double>(Time.timeAsDouble, Allocator.Persistent),
-            previousTimeStamp = new NativeReference<double>(Time.timeAsDouble-JiggleJobManager.FIXED_DELTA_TIME, Allocator.Persistent),
-            outputInterpolatedPositions = new NativeArray<Vector3>(boneCount, Allocator.Persistent),
-            outputInterpolatedRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent),
-        };
-
-        jobTransformWrite = new JiggleJobTransformWrite() {
-            previousLocalPositions = jobBulkRead.previousLocalPositions,
-            previousLocalRotations = jobBulkRead.previousLocalRotations,
-            outputInterpolatedPositions = jobInterpolation.outputInterpolatedPositions,
-            outputInterpolatedRotations = jobInterpolation.outputInterpolatedRotations,
-        };
+        jobTransformWrite = new JiggleJobTransformWrite(jobBulkRead, jobInterpolation);
         
-        jobInterpolation.currentSolve.CopyFrom(currentSolve);
-        jobInterpolation.previousSolve.CopyFrom(currentSolve);
-
-        jobPrepareInterpolation = new JiggleJobPrepareInterpolation() {
-            outputPoses = jobSimulate.output,
-            inputPoses = jobSimulate.transformMatrices,
-            currentSolve = jobInterpolation.currentSolve,
-            previousSimulatedRootOffset = jobInterpolation.previousSimulatedRootOffset,
-            currentSimulatedRootOffset = jobInterpolation.currentSimulatedRootOffset,
-            previousSimulatedRootPosition = jobInterpolation.previousSimulatedRootPosition,
-            currentSimulatedRootPosition = jobInterpolation.currentSimulatedRootPosition,
-            previousTimeStamp = jobInterpolation.previousTimeStamp,
-            currentTimeStamp = jobInterpolation.timeStamp,
-        };
+        jobPrepareInterpolation = new JiggleJobPrepareInterpolation(jobSimulate, jobInterpolation);
         
         transformAccessArray = new TransformAccessArray(bones);
-        restPoseTransforms = new Matrix4x4[boneCount];
-        RecordAllRestPoseTransforms(bones, restPoseTransforms);
-        jobBulkRead.restPoseMatrices.CopyFrom(restPoseTransforms);
     }
 
     private void PushBack() {
@@ -220,67 +170,26 @@ public class JiggleTree {
         }
     }
     */
-    
-    private static void RecordAllRestPoseTransforms(Transform[] bones, Matrix4x4[] output) {
-        for (var index = 0; index < bones.Length; index++) {
-            bones[index].GetLocalPositionAndRotation(out var localPosition, out var localRotation);
-            output[index] = Matrix4x4.TRS(localPosition, localRotation, Vector3.one);
-        }
-    }
 
     public void Dispose() {
-        if (hasHandleSimulate) {
-            handleSimulate.Complete();
-        }
-        if (hasHandleBulkRead) {
-            handleBulkRead.Complete();
-        }
-        if (hasHandleTrasnformWrite) {
-            handleTransformWrite.Complete();
-        }
-        
-        transformAccessArray.Dispose();
-        
-        if (jobSimulate.transformMatrices.IsCreated) {
-            jobSimulate.transformMatrices.Dispose();
-        }
-        if (jobSimulate.debug.IsCreated) {
-            jobSimulate.debug.Dispose();
-        }
-        if (jobSimulate.simulatedPoints.IsCreated) {
-            jobSimulate.simulatedPoints.Dispose();
-        }
-        if (jobSimulate.output.IsCreated) {
-            jobSimulate.output.Dispose();
-        }
-        if (jobBulkRead.restPoseMatrices.IsCreated) {
-            jobBulkRead.restPoseMatrices.Dispose();
-        }
-        if (jobBulkRead.previousLocalPositions.IsCreated) {
-            jobBulkRead.previousLocalPositions.Dispose();
-        }
-        if (jobBulkRead.previousLocalRotations.IsCreated) {
-            jobBulkRead.previousLocalRotations.Dispose();
-        }
-        if (jobBulkRead.animated.IsCreated) {
-            jobBulkRead.animated.Dispose();
-        }
-        if (jobInterpolation.previousSolve.IsCreated) {
-            jobInterpolation.previousSolve.Dispose();
-        }
-        if (jobInterpolation.currentSolve.IsCreated) {
-            jobInterpolation.currentSolve.Dispose();
+        jobSimulate.Dispose();
+        jobBulkRead.Dispose();
+        jobInterpolation.Dispose();
+        jobTransformWrite.Dispose();
+        jobPrepareInterpolation.Dispose();
+        if (transformAccessArray.isCreated) {
+            transformAccessArray.Dispose();
         }
     }
 
-    private static void DrawDebug(JiggleJob job) {
+    /*private static void DrawDebug(JiggleJob job) {
         for (var index = 0; index < job.simulatedPoints.Length; index++) {
             var simulatedPoint = job.simulatedPoints[index];
             if (simulatedPoint.parentIndex == -1) continue;
             DebugDrawSphere(job.debug[simulatedPoint.parentIndex], 0.05f, Color.cyan, (float)JiggleJobManager.FIXED_DELTA_TIME);
             Debug.DrawLine(job.debug[index], job.debug[simulatedPoint.parentIndex], Color.cyan, (float)JiggleJobManager.FIXED_DELTA_TIME);
         }
-    }
+    }*/
     
     private static void DebugDrawSphere(Vector3 origin, float radius, Color color, float duration, int segments = 8) {
         float angleStep = 360f / segments;

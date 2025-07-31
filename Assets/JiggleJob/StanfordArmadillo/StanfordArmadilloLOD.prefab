@@ -210,14 +210,14 @@ MonoBehaviour:
   _excludeRoot: 0
   _jiggleBoneInputParameters:
     advancedToggle: 1
-    angleLimitToggle: 0
+    angleLimitToggle: 1
     stiffness: 0.638
-    soften: 0.231
-    angleLimit: 0
-    angleLimitSoften: 0
-    rootStretch: 0.02
-    stretch: 0.127
-    drag: 0.079
+    soften: 0.461
+    angleLimit: 24.7
+    angleLimitSoften: 0.438
+    rootStretch: 0.096
+    stretch: 0.187
+    drag: 0.19
     airDrag: 0
     gravity: 1
     blend: 0

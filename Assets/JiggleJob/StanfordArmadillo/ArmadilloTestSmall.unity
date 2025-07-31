@@ -202,11 +202,6 @@ MonoBehaviour:
     gravity: 1
     blend: 0
   _excludedTransforms: []
---- !u!4 &1196167013 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -2335751251223409185, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
-  m_PrefabInstance: {fileID: 1571801574}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1273270108
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -502,21 +497,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c222ab56bf694d74096e6d709752b25f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _rootBone: {fileID: 1196167013}
+  _rootBone: {fileID: 2130319960}
   _animated: 1
   _excludeRoot: 0
   _jiggleBoneInputParameters:
     advancedToggle: 1
     angleLimitToggle: 1
-    stiffness: 0.426
-    soften: 0.328
-    angleLimit: 39.7
-    angleLimitSoften: 0.501
-    rootStretch: 0.058
-    stretch: 0.07
-    drag: 0.067
+    stiffness: 0.649
+    soften: 0.467
+    angleLimit: 26.6
+    angleLimitSoften: 0.421
+    rootStretch: 0.107
+    stretch: 0.188
+    drag: 0.2
     airDrag: 0
-    gravity: 0
+    gravity: 1
     blend: 0
   _excludedTransforms: []
 --- !u!1001 &1825603893
@@ -680,6 +675,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!4 &2130319960 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2525594347270614215, guid: 9eed73f7e0fc32740a211dbb5c9bc5c7, type: 3}
+  m_PrefabInstance: {fileID: 1571801574}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

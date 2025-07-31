@@ -139,7 +139,8 @@ public struct JiggleJob : IJob {
                 var correctionDistance = (desiredPosition - point.desiredConstraint).magnitude;
 
                 var angleCorrectionDistance = Mathf.Max(0f, correctionDistance - a);
-                point.desiredConstraint += (correctionDir * angleCorrectionDistance) * (1f-point.parameters.angleLimitSoften);
+                var angleCorrection = (correctionDir * angleCorrectionDistance) * (1f - point.parameters.angleLimitSoften);
+                point.desiredConstraint += angleCorrection;
             }
 
             #region Length Constraint

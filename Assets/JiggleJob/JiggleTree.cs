@@ -101,7 +101,7 @@ public class JiggleTree {
         if (hasPoseHandle) {
             poseHandle.Complete();
         }
-        DrawDebug(job);
+        //DrawDebug(job);
         JiggleInterpolationJob.previousTimeStamp = JiggleInterpolationJob.timeStamp;
         (JiggleInterpolationJob.currentSolve, JiggleInterpolationJob.previousSolve) = (JiggleInterpolationJob.previousSolve, JiggleInterpolationJob.currentSolve);
         //jigglePoseJob.currentSolve.CopyTo(jigglePoseJob.previousSolve);

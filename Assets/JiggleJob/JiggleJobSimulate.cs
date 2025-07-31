@@ -301,10 +301,10 @@ public struct JiggleJobSimulate : IJob {
                 simulatedVector = math.normalize(simulatedVectorSum * (1f / point.childenCount));
             }
             
-            var animPoseToPhysicsPose = Quaternion.Slerp(Quaternion.identity, Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector), point.parameters.blend);
+            var animPoseToPhysicsPose = math.slerp(quaternion.identity, FromToRotation(cachedAnimatedVector, simulatedVector), point.parameters.blend);
 
             outputPositions[point.transformIndex] = point.workingPosition;
-            outputRotations[point.transformIndex] = animPoseToPhysicsPose * transformRotations[point.transformIndex];
+            outputRotations[point.transformIndex] = math.mul(animPoseToPhysicsPose, transformRotations[point.transformIndex]);
             
             simulatedPoints[i] = point;
         }

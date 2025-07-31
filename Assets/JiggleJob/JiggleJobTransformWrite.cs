@@ -1,5 +1,6 @@
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
 
@@ -8,9 +9,9 @@ public struct JiggleJobTransformWrite : IJobParallelForTransform {
     public NativeArray<Vector3> previousLocalPositions;
     public NativeArray<Quaternion> previousLocalRotations;
     [ReadOnly]
-    public NativeArray<Vector3> outputInterpolatedPositions;
+    public NativeArray<float3> outputInterpolatedPositions;
     [ReadOnly]
-    public NativeArray<Quaternion> outputInterpolatedRotations;
+    public NativeArray<quaternion> outputInterpolatedRotations;
 
     public JiggleJobTransformWrite(JiggleJobBulkTransformRead jobBulkRead, JiggleJobInterpolation jobInterpolation) {
         previousLocalPositions = jobBulkRead.previousLocalPositions;

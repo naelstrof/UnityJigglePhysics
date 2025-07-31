@@ -8,8 +8,10 @@ using UnityEngine.Jobs;
 public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
     public NativeArray<float3> transformPositions;
     public NativeArray<quaternion> transformRotations;
+
+    public NativeArray<Vector3> restPosePositions;
+    public NativeArray<Quaternion> restPoseRotations;
     
-    public NativeArray<Matrix4x4> restPoseMatrices;
     [ReadOnly]
     public NativeArray<Vector3> previousLocalPositions;
     [ReadOnly]
@@ -19,19 +21,26 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
         var boneCount = bones.Length;
         transformPositions = jobSimulate.transformPositions;
         transformRotations = jobSimulate.transformRotations;
-        Matrix4x4[] restPoseMatricesArray = new Matrix4x4[boneCount];
+        Vector3[] restPosePositionsArray = new Vector3[boneCount];
+        Quaternion[] restPoseRotationsArray = new Quaternion[boneCount];
+        
         for (var index = 0; index < boneCount; index++) {
             bones[index].GetLocalPositionAndRotation(out var localPosition, out var localRotation);
-            restPoseMatricesArray[index] = Matrix4x4.TRS(localPosition, localRotation, Vector3.one);
+            restPosePositionsArray[index] = localPosition;
+            restPoseRotationsArray[index] = localRotation;
         }
         
-        restPoseMatrices = new NativeArray<Matrix4x4>(restPoseMatricesArray, Allocator.Persistent);
+        restPosePositions = new NativeArray<Vector3>(restPosePositionsArray, Allocator.Persistent);
+        restPoseRotations = new NativeArray<Quaternion>(restPoseRotationsArray, Allocator.Persistent);
         previousLocalPositions = new NativeArray<Vector3>(boneCount, Allocator.Persistent);
         previousLocalRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent);
     }
     public void Dispose() {
-        if (restPoseMatrices.IsCreated) {
-            restPoseMatrices.Dispose();
+        if (restPosePositions.IsCreated) {
+            restPosePositions.Dispose();
+        }
+        if (restPoseRotations.IsCreated) {
+            restPoseRotations.Dispose();
         }
         if (previousLocalPositions.IsCreated) {
             previousLocalPositions.Dispose();
@@ -44,14 +53,15 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
         // TODO: Stop going back and forth between matrices and positions/rotations
         transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
         if (!true) {
-            transform.SetLocalPositionAndRotation(restPoseMatrices[index].GetPosition(), restPoseMatrices[index].rotation);
+            transform.SetLocalPositionAndRotation(restPosePositions[index], restPoseRotations[index]);
             return;
         }
         if (localPosition == previousLocalPositions[index] &&
             localRotation == previousLocalRotations[index]) {
-            transform.SetLocalPositionAndRotation(restPoseMatrices[index].GetPosition(), restPoseMatrices[index].rotation);
+            transform.SetLocalPositionAndRotation(restPosePositions[index], restPoseRotations[index]);
         } else {
-            restPoseMatrices[index] = Matrix4x4.TRS(localPosition, localRotation, Vector3.one);
+            restPosePositions[index] = localPosition;
+            restPoseRotations[index] = localRotation;
         }
         transform.GetPositionAndRotation(out var position, out var rotation);
         transformPositions[index] = position;

@@ -18,10 +18,10 @@ public struct JiggleJobPrepareInterpolation : IJob {
     
     public NativeReference<double> previousTimeStamp;
     public NativeReference<double> currentTimeStamp;
-    public NativeReference<Vector3> previousSimulatedRootOffset;
-    public NativeReference<Vector3> currentSimulatedRootOffset;
-    public NativeReference<Vector3> previousSimulatedRootPosition;
-    public NativeReference<Vector3> currentSimulatedRootPosition;
+    public NativeReference<float3> previousSimulatedRootOffset;
+    public NativeReference<float3> currentSimulatedRootOffset;
+    public NativeReference<float3> previousSimulatedRootPosition;
+    public NativeReference<float3> currentSimulatedRootPosition;
 
     public JiggleJobPrepareInterpolation(JiggleJobSimulate jobSimulateSimulate, JiggleJobInterpolation jobInterpolation) {
         incomingTimeStamp = Time.timeAsDouble;

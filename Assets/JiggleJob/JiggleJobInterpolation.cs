@@ -18,16 +18,16 @@ public struct JiggleJobInterpolation : IJobFor {
     [ReadOnly] public NativeReference<double> previousTimeStamp;
     public double currentTime;
     
-    [ReadOnly] public NativeReference<Vector3> previousSimulatedRootOffset;
-    [ReadOnly] public NativeReference<Vector3> currentSimulatedRootOffset;
+    [ReadOnly] public NativeReference<float3> previousSimulatedRootOffset;
+    [ReadOnly] public NativeReference<float3> currentSimulatedRootOffset;
     
-    [ReadOnly] public NativeReference<Vector3> previousSimulatedRootPosition;
-    [ReadOnly] public NativeReference<Vector3> currentSimulatedRootPosition;
+    [ReadOnly] public NativeReference<float3> previousSimulatedRootPosition;
+    [ReadOnly] public NativeReference<float3> currentSimulatedRootPosition;
     
-    public Vector3 realRootPosition;
+    public float3 realRootPosition;
     
-    public NativeArray<Vector3> outputInterpolatedPositions;
-    public NativeArray<Quaternion> outputInterpolatedRotations;
+    public NativeArray<float3> outputInterpolatedPositions;
+    public NativeArray<quaternion> outputInterpolatedRotations;
 
     public JiggleJobInterpolation(JiggleJobSimulate jobSimulate, Transform[] bones) {
         var boneCount = bones.Length;
@@ -39,16 +39,16 @@ public struct JiggleJobInterpolation : IJobFor {
         jobSimulate.outputRotations.CopyTo(previousRotations);
         jobSimulate.outputPositions.CopyTo(currentPositions);
         jobSimulate.outputRotations.CopyTo(currentRotations);
-        previousSimulatedRootOffset = new NativeReference<Vector3>(Vector3.zero, Allocator.Persistent);
-        currentSimulatedRootOffset = new NativeReference<Vector3>(Vector3.zero, Allocator.Persistent);
+        previousSimulatedRootOffset = new NativeReference<float3>(Vector3.zero, Allocator.Persistent);
+        currentSimulatedRootOffset = new NativeReference<float3>(Vector3.zero, Allocator.Persistent);
         realRootPosition = bones[0].position;
-        previousSimulatedRootPosition = new NativeReference<Vector3>(realRootPosition, Allocator.Persistent);
-        currentSimulatedRootPosition = new NativeReference<Vector3>(realRootPosition, Allocator.Persistent);
+        previousSimulatedRootPosition = new NativeReference<float3>(realRootPosition, Allocator.Persistent);
+        currentSimulatedRootPosition = new NativeReference<float3>(realRootPosition, Allocator.Persistent);
         currentTime = Time.timeAsDouble;
         timeStamp = new NativeReference<double>(currentTime, Allocator.Persistent);
         previousTimeStamp = new NativeReference<double>(currentTime - JiggleJobManager.FIXED_DELTA_TIME, Allocator.Persistent);
-        outputInterpolatedPositions = new NativeArray<Vector3>(boneCount, Allocator.Persistent);
-        outputInterpolatedRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent);
+        outputInterpolatedPositions = new NativeArray<float3>(boneCount, Allocator.Persistent);
+        outputInterpolatedRotations = new NativeArray<quaternion>(boneCount, Allocator.Persistent);
     }
     
     public void Dispose() {
@@ -107,11 +107,11 @@ public struct JiggleJobInterpolation : IJobFor {
         // which might be noticable latency
         const double timeCorrection = JiggleJobManager.FIXED_DELTA_TIME * 2f;
         var t = (currentTime-timeCorrection - previousTimeStamp.Value) / diff;
-        var position = Vector3.LerpUnclamped(prevPosition, newPosition, (float)t);
-        var rotation = Quaternion.SlerpUnclamped(prevRotation, newRotation, (float)t);
+        var position = math.lerp(prevPosition, newPosition, (float)t);
+        var rotation = math.slerp(prevRotation, newRotation, (float)t);
         
-        var simulatedRootPosition = Vector3.LerpUnclamped(previousSimulatedRootPosition.Value, currentSimulatedRootPosition.Value, (float)t);
-        var simulatedRootOffset = Vector3.LerpUnclamped(previousSimulatedRootOffset.Value, currentSimulatedRootOffset.Value, (float)t);
+        var simulatedRootPosition = math.lerp(previousSimulatedRootPosition.Value, currentSimulatedRootPosition.Value, (float)t);
+        var simulatedRootOffset = math.lerp(previousSimulatedRootOffset.Value, currentSimulatedRootOffset.Value, (float)t);
         
         var snapToReal = realRootPosition-simulatedRootPosition;
         outputInterpolatedPositions[index] = position + snapToReal + simulatedRootOffset;

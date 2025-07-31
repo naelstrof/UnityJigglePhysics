@@ -120,9 +120,6 @@ public struct JiggleJobSimulate : IJob {
     }
     
     quaternion FromToRotation(float3 from, float3 to) {
-        if (math.all(from == to)) {
-            return quaternion.identity;
-        }
         var axis = math.cross(from, to);
         var angle = math.acos(math.clamp(math.dot(from, to), -1f, 1f));
         return quaternion.AxisAngle(axis, angle);

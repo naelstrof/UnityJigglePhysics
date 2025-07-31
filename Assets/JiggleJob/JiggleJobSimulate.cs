@@ -311,7 +311,7 @@ public struct JiggleJobSimulate : IJob {
     }
     
     public void Execute() {
-        try {
+        //try {
             Cache();
             VerletIntegrate();
             Constrain();
@@ -322,8 +322,8 @@ public struct JiggleJobSimulate : IJob {
             var pose = transformPositions[0];
             outputSimulatedRootOffset.Value = simulatedPosition - pose;
             outputSimulatedRootPosition.Value = simulatedPosition;
-        } catch (Exception e) {
-            Debug.LogError($"Error in JiggleJobBulkTransformRead: {e.Message}\n{e.StackTrace}");
-        }
+        //} catch (Exception e) {
+        //    Debug.LogError($"Error in JiggleJobBulkTransformRead: {e.Message}\n{e.StackTrace}");
+        //}
     }
 }

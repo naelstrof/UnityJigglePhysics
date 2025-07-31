@@ -50,7 +50,7 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
         }
     }
     public void Execute(int index, TransformAccess transform) {
-        try {
+        //try {
             // TODO: Stop going back and forth between matrices and positions/rotations
             transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
             if (!true) {
@@ -69,9 +69,9 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
             transform.GetPositionAndRotation(out var position, out var rotation);
             transformPositions[index] = position;
             transformRotations[index] = rotation;
-        } catch (Exception e) {
-            Debug.LogError($"Error in JiggleJobBulkTransformRead: {e.Message}\n{e.StackTrace}");
-        }
+        //} catch (Exception e) {
+        //    Debug.LogError($"Error in JiggleJobBulkTransformRead: {e.Message}\n{e.StackTrace}");
+        //}
     }
     
 }

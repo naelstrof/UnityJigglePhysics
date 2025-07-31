@@ -25,13 +25,13 @@ public struct JiggleJobTransformWrite : IJobParallelForTransform {
     }
     
     public void Execute(int index, TransformAccess transform) {
-        try {
+        //try {
             transform.SetPositionAndRotation(outputInterpolatedPositions[index], outputInterpolatedRotations[index]);
             transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
             previousLocalPositions[index] = localPosition;
             previousLocalRotations[index] = localRotation;
-        } catch (Exception e) {
-            Debug.LogError($"Error in JiggleJobBulkTransformRead: {e.Message}\n{e.StackTrace}");
-        }
+        //} catch (Exception e) {
+        //    Debug.LogError($"Error in JiggleJobBulkTransformRead: {e.Message}\n{e.StackTrace}");
+        //}
     }
 }

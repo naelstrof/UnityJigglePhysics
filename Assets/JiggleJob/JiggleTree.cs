@@ -22,6 +22,7 @@ public class JiggleTree {
     
     public JiggleJobInterpolation jobInterpolation;
     public JobHandle handleInterpolate;
+    public bool hasHandleInterpolate;
     
     public JiggleJobTransformWrite jobTransformWrite;
     public JobHandle handleTransformWrite;
@@ -54,8 +55,11 @@ public class JiggleTree {
 
     private void PushBack() {
         Profiler.BeginSample("JiggleTree.Pushback");
-        if (hasHandleTrasnformWrite) {
-            handleTransformWrite.Complete();
+        if (hasHandleSimulate) {
+            handleSimulate.Complete();
+        }
+        if (hasHandleInterpolate) {
+            handleInterpolate.Complete();
         }
 
         // Rotate our three memory buffers
@@ -88,13 +92,9 @@ public class JiggleTree {
     public void Simulate(double currentTime) {
         if (dirty) return;
         Profiler.BeginSample("JiggleTree.Simulate");
-        Profiler.BeginSample("JiggleTree.CompletePreviousJob");
         if (hasHandleSimulate) {
-            handleSimulate.Complete();
-            //DrawDebug(jiggleJob);
             PushBack();
         }
-        Profiler.EndSample();
         Profiler.BeginSample("JiggleTree.PrepareJobs");
         jobSimulate.timeStamp = currentTime;
         jobSimulate.gravity = Physics.gravity;
@@ -114,6 +114,7 @@ public class JiggleTree {
         jobInterpolation.realRootPosition = bones[0].position;
         jobInterpolation.currentTime = Time.timeAsDouble;
         handleInterpolate = jobInterpolation.ScheduleParallel(bones.Length, 32, default);
+        hasHandleInterpolate = true;
 
         // TODO: Posing shouldn't rely on the bulk read, maybe duplicate some data?
         if (hasHandleBulkRead) {

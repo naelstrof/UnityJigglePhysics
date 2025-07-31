@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Jobs;
 
 [BurstCompiled]
-public struct JiggleInterpolationJob : IJobFor {
+public struct JiggleJobInterpolation : IJobFor {
     [ReadOnly] public NativeArray<Matrix4x4> previousSolve;
     [ReadOnly] public NativeArray<Matrix4x4> currentSolve;
     //public NativeArray<Vector3> previousLocalPositions;

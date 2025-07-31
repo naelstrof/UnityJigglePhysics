@@ -6,8 +6,6 @@ using UnityEngine;
 public struct JiggleJobPrepareInterpolation : IJob {
     public double incomingTimeStamp;
     [ReadOnly]
-    public NativeArray<JiggleBoneSimulatedPoint> simulatedPoints;
-    [ReadOnly]
     public NativeArray<Matrix4x4> outputPoses;
     [ReadOnly]
     public NativeArray<Matrix4x4> inputPoses;

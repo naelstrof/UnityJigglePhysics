@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Jobs;
 
 [BurstCompiled]
-public struct JiggleBulkTransformRead : IJobParallelForTransform {
+public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
     public NativeArray<Matrix4x4> matrices;
     public NativeArray<Matrix4x4> restPoseMatrices;
     [ReadOnly]

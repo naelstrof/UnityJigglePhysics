@@ -4,20 +4,20 @@ using UnityEngine;
 using UnityEngine.Jobs;
 
 [BurstCompiled]
-public struct JiggleInterpolationJob : IJobParallelFor {
-    public NativeArray<Matrix4x4> previousSolve;
-    public NativeArray<Matrix4x4> currentSolve;
+public struct JiggleInterpolationJob : IJobFor {
+    [ReadOnly] public NativeArray<Matrix4x4> previousSolve;
+    [ReadOnly] public NativeArray<Matrix4x4> currentSolve;
     //public NativeArray<Vector3> previousLocalPositions;
     //public NativeArray<Quaternion> previousLocalRotations;
-    public double timeStamp;
-    public double previousTimeStamp;
+    [ReadOnly] public NativeReference<double> timeStamp;
+    [ReadOnly] public NativeReference<double> previousTimeStamp;
     public double currentTime;
     
-    public Vector3 previousSimulatedRootOffset;
-    public Vector3 currentSimulatedRootOffset;
+    [ReadOnly] public NativeReference<Vector3> previousSimulatedRootOffset;
+    [ReadOnly] public NativeReference<Vector3> currentSimulatedRootOffset;
     
-    public Vector3 previousSimulatedRootPosition;
-    public Vector3 currentSimulatedRootPosition;
+    [ReadOnly] public NativeReference<Vector3> previousSimulatedRootPosition;
+    [ReadOnly] public NativeReference<Vector3> currentSimulatedRootPosition;
     
     public Vector3 realRootPosition;
     
@@ -31,7 +31,7 @@ public struct JiggleInterpolationJob : IJobParallelFor {
         var newPosition = currentSolve[index].GetPosition();
         var newRotation = currentSolve[index].rotation;
 
-        var diff = timeStamp - previousTimeStamp;
+        var diff = timeStamp.Value - previousTimeStamp.Value;
         if (diff == 0) {
             throw new UnityException("Time difference is zero, cannot interpolate.");
         }
@@ -40,12 +40,12 @@ public struct JiggleInterpolationJob : IJobParallelFor {
         // The issue here is that we are having to operate 3 full frames in the past
         // which might be noticable latency
         const double timeCorrection = JiggleJobManager.FIXED_DELTA_TIME * 2f;
-        var t = (currentTime-timeCorrection - previousTimeStamp) / diff;
+        var t = (currentTime-timeCorrection - previousTimeStamp.Value) / diff;
         var position = Vector3.LerpUnclamped(prevPosition, newPosition, (float)t);
         var rotation = Quaternion.SlerpUnclamped(prevRotation, newRotation, (float)t);
         
-        var simulatedRootPosition = Vector3.LerpUnclamped(previousSimulatedRootPosition, currentSimulatedRootPosition, (float)t);
-        var simulatedRootOffset = Vector3.LerpUnclamped(previousSimulatedRootOffset, currentSimulatedRootOffset, (float)t);
+        var simulatedRootPosition = Vector3.LerpUnclamped(previousSimulatedRootPosition.Value, currentSimulatedRootPosition.Value, (float)t);
+        var simulatedRootOffset = Vector3.LerpUnclamped(previousSimulatedRootOffset.Value, currentSimulatedRootOffset.Value, (float)t);
         
         var snapToReal = realRootPosition-simulatedRootPosition;
         outputInterpolatedPositions[index] = position + snapToReal + simulatedRootOffset;

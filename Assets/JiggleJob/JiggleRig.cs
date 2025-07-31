@@ -46,7 +46,9 @@ public class JiggleRig : MonoBehaviour {
             // DO DFS HERE
         }*/
         _root = _rootBone.gameObject.AddComponent<MonobehaviourHider.JiggleRoot>();
-        _root.rig = this;
+        if (_root != null) {
+            _root.rig = this;
+        }
     }
 
     private void OnDisable() {

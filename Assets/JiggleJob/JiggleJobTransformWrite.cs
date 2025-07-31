@@ -7,7 +7,9 @@ using UnityEngine.Jobs;
 public struct JiggleJobTransformWrite : IJobParallelForTransform {
     public NativeArray<Vector3> previousLocalPositions;
     public NativeArray<Quaternion> previousLocalRotations;
+    [ReadOnly]
     public NativeArray<Vector3> outputInterpolatedPositions;
+    [ReadOnly]
     public NativeArray<Quaternion> outputInterpolatedRotations;
     
     public void Execute(int index, TransformAccess transform) {

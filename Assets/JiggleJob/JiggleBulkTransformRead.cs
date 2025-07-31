@@ -7,7 +7,9 @@ using UnityEngine.Jobs;
 public struct JiggleBulkTransformRead : IJobParallelForTransform {
     public NativeArray<Matrix4x4> matrices;
     public NativeArray<Matrix4x4> restPoseMatrices;
+    [ReadOnly]
     public NativeArray<Vector3> previousLocalPositions;
+    [ReadOnly]
     public NativeArray<Quaternion> previousLocalRotations;
     public NativeArray<bool> animated;
     public void Execute(int index, TransformAccess transform) {

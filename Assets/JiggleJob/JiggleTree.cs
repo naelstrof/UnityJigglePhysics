@@ -14,8 +14,9 @@ public class JiggleTree {
     public JiggleBulkTransformRead bulkRead;
     public TransformAccessArray transformAccessArray;
     public JiggleJob jiggleJob;
-    public JiggleInterpolationJob JiggleInterpolationJob;
+    public JiggleInterpolationJob jiggleJobInterpolation;
     public JiggleJobTransformWrite jiggleJobTransformWrite;
+    public JiggleJobPrepareInterpolation jiggleJobPrepareInterpolation;
     public bool hasJobHandle;
     public JobHandle jobHandle;
     public JobHandle bulkReadHandle;
@@ -25,6 +26,8 @@ public class JiggleTree {
     public bool hasPoseHandle;
 
     public JobHandle interpolateHandle;
+    public JobHandle prepareInterpolationHandle;
+    public bool hasPrepareInterpolationHandle;
     
     private Vector3 previousRootPosition;
     private Vector3 currentRootPosition;
@@ -67,15 +70,15 @@ public class JiggleTree {
             previousLocalRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent),
             animated = new NativeArray<bool>(boneCount, Allocator.Persistent)
         };
-        JiggleInterpolationJob = new JiggleInterpolationJob() {
+        jiggleJobInterpolation = new JiggleInterpolationJob() {
             previousSolve = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
             currentSolve = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent),
-            previousSimulatedRootOffset = Vector3.zero,
-            currentSimulatedRootOffset = Vector3.zero,
-            previousSimulatedRootPosition = bones[0].position,
-            currentSimulatedRootPosition = bones[0].position,
-            timeStamp = Time.timeAsDouble,
-            previousTimeStamp = Time.timeAsDouble-JiggleJobManager.FIXED_DELTA_TIME,
+            previousSimulatedRootOffset = new NativeReference<Vector3>(Vector3.zero, Allocator.Persistent),
+            currentSimulatedRootOffset = new NativeReference<Vector3>(Vector3.zero, Allocator.Persistent),
+            previousSimulatedRootPosition = new NativeReference<Vector3>(bones[0].position, Allocator.Persistent),
+            currentSimulatedRootPosition = new NativeReference<Vector3>(bones[0].position, Allocator.Persistent),
+            timeStamp = new NativeReference<double>(Time.timeAsDouble, Allocator.Persistent),
+            previousTimeStamp = new NativeReference<double>(Time.timeAsDouble-JiggleJobManager.FIXED_DELTA_TIME, Allocator.Persistent),
             outputInterpolatedPositions = new NativeArray<Vector3>(boneCount, Allocator.Persistent),
             outputInterpolatedRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent),
         };
@@ -83,12 +86,25 @@ public class JiggleTree {
         jiggleJobTransformWrite = new JiggleJobTransformWrite() {
             previousLocalPositions = bulkRead.previousLocalPositions,
             previousLocalRotations = bulkRead.previousLocalRotations,
-            outputInterpolatedPositions = JiggleInterpolationJob.outputInterpolatedPositions,
-            outputInterpolatedRotations = JiggleInterpolationJob.outputInterpolatedRotations,
+            outputInterpolatedPositions = jiggleJobInterpolation.outputInterpolatedPositions,
+            outputInterpolatedRotations = jiggleJobInterpolation.outputInterpolatedRotations,
         };
         
-        JiggleInterpolationJob.currentSolve.CopyFrom(currentSolve);
-        JiggleInterpolationJob.previousSolve.CopyFrom(currentSolve);
+        jiggleJobInterpolation.currentSolve.CopyFrom(currentSolve);
+        jiggleJobInterpolation.previousSolve.CopyFrom(currentSolve);
+
+        jiggleJobPrepareInterpolation = new JiggleJobPrepareInterpolation() {
+            simulatedPoints = jiggleJob.simulatedPoints,
+            outputPoses = jiggleJob.output,
+            inputPoses = jiggleJob.transformMatrices,
+            currentSolve = jiggleJobInterpolation.currentSolve,
+            previousSimulatedRootOffset = jiggleJobInterpolation.previousSimulatedRootOffset,
+            currentSimulatedRootOffset = jiggleJobInterpolation.currentSimulatedRootOffset,
+            previousSimulatedRootPosition = jiggleJobInterpolation.previousSimulatedRootPosition,
+            currentSimulatedRootPosition = jiggleJobInterpolation.currentSimulatedRootPosition,
+            previousTimeStamp = jiggleJobInterpolation.previousTimeStamp,
+            currentTimeStamp = jiggleJobInterpolation.timeStamp,
+        };
         
         transformAccessArray = new TransformAccessArray(bones);
         restPoseTransforms = new Matrix4x4[boneCount];
@@ -96,26 +112,16 @@ public class JiggleTree {
         bulkRead.restPoseMatrices.CopyFrom(restPoseTransforms);
     }
 
-    private void PushBack(JiggleJob job) {
+    private void PushBack() {
         Profiler.BeginSample("JiggleTree.Pushback");
         if (hasPoseHandle) {
             poseHandle.Complete();
         }
-        //DrawDebug(job);
-        JiggleInterpolationJob.previousTimeStamp = JiggleInterpolationJob.timeStamp;
-        (JiggleInterpolationJob.currentSolve, JiggleInterpolationJob.previousSolve) = (JiggleInterpolationJob.previousSolve, JiggleInterpolationJob.currentSolve);
-        //jigglePoseJob.currentSolve.CopyTo(jigglePoseJob.previousSolve);
-        JiggleInterpolationJob.timeStamp = job.timeStamp;
-        job.output.CopyTo(JiggleInterpolationJob.currentSolve);
-
-        var simulatedPoint = job.simulatedPoints[1];
-        
-        JiggleInterpolationJob.previousSimulatedRootOffset = JiggleInterpolationJob.currentSimulatedRootOffset;
-        JiggleInterpolationJob.currentSimulatedRootOffset = simulatedPoint.position - simulatedPoint.pose;
-        
-        JiggleInterpolationJob.previousSimulatedRootPosition = JiggleInterpolationJob.currentSimulatedRootPosition;
-        JiggleInterpolationJob.currentSimulatedRootPosition = simulatedPoint.position;
-        
+        jiggleJobPrepareInterpolation.incomingTimeStamp = jiggleJob.timeStamp;
+        (jiggleJobInterpolation.currentSolve, jiggleJobInterpolation.previousSolve) = (jiggleJobInterpolation.previousSolve, jiggleJobInterpolation.currentSolve);
+        jiggleJobPrepareInterpolation.currentSolve = jiggleJobInterpolation.currentSolve;
+        prepareInterpolationHandle = jiggleJobPrepareInterpolation.Schedule();
+        hasPrepareInterpolationHandle = true;
         Profiler.EndSample();
     }
     
@@ -126,7 +132,7 @@ public class JiggleTree {
         if (hasJobHandle) {
             jobHandle.Complete();
             //DrawDebug(jiggleJob);
-            PushBack(jiggleJob);
+            PushBack();
         }
         Profiler.EndSample();
         Profiler.BeginSample("JiggleTree.PrepareJobs");
@@ -134,8 +140,14 @@ public class JiggleTree {
         jiggleJob.gravity = Physics.gravity;
         Profiler.EndSample();
         Profiler.BeginSample("JiggleTree.ScheduleJobs");
-        bulkReadHandle = hasPoseHandle ? bulkRead.Schedule(transformAccessArray, poseHandle) : bulkRead.Schedule(transformAccessArray);
+        // TODO: Reading transforms shouldn't be reliant on interpolation
+        if (hasPrepareInterpolationHandle) {
+            bulkReadHandle = bulkRead.Schedule(transformAccessArray, prepareInterpolationHandle);
+        } else {
+            bulkReadHandle = bulkRead.Schedule(transformAccessArray);
+        }
         hasBulkReadHandle = true;
+
         jobHandle = jiggleJob.Schedule(bulkReadHandle);
         hasJobHandle = true;
         Profiler.EndSample();
@@ -144,10 +156,21 @@ public class JiggleTree {
 
     public void SchedulePose() {
         Profiler.BeginSample("JiggleTree.SchedulePose");
-        JiggleInterpolationJob.realRootPosition = bones[0].position;
-        JiggleInterpolationJob.currentTime = Time.timeAsDouble;
-        interpolateHandle = hasBulkReadHandle ? JiggleInterpolationJob.Schedule(bones.Length, 32, bulkReadHandle) : JiggleInterpolationJob.Schedule(bones.Length, 32);
-        poseHandle = jiggleJobTransformWrite.Schedule(transformAccessArray, interpolateHandle);
+        jiggleJobInterpolation.realRootPosition = bones[0].position;
+        jiggleJobInterpolation.currentTime = Time.timeAsDouble;
+        if (hasPrepareInterpolationHandle) {
+            interpolateHandle = jiggleJobInterpolation.ScheduleParallel(bones.Length, 32, prepareInterpolationHandle);
+        } else {
+            interpolateHandle = jiggleJobInterpolation.ScheduleParallel(bones.Length, 32, default);
+        }
+
+        // TODO: Posing shouldn't rely on the bulk read, maybe duplicate some data?
+        if (hasBulkReadHandle) {
+            poseHandle = jiggleJobTransformWrite.Schedule(transformAccessArray, JobHandle.CombineDependencies(interpolateHandle, bulkReadHandle));
+        } else {
+            poseHandle = jiggleJobTransformWrite.Schedule(transformAccessArray, interpolateHandle);
+        }
+
         hasPoseHandle = true;
         Profiler.EndSample();
     }
@@ -246,11 +269,11 @@ public class JiggleTree {
         if (bulkRead.animated.IsCreated) {
             bulkRead.animated.Dispose();
         }
-        if (JiggleInterpolationJob.previousSolve.IsCreated) {
-            JiggleInterpolationJob.previousSolve.Dispose();
+        if (jiggleJobInterpolation.previousSolve.IsCreated) {
+            jiggleJobInterpolation.previousSolve.Dispose();
         }
-        if (JiggleInterpolationJob.currentSolve.IsCreated) {
-            JiggleInterpolationJob.currentSolve.Dispose();
+        if (jiggleJobInterpolation.currentSolve.IsCreated) {
+            jiggleJobInterpolation.currentSolve.Dispose();
         }
     }
 

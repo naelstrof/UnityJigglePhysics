@@ -11,32 +11,48 @@ public struct JiggleJobSimulate : IJob {
     public double timeStamp;
     public Vector3 gravity;
     
-    public NativeArray<Matrix4x4> transformMatrices;
+    public NativeArray<Vector3> transformPositions;
+    public NativeArray<Quaternion> transformRotations;
     public NativeArray<JiggleBoneSimulatedPoint> simulatedPoints;
-    public NativeArray<Matrix4x4> output;
+    
+    public NativeArray<Vector3> outputPositions;
+    public NativeArray<Quaternion> outputRotations;
 
     public JiggleJobSimulate(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
         var boneCount = bones.Length;
-        var currentSolve = new Matrix4x4[boneCount];
+        var currentPositions = new Vector3[boneCount];
+        var currentRotations = new Quaternion[boneCount];
         for (int i = 0; i < boneCount; i++) {
-            currentSolve[i] = bones[i].localToWorldMatrix;
+            currentPositions[i] = bones[i].position;
+            currentRotations[i] = bones[i].rotation;
         }
-        transformMatrices = new NativeArray<Matrix4x4>(currentSolve, Allocator.Persistent);
+        transformPositions = new NativeArray<Vector3>(currentPositions, Allocator.Persistent);
+        transformRotations = new NativeArray<Quaternion>(currentRotations, Allocator.Persistent);
+        
         simulatedPoints = new NativeArray<JiggleBoneSimulatedPoint>(points, Allocator.Persistent);
-        output = new NativeArray<Matrix4x4>(currentSolve, Allocator.Persistent);
+        
+        outputPositions = new NativeArray<Vector3>(currentPositions, Allocator.Persistent);
+        outputRotations = new NativeArray<Quaternion>(currentRotations, Allocator.Persistent);
+        
         timeStamp = Time.timeAsDouble;
         gravity = Physics.gravity;
     }
 
     public void Dispose() {
-        if (transformMatrices.IsCreated) {
-            transformMatrices.Dispose();
+        if (transformPositions.IsCreated) {
+            transformPositions.Dispose();
+        }
+        if (transformRotations.IsCreated) {
+            transformRotations.Dispose();
         }
         if (simulatedPoints.IsCreated) {
             simulatedPoints.Dispose();
         }
-        if (output.IsCreated) {
-            output.Dispose();
+        if (outputPositions.IsCreated) {
+            outputPositions.Dispose();
+        }
+        if (outputRotations.IsCreated) {
+            outputRotations.Dispose();
         }
     }
 
@@ -48,20 +64,20 @@ public struct JiggleJobSimulate : IJob {
                 var child = simulatedPoints[point.childrenIndices[0]];
                 var childChild = simulatedPoints[child.childrenIndices[0]];
                 if (childChild.transformIndex == -1) { // edge case where it's a singular isolated root bone
-                    point.pose = transformMatrices[child.transformIndex].GetPosition() - Vector3.up*0.25f;
-                    point.parentPose = transformMatrices[child.transformIndex].GetPosition() - Vector3.up*0.5f;
+                    point.pose = transformPositions[child.transformIndex] - Vector3.up*0.25f;
+                    point.parentPose = transformPositions[child.transformIndex] - Vector3.up*0.5f;
                     point.desiredLengthToParent = 0.25f;
                 } else {
-                    var diff = transformMatrices[child.transformIndex].GetPosition() - transformMatrices[childChild.transformIndex].GetPosition();
-                    point.pose = transformMatrices[child.transformIndex].GetPosition() + diff;
-                    point.parentPose = transformMatrices[child.transformIndex].GetPosition() + diff*2f;
+                    var diff = transformPositions[child.transformIndex] - transformPositions[childChild.transformIndex];
+                    point.pose = transformPositions[child.transformIndex] + diff;
+                    point.parentPose = transformPositions[child.transformIndex] + diff*2f;
                     point.desiredLengthToParent = diff.magnitude;
                 }
                 point.desiredConstraint = point.pose;
                 point.workingPosition = point.pose;
             } else if (point.transformIndex != -1) { // "real" particles
                 var parent = simulatedPoints[point.parentIndex];
-                point.pose = transformMatrices[point.transformIndex].GetPosition();
+                point.pose = transformPositions[point.transformIndex];
                 point.parentPose = parent.pose;
                 point.desiredLengthToParent = Vector3.Distance(point.pose, parent.pose);
             } else { // virtual end particles
@@ -266,15 +282,9 @@ public struct JiggleJobSimulate : IJob {
             
             var animPoseToPhysicsPose = Quaternion.Slerp(Quaternion.identity, Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector), point.parameters.blend);
 
-            //var prot = Quaternion.Slerp(Quaternion.identity, Quaternion.Inverse(parent.rollingError), point.parameters.blend);
-            var mat = transformMatrices[point.transformIndex];
-            var rot = mat.rotation;
-            var scale = mat.lossyScale;
-            output[point.transformIndex] = Matrix4x4.TRS(
-                point.workingPosition, 
-                animPoseToPhysicsPose * rot, 
-                scale
-                );
+            outputPositions[point.transformIndex] = point.workingPosition;
+            outputRotations[point.transformIndex] = animPoseToPhysicsPose * transformRotations[point.transformIndex];
+            
             simulatedPoints[i] = point;
         }
     }

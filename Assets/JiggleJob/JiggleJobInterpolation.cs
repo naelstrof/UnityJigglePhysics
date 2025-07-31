@@ -5,8 +5,12 @@ using UnityEngine.Jobs;
 
 [BurstCompiled]
 public struct JiggleJobInterpolation : IJobFor {
-    [ReadOnly] public NativeArray<Matrix4x4> previousSolve;
-    [ReadOnly] public NativeArray<Matrix4x4> currentSolve;
+    [ReadOnly] public NativeArray<Vector3> previousPositions;
+    [ReadOnly] public NativeArray<Vector3> currentPositions;
+    
+    [ReadOnly] public NativeArray<Quaternion> previousRotations;
+    [ReadOnly] public NativeArray<Quaternion> currentRotations;
+    
     //public NativeArray<Vector3> previousLocalPositions;
     //public NativeArray<Quaternion> previousLocalRotations;
     [ReadOnly] public NativeReference<double> timeStamp;
@@ -26,10 +30,14 @@ public struct JiggleJobInterpolation : IJobFor {
 
     public JiggleJobInterpolation(JiggleJobSimulate jobSimulate, Transform[] bones) {
         var boneCount = bones.Length;
-        previousSolve = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent);
-        currentSolve = new NativeArray<Matrix4x4>(boneCount, Allocator.Persistent);
-        jobSimulate.output.CopyTo(previousSolve);
-        jobSimulate.output.CopyTo(currentSolve);
+        previousPositions = new NativeArray<Vector3>(boneCount, Allocator.Persistent);
+        previousRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent);
+        currentPositions = new NativeArray<Vector3>(boneCount, Allocator.Persistent);
+        currentRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent);
+        jobSimulate.outputPositions.CopyTo(previousPositions);
+        jobSimulate.outputRotations.CopyTo(previousRotations);
+        jobSimulate.outputPositions.CopyTo(currentPositions);
+        jobSimulate.outputRotations.CopyTo(currentRotations);
         previousSimulatedRootOffset = new NativeReference<Vector3>(Vector3.zero, Allocator.Persistent);
         currentSimulatedRootOffset = new NativeReference<Vector3>(Vector3.zero, Allocator.Persistent);
         realRootPosition = bones[0].position;
@@ -43,11 +51,17 @@ public struct JiggleJobInterpolation : IJobFor {
     }
     
     public void Dispose() {
-        if (previousSolve.IsCreated) {
-            previousSolve.Dispose();
+        if (previousPositions.IsCreated) {
+            previousPositions.Dispose();
         }
-        if (currentSolve.IsCreated) {
-            currentSolve.Dispose();
+        if (previousRotations.IsCreated) {
+            previousRotations.Dispose();
+        }
+        if (currentPositions.IsCreated) {
+            currentPositions.Dispose();
+        }
+        if (currentRotations.IsCreated) {
+            currentRotations.Dispose();
         }
         if (previousSimulatedRootOffset.IsCreated) {
             previousSimulatedRootOffset.Dispose();
@@ -76,11 +90,11 @@ public struct JiggleJobInterpolation : IJobFor {
     }
     
     public void Execute(int index) {
-        var prevPosition = previousSolve[index].GetPosition();
-        var prevRotation = previousSolve[index].rotation;
+        var prevPosition = previousPositions[index];
+        var prevRotation = previousRotations[index];
 
-        var newPosition = currentSolve[index].GetPosition();
-        var newRotation = currentSolve[index].rotation;
+        var newPosition = currentPositions[index];
+        var newRotation = currentRotations[index];
 
         var diff = timeStamp.Value - previousTimeStamp.Value;
         if (diff == 0) {

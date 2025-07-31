@@ -5,7 +5,9 @@ using UnityEngine.Jobs;
 
 [BurstCompiled]
 public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
-    public NativeArray<Matrix4x4> matrices;
+    public NativeArray<Vector3> transformPositions;
+    public NativeArray<Quaternion> transformRotations;
+    
     public NativeArray<Matrix4x4> restPoseMatrices;
     [ReadOnly]
     public NativeArray<Vector3> previousLocalPositions;
@@ -14,7 +16,8 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
 
     public JiggleJobBulkTransformRead(JiggleJobSimulate jobSimulate, Transform[] bones) {
         var boneCount = bones.Length;
-        matrices = jobSimulate.transformMatrices;
+        transformPositions = jobSimulate.transformPositions;
+        transformRotations = jobSimulate.transformRotations;
         Matrix4x4[] restPoseMatricesArray = new Matrix4x4[boneCount];
         for (var index = 0; index < boneCount; index++) {
             bones[index].GetLocalPositionAndRotation(out var localPosition, out var localRotation);
@@ -49,7 +52,9 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
         } else {
             restPoseMatrices[index] = Matrix4x4.TRS(localPosition, localRotation, Vector3.one);
         }
-        matrices[index] = transform.localToWorldMatrix;
+        transform.GetPositionAndRotation(out var position, out var rotation);
+        transformPositions[index] = position;
+        transformRotations[index] = rotation;
     }
     
 }

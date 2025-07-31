@@ -6,10 +6,15 @@ using UnityEngine;
 public struct JiggleJobPrepareInterpolation : IJob {
     public double incomingTimeStamp;
     [ReadOnly]
-    public NativeArray<Matrix4x4> outputPoses;
+    public NativeArray<Vector3> outputPositions;
     [ReadOnly]
-    public NativeArray<Matrix4x4> inputPoses;
-    public NativeArray<Matrix4x4> currentSolve;
+    public NativeArray<Quaternion> outputRotations;
+    [ReadOnly]
+    public NativeArray<Vector3> inputPosePositions;
+    
+    public NativeArray<Vector3> currentPositions;
+    public NativeArray<Quaternion> currentRotations;
+    
     public NativeReference<double> previousTimeStamp;
     public NativeReference<double> currentTimeStamp;
     public NativeReference<Vector3> previousSimulatedRootOffset;
@@ -19,9 +24,11 @@ public struct JiggleJobPrepareInterpolation : IJob {
 
     public JiggleJobPrepareInterpolation(JiggleJobSimulate jobSimulateSimulate, JiggleJobInterpolation jobInterpolation) {
         incomingTimeStamp = Time.timeAsDouble;
-        outputPoses = jobSimulateSimulate.output;
-        inputPoses = jobSimulateSimulate.transformMatrices;
-        currentSolve = jobInterpolation.currentSolve;
+        outputPositions = jobSimulateSimulate.outputPositions;
+        outputRotations = jobSimulateSimulate.outputRotations;
+        inputPosePositions = jobSimulateSimulate.transformPositions;
+        currentPositions = jobInterpolation.currentPositions;
+        currentRotations = jobInterpolation.currentRotations;
         previousSimulatedRootOffset = jobInterpolation.previousSimulatedRootOffset;
         currentSimulatedRootOffset = jobInterpolation.currentSimulatedRootOffset;
         previousSimulatedRootPosition = jobInterpolation.previousSimulatedRootPosition;
@@ -36,10 +43,11 @@ public struct JiggleJobPrepareInterpolation : IJob {
     public void Execute() {
         previousTimeStamp.Value = currentTimeStamp.Value;
         currentTimeStamp.Value = incomingTimeStamp;
-        outputPoses.CopyTo(currentSolve);
+        outputPositions.CopyTo(currentPositions);
+        outputRotations.CopyTo(currentRotations);
         
-        var simulatedPosition = outputPoses[0].GetPosition();
-        var pose = inputPoses[0].GetPosition();
+        var simulatedPosition = outputPositions[0];
+        var pose = inputPosePositions[0];
         previousSimulatedRootOffset.Value = currentSimulatedRootOffset.Value;
         currentSimulatedRootOffset.Value = simulatedPosition - pose;
         

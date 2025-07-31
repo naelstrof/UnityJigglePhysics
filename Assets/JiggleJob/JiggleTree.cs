@@ -64,8 +64,12 @@ public class JiggleTree {
             handleTransformWrite.Complete();
         }
         jobPrepareInterpolation.incomingTimeStamp = jobSimulate.timeStamp;
-        (jobInterpolation.currentSolve, jobInterpolation.previousSolve) = (jobInterpolation.previousSolve, jobInterpolation.currentSolve);
-        jobPrepareInterpolation.currentSolve = jobInterpolation.currentSolve;
+        (jobInterpolation.currentPositions, jobInterpolation.previousPositions) = (jobInterpolation.previousPositions, jobInterpolation.currentPositions);
+        (jobInterpolation.currentRotations, jobInterpolation.previousRotations) = (jobInterpolation.previousRotations, jobInterpolation.currentRotations);
+        
+        jobPrepareInterpolation.currentPositions = jobInterpolation.currentPositions;
+        jobPrepareInterpolation.currentRotations = jobInterpolation.currentRotations;
+        
         handlePrepareInterpolation = jobPrepareInterpolation.Schedule();
         hasHandlePrepareInterpolation = true;
         Profiler.EndSample();

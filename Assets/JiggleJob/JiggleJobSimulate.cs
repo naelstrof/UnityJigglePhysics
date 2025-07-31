@@ -18,6 +18,9 @@ public struct JiggleJobSimulate : IJob {
     
     public NativeArray<float3> outputPositions;
     public NativeArray<quaternion> outputRotations;
+    
+    public NativeReference<float3> outputSimulatedRootOffset;
+    public NativeReference<float3> outputSimulatedRootPosition;
 
     public JiggleJobSimulate(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
         var boneCount = bones.Length;
@@ -34,6 +37,9 @@ public struct JiggleJobSimulate : IJob {
         
         outputPositions = new NativeArray<float3>(currentPositions, Allocator.Persistent);
         outputRotations = new NativeArray<quaternion>(currentRotations, Allocator.Persistent);
+
+        outputSimulatedRootOffset = new NativeReference<float3>(new float3(0f), Allocator.Persistent);
+        outputSimulatedRootPosition = new NativeReference<float3>(currentPositions[0], Allocator.Persistent);
         
         timeStamp = Time.timeAsDouble;
         gravity = Physics.gravity;
@@ -310,5 +316,10 @@ public struct JiggleJobSimulate : IJob {
         Constrain();
         FinishStep();
         ApplyPose();
+        
+        var simulatedPosition = outputPositions[0];
+        var pose = transformPositions[0];
+        outputSimulatedRootOffset.Value = simulatedPosition - pose;
+        outputSimulatedRootPosition.Value = simulatedPosition;
     }
 }

@@ -12,10 +12,8 @@ public struct JiggleJobInterpolation : IJobFor {
     [ReadOnly] public NativeArray<quaternion> previousRotations;
     [ReadOnly] public NativeArray<quaternion> currentRotations;
     
-    //public NativeArray<Vector3> previousLocalPositions;
-    //public NativeArray<Quaternion> previousLocalRotations;
-    [ReadOnly] public NativeReference<double> timeStamp;
-    [ReadOnly] public NativeReference<double> previousTimeStamp;
+    public double timeStamp;
+    public double previousTimeStamp;
     public double currentTime;
     
     [ReadOnly] public NativeReference<float3> previousSimulatedRootOffset;
@@ -45,8 +43,8 @@ public struct JiggleJobInterpolation : IJobFor {
         previousSimulatedRootPosition = new NativeReference<float3>(realRootPosition, Allocator.Persistent);
         currentSimulatedRootPosition = new NativeReference<float3>(realRootPosition, Allocator.Persistent);
         currentTime = Time.timeAsDouble;
-        timeStamp = new NativeReference<double>(currentTime, Allocator.Persistent);
-        previousTimeStamp = new NativeReference<double>(currentTime - JiggleJobManager.FIXED_DELTA_TIME, Allocator.Persistent);
+        timeStamp = currentTime;
+        previousTimeStamp = currentTime - JiggleJobManager.FIXED_DELTA_TIME;
         outputInterpolatedPositions = new NativeArray<float3>(boneCount, Allocator.Persistent);
         outputInterpolatedRotations = new NativeArray<quaternion>(boneCount, Allocator.Persistent);
     }
@@ -76,12 +74,6 @@ public struct JiggleJobInterpolation : IJobFor {
         if (currentSimulatedRootPosition.IsCreated) {
             currentSimulatedRootPosition.Dispose();
         }
-        if (timeStamp.IsCreated) {
-            timeStamp.Dispose();
-        }
-        if (previousTimeStamp.IsCreated) {
-            previousTimeStamp.Dispose();
-        }
         if (outputInterpolatedPositions.IsCreated) {
             outputInterpolatedPositions.Dispose();
         }
@@ -97,7 +89,7 @@ public struct JiggleJobInterpolation : IJobFor {
         var newPosition = currentPositions[index];
         var newRotation = currentRotations[index];
 
-        var diff = timeStamp.Value - previousTimeStamp.Value;
+        var diff = timeStamp - previousTimeStamp;
         if (diff == 0) {
             throw new UnityException("Time difference is zero, cannot interpolate.");
         }
@@ -106,7 +98,7 @@ public struct JiggleJobInterpolation : IJobFor {
         // The issue here is that we are having to operate 3 full frames in the past
         // which might be noticable latency
         const double timeCorrection = JiggleJobManager.FIXED_DELTA_TIME * 2f;
-        var t = (currentTime-timeCorrection - previousTimeStamp.Value) / diff;
+        var t = (currentTime-timeCorrection - previousTimeStamp) / diff;
         var position = math.lerp(prevPosition, newPosition, (float)t);
         var rotation = math.slerp(prevRotation, newRotation, (float)t);
         

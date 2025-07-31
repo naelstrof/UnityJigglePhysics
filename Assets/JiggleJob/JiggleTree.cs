@@ -26,10 +26,6 @@ public class JiggleTree {
     public JiggleJobTransformWrite jobTransformWrite;
     public JobHandle handleTransformWrite;
     public bool hasHandleTrasnformWrite;
-    
-    public JiggleJobPrepareInterpolation jobPrepareInterpolation;
-    public JobHandle handlePrepareInterpolation;
-    public bool hasHandlePrepareInterpolation;
 
     public bool dirty;
 
@@ -53,8 +49,6 @@ public class JiggleTree {
         
         jobTransformWrite = new JiggleJobTransformWrite(jobBulkRead, jobInterpolation);
         
-        jobPrepareInterpolation = new JiggleJobPrepareInterpolation(jobSimulate, jobInterpolation);
-        
         transformAccessArray = new TransformAccessArray(bones);
     }
 
@@ -63,15 +57,31 @@ public class JiggleTree {
         if (hasHandleTrasnformWrite) {
             handleTransformWrite.Complete();
         }
-        jobPrepareInterpolation.incomingTimeStamp = jobSimulate.timeStamp;
-        (jobInterpolation.currentPositions, jobInterpolation.previousPositions) = (jobInterpolation.previousPositions, jobInterpolation.currentPositions);
-        (jobInterpolation.currentRotations, jobInterpolation.previousRotations) = (jobInterpolation.previousRotations, jobInterpolation.currentRotations);
+
+        // Rotate our three memory buffers
+        jobInterpolation.previousTimeStamp = jobInterpolation.timeStamp;
+        jobInterpolation.timeStamp = jobSimulate.timeStamp;
+
+        var temp = jobInterpolation.previousPositions;
+        jobInterpolation.previousPositions = jobInterpolation.currentPositions;
+        jobInterpolation.currentPositions = jobSimulate.outputPositions;
+        jobSimulate.outputPositions = temp;
         
-        jobPrepareInterpolation.currentPositions = jobInterpolation.currentPositions;
-        jobPrepareInterpolation.currentRotations = jobInterpolation.currentRotations;
+        var tempRot = jobInterpolation.previousRotations;
+        jobInterpolation.previousRotations = jobInterpolation.currentRotations;
+        jobInterpolation.currentRotations = jobSimulate.outputRotations;
+        jobSimulate.outputRotations = tempRot;
         
-        handlePrepareInterpolation = jobPrepareInterpolation.Schedule();
-        hasHandlePrepareInterpolation = true;
+        var tempRootOffset = jobInterpolation.previousSimulatedRootOffset;
+        jobInterpolation.previousSimulatedRootOffset = jobInterpolation.currentSimulatedRootOffset;
+        jobInterpolation.currentSimulatedRootOffset = jobSimulate.outputSimulatedRootOffset;
+        jobSimulate.outputSimulatedRootOffset = tempRootOffset;
+        
+        var tempRootPosition = jobInterpolation.previousSimulatedRootPosition;
+        jobInterpolation.previousSimulatedRootPosition = jobInterpolation.currentSimulatedRootPosition;
+        jobInterpolation.currentSimulatedRootPosition = jobSimulate.outputSimulatedRootPosition;
+        jobSimulate.outputSimulatedRootPosition = tempRootPosition;
+        
         Profiler.EndSample();
     }
     
@@ -90,12 +100,7 @@ public class JiggleTree {
         jobSimulate.gravity = Physics.gravity;
         Profiler.EndSample();
         Profiler.BeginSample("JiggleTree.ScheduleJobs");
-        // TODO: Reading transforms shouldn't be reliant on interpolation
-        if (hasHandlePrepareInterpolation) {
-            handleBulkRead = jobBulkRead.Schedule(transformAccessArray, handlePrepareInterpolation);
-        } else {
-            handleBulkRead = jobBulkRead.Schedule(transformAccessArray);
-        }
+        handleBulkRead = jobBulkRead.Schedule(transformAccessArray);
         hasHandleBulkRead = true;
 
         handleSimulate = jobSimulate.Schedule(handleBulkRead);
@@ -108,11 +113,7 @@ public class JiggleTree {
         Profiler.BeginSample("JiggleTree.SchedulePose");
         jobInterpolation.realRootPosition = bones[0].position;
         jobInterpolation.currentTime = Time.timeAsDouble;
-        if (hasHandlePrepareInterpolation) {
-            handleInterpolate = jobInterpolation.ScheduleParallel(bones.Length, 32, handlePrepareInterpolation);
-        } else {
-            handleInterpolate = jobInterpolation.ScheduleParallel(bones.Length, 32, default);
-        }
+        handleInterpolate = jobInterpolation.ScheduleParallel(bones.Length, 32, default);
 
         // TODO: Posing shouldn't rely on the bulk read, maybe duplicate some data?
         if (hasHandleBulkRead) {
@@ -180,7 +181,6 @@ public class JiggleTree {
         jobBulkRead.Dispose();
         jobInterpolation.Dispose();
         jobTransformWrite.Dispose();
-        jobPrepareInterpolation.Dispose();
         if (transformAccessArray.isCreated) {
             transformAccessArray.Dispose();
         }

@@ -1,12 +1,13 @@
 using System;
 using Unity.Collections;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
 
 [BurstCompiled]
 public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
-    public NativeArray<Vector3> transformPositions;
-    public NativeArray<Quaternion> transformRotations;
+    public NativeArray<float3> transformPositions;
+    public NativeArray<quaternion> transformRotations;
     
     public NativeArray<Matrix4x4> restPoseMatrices;
     [ReadOnly]

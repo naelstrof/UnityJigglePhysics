@@ -3,36 +3,37 @@ using System.Collections.Generic;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 
 [BurstCompile]
 public struct JiggleJobSimulate : IJob {
     // TODO: doubles are strictly a bad way to track time, probably should be ints or longs.
     public double timeStamp;
-    public Vector3 gravity;
+    public float3 gravity;
     
-    public NativeArray<Vector3> transformPositions;
-    public NativeArray<Quaternion> transformRotations;
+    public NativeArray<float3> transformPositions;
+    public NativeArray<quaternion> transformRotations;
     public NativeArray<JiggleBoneSimulatedPoint> simulatedPoints;
     
-    public NativeArray<Vector3> outputPositions;
-    public NativeArray<Quaternion> outputRotations;
+    public NativeArray<float3> outputPositions;
+    public NativeArray<quaternion> outputRotations;
 
     public JiggleJobSimulate(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
         var boneCount = bones.Length;
-        var currentPositions = new Vector3[boneCount];
-        var currentRotations = new Quaternion[boneCount];
+        var currentPositions = new float3[boneCount];
+        var currentRotations = new quaternion[boneCount];
         for (int i = 0; i < boneCount; i++) {
             currentPositions[i] = bones[i].position;
             currentRotations[i] = bones[i].rotation;
         }
-        transformPositions = new NativeArray<Vector3>(currentPositions, Allocator.Persistent);
-        transformRotations = new NativeArray<Quaternion>(currentRotations, Allocator.Persistent);
+        transformPositions = new NativeArray<float3>(currentPositions, Allocator.Persistent);
+        transformRotations = new NativeArray<quaternion>(currentRotations, Allocator.Persistent);
         
         simulatedPoints = new NativeArray<JiggleBoneSimulatedPoint>(points, Allocator.Persistent);
         
-        outputPositions = new NativeArray<Vector3>(currentPositions, Allocator.Persistent);
-        outputRotations = new NativeArray<Quaternion>(currentRotations, Allocator.Persistent);
+        outputPositions = new NativeArray<float3>(currentPositions, Allocator.Persistent);
+        outputRotations = new NativeArray<quaternion>(currentRotations, Allocator.Persistent);
         
         timeStamp = Time.timeAsDouble;
         gravity = Physics.gravity;
@@ -64,14 +65,14 @@ public struct JiggleJobSimulate : IJob {
                 var child = simulatedPoints[point.childrenIndices[0]];
                 var childChild = simulatedPoints[child.childrenIndices[0]];
                 if (childChild.transformIndex == -1) { // edge case where it's a singular isolated root bone
-                    point.pose = transformPositions[child.transformIndex] - Vector3.up*0.25f;
-                    point.parentPose = transformPositions[child.transformIndex] - Vector3.up*0.5f;
+                    point.pose = transformPositions[child.transformIndex] - new float3(0f, 0.25f, 0f);;
+                    point.parentPose = transformPositions[child.transformIndex] - new float3(0f, 0.5f, 0f);
                     point.desiredLengthToParent = 0.25f;
                 } else {
                     var diff = transformPositions[child.transformIndex] - transformPositions[childChild.transformIndex];
                     point.pose = transformPositions[child.transformIndex] + diff;
                     point.parentPose = transformPositions[child.transformIndex] + diff*2f;
-                    point.desiredLengthToParent = diff.magnitude;
+                    point.desiredLengthToParent = math.length(diff);
                 }
                 point.desiredConstraint = point.pose;
                 point.workingPosition = point.pose;
@@ -79,12 +80,12 @@ public struct JiggleJobSimulate : IJob {
                 var parent = simulatedPoints[point.parentIndex];
                 point.pose = transformPositions[point.transformIndex];
                 point.parentPose = parent.pose;
-                point.desiredLengthToParent = Vector3.Distance(point.pose, parent.pose);
+                point.desiredLengthToParent = math.distance(point.pose, parent.pose);
             } else { // virtual end particles
                 var parent = simulatedPoints[point.parentIndex];
                 point.pose = (parent.pose*2f - parent.parentPose);
                 point.parentPose = parent.pose;
-                point.desiredLengthToParent = Vector3.Distance(point.pose, point.parentPose);
+                point.desiredLengthToParent = math.distance(point.pose, point.parentPose);
             }
             
             simulatedPoints[i] = point;
@@ -111,6 +112,19 @@ public struct JiggleJobSimulate : IJob {
             simulatedPoints[i] = point;
         }
     }
+    
+    quaternion FromToRotation(float3 from, float3 to) {
+        if (math.all(from == to)) {
+            return quaternion.identity;
+        }
+        var axis = math.cross(from, to);
+        var angle = math.acos(math.clamp(math.dot(from, to), -1f, 1f));
+        return quaternion.AxisAngle(axis, angle);
+    }
+    
+    float float3Angle(float3 a, float3 b) {
+        return math.degrees(math.acos(math.dot(math.normalize(a), math.normalize(b))));
+    }
 
     private unsafe void Constrain() {
         int simulatedPointCount = simulatedPoints.Length;
@@ -123,7 +137,7 @@ public struct JiggleJobSimulate : IJob {
             #region Special root particle solve
             if (parent.parentIndex == -1) {
                 var child = simulatedPoints[point.childrenIndices[0]];
-                point.desiredConstraint = point.workingPosition = Vector3.Lerp(point.workingPosition, point.pose, point.parameters.rootElasticity * point.parameters.rootElasticity);
+                point.desiredConstraint = point.workingPosition = math.lerp(point.workingPosition, point.pose, point.parameters.rootElasticity * point.parameters.rootElasticity);
                 var head = point.pose;
                 var tail = child.pose;
                 var diffasdf = head - tail;
@@ -135,50 +149,51 @@ public struct JiggleJobSimulate : IJob {
             #endregion
 
             #region Angle Constraint
-            var parentAimPose = (point.parentPose - parent.parentPose).normalized;
-            var parentAim = (parent.desiredConstraint - parent.parentPose).normalized;
+            var parentAimPose = math.normalize(point.parentPose - parent.parentPose);
+            var parentAim = math.normalize(parent.desiredConstraint - parent.parentPose);
             if (parent.parentIndex != -1) {
                 var parentParent = simulatedPoints[parent.parentIndex];
-                parentAim = (parent.desiredConstraint - parentParent.desiredConstraint).normalized;
+                parentAim = math.normalize(parent.desiredConstraint - parentParent.desiredConstraint);
             }
 
-            var currentLength = (point.workingPosition - parent.desiredConstraint).magnitude;
-            var from_to_rot = Quaternion.FromToRotation(parentAimPose, parentAim);
-            var current_pose_dir = (point.pose - point.parentPose).normalized;
-            var constraintTarget = from_to_rot * (current_pose_dir * currentLength);
+            var currentLength = math.length(point.workingPosition - parent.desiredConstraint);
+            var from_to_rot = FromToRotation(parentAimPose, parentAim);
+            var current_pose_dir = math.normalize(point.pose - point.parentPose);
+            var constraintTarget = math.rotate(from_to_rot, (current_pose_dir * currentLength));
 
             var desiredPosition = parent.desiredConstraint + constraintTarget;
 
             
-            var error = Vector3.Distance(point.workingPosition, parent.desiredConstraint + constraintTarget);
+            var error = math.distance(point.workingPosition, parent.desiredConstraint + constraintTarget);
             error /= currentLength;
-            error = Mathf.Min(error, 1.0f);
-            error = Mathf.Pow(error, parent.parameters.elasticitySoften);
-            point.desiredConstraint = Vector3.Lerp(point.workingPosition, desiredPosition, parent.parameters.angleElasticity * error);
+            error = math.min(error, 1.0f);
+            error = math.pow(error, parent.parameters.elasticitySoften);
+            point.desiredConstraint = math.lerp(point.workingPosition, desiredPosition, parent.parameters.angleElasticity * error);
             #endregion
             
             // DO COLLISIONS HERE
             
             if (point.parameters.angleLimited) { // --- Angle Limit Constraint
                 float angleA_deg = point.parameters.angleLimit;
-                float angleC_deg = Vector3.Angle(
+                // TODO: This should be radians instead of degrees
+                float angleC_deg = float3Angle(
                     point.desiredConstraint - desiredPosition,
                     parent.desiredConstraint - desiredPosition
                 ); // known included angle C
 
-                float b = Vector3.Distance(point.parentPose, desiredPosition); // known side opposite angle B
+                float b = math.distance(point.parentPose, desiredPosition); // known side opposite angle B
 
                 float angleB_deg = 180f - angleA_deg - angleC_deg;
 
                 float angleA_rad = angleA_deg * Mathf.Deg2Rad;
                 float angleB_rad = angleB_deg * Mathf.Deg2Rad;
 
-                float a = b * Mathf.Sin(angleA_rad) / Mathf.Sin(angleB_rad);
+                float a = b * math.sin(angleA_rad) / Mathf.Sin(angleB_rad);
 
-                var correctionDir = (desiredPosition - point.desiredConstraint).normalized;
-                var correctionDistance = (desiredPosition - point.desiredConstraint).magnitude;
+                var correctionDir = math.normalize(desiredPosition - point.desiredConstraint);
+                var correctionDistance = math.length(desiredPosition - point.desiredConstraint);
 
-                var angleCorrectionDistance = Mathf.Max(0f, correctionDistance - a);
+                var angleCorrectionDistance = math.max(0f, correctionDistance - a);
                 var angleCorrection = (correctionDir * angleCorrectionDistance) * (1f - point.parameters.angleLimitSoften);
                 point.desiredConstraint += angleCorrection;
             }
@@ -186,8 +201,8 @@ public struct JiggleJobSimulate : IJob {
             #region Length Constraint
             var length_elasticity = parent.parameters.lengthElasticity;
             var diff = point.desiredConstraint - parent.desiredConstraint;
-            var dir = diff.normalized;
-            var forwardConstraint = Vector3.Lerp(point.desiredConstraint, parent.desiredConstraint + dir * point.desiredLengthToParent, length_elasticity);
+            var dir = math.normalize(diff);
+            var forwardConstraint = math.lerp(point.desiredConstraint, parent.desiredConstraint + dir * point.desiredLengthToParent, length_elasticity);
             point.desiredConstraint = forwardConstraint;
             #endregion
             
@@ -204,25 +219,25 @@ public struct JiggleJobSimulate : IJob {
 
             if (point.childenCount > 0) { // Back-propagated motion specifically for collision enabled chains
                 var child = simulatedPoints[point.childrenIndices[0]];
-                var aim_pose = (child.pose - point.parentPose).normalized;
-                var aim = (child.workingPosition - parent.workingPosition).normalized;
-                var from_to_rot_also = Quaternion.FromToRotation(aim_pose, aim);
-                var parent_to_self = (point.pose - point.parentPose).normalized;
-                var real_length = (point.workingPosition - parent.workingPosition).magnitude;
-                var targetPos = (from_to_rot_also * (parent_to_self * real_length)) + parent.workingPosition;
+                var aim_pose = math.normalize(child.pose - point.parentPose);
+                var aim = math.normalize(child.workingPosition - parent.workingPosition);
+                var from_to_rot_also = FromToRotation(aim_pose, aim);
+                var parent_to_self = math.normalize(point.pose - point.parentPose);
+                var real_length = math.length(point.workingPosition - parent.workingPosition);
+                var targetPos = math.rotate(from_to_rot_also, (parent_to_self * real_length)) + parent.workingPosition;
 
-                var error_also = (point.workingPosition - targetPos).magnitude;
+                var error_also = math.length(point.workingPosition - targetPos);
                 error_also /= point.desiredLengthToParent;
-                error_also = Mathf.Min(error_also, 1.0f);
-                error_also = Mathf.Pow(error_also, parent.parameters.elasticitySoften);
-                var backward_constraint = Vector3.Lerp(point.workingPosition, targetPos, (parent.parameters.angleElasticity * parent.parameters.angleElasticity * error_also));
+                error_also = math.min(error_also, 1.0f);
+                error_also = math.pow(error_also, parent.parameters.elasticitySoften);
+                var backward_constraint = math.lerp(point.workingPosition, targetPos, (parent.parameters.angleElasticity * parent.parameters.angleElasticity * error_also));
 
                 var child_length_elasticity = point.parameters.lengthElasticity * point.parameters.lengthElasticity;
 
                 var cdiff = backward_constraint - child.workingPosition;
-                var cdir = cdiff.normalized;
-                backward_constraint = Vector3.Lerp(backward_constraint, child.workingPosition + cdir * child.desiredLengthToParent, child_length_elasticity * 0.5f);
-                point.workingPosition = Vector3.Lerp(forwardConstraint, backward_constraint, 0.5f);
+                var cdir = math.normalize(cdiff);
+                backward_constraint = math.lerp(backward_constraint, child.workingPosition + cdir * child.desiredLengthToParent, child_length_elasticity * 0.5f);
+                point.workingPosition = math.lerp(forwardConstraint, backward_constraint, 0.5f);
             } else {
                 point.workingPosition = forwardConstraint;
             }
@@ -259,25 +274,25 @@ public struct JiggleJobSimulate : IJob {
             if (point.parentIndex == -1) {
                 continue;
             }
-            
-            Vector3 cachedAnimatedVector = Vector3.zero;
-            Vector3 simulatedVector = Vector3.zero;
+
+            float3 cachedAnimatedVector = new float3(0f);
+            float3 simulatedVector = cachedAnimatedVector;
 
             if (point.childenCount == 1) {
-                cachedAnimatedVector = (local_child_pose - local_pose).normalized;
-                simulatedVector = (local_child_working_position - local_working_position).normalized;
+                cachedAnimatedVector = math.normalize(local_child_pose - local_pose);
+                simulatedVector = math.normalize(local_child_working_position - local_working_position);
             } else {
-                var cachedAnimatedVectorSum = Vector3.zero;
-                var simulatedVectorSum = Vector3.zero;
+                var cachedAnimatedVectorSum = new float3(0f);
+                var simulatedVectorSum = cachedAnimatedVectorSum;
                 for (var j = 0; j < point.childenCount; j++) {
                     var child_also = simulatedPoints[point.childrenIndices[j]];
                     var local_child_pose_also = child_also.pose;
                     var local_child_working_position_also = child_also.workingPosition;
-                    cachedAnimatedVectorSum += (local_child_pose_also - local_pose).normalized;
-                    simulatedVectorSum += (local_child_working_position_also - local_working_position).normalized;
+                    cachedAnimatedVectorSum += math.normalize(local_child_pose_also - local_pose);
+                    simulatedVectorSum += math.normalize(local_child_working_position_also - local_working_position);
                 }
-                cachedAnimatedVector = (cachedAnimatedVectorSum * (1f / point.childenCount)).normalized;
-                simulatedVector = (simulatedVectorSum * (1f / point.childenCount)).normalized;
+                cachedAnimatedVector = math.normalize(cachedAnimatedVectorSum * (1f / point.childenCount));
+                simulatedVector = math.normalize(simulatedVectorSum * (1f / point.childenCount));
             }
             
             var animPoseToPhysicsPose = Quaternion.Slerp(Quaternion.identity, Quaternion.FromToRotation(cachedAnimatedVector, simulatedVector), point.parameters.blend);

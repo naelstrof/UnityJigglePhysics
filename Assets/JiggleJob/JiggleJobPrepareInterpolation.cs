@@ -1,19 +1,20 @@
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 
 [BurstCompiled]
 public struct JiggleJobPrepareInterpolation : IJob {
     public double incomingTimeStamp;
     [ReadOnly]
-    public NativeArray<Vector3> outputPositions;
+    public NativeArray<float3> outputPositions;
     [ReadOnly]
-    public NativeArray<Quaternion> outputRotations;
+    public NativeArray<quaternion> outputRotations;
     [ReadOnly]
-    public NativeArray<Vector3> inputPosePositions;
+    public NativeArray<float3> inputPosePositions;
     
-    public NativeArray<Vector3> currentPositions;
-    public NativeArray<Quaternion> currentRotations;
+    public NativeArray<float3> currentPositions;
+    public NativeArray<quaternion> currentRotations;
     
     public NativeReference<double> previousTimeStamp;
     public NativeReference<double> currentTimeStamp;

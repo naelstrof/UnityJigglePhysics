@@ -1,14 +1,15 @@
+using Unity.Mathematics;
 using UnityEngine;
 
 public unsafe struct JiggleBoneSimulatedPoint {
     public const int MAX_CHILDREN = 16;
     // Generated at runtime
-    public Vector3 lastPosition;
-    public Vector3 position;
-    public Vector3 workingPosition;
-    public Vector3 desiredConstraint;
-    public Vector3 parentPose;
-    public Vector3 pose;
+    public float3 lastPosition;
+    public float3 position;
+    public float3 workingPosition;
+    public float3 desiredConstraint;
+    public float3 parentPose;
+    public float3 pose;
     public float desiredLengthToParent;
     public bool animated;
 

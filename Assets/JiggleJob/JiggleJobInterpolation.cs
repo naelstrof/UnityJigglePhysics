@@ -1,15 +1,16 @@
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
 
 [BurstCompiled]
 public struct JiggleJobInterpolation : IJobFor {
-    [ReadOnly] public NativeArray<Vector3> previousPositions;
-    [ReadOnly] public NativeArray<Vector3> currentPositions;
+    [ReadOnly] public NativeArray<float3> previousPositions;
+    [ReadOnly] public NativeArray<float3> currentPositions;
     
-    [ReadOnly] public NativeArray<Quaternion> previousRotations;
-    [ReadOnly] public NativeArray<Quaternion> currentRotations;
+    [ReadOnly] public NativeArray<quaternion> previousRotations;
+    [ReadOnly] public NativeArray<quaternion> currentRotations;
     
     //public NativeArray<Vector3> previousLocalPositions;
     //public NativeArray<Quaternion> previousLocalRotations;
@@ -30,10 +31,10 @@ public struct JiggleJobInterpolation : IJobFor {
 
     public JiggleJobInterpolation(JiggleJobSimulate jobSimulate, Transform[] bones) {
         var boneCount = bones.Length;
-        previousPositions = new NativeArray<Vector3>(boneCount, Allocator.Persistent);
-        previousRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent);
-        currentPositions = new NativeArray<Vector3>(boneCount, Allocator.Persistent);
-        currentRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent);
+        previousPositions = new NativeArray<float3>(boneCount, Allocator.Persistent);
+        previousRotations = new NativeArray<quaternion>(boneCount, Allocator.Persistent);
+        currentPositions = new NativeArray<float3>(boneCount, Allocator.Persistent);
+        currentRotations = new NativeArray<quaternion>(boneCount, Allocator.Persistent);
         jobSimulate.outputPositions.CopyTo(previousPositions);
         jobSimulate.outputRotations.CopyTo(previousRotations);
         jobSimulate.outputPositions.CopyTo(currentPositions);

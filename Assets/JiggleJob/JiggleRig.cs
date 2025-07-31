@@ -17,7 +17,7 @@ public class JiggleRig : MonoBehaviour {
     [SerializeField] protected JiggleBoneInputParameters _jiggleBoneInputParameters;
     [SerializeField] protected List<Transform> _excludedTransforms = new List<Transform>();
     
-    private MonobehaviourHider.JiggleRoot _root;
+    private JiggleRoot _root;
     bool isValid = false;
     public bool rootExcluded => _excludeRoot;
     public Transform rootBone => _rootBone;
@@ -45,7 +45,7 @@ public class JiggleRig : MonoBehaviour {
             List<JiggleRig> finished = new List<JiggleRig>();
             // DO DFS HERE
         }*/
-        _root = _rootBone.gameObject.AddComponent<MonobehaviourHider.JiggleRoot>();
+        _root = new JiggleRoot(_rootBone);
         if (_root != null) {
             _root.rig = this;
         }
@@ -53,7 +53,7 @@ public class JiggleRig : MonoBehaviour {
 
     private void OnDisable() {
         if (_root != null) {
-            Destroy(_root);
+            JiggleRoot.RemoveJiggleRoot(_root);
         }
     }
 

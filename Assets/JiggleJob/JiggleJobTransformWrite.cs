@@ -1,3 +1,4 @@
+using System;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
@@ -24,9 +25,13 @@ public struct JiggleJobTransformWrite : IJobParallelForTransform {
     }
     
     public void Execute(int index, TransformAccess transform) {
-        transform.SetPositionAndRotation(outputInterpolatedPositions[index], outputInterpolatedRotations[index]);
-        transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
-        previousLocalPositions[index] = localPosition;
-        previousLocalRotations[index] = localRotation;
+        try {
+            transform.SetPositionAndRotation(outputInterpolatedPositions[index], outputInterpolatedRotations[index]);
+            transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
+            previousLocalPositions[index] = localPosition;
+            previousLocalRotations[index] = localRotation;
+        } catch (Exception e) {
+            Debug.LogError($"Error in JiggleJobBulkTransformRead: {e.Message}\n{e.StackTrace}");
+        }
     }
 }

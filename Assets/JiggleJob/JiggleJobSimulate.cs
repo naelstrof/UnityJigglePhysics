@@ -129,13 +129,16 @@ public struct JiggleJobSimulate : IJob {
     }
     
     float float3Angle(float3 a, float3 b) {
-        return math.degrees(math.acos(math.dot(math.normalize(a), math.normalize(b))));
+        return math.degrees(math.acos(math.clamp(math.dot(math.normalizesafe(a), math.normalizesafe(b)), -1f, 1f)));
     }
 
     private unsafe void Constrain() {
         int simulatedPointCount = simulatedPoints.Length;
         for (int i = 0; i < simulatedPointCount; i++) {
+
+            
             var point = simulatedPoints[i];
+            
             if (point.parentIndex == -1) {
                 continue;
             }
@@ -153,18 +156,18 @@ public struct JiggleJobSimulate : IJob {
                 continue;
             }
             #endregion
-
+            
             #region Angle Constraint
-            var parentAimPose = math.normalize(point.parentPose - parent.parentPose);
-            var parentAim = math.normalize(parent.desiredConstraint - parent.parentPose);
+            var parentAimPose = math.normalizesafe(point.parentPose - parent.parentPose);
+            var parentAim = math.normalizesafe(parent.desiredConstraint - parent.parentPose);
             if (parent.parentIndex != -1) {
                 var parentParent = simulatedPoints[parent.parentIndex];
-                parentAim = math.normalize(parent.desiredConstraint - parentParent.desiredConstraint);
+                parentAim = math.normalizesafe(parent.desiredConstraint - parentParent.desiredConstraint);
             }
 
             var currentLength = math.length(point.workingPosition - parent.desiredConstraint);
             var from_to_rot = FromToRotation(parentAimPose, parentAim);
-            var current_pose_dir = math.normalize(point.pose - point.parentPose);
+            var current_pose_dir = math.normalizesafe(point.pose - point.parentPose);
             var constraintTarget = math.rotate(from_to_rot, (current_pose_dir * currentLength));
 
             var desiredPosition = parent.desiredConstraint + constraintTarget;
@@ -196,24 +199,25 @@ public struct JiggleJobSimulate : IJob {
 
                 float a = b * math.sin(angleA_rad) / Mathf.Sin(angleB_rad);
 
-                var correctionDir = math.normalize(desiredPosition - point.desiredConstraint);
+                var correctionDir = math.normalizesafe(desiredPosition - point.desiredConstraint);
                 var correctionDistance = math.length(desiredPosition - point.desiredConstraint);
 
                 var angleCorrectionDistance = math.max(0f, correctionDistance - a);
                 var angleCorrection = (correctionDir * angleCorrectionDistance) * (1f - point.parameters.angleLimitSoften);
                 point.desiredConstraint += angleCorrection;
             }
-
+            
             #region Length Constraint
             var length_elasticity = parent.parameters.lengthElasticity;
             var diff = point.desiredConstraint - parent.desiredConstraint;
-            var dir = math.normalize(diff);
+            var dir = math.normalizesafe(diff);
             var forwardConstraint = math.lerp(point.desiredConstraint, parent.desiredConstraint + dir * point.desiredLengthToParent, length_elasticity);
             point.desiredConstraint = forwardConstraint;
             #endregion
             
             point.workingPosition = forwardConstraint;
             simulatedPoints[i] = point;
+
             continue;
             
             #region Back-propagated motion for collisions
@@ -225,10 +229,10 @@ public struct JiggleJobSimulate : IJob {
 
             if (point.childenCount > 0) { // Back-propagated motion specifically for collision enabled chains
                 var child = simulatedPoints[point.childrenIndices[0]];
-                var aim_pose = math.normalize(child.pose - point.parentPose);
-                var aim = math.normalize(child.workingPosition - parent.workingPosition);
+                var aim_pose = math.normalizesafe(child.pose - point.parentPose);
+                var aim = math.normalizesafe(child.workingPosition - parent.workingPosition);
                 var from_to_rot_also = FromToRotation(aim_pose, aim);
-                var parent_to_self = math.normalize(point.pose - point.parentPose);
+                var parent_to_self = math.normalizesafe(point.pose - point.parentPose);
                 var real_length = math.length(point.workingPosition - parent.workingPosition);
                 var targetPos = math.rotate(from_to_rot_also, (parent_to_self * real_length)) + parent.workingPosition;
 
@@ -241,7 +245,7 @@ public struct JiggleJobSimulate : IJob {
                 var child_length_elasticity = point.parameters.lengthElasticity * point.parameters.lengthElasticity;
 
                 var cdiff = backward_constraint - child.workingPosition;
-                var cdir = math.normalize(cdiff);
+                var cdir = math.normalizesafe(cdiff);
                 backward_constraint = math.lerp(backward_constraint, child.workingPosition + cdir * child.desiredLengthToParent, child_length_elasticity * 0.5f);
                 point.workingPosition = math.lerp(forwardConstraint, backward_constraint, 0.5f);
             } else {
@@ -266,7 +270,7 @@ public struct JiggleJobSimulate : IJob {
         int simulatedPointCount = simulatedPoints.Length;
         for (int i = 0; i < simulatedPointCount; i++) {
             var point = simulatedPoints[i];
-            if (point.childenCount == 0) {
+            if (point.childenCount <= 0) {
                 continue;
             }
 
@@ -284,9 +288,9 @@ public struct JiggleJobSimulate : IJob {
             float3 cachedAnimatedVector = new float3(0f);
             float3 simulatedVector = cachedAnimatedVector;
 
-            if (point.childenCount == 1) {
-                cachedAnimatedVector = math.normalize(local_child_pose - local_pose);
-                simulatedVector = math.normalize(local_child_working_position - local_working_position);
+            if (point.childenCount <= 1) {
+                cachedAnimatedVector = math.normalizesafe(local_child_pose - local_pose);
+                simulatedVector = math.normalizesafe(local_child_working_position - local_working_position);
             } else {
                 var cachedAnimatedVectorSum = new float3(0f);
                 var simulatedVectorSum = cachedAnimatedVectorSum;
@@ -294,15 +298,14 @@ public struct JiggleJobSimulate : IJob {
                     var child_also = simulatedPoints[point.childrenIndices[j]];
                     var local_child_pose_also = child_also.pose;
                     var local_child_working_position_also = child_also.workingPosition;
-                    cachedAnimatedVectorSum += math.normalize(local_child_pose_also - local_pose);
-                    simulatedVectorSum += math.normalize(local_child_working_position_also - local_working_position);
+                    cachedAnimatedVectorSum += math.normalizesafe(local_child_pose_also - local_pose);
+                    simulatedVectorSum += math.normalizesafe(local_child_working_position_also - local_working_position);
                 }
-                cachedAnimatedVector = math.normalize(cachedAnimatedVectorSum * (1f / point.childenCount));
-                simulatedVector = math.normalize(simulatedVectorSum * (1f / point.childenCount));
+                cachedAnimatedVector = math.normalizesafe(cachedAnimatedVectorSum * (1f / point.childenCount));
+                simulatedVector = math.normalizesafe(simulatedVectorSum * (1f / point.childenCount));
             }
             
             var animPoseToPhysicsPose = math.slerp(quaternion.identity, FromToRotation(cachedAnimatedVector, simulatedVector), point.parameters.blend);
-
             outputPositions[point.transformIndex] = point.workingPosition;
             outputRotations[point.transformIndex] = math.mul(animPoseToPhysicsPose, transformRotations[point.transformIndex]);
             
@@ -311,15 +314,19 @@ public struct JiggleJobSimulate : IJob {
     }
     
     public void Execute() {
-        Cache();
-        VerletIntegrate();
-        Constrain();
-        FinishStep();
-        ApplyPose();
-        
-        var simulatedPosition = outputPositions[0];
-        var pose = transformPositions[0];
-        outputSimulatedRootOffset.Value = simulatedPosition - pose;
-        outputSimulatedRootPosition.Value = simulatedPosition;
+        try {
+            Cache();
+            VerletIntegrate();
+            Constrain();
+            FinishStep();
+            ApplyPose();
+            
+            var simulatedPosition = outputPositions[0];
+            var pose = transformPositions[0];
+            outputSimulatedRootOffset.Value = simulatedPosition - pose;
+            outputSimulatedRootPosition.Value = simulatedPosition;
+        } catch (Exception e) {
+            Debug.LogError($"Error in JiggleJobBulkTransformRead: {e.Message}\n{e.StackTrace}");
+        }
     }
 }

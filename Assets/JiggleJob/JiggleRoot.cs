@@ -9,7 +9,7 @@ public class JiggleRoot {
     private static List<JiggleRoot> jiggleRoots;
     private static Dictionary<Transform, JiggleRoot> jiggleRootLookup;
     private static bool rootDirty = false;
-    private static List<JiggleTree> jiggleTrees;
+    private static JiggleTree[] jiggleTrees;
     private static readonly List<Transform> tempTransforms = new List<Transform>();
     private static readonly List<JiggleBoneSimulatedPoint> tempPoints = new List<JiggleBoneSimulatedPoint>();
     private Transform _transform;
@@ -28,7 +28,7 @@ public class JiggleRoot {
                 tree.Dispose();
             }
         }
-        jiggleTrees = new List<JiggleTree>();
+        jiggleTrees = null;
         rootDirty = true;
     }
 
@@ -141,7 +141,7 @@ public class JiggleRoot {
         return validChildren;
     }
     
-    public static List<JiggleTree> GetJiggleTrees() {
+    public static JiggleTree[] GetJiggleTrees() {
         if (!rootDirty) {
             return jiggleTrees;
         }
@@ -179,17 +179,20 @@ public class JiggleRoot {
             superRoot._jiggleTree = newJiggleTree;
         }
         rootDirty = false;
-        foreach (var jiggleTree in jiggleTrees) {
-            if (!newJiggleTrees.Contains(jiggleTree)) {
-                jiggleTree.Dispose();
+        if (jiggleTrees != null) {
+            foreach (var jiggleTree in jiggleTrees) {
+                if (!newJiggleTrees.Contains(jiggleTree)) {
+                    jiggleTree.Dispose();
+                }
             }
         }
-        jiggleTrees = newJiggleTrees;
+
+        jiggleTrees = newJiggleTrees.ToArray();
         
         jobBulkReadRoots.Dispose();
-        jobBulkReadRoots = new JiggleJobBulkReadRoots(jiggleTrees.Count);
-        rootPositions = new Vector3[jiggleTrees.Count];
-        List<Transform> rootTransforms = new List<Transform>(jiggleTrees.Count);
+        jobBulkReadRoots = new JiggleJobBulkReadRoots(jiggleTrees.Length);
+        rootPositions = new Vector3[jiggleTrees.Length];
+        List<Transform> rootTransforms = new List<Transform>(jiggleTrees.Length);
         foreach (var superRoot in superRoots) {
             rootTransforms.Add(superRoot._transform);
         }
@@ -215,7 +218,8 @@ public class JiggleRoot {
             foreach (var tree in jiggleTrees) {
                 tree.Dispose();
             }
-            jiggleTrees.Clear();
+
+            jiggleTrees = null;
         }
     }
 

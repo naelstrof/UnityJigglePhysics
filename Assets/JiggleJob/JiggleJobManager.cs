@@ -20,7 +20,7 @@ public static class JiggleJobManager {
         var trees = JiggleRoot.GetJiggleTrees();
         var rootPositions = JiggleRoot.GetRootPositions();
         var currentTime = Time.timeAsDouble;
-        for (int i = 0; i < trees.Count; i++) {
+        for (int i = 0; i < trees.Length; i++) {
             trees[i].SchedulePose(currentTime, rootPositions[i]);
         }
     }

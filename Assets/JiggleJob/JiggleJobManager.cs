@@ -18,8 +18,10 @@ public static class JiggleJobManager {
 
     public static void SchedulePose() {
         var trees = JiggleRoot.GetJiggleTrees();
-        foreach (var jiggleTree in trees) {
-            jiggleTree.SchedulePose();
+        var rootPositions = JiggleRoot.GetRootPositions();
+        var currentTime = Time.timeAsDouble;
+        for (int i = 0; i < trees.Count; i++) {
+            trees[i].SchedulePose(currentTime, rootPositions[i]);
         }
     }
     
@@ -31,9 +33,10 @@ public static class JiggleJobManager {
     }
 
     private static void Simulate(double currentTime) {
+        var gravity = Physics.gravity;
         var trees = JiggleRoot.GetJiggleTrees();
         foreach (var jiggleTree in trees) {
-            jiggleTree.Simulate(currentTime);
+            jiggleTree.Simulate(currentTime, gravity);
         }
     }
     

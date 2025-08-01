@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Jobs;
 using UnityEngine.Profiling;
 
 public class JiggleRoot {
@@ -14,6 +15,9 @@ public class JiggleRoot {
     private Transform _transform;
     private JiggleTree _jiggleTree;
     public JiggleRig rig;
+    private static JiggleJobBulkReadRoots jobBulkReadRoots;
+    private static Vector3[] rootPositions;
+    private static TransformAccessArray transformAccessArray;
     
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void Initialize() {
@@ -60,7 +64,14 @@ public class JiggleRoot {
         }
         return roots;
     }
-
+    
+    public static Vector3[] GetRootPositions() {
+        var handle = jobBulkReadRoots.Schedule(transformAccessArray);
+        handle.Complete();
+        jobBulkReadRoots.outputPositions.CopyTo(rootPositions);
+        return rootPositions;
+    }
+    
     private static void Visit(Transform t, List<Transform> transforms, List<JiggleBoneSimulatedPoint> points, int parentIndex, JiggleRoot lastRoot, out int newIndex) {
         if (GetJiggleRootByBone(t, out JiggleRoot newRoot)) {
             lastRoot = newRoot;
@@ -174,6 +185,18 @@ public class JiggleRoot {
             }
         }
         jiggleTrees = newJiggleTrees;
+        
+        jobBulkReadRoots.Dispose();
+        jobBulkReadRoots = new JiggleJobBulkReadRoots(jiggleTrees.Count);
+        rootPositions = new Vector3[jiggleTrees.Count];
+        List<Transform> rootTransforms = new List<Transform>(jiggleTrees.Count);
+        foreach (var superRoot in superRoots) {
+            rootTransforms.Add(superRoot._transform);
+        }
+        if (transformAccessArray.isCreated) {
+            transformAccessArray.Dispose();
+        }
+        transformAccessArray = new TransformAccessArray(rootTransforms.ToArray());
         Profiler.EndSample();
         return jiggleTrees;
     }

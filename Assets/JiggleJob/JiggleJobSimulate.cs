@@ -194,7 +194,8 @@ public struct JiggleJobSimulate : IJob {
                 float angleA_rad = angleA_deg * Mathf.Deg2Rad;
                 float angleB_rad = angleB_deg * Mathf.Deg2Rad;
 
-                float a = b * math.sin(angleA_rad) / Mathf.Sin(angleB_rad);
+                var oppo = math.sin(angleB_rad);
+                float a = oppo == 0f ? 0f : b * math.sin(angleA_rad) / oppo;
 
                 var correctionDir = math.normalizesafe(desiredPosition - point.desiredConstraint);
                 var correctionDistance = math.length(desiredPosition - point.desiredConstraint);

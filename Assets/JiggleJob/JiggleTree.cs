@@ -88,7 +88,7 @@ public class JiggleTree {
         Profiler.EndSample();
     }
     
-    public void Simulate(double currentTime) {
+    public void Simulate(double currentTime, Vector3 gravity) {
         if (dirty) return;
         Profiler.BeginSample("JiggleTree.Simulate");
         if (hasHandleSimulate) {
@@ -96,7 +96,7 @@ public class JiggleTree {
         }
         Profiler.BeginSample("JiggleTree.PrepareJobs");
         jobSimulate.timeStamp = currentTime;
-        jobSimulate.gravity = Physics.gravity;
+        jobSimulate.gravity = gravity;
         Profiler.EndSample();
         Profiler.BeginSample("JiggleTree.ScheduleJobs");
         handleBulkRead = jobBulkRead.Schedule(transformAccessArray);
@@ -108,10 +108,10 @@ public class JiggleTree {
         Profiler.EndSample();
     }
 
-    public void SchedulePose() {
+    public void SchedulePose(double currentTime, Vector3 rootPosition) {
         Profiler.BeginSample("JiggleTree.SchedulePose");
-        jobInterpolation.realRootPosition = bones[0].position;
-        jobInterpolation.currentTime = Time.timeAsDouble;
+        jobInterpolation.realRootPosition = rootPosition;
+        jobInterpolation.currentTime = currentTime;
         handleInterpolate = jobInterpolation.ScheduleParallel(bones.Length, 32, default);
         hasHandleInterpolate = true;
 

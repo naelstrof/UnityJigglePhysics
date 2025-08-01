@@ -1,10 +1,11 @@
 using System;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
 
-[BurstCompiled]
+[BurstCompile]
 public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
     public NativeArray<float3> transformPositions;
     public NativeArray<quaternion> transformRotations;
@@ -50,31 +51,24 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
         }
     }
     public void Execute(int index, TransformAccess transform) {
-        //try {
-            // TODO: Stop going back and forth between matrices and positions/rotations
-            transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
-            if (!true) {
-                transform.SetLocalPositionAndRotation(restPosePositions[index], restPoseRotations[index]);
-                return;
-            }
+        // TODO: Stop going back and forth between matrices and positions/rotations
+        transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
+        if (!true) {
+            transform.SetLocalPositionAndRotation(restPosePositions[index], restPoseRotations[index]);
+            return;
+        }
 
-            if (localPosition == previousLocalPositions[index] &&
-                localRotation == previousLocalRotations[index]) {
-                transform.SetLocalPositionAndRotation(restPosePositions[index], restPoseRotations[index]);
-            } else {
-                restPosePositions[index] = localPosition;
-                restPoseRotations[index] = localRotation;
-            }
+        if (localPosition == previousLocalPositions[index] &&
+            localRotation == previousLocalRotations[index]) {
+            transform.SetLocalPositionAndRotation(restPosePositions[index], restPoseRotations[index]);
+        } else {
+            restPosePositions[index] = localPosition;
+            restPoseRotations[index] = localRotation;
+        }
 
-            transform.GetPositionAndRotation(out var position, out var rotation);
-            transformPositions[index] = position;
-            transformRotations[index] = rotation;
-        //} catch (Exception e) {
-        //    Debug.LogError($"Error in JiggleJobBulkTransformRead: {e.Message}\n{e.StackTrace}");
-        //}
+        transform.GetPositionAndRotation(out var position, out var rotation);
+        transformPositions[index] = position;
+        transformRotations[index] = rotation;
     }
     
-}
-
-public class BurstCompiledAttribute : Attribute {
 }

@@ -1,5 +1,6 @@
 using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
 using UnityEngine.Profiling;
@@ -99,7 +100,7 @@ public class JiggleTree {
         jobSimulate.gravity = gravity;
         Profiler.EndSample();
         Profiler.BeginSample("JiggleTree.ScheduleJobs");
-        handleBulkRead = jobBulkRead.Schedule(transformAccessArray);
+        handleBulkRead = jobBulkRead.ScheduleReadOnly(transformAccessArray, 256);
         hasHandleBulkRead = true;
 
         handleSimulate = jobSimulate.Schedule(handleBulkRead);
@@ -108,11 +109,12 @@ public class JiggleTree {
         Profiler.EndSample();
     }
 
-    public void SchedulePose(double currentTime, Vector3 rootPosition) {
+    public void SchedulePose(double currentTime, JobHandle rootRead, NativeArray<float3> rootPositions, int rootReadIndex) {
         Profiler.BeginSample("JiggleTree.SchedulePose");
-        jobInterpolation.realRootPosition = rootPosition;
+        jobInterpolation.realRootIndex = rootReadIndex;
         jobInterpolation.currentTime = currentTime;
-        handleInterpolate = jobInterpolation.ScheduleParallel(bones.Length, 32, default);
+        jobInterpolation.realRootPositions = rootPositions;
+        handleInterpolate = jobInterpolation.ScheduleParallel(bones.Length, 256, rootRead);
         hasHandleInterpolate = true;
 
         // TODO: Posing shouldn't rely on the bulk read, maybe duplicate some data?

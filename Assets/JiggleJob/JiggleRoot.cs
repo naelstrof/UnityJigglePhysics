@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
@@ -16,7 +19,6 @@ public class JiggleRoot {
     private JiggleTree _jiggleTree;
     public JiggleRig rig;
     private static JiggleJobBulkReadRoots jobBulkReadRoots;
-    private static Vector3[] rootPositions;
     private static TransformAccessArray transformAccessArray;
     
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -36,8 +38,8 @@ public class JiggleRoot {
         var current = t;
         while (current.parent != null) {
             current = current.parent;
-            if (jiggleRootLookup.ContainsKey(current)) {
-                jiggleRoot = jiggleRootLookup[current];
+            if (jiggleRootLookup.TryGetValue(current, out var root)) {
+                jiggleRoot = root;
                 return true;
             }
         }
@@ -65,11 +67,9 @@ public class JiggleRoot {
         return roots;
     }
     
-    public static Vector3[] GetRootPositions() {
-        var handle = jobBulkReadRoots.Schedule(transformAccessArray);
-        handle.Complete();
-        jobBulkReadRoots.outputPositions.CopyTo(rootPositions);
-        return rootPositions;
+    public static void GetRootPositions(out JobHandle handle, out NativeArray<float3> reads) {
+        handle = jobBulkReadRoots.ScheduleReadOnly(transformAccessArray, 256);
+        reads = jobBulkReadRoots.outputPositions;
     }
     
     private static void Visit(Transform t, List<Transform> transforms, List<JiggleBoneSimulatedPoint> points, int parentIndex, JiggleRoot lastRoot, out int newIndex) {
@@ -191,7 +191,6 @@ public class JiggleRoot {
         
         jobBulkReadRoots.Dispose();
         jobBulkReadRoots = new JiggleJobBulkReadRoots(jiggleTrees.Length);
-        rootPositions = new Vector3[jiggleTrees.Length];
         List<Transform> rootTransforms = new List<Transform>(jiggleTrees.Length);
         foreach (var superRoot in superRoots) {
             rootTransforms.Add(superRoot._transform);

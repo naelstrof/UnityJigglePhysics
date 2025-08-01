@@ -1,11 +1,12 @@
 using System;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
 
-[BurstCompiled]
+[BurstCompile]
 public struct JiggleJobTransformWrite : IJobParallelForTransform {
     public NativeArray<Vector3> previousLocalPositions;
     public NativeArray<Quaternion> previousLocalRotations;

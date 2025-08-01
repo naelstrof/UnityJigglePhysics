@@ -1,12 +1,15 @@
+using Unity.Burst;
 using Unity.Collections;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
 
+[BurstCompile]
 public struct JiggleJobBulkReadRoots : IJobParallelForTransform {
-    public NativeArray<Vector3> outputPositions;
+    public NativeArray<float3> outputPositions;
 
     public JiggleJobBulkReadRoots(int treeCount) {
-        outputPositions = new NativeArray<Vector3>(treeCount, Allocator.Persistent);
+        outputPositions = new NativeArray<float3>(treeCount, Allocator.Persistent);
     }
     
     public void Dispose() {

@@ -18,10 +18,10 @@ public static class JiggleJobManager {
 
     public static void SchedulePose() {
         var trees = JiggleRoot.GetJiggleTrees();
-        var rootPositions = JiggleRoot.GetRootPositions();
+        JiggleRoot.GetRootPositions(out var handle, out var rootPositions);
         var currentTime = Time.timeAsDouble;
         for (int i = 0; i < trees.Length; i++) {
-            trees[i].SchedulePose(currentTime, rootPositions[i]);
+            trees[i].SchedulePose(currentTime, handle, rootPositions, i);
         }
     }
     

@@ -66,10 +66,59 @@ public class JiggleRoot {
         }
         return roots;
     }
+
+    private class SuperRootSets {
+        public Transform nonJiggleRoot;
+        public List<JiggleRoot> superRoots;
+    }
+
+    private static List<SuperRootSets> GetSuperRootSets(List<JiggleRoot> superRoots) {
+        var superRootSets = new List<SuperRootSets>();
+        for (var index = 0; index < superRoots.Count; index++) {
+            var setSuperRoots = new List<JiggleRoot>() { superRoots[index] };
+            var nonJiggleRoot = FindNonJiggleRoot(setSuperRoots[0]._transform);
+            if (nonJiggleRoot == null) {
+                superRootSets.Add(new SuperRootSets() {
+                    nonJiggleRoot = setSuperRoots[0]._transform,
+                    superRoots = setSuperRoots
+                });
+                superRoots.RemoveAt(index);
+                index--;
+                continue;
+            }
+            if (index>=superRoots.Count) continue;
+            for (int index2 = index+1; index2 < superRoots.Count; index2++) {
+                var additionalSuperRoot = superRoots[index2];
+                var nonJiggleRoot2 = FindNonJiggleRoot(additionalSuperRoot._transform);
+                if (nonJiggleRoot2 == nonJiggleRoot) {
+                    setSuperRoots.Add(additionalSuperRoot);
+                    superRoots.RemoveAt(index2);
+                    index--;
+                    index2--;
+                }
+            }
+            superRootSets.Add(new SuperRootSets() {
+                nonJiggleRoot = nonJiggleRoot,
+                superRoots = setSuperRoots
+            });
+        }
+        return superRootSets;
+    }
+    
+    private static Transform FindNonJiggleRoot(Transform t) {
+        while (t.parent != null) {
+            t = t.parent;
+            if (t.TryGetComponent<Animator>(out var animator)) {
+                return t;
+            }
+        }
+        return null;
+    }
     
     public static void GetRootPositions(out JobHandle handle, out NativeArray<float3> reads) {
         handle = jobBulkReadRoots.ScheduleReadOnly(transformAccessArray, 256);
         reads = jobBulkReadRoots.outputPositions;
+        handle.Complete();
     }
     
     private static void Visit(Transform t, List<Transform> transforms, List<JiggleBoneSimulatedPoint> points, int parentIndex, JiggleRoot lastRoot, out int newIndex) {
@@ -149,6 +198,13 @@ public class JiggleRoot {
         // TODO: Cleanup previous trees, or reuse them.
         var newJiggleTrees = new List<JiggleTree>();
         var superRoots = GetSuperRoots();
+        var superRootSets = GetSuperRootSets(superRoots);
+        foreach (var superRootSet in superRootSets) {
+            Debug.Log(superRootSet.nonJiggleRoot.gameObject.name);
+            foreach (var superRoot in superRootSet.superRoots) {
+                Debug.Log(superRoot._transform.gameObject.name);
+            }
+        }
         foreach (var superRoot in superRoots) {
             Profiler.BeginSample("JiggleRoot.FindExistingJiggleTree");
             // TODO: CHECK FOR DIRTY MEMBER, USE OLD JIGGLE TREE IF NOT DIRTY

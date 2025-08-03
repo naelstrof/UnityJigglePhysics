@@ -1,8 +1,9 @@
 using System;
-using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
+
+using UnityEditor;
+using UnityEditor.UIElements;
 
 [CustomEditor(typeof(JiggleRig), true)]
 public class JiggleRigEditor : Editor {
@@ -46,7 +47,7 @@ public class JiggleRigEditor : Editor {
         return visualElement;
     }
 
-    public void OnSceneGUI() {
+    /*public void OnSceneGUI() {
         var script = (JiggleRig)target;
         var cam = SceneView.lastActiveSceneView.camera;
         var points = script.GetJiggleBoneSimulatedPoints();
@@ -56,7 +57,7 @@ public class JiggleRigEditor : Editor {
             if (simulatedPoint.transformIndex == -1) continue;
             DrawBone(points[simulatedPoint.parentIndex].position, simulatedPoint.position, simulatedPoint.parameters.angleLimit, cam);
         }
-    }
+    }*/
 
     public void DrawBone(Vector3 boneHead, Vector3 boneTail, float angleLimit, Camera cam) {
         var camForward = cam.transform.forward;

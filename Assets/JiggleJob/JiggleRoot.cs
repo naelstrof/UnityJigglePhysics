@@ -8,6 +8,51 @@ using UnityEngine;
 using UnityEngine.Jobs;
 using UnityEngine.Profiling;
 
+public class JiggleJobs {
+    private int treeCount;
+    private int transformCount;
+    
+    public JiggleJobBulkTransformRead jobBulkTransformRead;
+    public JiggleJobSimulate jobSimulate;
+    public JiggleJobInterpolation jobInterpolation;
+    public TransformAccessArray transformAccessArray;
+    
+    public JiggleJobTransformWrite jobTransformWrite;
+
+    public int GetTreeCount() => treeCount;
+    public int GetTransformCount() => transformCount;
+    public void Dispose() {
+        treeCount = 0;
+        transformCount = 0;
+        jobBulkTransformRead.Dispose();
+        jobSimulate.Dispose();
+        jobInterpolation.Dispose();
+        transformAccessArray.Dispose();
+        jobTransformWrite.Dispose();
+    }
+
+    public void Set(Transform[] transforms, JiggleTreeStruct[] trees, JiggleTransform[] poses, JiggleTransform[] localPoses) {
+        treeCount = trees.Length;
+        transformCount = transforms.Length;
+        
+        jobSimulate.Dispose();
+        jobSimulate = new JiggleJobSimulate(trees, poses);
+        
+        jobInterpolation.Dispose();
+        jobInterpolation = new JiggleJobInterpolation(poses);
+
+        jobBulkTransformRead.Dispose();
+        jobBulkTransformRead = new JiggleJobBulkTransformRead(jobSimulate, localPoses);
+        
+        jobTransformWrite = new JiggleJobTransformWrite(jobBulkTransformRead, jobInterpolation);
+        
+        if (transformAccessArray.isCreated) {
+            transformAccessArray.Dispose();
+        }
+        transformAccessArray = new TransformAccessArray(transforms);
+    }
+}
+
 public class JiggleRoot {
     private static List<JiggleRoot> jiggleRoots;
     private static Dictionary<Transform, JiggleRoot> jiggleRootLookup;
@@ -18,20 +63,17 @@ public class JiggleRoot {
     private Transform _transform;
     private JiggleTree _jiggleTree;
     public JiggleRig rig;
-    private static JiggleJobBulkReadRoots jobBulkReadRoots;
-    private static TransformAccessArray transformAccessArray;
+
+    public static JiggleJobs jobs;
     
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void Initialize() {
         jiggleRoots = new List<JiggleRoot>();
         jiggleRootLookup = new Dictionary<Transform, JiggleRoot>();
-        if (jiggleTrees != null) {
-            foreach (var tree in jiggleTrees) {
-                tree.Dispose();
-            }
-        }
         jiggleTrees = null;
         rootDirty = true;
+        jobs?.Dispose();
+        jobs = new JiggleJobs();
     }
 
     private static bool GetParentJiggleRoot(Transform t, out JiggleRoot jiggleRoot) {
@@ -115,12 +157,6 @@ public class JiggleRoot {
         return null;
     }
     
-    public static void GetRootPositions(out JobHandle handle, out NativeArray<float3> reads) {
-        handle = jobBulkReadRoots.ScheduleReadOnly(transformAccessArray, 256);
-        reads = jobBulkReadRoots.outputPositions;
-        handle.Complete();
-    }
-    
     private static void Visit(Transform t, List<Transform> transforms, List<JiggleBoneSimulatedPoint> points, int parentIndex, JiggleRoot lastRoot, out int newIndex) {
         if (GetJiggleRootByBone(t, out JiggleRoot newRoot)) {
             lastRoot = newRoot;
@@ -144,7 +180,7 @@ public class JiggleRoot {
                 childenCount = validChildren.Count == 0 ? 1 : validChildren.Count,
                 parameters = parameters,
                 parentIndex = parentIndex,
-                transformIndex = transforms.Count-1,
+                hasTransform = true,
                 animated = true,
             });
             newIndex = points.Count - 1;
@@ -156,7 +192,7 @@ public class JiggleRoot {
                     childenCount = 0,
                     parameters = lastRoot.rig.GetJiggleBoneParameter(1f),
                     parentIndex = newIndex,
-                    transformIndex = -1,
+                    hasTransform = false,
                     animated = false,
                 });
                 unsafe { // WEIRD
@@ -190,9 +226,9 @@ public class JiggleRoot {
         return validChildren;
     }
     
-    public static JiggleTree[] GetJiggleTrees() {
+    public static JiggleJobs GetJiggleJobs() {
         if (!rootDirty) {
-            return jiggleTrees;
+            return jobs;
         }
         Profiler.BeginSample("JiggleRoot.GetJiggleTrees");
         // TODO: Cleanup previous trees, or reuse them.
@@ -220,7 +256,7 @@ public class JiggleRoot {
                 childenCount = 1,
                 parameters = superRoot.rig.GetJiggleBoneParameter(0f),
                 parentIndex = -1,
-                transformIndex = -1,
+                hasTransform = false,
                 animated = false,
             });
             Visit(superRoot._transform, tempTransforms, tempPoints, 0, superRoot, out int childIndex);
@@ -235,28 +271,19 @@ public class JiggleRoot {
             superRoot._jiggleTree = newJiggleTree;
         }
         rootDirty = false;
-        if (jiggleTrees != null) {
-            foreach (var jiggleTree in jiggleTrees) {
-                if (!newJiggleTrees.Contains(jiggleTree)) {
-                    jiggleTree.Dispose();
-                }
-            }
-        }
-
         jiggleTrees = newJiggleTrees.ToArray();
-        
-        jobBulkReadRoots.Dispose();
-        jobBulkReadRoots = new JiggleJobBulkReadRoots(jiggleTrees.Length);
-        List<Transform> rootTransforms = new List<Transform>(jiggleTrees.Length);
-        foreach (var superRoot in superRoots) {
-            rootTransforms.Add(superRoot._transform);
-        }
-        if (transformAccessArray.isCreated) {
-            transformAccessArray.Dispose();
-        }
-        transformAccessArray = new TransformAccessArray(rootTransforms.ToArray());
         Profiler.EndSample();
-        return jiggleTrees;
+        
+
+        List<JiggleTreeStruct> structs = new List<JiggleTreeStruct>(jiggleTrees.Length);
+        List<Transform> jiggledTransforms = new  List<Transform>(jiggleTrees.Length);
+        List<JiggleTransform> jiggleTransformPoses = new List<JiggleTransform>(jiggleTrees.Length);
+        List<JiggleTransform> jiggleTransformLocalPoses = new List<JiggleTransform>(jiggleTrees.Length);
+        foreach(var tree in jiggleTrees) {
+            structs.Add(tree.GetStruct(jiggledTransforms, jiggleTransformPoses, jiggleTransformLocalPoses));
+        }
+        jobs.Set(jiggledTransforms.ToArray(), structs.ToArray(), jiggleTransformPoses.ToArray(), jiggleTransformLocalPoses.ToArray());
+        return jobs;
     }
 
     public static void RemoveJiggleRoot(JiggleRoot jiggleRoot) {
@@ -270,10 +297,6 @@ public class JiggleRoot {
             RemoveJiggleRoot(parentJiggleRoot);
         }
         if (jiggleRoots.Count == 0) {
-            foreach (var tree in jiggleTrees) {
-                tree.Dispose();
-            }
-
             jiggleTrees = null;
         }
     }

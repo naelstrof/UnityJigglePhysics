@@ -7,68 +7,54 @@ using UnityEngine.Jobs;
 
 [BurstCompile]
 public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
-    public NativeArray<float3> transformPositions;
-    public NativeArray<quaternion> transformRotations;
-
-    public NativeArray<Vector3> restPosePositions;
-    public NativeArray<Quaternion> restPoseRotations;
+    public NativeArray<JiggleTransform> transforms;
     
-    [ReadOnly]
-    public NativeArray<Vector3> previousLocalPositions;
-    [ReadOnly]
-    public NativeArray<Quaternion> previousLocalRotations;
-
-    public JiggleJobBulkTransformRead(JiggleJobSimulate jobSimulate, Transform[] bones) {
-        var boneCount = bones.Length;
-        transformPositions = jobSimulate.transformPositions;
-        transformRotations = jobSimulate.transformRotations;
-        Vector3[] restPosePositionsArray = new Vector3[boneCount];
-        Quaternion[] restPoseRotationsArray = new Quaternion[boneCount];
-        
-        for (var index = 0; index < boneCount; index++) {
-            bones[index].GetLocalPositionAndRotation(out var localPosition, out var localRotation);
-            restPosePositionsArray[index] = localPosition;
-            restPoseRotationsArray[index] = localRotation;
-        }
-        
-        restPosePositions = new NativeArray<Vector3>(restPosePositionsArray, Allocator.Persistent);
-        restPoseRotations = new NativeArray<Quaternion>(restPoseRotationsArray, Allocator.Persistent);
-        previousLocalPositions = new NativeArray<Vector3>(boneCount, Allocator.Persistent);
-        previousLocalRotations = new NativeArray<Quaternion>(boneCount, Allocator.Persistent);
+    public NativeArray<JiggleTransform> restPoseTransforms;
+    
+    [ReadOnly] public NativeArray<JiggleTransform> previousLocalTransforms;
+    
+    public JiggleJobBulkTransformRead(JiggleJobSimulate jobSimulate, JiggleTransform[] localPoses) {
+        transforms = jobSimulate.inputPoses;
+        restPoseTransforms = new NativeArray<JiggleTransform>(localPoses, Allocator.Persistent);
+        previousLocalTransforms = new NativeArray<JiggleTransform>(localPoses, Allocator.Persistent);
     }
+    
     public void Dispose() {
-        if (restPosePositions.IsCreated) {
-            restPosePositions.Dispose();
+        if (restPoseTransforms.IsCreated) {
+            restPoseTransforms.Dispose();
         }
-        if (restPoseRotations.IsCreated) {
-            restPoseRotations.Dispose();
-        }
-        if (previousLocalPositions.IsCreated) {
-            previousLocalPositions.Dispose();
-        }
-        if (previousLocalRotations.IsCreated) {
-            previousLocalRotations.Dispose();
+        if (previousLocalTransforms.IsCreated) {
+            previousLocalTransforms.Dispose();
         }
     }
+
     public void Execute(int index, TransformAccess transform) {
-        // TODO: Stop going back and forth between matrices and positions/rotations
+        var jiggleTransform = transforms[index];
+        if (jiggleTransform.isVirtual) {
+            return;
+        }
+        
         transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
+        var restTransform = restPoseTransforms[index];
         if (!true) {
-            transform.SetLocalPositionAndRotation(restPosePositions[index], restPoseRotations[index]);
+            transform.SetLocalPositionAndRotation(restTransform.position, restTransform.rotation);
             return;
         }
 
-        if (localPosition == previousLocalPositions[index] &&
-            localRotation == previousLocalRotations[index]) {
-            transform.SetLocalPositionAndRotation(restPosePositions[index], restPoseRotations[index]);
+        var localTransform = previousLocalTransforms[index];
+        if (localPosition == (Vector3)localTransform.position &&
+            localRotation == (Quaternion)localTransform.rotation) {
+            transform.SetLocalPositionAndRotation(restTransform.position, restTransform.rotation);
         } else {
-            restPosePositions[index] = localPosition;
-            restPoseRotations[index] = localRotation;
+            restTransform.position = localPosition;
+            restTransform.rotation = localRotation;
+            restPoseTransforms[index] = restTransform;
         }
 
         transform.GetPositionAndRotation(out var position, out var rotation);
-        transformPositions[index] = position;
-        transformRotations[index] = rotation;
+        jiggleTransform.position = position;
+        jiggleTransform.rotation = rotation;
+        transforms[index] = jiggleTransform;
     }
     
 }

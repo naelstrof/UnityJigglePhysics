@@ -7,105 +7,86 @@ using Unity.Mathematics;
 using UnityEngine;
 
 [BurstCompile]
-public struct JiggleJobSimulate : IJob {
+public struct JiggleJobSimulate : IJobFor {
     // TODO: doubles are strictly a bad way to track time, probably should be ints or longs.
     public double timeStamp;
     public float3 gravity;
     
-    public NativeArray<float3> transformPositions;
-    public NativeArray<quaternion> transformRotations;
-    public NativeArray<JiggleBoneSimulatedPoint> simulatedPoints;
+    [NativeDisableParallelForRestriction]
+    public NativeArray<JiggleTransform> inputPoses;
+    [NativeDisableParallelForRestriction]
+    public NativeArray<JiggleTransform> outputPoses;
+    //[NativeDisableParallelForRestriction]
+    //public NativeArray<float3> outputSimulatedRootOffset;
+    //[NativeDisableParallelForRestriction]
+    //public NativeArray<float3> outputSimulatedRootPosition;
     
-    public NativeArray<float3> outputPositions;
-    public NativeArray<quaternion> outputRotations;
+    public NativeArray<JiggleTreeStruct> jiggleTrees;
     
-    public NativeReference<float3> outputSimulatedRootOffset;
-    public NativeReference<float3> outputSimulatedRootPosition;
-
-    public JiggleJobSimulate(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
-        var boneCount = bones.Length;
-        var currentPositions = new float3[boneCount];
-        var currentRotations = new quaternion[boneCount];
-        for (int i = 0; i < boneCount; i++) {
-            currentPositions[i] = bones[i].position;
-            currentRotations[i] = bones[i].rotation;
-        }
-        transformPositions = new NativeArray<float3>(currentPositions, Allocator.Persistent);
-        transformRotations = new NativeArray<quaternion>(currentRotations, Allocator.Persistent);
+    public JiggleJobSimulate(JiggleTreeStruct[] trees, JiggleTransform[] poses) {
+        inputPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
+        jiggleTrees = new NativeArray<JiggleTreeStruct>(trees, Allocator.Persistent);
         
-        simulatedPoints = new NativeArray<JiggleBoneSimulatedPoint>(points, Allocator.Persistent);
-        
-        outputPositions = new NativeArray<float3>(currentPositions, Allocator.Persistent);
-        outputRotations = new NativeArray<quaternion>(currentRotations, Allocator.Persistent);
-
-        outputSimulatedRootOffset = new NativeReference<float3>(new float3(0f), Allocator.Persistent);
-        outputSimulatedRootPosition = new NativeReference<float3>(currentPositions[0], Allocator.Persistent);
+        outputPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
         
         timeStamp = Time.timeAsDouble;
         gravity = Physics.gravity;
     }
-
+    
     public void Dispose() {
-        if (transformPositions.IsCreated) {
-            transformPositions.Dispose();
+        if (inputPoses.IsCreated) {
+            inputPoses.Dispose();
         }
-        if (transformRotations.IsCreated) {
-            transformRotations.Dispose();
+        if (outputPoses.IsCreated) {
+            outputPoses.Dispose();
         }
-        if (simulatedPoints.IsCreated) {
-            simulatedPoints.Dispose();
-        }
-        if (outputPositions.IsCreated) {
-            outputPositions.Dispose();
-        }
-        if (outputRotations.IsCreated) {
-            outputRotations.Dispose();
+        if (jiggleTrees.IsCreated) {
+            jiggleTrees.Dispose();
         }
     }
 
-    private unsafe void Cache() {
-        int simulatedPointCount = simulatedPoints.Length;
-        for (int i = 0; i < simulatedPointCount; i++) {
-            var point = simulatedPoints[i];
+    private unsafe void Cache(JiggleTreeStruct tree) {
+        for (int i = 0; i < tree.pointCount; i++) {
+            var point = tree.points[i];
             if (point.parentIndex == -1) { // virtual root particles
-                var child = simulatedPoints[point.childrenIndices[0]];
-                var childChild = simulatedPoints[child.childrenIndices[0]];
-                if (childChild.transformIndex == -1) { // edge case where it's a singular isolated root bone
-                    point.pose = transformPositions[child.transformIndex] - new float3(0f, 0.25f, 0f);;
-                    point.parentPose = transformPositions[child.transformIndex] - new float3(0f, 0.5f, 0f);
+                var child = tree.points[point.childrenIndices[0]];
+                var childChild = tree.points[child.childrenIndices[0]];
+                var childPose = tree.GetInputPose(inputPoses, point.childrenIndices[0]);
+                var childChildPose = tree.GetInputPose(inputPoses, child.childrenIndices[0]);
+                if (!childChild.hasTransform) { // edge case where it's a singular isolated root bone
+                    point.pose = childPose.position - new float3(0f, 0.25f, 0f);;
+                    point.parentPose = childPose.position - new float3(0f, 0.5f, 0f);
                     point.desiredLengthToParent = 0.25f;
                 } else {
-                    var diff = transformPositions[child.transformIndex] - transformPositions[childChild.transformIndex];
-                    point.pose = transformPositions[child.transformIndex] + diff;
-                    point.parentPose = transformPositions[child.transformIndex] + diff*2f;
+                    var diff = childPose.position - childChildPose.position;
+                    point.pose = childPose.position + diff;
+                    point.parentPose = childPose.position + diff*2f;
                     point.desiredLengthToParent = math.length(diff);
                 }
                 point.desiredConstraint = point.pose;
                 point.workingPosition = point.pose;
-            } else if (point.transformIndex != -1) { // "real" particles
-                var parent = simulatedPoints[point.parentIndex];
-                point.pose = transformPositions[point.transformIndex];
+            } else if (point.hasTransform) { // "real" particles
+                var parent = tree.points[point.parentIndex];
+                point.pose = tree.GetInputPose(inputPoses, i).position;
                 point.parentPose = parent.pose;
                 point.desiredLengthToParent = math.distance(point.pose, parent.pose);
             } else { // virtual end particles
-                var parent = simulatedPoints[point.parentIndex];
+                var parent = tree.points[point.parentIndex];
                 point.pose = (parent.pose*2f - parent.parentPose);
                 point.parentPose = parent.pose;
                 point.desiredLengthToParent = math.distance(point.pose, point.parentPose);
             }
-            
-            simulatedPoints[i] = point;
+            tree.points[i] = point;
         }
     }
 
-    private void VerletIntegrate() {
-        int simulatedPointCount = simulatedPoints.Length;
-        for (int i = 0; i < simulatedPointCount; i++) {
-            var point = simulatedPoints[i];
+    private unsafe void VerletIntegrate(JiggleTreeStruct tree) {
+        for (int i = 0; i < tree.pointCount; i++) {
+            var point = tree.points[i];
             if (point.parentIndex == -1) {
                 continue;
             }
-            var parent = simulatedPoints[point.parentIndex];
+            var parent = tree.points[point.parentIndex];
             
             var delta = point.position - point.lastPosition;
             var localSpaceVelocity = delta - (parent.position - parent.lastPosition);
@@ -115,7 +96,7 @@ public struct JiggleJobSimulate : IJob {
             } else {
                 point.workingPosition = point.position + velocity * (1f-point.parameters.airDrag) + localSpaceVelocity * (1f-point.parameters.drag) + gravity * point.parameters.gravityMultiplier * (float)JiggleJobManager.FIXED_DELTA_TIME_SQUARED;
             }
-            simulatedPoints[i] = point;
+            tree.points[i] = point;
         }
     }
     
@@ -129,27 +110,24 @@ public struct JiggleJobSimulate : IJob {
         return math.degrees(math.acos(math.clamp(math.dot(math.normalizesafe(a), math.normalizesafe(b)), -1f, 1f)));
     }
 
-    private unsafe void Constrain() {
-        int simulatedPointCount = simulatedPoints.Length;
-        for (int i = 0; i < simulatedPointCount; i++) {
-
-            
-            var point = simulatedPoints[i];
+    private unsafe void Constrain(JiggleTreeStruct tree) {
+        for (int i = 0; i < tree.pointCount; i++) {
+            var point = tree.points[i];
             
             if (point.parentIndex == -1) {
                 continue;
             }
-            var parent = simulatedPoints[point.parentIndex];
+            var parent = tree.points[point.parentIndex];
             #region Special root particle solve
             if (parent.parentIndex == -1) {
-                var child = simulatedPoints[point.childrenIndices[0]];
+                var child = tree.points[point.childrenIndices[0]];
                 point.desiredConstraint = point.workingPosition = math.lerp(point.workingPosition, point.pose, point.parameters.rootElasticity * point.parameters.rootElasticity);
                 var head = point.pose;
                 var tail = child.pose;
                 var diffasdf = head - tail;
                 parent.desiredConstraint = point.desiredConstraint + diffasdf;
-                simulatedPoints[point.parentIndex] = parent;
-                simulatedPoints[i] = point;
+                tree.points[point.parentIndex] = parent;
+                tree.points[i] = point;
                 continue;
             }
             #endregion
@@ -158,7 +136,7 @@ public struct JiggleJobSimulate : IJob {
             var parentAimPose = math.normalizesafe(point.parentPose - parent.parentPose);
             var parentAim = math.normalizesafe(parent.desiredConstraint - parent.parentPose);
             if (parent.parentIndex != -1) {
-                var parentParent = simulatedPoints[parent.parentIndex];
+                var parentParent = tree.points[parent.parentIndex];
                 parentAim = math.normalizesafe(parent.desiredConstraint - parentParent.desiredConstraint);
             }
 
@@ -214,19 +192,19 @@ public struct JiggleJobSimulate : IJob {
             #endregion
             
             point.workingPosition = forwardConstraint;
-            simulatedPoints[i] = point;
+            tree.points[i] = point;
 
             continue;
             
             #region Back-propagated motion for collisions
             if (parent.parameters is { angleElasticity: 1f, lengthElasticity: 1f }) { // FIXME: Also check if collisions are disabled
                 point.workingPosition = forwardConstraint;
-                simulatedPoints[i] = point;
+                tree.points[i] = point;
                 continue;
             }
 
             if (point.childenCount > 0) { // Back-propagated motion specifically for collision enabled chains
-                var child = simulatedPoints[point.childrenIndices[0]];
+                var child = tree.points[point.childrenIndices[0]];
                 var aim_pose = math.normalizesafe(child.pose - point.parentPose);
                 var aim = math.normalizesafe(child.workingPosition - parent.workingPosition);
                 var from_to_rot_also = FromToRotation(aim_pose, aim);
@@ -249,30 +227,28 @@ public struct JiggleJobSimulate : IJob {
             } else {
                 point.workingPosition = forwardConstraint;
             }
-            simulatedPoints[i] = point;
+            tree.points[i] = point;
             #endregion
         }
     }
 
-    private void FinishStep() {
-        int simulatedPointCount = simulatedPoints.Length;
-        for (int i = 0; i < simulatedPointCount; i++) {
-            var point = simulatedPoints[i];
+    private unsafe void FinishStep(JiggleTreeStruct tree) {
+        for (int i = 0; i < tree.pointCount; i++) {
+            var point = tree.points[i];
             point.lastPosition = point.position;
             point.position = point.workingPosition;
-            simulatedPoints[i] = point;
+            tree.points[i] = point;
         }
     }
 
-    private unsafe void ApplyPose() {
-        int simulatedPointCount = simulatedPoints.Length;
-        for (int i = 0; i < simulatedPointCount; i++) {
-            var point = simulatedPoints[i];
+    private unsafe void ApplyPose(JiggleTreeStruct tree) {
+        for (int i = 0; i < tree.pointCount; i++) {
+            var point = tree.points[i];
             if (point.childenCount <= 0) {
                 continue;
             }
 
-            var child = simulatedPoints[point.childrenIndices[0]];
+            var child = tree.points[point.childrenIndices[0]];
 
             var local_pose = point.pose;
             var local_child_pose = child.pose;
@@ -293,7 +269,7 @@ public struct JiggleJobSimulate : IJob {
                 var cachedAnimatedVectorSum = new float3(0f);
                 var simulatedVectorSum = cachedAnimatedVectorSum;
                 for (var j = 0; j < point.childenCount; j++) {
-                    var child_also = simulatedPoints[point.childrenIndices[j]];
+                    var child_also = tree.points[point.childrenIndices[j]];
                     var local_child_pose_also = child_also.pose;
                     var local_child_working_position_also = child_also.workingPosition;
                     cachedAnimatedVectorSum += math.normalizesafe(local_child_pose_also - local_pose);
@@ -304,27 +280,38 @@ public struct JiggleJobSimulate : IJob {
             }
             
             var animPoseToPhysicsPose = math.slerp(quaternion.identity, FromToRotation(cachedAnimatedVector, simulatedVector), point.parameters.blend);
-            outputPositions[point.transformIndex] = point.workingPosition;
-            outputRotations[point.transformIndex] = math.mul(animPoseToPhysicsPose, transformRotations[point.transformIndex]);
-            
-            simulatedPoints[i] = point;
+
+            tree.WriteOutputPose(outputPoses, i, new JiggleTransform() {
+                isVirtual = false,
+                position = point.workingPosition,
+                rotation = math.mul(animPoseToPhysicsPose, tree.GetInputPose(inputPoses, i).rotation),
+            });
+            tree.points[i] = point;
         }
     }
-    
-    public void Execute() {
-        //try {
-            Cache();
-            VerletIntegrate();
-            Constrain();
-            FinishStep();
-            ApplyPose();
-            
-            var simulatedPosition = outputPositions[0];
-            var pose = transformPositions[0];
-            outputSimulatedRootOffset.Value = simulatedPosition - pose;
-            outputSimulatedRootPosition.Value = simulatedPosition;
-        //} catch (Exception e) {
-        //    Debug.LogError($"Error in JiggleJobBulkTransformRead: {e.Message}\n{e.StackTrace}");
-        //}
+
+    /*private unsafe void RecordRootOffsets(JiggleTreeStruct tree) {
+        for (int i = 0; i < tree.pointCount; i++) {
+            var point = tree.points[i];
+            if (!point.hasTransform) {
+                continue;
+            }
+
+            var rootSimulationPosition = outputPoses[1 + (int)tree.transformIndexOffset].position;
+            var rootPose = tree.GetInputPose(inputPoses, 1).position;
+            outputSimulatedRootOffset[i + (int)tree.transformIndexOffset] = rootSimulationPosition - rootPose;
+            outputSimulatedRootPosition[i+(int)tree.transformIndexOffset] = rootSimulationPosition;
+        }
+    }*/
+
+
+    public void Execute(int index) {
+        var tree = jiggleTrees[index];
+        Cache(tree);
+        VerletIntegrate(tree);
+        Constrain(tree);
+        FinishStep(tree);
+        ApplyPose(tree);
+        //RecordRootOffsets(tree);
     }
 }

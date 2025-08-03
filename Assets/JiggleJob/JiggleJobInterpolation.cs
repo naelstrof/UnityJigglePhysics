@@ -7,113 +7,62 @@ using UnityEngine.Jobs;
 
 [BurstCompile]
 public struct JiggleJobInterpolation : IJobFor {
-    [ReadOnly][NativeDisableParallelForRestriction]
-    public NativeArray<float3> realRootPositions;
+    //[ReadOnly][NativeDisableParallelForRestriction]
+    //public NativeArray<float3> realRootPositions;
     
-    [ReadOnly] public NativeArray<float3> previousPositions;
-    [ReadOnly] public NativeArray<float3> currentPositions;
-    
-    [ReadOnly] public NativeArray<quaternion> previousRotations;
-    [ReadOnly] public NativeArray<quaternion> currentRotations;
+    [ReadOnly] public NativeArray<JiggleTransform> previousPoses;
+    [ReadOnly] public NativeArray<JiggleTransform> currentPoses;
     
     public double timeStamp;
     public double previousTimeStamp;
     public double currentTime;
     
-    [ReadOnly] public NativeReference<float3> previousSimulatedRootOffset;
-    [ReadOnly] public NativeReference<float3> currentSimulatedRootOffset;
+    //[ReadOnly] public NativeArray<float3> previousSimulatedRootOffset;
+    //[ReadOnly] public NativeArray<float3> currentSimulatedRootOffset;
     
-    [ReadOnly] public NativeReference<float3> previousSimulatedRootPosition;
-    [ReadOnly] public NativeReference<float3> currentSimulatedRootPosition;
+    //[ReadOnly] public NativeArray<float3> previousSimulatedRootPosition;
+    //[ReadOnly] public NativeArray<float3> currentSimulatedRootPosition;
     
-    public int realRootIndex;
-    
-    public NativeArray<float3> outputInterpolatedPositions;
-    public NativeArray<quaternion> outputInterpolatedRotations;
+    public NativeArray<JiggleTransform> outputInterpolatedPoses;
 
-    public JiggleJobInterpolation(JiggleJobSimulate jobSimulate, Transform[] bones) {
-        var boneCount = bones.Length;
-        realRootPositions = default;
-        previousPositions = new NativeArray<float3>(boneCount, Allocator.Persistent);
-        previousRotations = new NativeArray<quaternion>(boneCount, Allocator.Persistent);
-        currentPositions = new NativeArray<float3>(boneCount, Allocator.Persistent);
-        currentRotations = new NativeArray<quaternion>(boneCount, Allocator.Persistent);
-        jobSimulate.outputPositions.CopyTo(previousPositions);
-        jobSimulate.outputRotations.CopyTo(previousRotations);
-        jobSimulate.outputPositions.CopyTo(currentPositions);
-        jobSimulate.outputRotations.CopyTo(currentRotations);
-        previousSimulatedRootOffset = new NativeReference<float3>(Vector3.zero, Allocator.Persistent);
-        currentSimulatedRootOffset = new NativeReference<float3>(Vector3.zero, Allocator.Persistent);
-        //realRootPosition = bones[0].position;
-        var position = bones[0].position;
-        previousSimulatedRootPosition = new NativeReference<float3>(position, Allocator.Persistent);
-        currentSimulatedRootPosition = new NativeReference<float3>(position, Allocator.Persistent);
-        currentTime = Time.timeAsDouble;
-        timeStamp = currentTime;
-        previousTimeStamp = currentTime - JiggleJobManager.FIXED_DELTA_TIME;
-        outputInterpolatedPositions = new NativeArray<float3>(boneCount, Allocator.Persistent);
-        outputInterpolatedRotations = new NativeArray<quaternion>(boneCount, Allocator.Persistent);
-        realRootIndex = 0;
+    public JiggleJobInterpolation(JiggleTransform[] poses) {
+        previousPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
+        currentPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
+        outputInterpolatedPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
+        timeStamp = Time.timeAsDouble;
+        previousTimeStamp = timeStamp - JiggleJobManager.FIXED_DELTA_TIME;
+        currentTime = timeStamp;
     }
     
     public void Dispose() {
-        if (previousPositions.IsCreated) {
-            previousPositions.Dispose();
+        if (previousPoses.IsCreated) {
+            previousPoses.Dispose();
         }
-        if (previousRotations.IsCreated) {
-            previousRotations.Dispose();
+        if (currentPoses.IsCreated) {
+            currentPoses.Dispose();
         }
-        if (currentPositions.IsCreated) {
-            currentPositions.Dispose();
-        }
-        if (currentRotations.IsCreated) {
-            currentRotations.Dispose();
-        }
-        if (previousSimulatedRootOffset.IsCreated) {
-            previousSimulatedRootOffset.Dispose();
-        }
-        if (currentSimulatedRootOffset.IsCreated) {
-            currentSimulatedRootOffset.Dispose();
-        }
-        if (previousSimulatedRootPosition.IsCreated) {
-            previousSimulatedRootPosition.Dispose();
-        }
-        if (currentSimulatedRootPosition.IsCreated) {
-            currentSimulatedRootPosition.Dispose();
-        }
-        if (outputInterpolatedPositions.IsCreated) {
-            outputInterpolatedPositions.Dispose();
-        }
-        if (outputInterpolatedRotations.IsCreated) {
-            outputInterpolatedRotations.Dispose();
+        if (outputInterpolatedPoses.IsCreated) {
+            outputInterpolatedPoses.Dispose();
         }
     }
     
     public void Execute(int index) {
-        var prevPosition = previousPositions[index];
-        var prevRotation = previousRotations[index];
-
-        var newPosition = currentPositions[index];
-        var newRotation = currentRotations[index];
+        var prevPose = previousPoses[index];
+        var newPose = currentPoses[index];
 
         var diff = timeStamp - previousTimeStamp;
         if (diff == 0) {
             throw new UnityException("Time difference is zero, cannot interpolate.");
         }
-
-        // TODO: Revisit this issue after FEELING the solve in VR in context
-        // The issue here is that we are having to operate 3 full frames in the past
-        // which might be noticable latency
         const double timeCorrection = JiggleJobManager.FIXED_DELTA_TIME * 2f;
         var t = (currentTime-timeCorrection - previousTimeStamp) / diff;
-        var position = math.lerp(prevPosition, newPosition, (float)t);
-        var rotation = math.slerp(prevRotation, newRotation, (float)t);
+        var interPose = JiggleTransform.Lerp(prevPose, newPose, (float)t);
         
-        var simulatedRootPosition = math.lerp(previousSimulatedRootPosition.Value, currentSimulatedRootPosition.Value, (float)t);
-        var simulatedRootOffset = math.lerp(previousSimulatedRootOffset.Value, currentSimulatedRootOffset.Value, (float)t);
+        //var simulatedRootPosition = math.lerp(previousSimulatedRootPosition[index], currentSimulatedRootPosition[index], (float)t);
+        //var simulatedRootOffset = math.lerp(previousSimulatedRootOffset[index], currentSimulatedRootOffset[index], (float)t);
         
-        var snapToReal = realRootPositions[realRootIndex]-simulatedRootPosition;
-        outputInterpolatedPositions[index] = position + snapToReal + simulatedRootOffset;
-        outputInterpolatedRotations[index] = rotation;
+        //var snapToReal = realRootPositions[index]-simulatedRootPosition;
+        //interPose.position += snapToReal + simulatedRootOffset;
+        outputInterpolatedPoses[index] = interPose;
     }
 }

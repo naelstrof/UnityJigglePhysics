@@ -8,31 +8,28 @@ using UnityEngine.Jobs;
 
 [BurstCompile]
 public struct JiggleJobTransformWrite : IJobParallelForTransform {
-    public NativeArray<Vector3> previousLocalPositions;
-    public NativeArray<Quaternion> previousLocalRotations;
-    [ReadOnly]
-    public NativeArray<float3> outputInterpolatedPositions;
-    [ReadOnly]
-    public NativeArray<quaternion> outputInterpolatedRotations;
-
+    public NativeArray<JiggleTransform> previousLocalPoses;
+    [ReadOnly] public NativeArray<JiggleTransform> inputInterpolatedPoses;
     public JiggleJobTransformWrite(JiggleJobBulkTransformRead jobBulkRead, JiggleJobInterpolation jobInterpolation) {
-        previousLocalPositions = jobBulkRead.previousLocalPositions;
-        previousLocalRotations = jobBulkRead.previousLocalRotations;
-        outputInterpolatedPositions = jobInterpolation.outputInterpolatedPositions;
-        outputInterpolatedRotations = jobInterpolation.outputInterpolatedRotations;
+        previousLocalPoses = jobBulkRead.previousLocalTransforms;
+        inputInterpolatedPoses = jobInterpolation.outputInterpolatedPoses;
     }
     
     public void Dispose() {
     }
     
     public void Execute(int index, TransformAccess transform) {
-        //try {
-            transform.SetPositionAndRotation(outputInterpolatedPositions[index], outputInterpolatedRotations[index]);
-            transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
-            previousLocalPositions[index] = localPosition;
-            previousLocalRotations[index] = localRotation;
-        //} catch (Exception e) {
-        //    Debug.LogError($"Error in JiggleJobBulkTransformRead: {e.Message}\n{e.StackTrace}");
-        //}
+        var pose = inputInterpolatedPoses[index];
+        if (pose.isVirtual) {
+            return;
+        }
+        
+        transform.SetPositionAndRotation(pose.position, pose.rotation);
+        transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
+        
+        var previousLocalPose = previousLocalPoses[index];
+        previousLocalPose.position = localPosition;
+        previousLocalPose.rotation = localRotation;
+        previousLocalPoses[index] = previousLocalPose;
     }
 }

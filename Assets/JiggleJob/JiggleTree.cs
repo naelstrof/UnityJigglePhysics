@@ -1,33 +1,90 @@
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
 using UnityEngine.Profiling;
 
+public struct JiggleTransform {
+    public bool isVirtual;
+    public float3 position;
+    public quaternion rotation;
+    public static JiggleTransform Lerp(JiggleTransform a, JiggleTransform b, float t) {
+        return new JiggleTransform() {
+            isVirtual = a.isVirtual,
+            position = math.lerp(a.position, b.position, t),
+            rotation = math.slerp(a.rotation, b.rotation, t),
+        };
+    }
+}
+
+public unsafe struct JiggleTreeStruct {
+    public uint pointCount;
+    public uint transformIndexOffset;
+    public JiggleBoneSimulatedPoint* points;
+}
+
+public static class JiggleTreeStructExtensions {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static JiggleTransform GetInputPose(this JiggleTreeStruct self, NativeArray<JiggleTransform> inputPoses, int index) {
+        return inputPoses[index + (int)self.transformIndexOffset];
+    }
+
+    public static void WriteOutputPose(this JiggleTreeStruct self, NativeArray<JiggleTransform> outputPoses,
+        int index, JiggleTransform output) {
+        outputPoses[index + (int)self.transformIndexOffset] = output;
+    }
+}
+
 // TODO: One IJobParallelForTransform for each jiggle tree so that it represents a single transform root
 // NOT an IJobParallelForTransform for each bone
 public class JiggleTree {
     public Transform[] bones;
     public JiggleBoneSimulatedPoint[] points;
-    
-    public TransformAccessArray transformAccessArray;
-    public JiggleJobBulkTransformRead jobBulkRead;
-    public JobHandle handleBulkRead;
-    public bool hasHandleBulkRead;
-    
-    public JiggleJobSimulate jobSimulate;
-    public bool hasHandleSimulate;
-    public JobHandle handleSimulate;
-    
-    public JiggleJobInterpolation jobInterpolation;
-    public JobHandle handleInterpolate;
-    public bool hasHandleInterpolate;
-    
-    public JiggleJobTransformWrite jobTransformWrite;
-    public JobHandle handleTransformWrite;
-    public bool hasHandleTrasnformWrite;
 
+    public unsafe JiggleTreeStruct GetStruct(List<Transform> transforms, List<JiggleTransform> jiggleTransforms, List<JiggleTransform> localJiggleTransforms) {
+        uint pointCount = (uint)points.Length;
+        JiggleTreeStruct ret = new JiggleTreeStruct() {
+            pointCount = pointCount,
+            transformIndexOffset = (uint)transforms.Count,
+            points = (JiggleBoneSimulatedPoint*)UnsafeUtility.Malloc(Marshal.SizeOf<JiggleBoneSimulatedPoint>() * pointCount, UnsafeUtility.AlignOf<JiggleBoneSimulatedPoint>(), Allocator.Persistent ),
+        };
+        int currentTransformIndex = 0;
+        for(int i=0;i < pointCount; i++) {
+            var point = points[i];
+            if (point.hasTransform) {
+                var bone = bones[currentTransformIndex++];
+                transforms.Add(bone);
+                bone.GetPositionAndRotation(out var position, out var rotation);
+                bone.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
+                jiggleTransforms.Add(new JiggleTransform() {
+                    isVirtual = false,
+                    position = position,
+                    rotation = rotation,
+                });
+                localJiggleTransforms.Add(new JiggleTransform() {
+                    isVirtual = false,
+                    position = localPosition,
+                    rotation = localRotation,
+                });
+            } else {
+                transforms.Add(bones[0]);
+                jiggleTransforms.Add(new JiggleTransform() {
+                    isVirtual = true,
+                });
+                localJiggleTransforms.Add(new JiggleTransform() {
+                    isVirtual = true,
+                });
+            }
+            ret.points[i] = point;
+        }
+        return ret;
+    }
+    
     public bool dirty;
 
     public JiggleTree(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
@@ -42,173 +99,7 @@ public class JiggleTree {
         for(int i=0; i < pointCount; i++) {
             this.points[i] = points[i];
         }
-
-        jobSimulate = new JiggleJobSimulate(bones, points);
-        jobBulkRead = new JiggleJobBulkTransformRead(jobSimulate, bones);
-
-        jobInterpolation = new JiggleJobInterpolation(jobSimulate, bones);
-        
-        jobTransformWrite = new JiggleJobTransformWrite(jobBulkRead, jobInterpolation);
-        
-        transformAccessArray = new TransformAccessArray(bones);
     }
-
-    private void PushBack() {
-        Profiler.BeginSample("JiggleTree.Pushback");
-        if (hasHandleSimulate) {
-            handleSimulate.Complete();
-        }
-        if (hasHandleInterpolate) {
-            handleInterpolate.Complete();
-        }
-
-        // Rotate our three memory buffers
-        jobInterpolation.previousTimeStamp = jobInterpolation.timeStamp;
-        jobInterpolation.timeStamp = jobSimulate.timeStamp;
-
-        var temp = jobInterpolation.previousPositions;
-        jobInterpolation.previousPositions = jobInterpolation.currentPositions;
-        jobInterpolation.currentPositions = jobSimulate.outputPositions;
-        jobSimulate.outputPositions = temp;
-        
-        var tempRot = jobInterpolation.previousRotations;
-        jobInterpolation.previousRotations = jobInterpolation.currentRotations;
-        jobInterpolation.currentRotations = jobSimulate.outputRotations;
-        jobSimulate.outputRotations = tempRot;
-        
-        var tempRootOffset = jobInterpolation.previousSimulatedRootOffset;
-        jobInterpolation.previousSimulatedRootOffset = jobInterpolation.currentSimulatedRootOffset;
-        jobInterpolation.currentSimulatedRootOffset = jobSimulate.outputSimulatedRootOffset;
-        jobSimulate.outputSimulatedRootOffset = tempRootOffset;
-        
-        var tempRootPosition = jobInterpolation.previousSimulatedRootPosition;
-        jobInterpolation.previousSimulatedRootPosition = jobInterpolation.currentSimulatedRootPosition;
-        jobInterpolation.currentSimulatedRootPosition = jobSimulate.outputSimulatedRootPosition;
-        jobSimulate.outputSimulatedRootPosition = tempRootPosition;
-        
-        Profiler.EndSample();
-    }
-    
-    public void Simulate(double currentTime, Vector3 gravity) {
-        if (dirty) return;
-        Profiler.BeginSample("JiggleTree.Simulate");
-        if (hasHandleSimulate) {
-            PushBack();
-        }
-        Profiler.BeginSample("JiggleTree.PrepareJobs");
-        jobSimulate.timeStamp = currentTime;
-        jobSimulate.gravity = gravity;
-        Profiler.EndSample();
-        Profiler.BeginSample("JiggleTree.ScheduleJobs");
-        handleBulkRead = jobBulkRead.ScheduleReadOnly(transformAccessArray, 256);
-        hasHandleBulkRead = true;
-
-        handleSimulate = jobSimulate.Schedule(handleBulkRead);
-        hasHandleSimulate = true;
-        Profiler.EndSample();
-        Profiler.EndSample();
-    }
-
-    public void SchedulePose(double currentTime, JobHandle rootRead, NativeArray<float3> rootPositions, int rootReadIndex) {
-        Profiler.BeginSample("JiggleTree.SchedulePose");
-        jobInterpolation.realRootIndex = rootReadIndex;
-        jobInterpolation.currentTime = currentTime;
-        jobInterpolation.realRootPositions = rootPositions;
-        handleInterpolate = jobInterpolation.ScheduleParallel(bones.Length, 256, rootRead);
-        hasHandleInterpolate = true;
-
-        // TODO: Posing shouldn't rely on the bulk read, maybe duplicate some data?
-        if (hasHandleBulkRead) {
-            handleTransformWrite = jobTransformWrite.Schedule(transformAccessArray, JobHandle.CombineDependencies(handleInterpolate, handleBulkRead));
-        } else {
-            handleTransformWrite = jobTransformWrite.Schedule(transformAccessArray, handleInterpolate);
-        }
-
-        hasHandleTrasnformWrite = true;
-        Profiler.EndSample();
-    }
-
-    public void CompletePose() {
-        Profiler.BeginSample("JiggleTree.CompletePose");
-        if (hasHandleTrasnformWrite) {
-            handleTransformWrite.Complete();
-        }
-        Profiler.EndSample();
-    }
-
-    /*
-    public void Pose() {
-        var boneCount = bones.Length;
-        for (int i = 0; i < boneCount; i++) {
-            var prevPosition = previousSolve[i].GetPosition();
-            var prevRotation = previousSolve[i].rotation;
-
-            var newPosition = currentSolve[i].GetPosition();
-            var newRotation = currentSolve[i].rotation;
-
-
-            var diff = timeStamp - previousTimeStamp;
-            if (diff == 0) {
-                throw new UnityException("Time difference is zero, cannot interpolate.");
-                return;
-            }
-
-            // TODO: Revisit this issue after FEELING the solve in VR in context
-            // The issue here is that we are having to operate 3 full frames in the past
-            // which might be noticable latency
-            var timeCorrection = JiggleJobManager.FIXED_DELTA_TIME * 2f;
-            var t = (Time.timeAsDouble-timeCorrection - previousTimeStamp) / diff;
-            var position = Vector3.LerpUnclamped(prevPosition, newPosition, (float)t);
-            var rotation = Quaternion.SlerpUnclamped(prevRotation, newRotation, (float)t);
-            //Debug.DrawRay(position + Vector3.up*Mathf.Repeat(Time.timeSinceLevelLoad,5f), Vector3.up, Color.magenta, 5f);
-            // NULL CHECK (OPTIONAL IF YOU WANT TO BE REALLY CAREFUL)
-            if (!bones[i]) {
-                dirty = true;
-                MonobehaviourHider.JiggleRoot.SetDirty();
-                return;
-            }
-            var timeOffset = Vector3.LerpUnclamped(lastPositionTimeOffset, positionTimeOffset, (float)t);
-            bones[i].SetPositionAndRotation(position + timeOffset, rotation);
-        }
-        for (int i = 0; i < boneCount; i++) {
-            bones[i].GetLocalPositionAndRotation(out var localPosition, out var localRotation);
-            previousLocalPositions[i] = localPosition;
-            previousLocalRotations[i] = localRotation;
-        }
-    }
-    */
-
-    public void Dispose() {
-        if (hasHandleBulkRead) {
-            handleBulkRead.Complete();
-        }
-        if (hasHandleSimulate) {
-            handleSimulate.Complete();
-        }
-        if (hasHandleInterpolate) {
-            handleInterpolate.Complete();
-        }
-        if (hasHandleTrasnformWrite) {
-            handleTransformWrite.Complete();
-        }
-        jobSimulate.Dispose();
-        jobBulkRead.Dispose();
-        jobInterpolation.Dispose();
-        jobTransformWrite.Dispose();
-        if (transformAccessArray.isCreated) {
-            transformAccessArray.Dispose();
-        }
-    }
-
-    /*private static void DrawDebug(JiggleJob job) {
-        for (var index = 0; index < job.simulatedPoints.Length; index++) {
-            var simulatedPoint = job.simulatedPoints[index];
-            if (simulatedPoint.parentIndex == -1) continue;
-            DebugDrawSphere(job.debug[simulatedPoint.parentIndex], 0.05f, Color.cyan, (float)JiggleJobManager.FIXED_DELTA_TIME);
-            Debug.DrawLine(job.debug[index], job.debug[simulatedPoint.parentIndex], Color.cyan, (float)JiggleJobManager.FIXED_DELTA_TIME);
-        }
-    }*/
-    
     private static void DebugDrawSphere(Vector3 origin, float radius, Color color, float duration, int segments = 8) {
         float angleStep = 360f / segments;
         Vector3 prevPoint = Vector3.zero;

@@ -117,10 +117,14 @@ public class JiggleJobs {
 
         var jiggleTrasnformRootTransforms = new List<Transform>();
         foreach (var jiggleTree in jiggleTrees) {
-            for (var boneIndex = 0; boneIndex < jiggleTree.bones.Length; boneIndex++) {
+            foreach (var t in jiggleTree.points) {
                 jiggleTrasnformRootTransforms.Add(jiggleTree.bones[0]);
             }
         }
+        if (transformRootAccessArray.isCreated) {
+            transformRootAccessArray.Dispose();
+        }
+        transformRootAccessArray = new TransformAccessArray(jiggleTrasnformRootTransforms.ToArray());
         
         treeCount = structs.Count;
         transformCount = jiggledTransforms.Count;
@@ -145,9 +149,5 @@ public class JiggleJobs {
             transformAccessArray.Dispose();
         }
         transformAccessArray = new TransformAccessArray(jiggledTransforms.ToArray());
-        if (transformRootAccessArray.isCreated) {
-            transformRootAccessArray.Dispose();
-        }
-        transformRootAccessArray = new TransformAccessArray(jiggleTrasnformRootTransforms.ToArray());
     }
 }

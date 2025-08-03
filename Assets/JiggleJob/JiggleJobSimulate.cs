@@ -12,7 +12,7 @@ public struct JiggleJobSimulate : IJobFor {
     public double timeStamp;
     public float3 gravity;
     
-    [NativeDisableParallelForRestriction]
+    [ReadOnly][NativeDisableParallelForRestriction]
     public NativeArray<JiggleTransform> inputPoses;
     [NativeDisableParallelForRestriction]
     public NativeArray<JiggleTransform> outputPoses;
@@ -299,11 +299,7 @@ public struct JiggleJobSimulate : IJobFor {
         var rootSimulationPosition = tree.points[1].workingPosition;
         var rootPose = tree.GetInputPose(inputPoses, 1).position;
         for (int i = 0; i < tree.pointCount; i++) {
-            var point = tree.points[i];
-            if (!point.hasTransform) {
-                continue;
-            }
-            outputSimulatedRootOffset[i + (int)tree.transformIndexOffset] = rootSimulationPosition - rootPose;
+            outputSimulatedRootOffset[i+(int)tree.transformIndexOffset] = rootSimulationPosition - rootPose;
             outputSimulatedRootPosition[i+(int)tree.transformIndexOffset] = rootSimulationPosition;
         }
     }

@@ -5,53 +5,7 @@ using Unity.Jobs;
 using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Jobs;
 using UnityEngine.Profiling;
-
-public class JiggleJobs {
-    private int treeCount;
-    private int transformCount;
-    
-    public JiggleJobBulkTransformRead jobBulkTransformRead;
-    public JiggleJobSimulate jobSimulate;
-    public JiggleJobInterpolation jobInterpolation;
-    public TransformAccessArray transformAccessArray;
-    
-    public JiggleJobTransformWrite jobTransformWrite;
-
-    public int GetTreeCount() => treeCount;
-    public int GetTransformCount() => transformCount;
-    public void Dispose() {
-        treeCount = 0;
-        transformCount = 0;
-        jobBulkTransformRead.Dispose();
-        jobSimulate.Dispose();
-        jobInterpolation.Dispose();
-        transformAccessArray.Dispose();
-        jobTransformWrite.Dispose();
-    }
-
-    public void Set(Transform[] transforms, JiggleTreeStruct[] trees, JiggleTransform[] poses, JiggleTransform[] localPoses) {
-        treeCount = trees.Length;
-        transformCount = transforms.Length;
-        
-        jobSimulate.Dispose();
-        jobSimulate = new JiggleJobSimulate(trees, poses);
-        
-        jobInterpolation.Dispose();
-        jobInterpolation = new JiggleJobInterpolation(poses);
-
-        jobBulkTransformRead.Dispose();
-        jobBulkTransformRead = new JiggleJobBulkTransformRead(jobSimulate, localPoses);
-        
-        jobTransformWrite = new JiggleJobTransformWrite(jobBulkTransformRead, jobInterpolation);
-        
-        if (transformAccessArray.isCreated) {
-            transformAccessArray.Dispose();
-        }
-        transformAccessArray = new TransformAccessArray(transforms);
-    }
-}
 
 public class JiggleRoot {
     private static List<JiggleRoot> jiggleRoots;
@@ -109,44 +63,6 @@ public class JiggleRoot {
         return roots;
     }
 
-    private class SuperRootSets {
-        public Transform nonJiggleRoot;
-        public List<JiggleRoot> superRoots;
-    }
-
-    private static List<SuperRootSets> GetSuperRootSets(List<JiggleRoot> superRoots) {
-        var superRootSets = new List<SuperRootSets>();
-        for (var index = 0; index < superRoots.Count; index++) {
-            var setSuperRoots = new List<JiggleRoot>() { superRoots[index] };
-            var nonJiggleRoot = FindNonJiggleRoot(setSuperRoots[0]._transform);
-            if (nonJiggleRoot == null) {
-                superRootSets.Add(new SuperRootSets() {
-                    nonJiggleRoot = setSuperRoots[0]._transform,
-                    superRoots = setSuperRoots
-                });
-                superRoots.RemoveAt(index);
-                index--;
-                continue;
-            }
-            if (index>=superRoots.Count) continue;
-            for (int index2 = index+1; index2 < superRoots.Count; index2++) {
-                var additionalSuperRoot = superRoots[index2];
-                var nonJiggleRoot2 = FindNonJiggleRoot(additionalSuperRoot._transform);
-                if (nonJiggleRoot2 == nonJiggleRoot) {
-                    setSuperRoots.Add(additionalSuperRoot);
-                    superRoots.RemoveAt(index2);
-                    index--;
-                    index2--;
-                }
-            }
-            superRootSets.Add(new SuperRootSets() {
-                nonJiggleRoot = nonJiggleRoot,
-                superRoots = setSuperRoots
-            });
-        }
-        return superRootSets;
-    }
-    
     private static Transform FindNonJiggleRoot(Transform t) {
         while (t.parent != null) {
             t = t.parent;
@@ -234,13 +150,6 @@ public class JiggleRoot {
         // TODO: Cleanup previous trees, or reuse them.
         var newJiggleTrees = new List<JiggleTree>();
         var superRoots = GetSuperRoots();
-        var superRootSets = GetSuperRootSets(superRoots);
-        foreach (var superRootSet in superRootSets) {
-            Debug.Log(superRootSet.nonJiggleRoot.gameObject.name);
-            foreach (var superRoot in superRootSet.superRoots) {
-                Debug.Log(superRoot._transform.gameObject.name);
-            }
-        }
         foreach (var superRoot in superRoots) {
             Profiler.BeginSample("JiggleRoot.FindExistingJiggleTree");
             // TODO: CHECK FOR DIRTY MEMBER, USE OLD JIGGLE TREE IF NOT DIRTY
@@ -273,16 +182,7 @@ public class JiggleRoot {
         rootDirty = false;
         jiggleTrees = newJiggleTrees.ToArray();
         Profiler.EndSample();
-        
-
-        List<JiggleTreeStruct> structs = new List<JiggleTreeStruct>(jiggleTrees.Length);
-        List<Transform> jiggledTransforms = new  List<Transform>(jiggleTrees.Length);
-        List<JiggleTransform> jiggleTransformPoses = new List<JiggleTransform>(jiggleTrees.Length);
-        List<JiggleTransform> jiggleTransformLocalPoses = new List<JiggleTransform>(jiggleTrees.Length);
-        foreach(var tree in jiggleTrees) {
-            structs.Add(tree.GetStruct(jiggledTransforms, jiggleTransformPoses, jiggleTransformLocalPoses));
-        }
-        jobs.Set(jiggledTransforms.ToArray(), structs.ToArray(), jiggleTransformPoses.ToArray(), jiggleTransformLocalPoses.ToArray());
+        jobs.Set(jiggleTrees);
         return jobs;
     }
 

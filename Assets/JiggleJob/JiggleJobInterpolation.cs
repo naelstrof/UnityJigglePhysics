@@ -7,8 +7,7 @@ using UnityEngine.Jobs;
 
 [BurstCompile]
 public struct JiggleJobInterpolation : IJobFor {
-    //[ReadOnly][NativeDisableParallelForRestriction]
-    //public NativeArray<float3> realRootPositions;
+    [ReadOnly] public NativeArray<float3> realRootPositions;
     
     [ReadOnly] public NativeArray<JiggleTransform> previousPoses;
     [ReadOnly] public NativeArray<JiggleTransform> currentPoses;
@@ -17,18 +16,28 @@ public struct JiggleJobInterpolation : IJobFor {
     public double previousTimeStamp;
     public double currentTime;
     
-    //[ReadOnly] public NativeArray<float3> previousSimulatedRootOffset;
-    //[ReadOnly] public NativeArray<float3> currentSimulatedRootOffset;
+    [ReadOnly] public NativeArray<float3> previousSimulatedRootOffset;
+    [ReadOnly] public NativeArray<float3> currentSimulatedRootOffset;
     
-    //[ReadOnly] public NativeArray<float3> previousSimulatedRootPosition;
-    //[ReadOnly] public NativeArray<float3> currentSimulatedRootPosition;
+    [ReadOnly] public NativeArray<float3> previousSimulatedRootPosition;
+    [ReadOnly] public NativeArray<float3> currentSimulatedRootPosition;
     
     public NativeArray<JiggleTransform> outputInterpolatedPoses;
 
-    public JiggleJobInterpolation(JiggleTransform[] poses) {
+    public JiggleJobInterpolation(JiggleTransform[] poses, JiggleJobBulkReadRoots jiggleJobBulkReadRoots) {
         previousPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
         currentPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
         outputInterpolatedPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
+        previousSimulatedRootOffset = new NativeArray<float3>(poses.Length, Allocator.Persistent);
+        currentSimulatedRootOffset = new NativeArray<float3>(poses.Length, Allocator.Persistent);
+        var tempPoses = new float3[poses.Length];
+        for (var index = 0; index < poses.Length; index++) {
+            tempPoses[index] = poses[index].position;
+        }
+        previousSimulatedRootPosition = new NativeArray<float3>(tempPoses, Allocator.Persistent);
+        currentSimulatedRootPosition = new NativeArray<float3>(tempPoses, Allocator.Persistent);
+        realRootPositions = jiggleJobBulkReadRoots.outputPositions;
+        
         timeStamp = Time.timeAsDouble;
         previousTimeStamp = timeStamp - JiggleJobManager.FIXED_DELTA_TIME;
         currentTime = timeStamp;
@@ -58,11 +67,11 @@ public struct JiggleJobInterpolation : IJobFor {
         var t = (currentTime-timeCorrection - previousTimeStamp) / diff;
         var interPose = JiggleTransform.Lerp(prevPose, newPose, (float)t);
         
-        //var simulatedRootPosition = math.lerp(previousSimulatedRootPosition[index], currentSimulatedRootPosition[index], (float)t);
-        //var simulatedRootOffset = math.lerp(previousSimulatedRootOffset[index], currentSimulatedRootOffset[index], (float)t);
+        var simulatedRootPosition = math.lerp(previousSimulatedRootPosition[index], currentSimulatedRootPosition[index], (float)t);
+        var simulatedRootOffset = math.lerp(previousSimulatedRootOffset[index], currentSimulatedRootOffset[index], (float)t);
         
-        //var snapToReal = realRootPositions[index]-simulatedRootPosition;
-        //interPose.position += snapToReal + simulatedRootOffset;
+        var snapToReal = realRootPositions[index]-simulatedRootPosition;
+        interPose.position += snapToReal + simulatedRootOffset;
         outputInterpolatedPoses[index] = interPose;
     }
 }

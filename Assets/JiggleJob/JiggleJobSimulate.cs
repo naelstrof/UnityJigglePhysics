@@ -16,17 +16,22 @@ public struct JiggleJobSimulate : IJobFor {
     public NativeArray<JiggleTransform> inputPoses;
     [NativeDisableParallelForRestriction]
     public NativeArray<JiggleTransform> outputPoses;
-    //[NativeDisableParallelForRestriction]
-    //public NativeArray<float3> outputSimulatedRootOffset;
-    //[NativeDisableParallelForRestriction]
-    //public NativeArray<float3> outputSimulatedRootPosition;
+    [NativeDisableParallelForRestriction]
+    public NativeArray<float3> outputSimulatedRootOffset;
+    [NativeDisableParallelForRestriction]
+    public NativeArray<float3> outputSimulatedRootPosition;
     
     public NativeArray<JiggleTreeStruct> jiggleTrees;
     
     public JiggleJobSimulate(JiggleTreeStruct[] trees, JiggleTransform[] poses) {
         inputPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
         jiggleTrees = new NativeArray<JiggleTreeStruct>(trees, Allocator.Persistent);
-        
+        outputSimulatedRootOffset = new NativeArray<float3>(poses.Length, Allocator.Persistent);
+        var tempPoses = new float3[poses.Length];
+        for (var index = 0; index < poses.Length; index++) {
+            tempPoses[index] = poses[index].position;
+        }
+        outputSimulatedRootPosition = new NativeArray<float3>(tempPoses.Length, Allocator.Persistent);
         outputPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
         
         timeStamp = Time.timeAsDouble;
@@ -290,19 +295,18 @@ public struct JiggleJobSimulate : IJobFor {
         }
     }
 
-    /*private unsafe void RecordRootOffsets(JiggleTreeStruct tree) {
+    private unsafe void RecordRootOffsets(JiggleTreeStruct tree) {
+        var rootSimulationPosition = tree.points[1].workingPosition;
+        var rootPose = tree.GetInputPose(inputPoses, 1).position;
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points[i];
             if (!point.hasTransform) {
                 continue;
             }
-
-            var rootSimulationPosition = outputPoses[1 + (int)tree.transformIndexOffset].position;
-            var rootPose = tree.GetInputPose(inputPoses, 1).position;
             outputSimulatedRootOffset[i + (int)tree.transformIndexOffset] = rootSimulationPosition - rootPose;
             outputSimulatedRootPosition[i+(int)tree.transformIndexOffset] = rootSimulationPosition;
         }
-    }*/
+    }
 
 
     public void Execute(int index) {
@@ -312,6 +316,6 @@ public struct JiggleJobSimulate : IJobFor {
         Constrain(tree);
         FinishStep(tree);
         ApplyPose(tree);
-        //RecordRootOffsets(tree);
+        RecordRootOffsets(tree);
     }
 }

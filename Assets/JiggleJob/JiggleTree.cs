@@ -46,7 +46,7 @@ public class JiggleTree {
     public Transform[] bones;
     public JiggleBoneSimulatedPoint[] points;
 
-    public unsafe JiggleTreeStruct GetStruct(List<Transform> transforms, List<JiggleTransform> jiggleTransforms, List<JiggleTransform> localJiggleTransforms) {
+    public unsafe JiggleTreeStruct GetStructAndUpdateLists(List<Transform> transforms, List<JiggleTransform> jiggleTransforms, List<JiggleTransform> localJiggleTransforms) {
         uint pointCount = (uint)points.Length;
         JiggleTreeStruct ret = new JiggleTreeStruct() {
             pointCount = pointCount,

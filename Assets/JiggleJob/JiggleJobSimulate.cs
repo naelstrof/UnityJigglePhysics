@@ -20,10 +20,12 @@ public struct JiggleJobSimulate : IJobFor {
     public NativeArray<float3> outputSimulatedRootOffset;
     [NativeDisableParallelForRestriction]
     public NativeArray<float3> outputSimulatedRootPosition;
+    [NativeDisableParallelForRestriction]
+    public NativeArray<float3> testColliders;
     
     public NativeArray<JiggleTreeStruct> jiggleTrees;
     
-    public JiggleJobSimulate(JiggleTreeStruct[] trees, JiggleTransform[] poses) {
+    public JiggleJobSimulate(JiggleTreeStruct[] trees, JiggleTransform[] poses, Vector3[] colliders) {
         inputPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
         jiggleTrees = new NativeArray<JiggleTreeStruct>(trees, Allocator.Persistent);
         outputSimulatedRootOffset = new NativeArray<float3>(poses.Length, Allocator.Persistent);
@@ -33,7 +35,11 @@ public struct JiggleJobSimulate : IJobFor {
         }
         outputSimulatedRootPosition = new NativeArray<float3>(tempPoses.Length, Allocator.Persistent);
         outputPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
-        
+        var tempColliders = new float3[colliders.Length];
+        for (var index = 0; index < colliders.Length; index++) {
+            tempColliders[index] = colliders[index];
+        }
+        testColliders = new NativeArray<float3>(tempColliders, Allocator.Persistent);
         timeStamp = Time.timeAsDouble;
         gravity = Physics.gravity;
     }
@@ -116,6 +122,13 @@ public struct JiggleJobSimulate : IJobFor {
     }
 
     private unsafe void Constrain(JiggleTreeStruct tree) {
+        var closeColliders = new List<int>();
+        for (int i = 0; i < testColliders.Length; i++) {
+            var dist = math.distance(tree.points[0].position, testColliders[i]);
+            if (dist < 5f) {
+                closeColliders.Add(i);
+            }
+        }
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points[i];
             
@@ -159,8 +172,21 @@ public struct JiggleJobSimulate : IJobFor {
             error = math.pow(error, parent.parameters.elasticitySoften);
             point.desiredConstraint = math.lerp(point.workingPosition, desiredPosition, parent.parameters.angleElasticity * error);
             #endregion
-            
-            // DO COLLISIONS HERE
+
+            #region Collisions
+            for (int closeColliderIndex=0; closeColliderIndex < closeColliders.Count; closeColliderIndex++) {
+                var colliderIndex = closeColliders[closeColliderIndex];
+                var colliderPosition = testColliders[colliderIndex];
+                var vectorFromCollider = point.desiredConstraint - colliderPosition;
+                var distanceToCollider = math.length(vectorFromCollider);
+                var minDistance = point.parameters.collisionRadius + 1f;
+                if (distanceToCollider < minDistance) {
+                    var correctionDir = math.normalizesafe(vectorFromCollider);
+                    var correctionDistance = minDistance - distanceToCollider;
+                    point.desiredConstraint += correctionDir * correctionDistance * (1f - 0.5f); // TODO: soften
+                }
+            }
+            #endregion
             
             if (point.parameters.angleLimited) { // --- Angle Limit Constraint
                 float angleA_deg = point.parameters.angleLimit;

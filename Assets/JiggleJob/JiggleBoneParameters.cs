@@ -16,6 +16,7 @@ public struct JiggleBoneParameters {
     public float blend;
     public float airDrag;
     public float drag;
+    public float collisionRadius;
 }
 
 [Serializable]
@@ -45,7 +46,8 @@ public struct JiggleBoneInputParameters {
             angleLimitSoften = angleLimitSoften,
             blend = 1f,
             drag = drag,
-            airDrag = airDrag
+            airDrag = airDrag,
+            collisionRadius = 0.01f // TODO
         };
     }
 }

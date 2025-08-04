@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Jobs.LowLevel.Unsafe;
@@ -12,6 +13,7 @@ public class JiggleRoot {
     private static Dictionary<Transform, JiggleRoot> jiggleRootLookup;
     private static bool rootDirty = false;
     private static JiggleTree[] jiggleTrees;
+    private static Transform[] colliderTransforms;
     private static readonly List<Transform> tempTransforms = new List<Transform>();
     private static readonly List<JiggleBoneSimulatedPoint> tempPoints = new List<JiggleBoneSimulatedPoint>();
     private Transform _transform;
@@ -25,6 +27,7 @@ public class JiggleRoot {
         jiggleRoots = new List<JiggleRoot>();
         jiggleRootLookup = new Dictionary<Transform, JiggleRoot>();
         jiggleTrees = null;
+        colliderTransforms = null;
         rootDirty = true;
         jobs?.Dispose();
         jobs = new JiggleJobs();
@@ -182,7 +185,9 @@ public class JiggleRoot {
         rootDirty = false;
         jiggleTrees = newJiggleTrees.ToArray();
         Profiler.EndSample();
-        jobs.Set(jiggleTrees);
+        colliderTransforms = UnityEngine.Object.FindObjectsOfType<JigglePhysicsCollider>().Select(c => c.transform)
+            .ToArray();
+        jobs.Set(jiggleTrees, colliderTransforms);
         return jobs;
     }
 

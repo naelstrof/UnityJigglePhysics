@@ -122,13 +122,6 @@ public struct JiggleJobSimulate : IJobFor {
     }
 
     private unsafe void Constrain(JiggleTreeStruct tree) {
-        var closeColliders = new List<int>();
-        for (int i = 0; i < testColliders.Length; i++) {
-            var dist = math.distance(tree.points[0].position, testColliders[i]);
-            if (dist < 5f) {
-                closeColliders.Add(i);
-            }
-        }
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points[i];
             
@@ -174,9 +167,10 @@ public struct JiggleJobSimulate : IJobFor {
             #endregion
 
             #region Collisions
-            for (int closeColliderIndex=0; closeColliderIndex < closeColliders.Count; closeColliderIndex++) {
-                var colliderIndex = closeColliders[closeColliderIndex];
-                var colliderPosition = testColliders[colliderIndex];
+
+            var colliderCount = testColliders.Length;
+            for (int index=0; index < colliderCount; index++) {
+                var colliderPosition = testColliders[index];
                 var vectorFromCollider = point.desiredConstraint - colliderPosition;
                 var distanceToCollider = math.length(vectorFromCollider);
                 var minDistance = point.parameters.collisionRadius + 1f;
@@ -222,10 +216,7 @@ public struct JiggleJobSimulate : IJobFor {
             point.desiredConstraint = forwardConstraint;
             #endregion
             
-            point.workingPosition = forwardConstraint;
-            tree.points[i] = point;
-
-            continue;
+            // TODO: Early out if collisions are disabled
             
             #region Back-propagated motion for collisions
             if (parent.parameters is { angleElasticity: 1f, lengthElasticity: 1f }) { // FIXME: Also check if collisions are disabled
@@ -244,7 +235,7 @@ public struct JiggleJobSimulate : IJobFor {
                 var targetPos = math.rotate(from_to_rot_also, (parent_to_self * real_length)) + parent.workingPosition;
 
                 var error_also = math.length(point.workingPosition - targetPos);
-                error_also /= point.desiredLengthToParent;
+                error_also /= real_length;
                 error_also = math.min(error_also, 1.0f);
                 error_also = math.pow(error_also, parent.parameters.elasticitySoften);
                 var backward_constraint = math.lerp(point.workingPosition, targetPos, (parent.parameters.angleElasticity * parent.parameters.angleElasticity * error_also));

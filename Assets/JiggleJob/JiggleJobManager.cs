@@ -18,28 +18,21 @@ public static class JiggleJobManager {
         accumulatedTime = 0f;
         time = 0f;
     }
-
-    public static void SampleAndStepSimulation(double deltaTime) {
+    
+    public static void ScheduleUpdate(double deltaTime) {
         accumulatedTime += deltaTime;
         if (accumulatedTime < FIXED_DELTA_TIME) {
+            JiggleRoot.GetJiggleJobs().SchedulePoses(default);
             return;
         }
         while (accumulatedTime >= FIXED_DELTA_TIME) {
             accumulatedTime -= FIXED_DELTA_TIME;
             time += FIXED_DELTA_TIME;
         }
-        Simulate(time);
+        JiggleRoot.GetJiggleJobs().Simulate(time);
     }
-    
-    private static void Simulate(double currentTime) {
-        JiggleRoot.GetJiggleJobs().Simulate(currentTime);
-    }
-    
-    public static void SchedulePose() {
-        JiggleRoot.GetJiggleJobs().SchedulePoses();
-    }
-    
-    public static void CompletePose() {
+
+    public static void CompleteUpdate() {
         JiggleRoot.GetJiggleJobs().CompletePoses();
     }
 

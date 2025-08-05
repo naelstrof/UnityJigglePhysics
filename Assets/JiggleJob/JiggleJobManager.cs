@@ -36,4 +36,11 @@ public static class JiggleJobManager {
         JiggleRoot.GetJiggleJobs().CompletePoses();
     }
 
+    public static void OnDrawGizmos() {
+        if (!Application.isPlaying) {
+            return;
+        }
+        JiggleRoot.GetJiggleJobs().OnDrawGizmos();
+    }
+
 }

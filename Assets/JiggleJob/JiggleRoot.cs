@@ -76,7 +76,7 @@ public class JiggleRoot {
         return null;
     }
     
-    private static void Visit(Transform t, List<Transform> transforms, List<JiggleBoneSimulatedPoint> points, int parentIndex, JiggleRoot lastRoot, out int newIndex) {
+    private static void Visit(Transform t, List<Transform> transforms, List<JiggleBoneSimulatedPoint> points, int parentIndex, JiggleRoot lastRoot, Vector3 lastPosition, out int newIndex) {
         if (GetJiggleRootByBone(t, out JiggleRoot newRoot)) {
             lastRoot = newRoot;
         }
@@ -92,10 +92,12 @@ public class JiggleRoot {
                 };
             }
 
+            var currentPosition = t.position;
+
             var validChildren = GetValidChildren(t, lastRoot.rig);
             points.Add(new JiggleBoneSimulatedPoint() { // Regular point
-                position = t.position,
-                lastPosition = t.position,
+                position = currentPosition,
+                lastPosition = currentPosition,
                 childenCount = validChildren.Count == 0 ? 1 : validChildren.Count,
                 parameters = parameters,
                 parentIndex = parentIndex,
@@ -106,8 +108,8 @@ public class JiggleRoot {
             
             if (validChildren.Count == 0) {
                 points.Add(new JiggleBoneSimulatedPoint() { // virtual projected tip
-                    position = t.position,
-                    lastPosition = t.position,
+                    position = currentPosition + (currentPosition - lastPosition),
+                    lastPosition = currentPosition + (currentPosition - lastPosition),
                     childenCount = 0,
                     parameters = lastRoot.rig.GetJiggleBoneParameter(1f),
                     parentIndex = newIndex,
@@ -122,7 +124,7 @@ public class JiggleRoot {
             } else {
                 for (int i = 0; i < validChildren.Count; i++) {
                     var child = validChildren[i];
-                    Visit(child, transforms, points, newIndex, lastRoot, out int childIndex);
+                    Visit(child, transforms, points, newIndex, lastRoot, currentPosition, out int childIndex);
                     unsafe { // WEIRD
                         var record = points[newIndex];
                         record.childrenIndices[i] = childIndex;
@@ -149,6 +151,7 @@ public class JiggleRoot {
         if (!rootDirty) {
             return jobs;
         }
+        jobs.Dispose();
         Profiler.BeginSample("JiggleRoot.GetJiggleTrees");
         // TODO: Cleanup previous trees, or reuse them.
         var newJiggleTrees = new List<JiggleTree>();
@@ -182,7 +185,7 @@ public class JiggleRoot {
                 hasTransform = false,
                 animated = false,
             });
-            Visit(superRoot._transform, tempTransforms, tempPoints, 0, superRoot, out int childIndex);
+            Visit(superRoot._transform, tempTransforms, tempPoints, 0, superRoot, superRoot._transform.position, out int childIndex);
             unsafe {
                 var rootPoint = tempPoints[0];
                 rootPoint.childrenIndices[0] = childIndex;

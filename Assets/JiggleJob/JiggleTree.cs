@@ -34,6 +34,24 @@ public unsafe struct JiggleTreeStruct {
         }
     }
 
+    public void OnGizmoDraw() {
+        for (int i = 0; i < pointCount; i++) {
+            var point = points[i];
+            if (point.hasTransform) {
+                Gizmos.color = Color.cyan;
+                Gizmos.DrawWireSphere(point.position, 0.1f);
+            } else {
+                Gizmos.color = Color.magenta;
+                Gizmos.DrawWireSphere(point.position, 0.1f);
+            }
+
+            if (point.childenCount != 0) {
+                var child = points[point.childrenIndices[0]];
+                Gizmos.color = Color.cyan;
+                Gizmos.DrawLine(point.position, child.position);
+            }
+        }
+    }
 }
 
 public static class JiggleTreeStructExtensions {
@@ -42,6 +60,7 @@ public static class JiggleTreeStructExtensions {
         return inputPoses[index + (int)self.transformIndexOffset];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void WriteOutputPose(this JiggleTreeStruct self, NativeArray<JiggleTransform> outputPoses,
         int index, JiggleTransform output) {
         outputPoses[index + (int)self.transformIndexOffset] = output;

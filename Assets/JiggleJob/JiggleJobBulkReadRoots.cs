@@ -8,10 +8,10 @@ using UnityEngine.Jobs;
 public struct JiggleJobBulkReadRoots : IJobParallelForTransform {
     public NativeArray<float3> outputPositions;
 
-    public JiggleJobBulkReadRoots(JiggleTransform[] poses) {
-        var tempPoses = new float3[poses.Length];
-        for (var index = 0; index < poses.Length; index++) {
-            tempPoses[index] = poses[index].position;
+    public JiggleJobBulkReadRoots(Transform[] rootBones) {
+        var tempPoses = new float3[rootBones.Length];
+        for (var index = 0; index < rootBones.Length; index++) {
+            tempPoses[index] = rootBones[index].position;
         }
         outputPositions = new NativeArray<float3>(tempPoses, Allocator.Persistent);
     }

@@ -41,7 +41,11 @@ public class JiggleJobs {
 
     public int GetTreeCount() => treeCount;
     public int GetTransformCount() => transformCount;
+    private bool disposed = true;
     public void Dispose() {
+        if (disposed) {
+            return;
+        }
         if (hasHandleColliderRead) handleColliderRead.Complete();
         if (hasHandleBulkRead) handleBulkRead.Complete();
         if (hasHandleRootRead) handleRootRead.Complete();
@@ -71,6 +75,7 @@ public class JiggleJobs {
             transformRootAccessArray.Dispose();
         }
         jobTransformWrite.Dispose();
+        disposed = true;
     }
 
     public JobHandle SchedulePoses(JobHandle dep) {
@@ -135,8 +140,6 @@ public class JiggleJobs {
     }
     
     public void Set(JiggleTree[] jiggleTrees, Transform[] colliderTransforms) {
-        Dispose();
-        
         List<JiggleTreeStruct> structs = new List<JiggleTreeStruct>(jiggleTrees.Length);
         List<Transform> jiggledTransforms = new  List<Transform>(jiggleTrees.Length);
         List<Transform> colliderTransformList = new List<Transform>(colliderTransforms.Length);
@@ -170,7 +173,7 @@ public class JiggleJobs {
         
         jobSimulate = new JiggleJobSimulate(jiggleTreeStructs, jiggledTransformPosesArray, colliders.ToArray());
         
-        jobBulkReadRoots = new JiggleJobBulkReadRoots(jiggledTransformPosesArray);
+        jobBulkReadRoots = new JiggleJobBulkReadRoots(jiggleTransformRootTransforms.ToArray());
         
         jobInterpolation = new JiggleJobInterpolation(jiggledTransformPosesArray, jobBulkReadRoots);
 
@@ -183,5 +186,18 @@ public class JiggleJobs {
         transformAccessArray = new TransformAccessArray(jiggledTransforms.ToArray());
         
         colliderTransformAccessArray = new TransformAccessArray(colliderTransformList.ToArray());
+        disposed = false;
+    }
+
+    public void OnDrawGizmos() {
+        if (hasHandleSimulate) {
+            handleSimulate.Complete();
+            jobSimulate.jiggleTrees.CopyTo(jiggleTreeStructs);
+            var count = jiggleTreeStructs.Length;
+            for (int i = 0; i < count; i++) {
+                var tree = jiggleTreeStructs[i];
+                tree.OnGizmoDraw();
+            }
+        }
     }
 }

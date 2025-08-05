@@ -19,4 +19,11 @@ public unsafe struct JiggleBoneSimulatedPoint {
     public fixed int childrenIndices[MAX_CHILDREN];
     public int childenCount;
     public bool hasTransform;
+    public override string ToString() {
+        return $"(position: {position},\nlastPosition: {lastPosition},\n" +
+               $"workingPosition: {workingPosition},\ndesiredConstraint: {desiredConstraint},\n" +
+               $"parentPose: {parentPose},\npose: {pose},\ndesiredLengthToParent:{desiredLengthToParent},\n" +
+               $"animated: {animated},\n parameters: {parameters},\n parentIndex: {parentIndex},\n " +
+               $"children: [{childrenIndices[0]}, ...],\n childenCount: {childenCount},\n hasTransform: {hasTransform})";
+    }
 }

@@ -131,7 +131,7 @@ public class JiggleJobs {
         handleColliderRead = jobBulkColliderTransformRead.ScheduleReadOnly(colliderTransformAccessArray, 128);
         hasHandleColliderRead = true;
         
-        var handle = JiggleRoot.GetJiggleJobs().SchedulePoses(JobHandle.CombineDependencies(handleBulkRead, handleColliderRead));
+        var handle = JiggleTreeUtility.GetJiggleJobs().SchedulePoses(JobHandle.CombineDependencies(handleBulkRead, handleColliderRead));
 
         jobSimulate.gravity = gravity;
         jobSimulate.timeStamp = currentTime;

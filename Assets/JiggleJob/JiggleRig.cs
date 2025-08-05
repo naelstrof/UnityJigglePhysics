@@ -17,7 +17,7 @@ public class JiggleRig : MonoBehaviour {
     [SerializeField] protected JiggleBoneInputParameters _jiggleBoneInputParameters;
     [SerializeField] protected List<Transform> _excludedTransforms = new List<Transform>();
     
-    private JiggleRoot _root;
+    private JiggleTreeSegment _jiggleTreeSegment;
     bool isValid = false;
     public bool rootExcluded => _excludeRoot;
     public Transform rootBone => _rootBone;
@@ -45,15 +45,12 @@ public class JiggleRig : MonoBehaviour {
             List<JiggleRig> finished = new List<JiggleRig>();
             // DO DFS HERE
         }*/
-        _root = new JiggleRoot(_rootBone);
-        if (_root != null) {
-            _root.rig = this;
-        }
+        _jiggleTreeSegment = new JiggleTreeSegment(_rootBone, this);
     }
 
     private void OnDisable() {
-        if (_root != null) {
-            JiggleRoot.RemoveJiggleRoot(_root);
+        if (_jiggleTreeSegment != null) {
+            JiggleTreeUtility.RemoveJiggleTreeSegment(_jiggleTreeSegment);
         }
     }
 

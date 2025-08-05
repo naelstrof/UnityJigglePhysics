@@ -22,25 +22,25 @@ public static class JiggleJobManager {
     public static void ScheduleUpdate(double deltaTime) {
         accumulatedTime += deltaTime;
         if (accumulatedTime < FIXED_DELTA_TIME) {
-            JiggleRoot.GetJiggleJobs().SchedulePoses(default);
+            JiggleTreeUtility.GetJiggleJobs().SchedulePoses(default);
             return;
         }
         while (accumulatedTime >= FIXED_DELTA_TIME) {
             accumulatedTime -= FIXED_DELTA_TIME;
             time += FIXED_DELTA_TIME;
         }
-        JiggleRoot.GetJiggleJobs().Simulate(time);
+        JiggleTreeUtility.GetJiggleJobs().Simulate(time);
     }
 
     public static void CompleteUpdate() {
-        JiggleRoot.GetJiggleJobs().CompletePoses();
+        JiggleTreeUtility.GetJiggleJobs().CompletePoses();
     }
 
     public static void OnDrawGizmos() {
         if (!Application.isPlaying) {
             return;
         }
-        JiggleRoot.GetJiggleJobs().OnDrawGizmos();
+        JiggleTreeUtility.GetJiggleJobs().OnDrawGizmos();
     }
 
 }

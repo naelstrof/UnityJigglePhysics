@@ -33,7 +33,7 @@ public struct JiggleJobSimulate : IJobFor {
         for (var index = 0; index < poses.Length; index++) {
             tempPoses[index] = poses[index].position;
         }
-        outputSimulatedRootPosition = new NativeArray<float3>(tempPoses.Length, Allocator.Persistent);
+        outputSimulatedRootPosition = new NativeArray<float3>(tempPoses, Allocator.Persistent);
         outputPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
         var tempColliders = new float3[colliders.Length];
         for (var index = 0; index < colliders.Length; index++) {

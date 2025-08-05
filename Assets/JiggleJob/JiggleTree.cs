@@ -26,6 +26,14 @@ public unsafe struct JiggleTreeStruct {
     public uint pointCount;
     public uint transformIndexOffset;
     public JiggleBoneSimulatedPoint* points;
+
+    public void Dispose() {
+        if (points != null) {
+            UnsafeUtility.Free(points, Allocator.Persistent);
+            points = null;
+        }
+    }
+
 }
 
 public static class JiggleTreeStructExtensions {

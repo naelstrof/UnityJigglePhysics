@@ -38,7 +38,8 @@ public struct JiggleJobInterpolation : IJobFor {
         currentSimulatedRootPosition = new NativeArray<float3>(tempPoses, Allocator.Persistent);
         realRootPositions = jiggleJobBulkReadRoots.outputPositions;
         
-        timeStamp = Time.timeAsDouble;
+        // Yes the double subtraction is intentional here, otherwise our simulation will share a timestamp on creation.
+        timeStamp = Time.timeAsDouble - JiggleJobManager.FIXED_DELTA_TIME;
         previousTimeStamp = timeStamp - JiggleJobManager.FIXED_DELTA_TIME;
         currentTime = timeStamp;
     }
@@ -61,7 +62,7 @@ public struct JiggleJobInterpolation : IJobFor {
 
         var diff = timeStamp - previousTimeStamp;
         if (diff == 0) {
-            throw new UnityException("Time difference is zero, cannot interpolate.");
+            throw new UnityException($"Time difference is zero ({timeStamp}-{previousTimeStamp}), cannot interpolate.");
         }
         const double timeCorrection = JiggleJobManager.FIXED_DELTA_TIME * 2f;
         var t = (currentTime-timeCorrection - previousTimeStamp) / diff;

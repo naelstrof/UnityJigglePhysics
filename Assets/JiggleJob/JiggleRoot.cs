@@ -164,7 +164,18 @@ public class JiggleRoot {
             Profiler.EndSample();
             tempTransforms.Clear();
             tempPoints.Clear();
+            Vector3 backProjection = Vector3.zero;
+            if (superRoot._transform.childCount != 0) {
+                var pos = superRoot._transform.position;
+                var childPos = superRoot._transform.GetChild(0).position;
+                var diff = pos - childPos;
+                backProjection = pos + diff;
+            } else {
+                backProjection = superRoot._transform.position;
+            }
             tempPoints.Add(new JiggleBoneSimulatedPoint() { // Back projected virtual root
+                position = backProjection,
+                lastPosition = backProjection,
                 childenCount = 1,
                 parameters = superRoot.rig.GetJiggleBoneParameter(0f),
                 parentIndex = -1,

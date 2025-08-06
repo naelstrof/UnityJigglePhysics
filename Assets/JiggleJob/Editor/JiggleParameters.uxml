@@ -1,23 +1,36 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
     <Style src="project://database/Assets/JiggleJob/Editor/JiggleStyles.uss?fileID=7433441132597879392&amp;guid=9a2f78f6a51166c4ca0e12830ed7e7ab&amp;type=3#JiggleStyles" />
-    <ui:Label text="Jiggle Parameters" class="title" style="margin-bottom: 20px;" />
+    <ui:Label text="Settings" class="title" />
+    <ui:VisualElement name="Spacer" class="spacer" />
     <ui:VisualElement name="VisualElement">
-        <ui:Toggle label="Toggle" name="AdvancedToggle" />
-        <ui:Slider label="Slider" value="42" high-value="1" name="StiffnessSlider" />
+        <ui:Toggle label="Advanced" name="AdvancedToggle" />
+        <ui:Slider label="Stiffness" value="42" high-value="1" name="StiffnessSlider" />
+        <uie:CurveField label="Stiffness Curve" value="{0,0,0,0,0,0,Free,Free,False,None};{5,8,0,0,0,0,Free,Free,False,None};{10,4,0,0,0,0,Free,Free,False,None}+(ClampForever,ClampForever)" name="StiffnessCurve" />
         <ui:VisualElement name="AdvancedSection" style="flex-grow: 1;">
-            <ui:Slider label="Slider" value="42" high-value="1" name="SoftenSlider" />
-            <ui:Slider label="Slider" value="42" high-value="1" name="StretchSlider" />
+            <ui:Slider label="Soften" value="42" high-value="1" name="SoftenSlider" />
+            <ui:Slider label="Stretch" value="42" high-value="1" name="StretchSlider" />
             <ui:VisualElement name="RootSection" style="flex-grow: 1;">
-                <ui:Slider label="Slider" value="42" high-value="1" name="RootStretchSlider" />
+                <ui:Slider label="RootStretch" value="42" high-value="1" name="RootStretchSlider" />
             </ui:VisualElement>
-            <ui:Toggle label="Toggle" name="AngleLimitToggle" />
+            <ui:VisualElement name="Spacer" class="spacer" />
+            <ui:Toggle label="AngleLimit" name="AngleLimitToggle" />
             <ui:VisualElement name="AngleLimitSection" style="flex-grow: 1;">
-                <ui:Slider label="Slider" value="42" high-value="90" name="AngleLimitSlider" />
-                <ui:Slider label="Slider" value="42" high-value="1" name="AngleLimitSoftenSlider" />
+                <ui:Slider label="AngleLimit" value="42" high-value="90" name="AngleLimitSlider" />
+                <ui:Slider label="AngleLimitSoften" value="42" high-value="1" name="AngleLimitSoftenSlider" />
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:Slider label="Slider" value="42" high-value="1" name="DragSlider" />
-        <ui:Slider label="Slider" value="42" high-value="1" name="AirDragSlider" />
-        <ui:FloatField label="Float Field" value="42.2" name="GravityField" />
+        <ui:VisualElement name="Spacer" class="spacer" />
+        <ui:Slider label="Drag" value="42" high-value="1" name="DragSlider" />
+        <ui:Slider label="Air Drag" value="42" high-value="1" name="AirDragSlider" />
+        <ui:VisualElement name="Spacer" class="spacer" />
+        <ui:FloatField label="Gravity" value="42.2" name="GravityField" />
+        <ui:VisualElement name="AdvancedSection2" style="flex-grow: 1;">
+            <ui:VisualElement name="Spacer" class="spacer" />
+            <ui:Toggle label="Collision" name="CollisionToggle" />
+            <ui:VisualElement name="CollisionSection" style="flex-grow: 1;">
+                <ui:FloatField label="Collision Radius" value="42.2" name="CollisionRadiusField" />
+                <uie:CurveField label="Collision Radius Curve" value="{0,0,0,0,0,0,Free,Free,False,None};{5,8,0,0,0,0,Free,Free,False,None};{10,4,0,0,0,0,Free,Free,False,None}+(ClampForever,ClampForever)" name="CollisionRadiusCurve" />
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

@@ -47,29 +47,32 @@ public class JiggleRigEditor : Editor {
         return visualElement;
     }
 
-    /*public void OnSceneGUI() {
+    public void OnSceneGUI() {
         var script = (JiggleRig)target;
         var cam = SceneView.lastActiveSceneView.camera;
-        var points = script.GetJiggleBoneSimulatedPoints();
+        var transforms = script.GetJiggleBoneTransforms();
+        var jiggleTree = JiggleTreeUtility.GetJiggleTree(script);
+        var points = jiggleTree.points;
         for (var index = 0; index < points.Length; index++) {
             var simulatedPoint = points[index];
             if (simulatedPoint.parentIndex == -1) continue;
-            if (simulatedPoint.transformIndex == -1) continue;
-            DrawBone(points[simulatedPoint.parentIndex].position, simulatedPoint.position, simulatedPoint.parameters.angleLimit, cam);
+            if (!points[simulatedPoint.parentIndex].hasTransform) continue;
+            DrawBone(points[simulatedPoint.parentIndex].position, simulatedPoint.position, simulatedPoint.parameters, cam);
         }
-    }*/
+    }
 
-    public void DrawBone(Vector3 boneHead, Vector3 boneTail, float angleLimit, Camera cam) {
+    public void DrawBone(Vector3 boneHead, Vector3 boneTail, JiggleBoneParameters jiggleBoneParameters, Camera cam) {
         var camForward = cam.transform.forward;
         var fixedScreenSize = 0.01f;
         var toCam = cam.transform.position - boneHead;
         var distance = toCam.magnitude;
         var scale = distance * fixedScreenSize;
+        scale = jiggleBoneParameters.collisionRadius;
         Handles.DrawWireDisc(boneHead, camForward, scale);
         Handles.DrawLine(boneHead, boneTail);
         var boneDirection = (boneTail - boneHead).normalized;
         var angleLimitScale = 0.05f;
-        Handles.DrawWireDisc(boneHead + boneDirection * angleLimitScale * Mathf.Cos(angleLimit*Mathf.Deg2Rad), boneDirection, angleLimitScale * Mathf.Sin(angleLimit*Mathf.Deg2Rad));
+        Handles.DrawWireDisc(boneHead + boneDirection * angleLimitScale * Mathf.Cos(jiggleBoneParameters.angleLimit*Mathf.Deg2Rad), boneDirection, angleLimitScale * Mathf.Sin(jiggleBoneParameters.angleLimit*Mathf.Deg2Rad));
     }
     
 }

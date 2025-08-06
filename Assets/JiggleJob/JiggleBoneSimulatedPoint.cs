@@ -15,6 +15,7 @@ public unsafe struct JiggleBoneSimulatedPoint {
 
     // Set at initialization
     public JiggleBoneParameters parameters;
+    public float distanceFromRoot;
     public int parentIndex;
     public fixed int childrenIndices[MAX_CHILDREN];
     public int childenCount;

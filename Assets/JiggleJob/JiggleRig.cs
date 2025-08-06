@@ -12,6 +12,7 @@ using UnityEngine.UIElements;
 public class JiggleRig : MonoBehaviour {
 
     [SerializeField] protected Transform _rootBone;
+    [SerializeField] protected bool _advanced;
     [SerializeField] protected bool _animated;
     [SerializeField] protected bool _excludeRoot;
     [SerializeField] protected JiggleBoneInputParameters _jiggleBoneInputParameters;
@@ -54,11 +55,11 @@ public class JiggleRig : MonoBehaviour {
         }
     }
 
-    public JiggleBoneParameters GetJiggleBoneParameter(float normalizedDistance) {
-        return _jiggleBoneInputParameters.ToJiggleBoneParameters();
+    public JiggleBoneParameters GetJiggleBoneParameter(float normalizedDistanceFromRoot) {
+        return _jiggleBoneInputParameters.ToJiggleBoneParameters(normalizedDistanceFromRoot);
     }
 
-    private Transform[] GetJiggleBoneTransforms() {
+    public Transform[] GetJiggleBoneTransforms() {
         var transforms = _rootBone.GetComponentsInChildren<Transform>();
         return transforms;
     }
@@ -66,101 +67,16 @@ public class JiggleRig : MonoBehaviour {
     void OnValidate() {
         isValid = _rootBone.IsChildOf(gameObject.transform);
         if (_excludedTransforms == null) _excludedTransforms = new List<Transform>();
+        ValidateCurve(ref _jiggleBoneInputParameters.stiffnessCurve);
+        ValidateCurve(ref _jiggleBoneInputParameters.collisionRadiusCurve);
+    }
+
+    void ValidateCurve(ref AnimationCurve animationCurve) {
+        if (animationCurve == null || animationCurve.length == 0) {
+            animationCurve = AnimationCurve.Linear(0f, 1f, 1f, 1f);
+        }
     }
     
-    public JiggleBoneSimulatedPoint[] GetJiggleBoneSimulatedPoints() {
-        
-        // TODO: Need to create the entire structure temporarily as a list, so that we can
-        // TODO: collapse the ~zero length bones out of the list before turning it into an array.
-        
-        var transforms = GetJiggleBoneTransforms();
-        var childlessTransformIndices = new List<int>();
-        var tails = 0;
-        for (var index = 0; index < transforms.Length; index++) {
-            var transform = transforms[index];
-            if (transform.childCount != 0) continue;
-            childlessTransformIndices.Add(index);
-            tails++;
-        }
-
-        var points = new JiggleBoneSimulatedPoint[1+transforms.Length+tails];
-        unsafe {
-            for (int i = 0; i < points.Length; i++) {
-                var transformIndex = i - 1;
-            
-                // BACK PROJECTED VIRTUAL ROOT
-                if (transformIndex < 0) {
-                    points[i] = new JiggleBoneSimulatedPoint {
-                        parentIndex = -1,
-                        parameters = _jiggleBoneInputParameters.ToJiggleBoneParameters(),
-                        hasTransform = false,
-                        animated = false
-                    };
-                    continue;
-                }
-            
-                // FORWARD PROJECTED TAILS
-                var tailIndex = transformIndex - transforms.Length;
-                if (tailIndex >= 0) {
-                    points[i] = new JiggleBoneSimulatedPoint {
-                        parentIndex = childlessTransformIndices[tailIndex]+1,
-                        parameters = _jiggleBoneInputParameters.ToJiggleBoneParameters(),
-                        hasTransform = false,
-                        animated = false
-                    };
-                    continue;
-                }
-            
-                // TRANSFORMS
-                var parentIndex = -1;
-                if (transformIndex == 0) {
-                    parentIndex = 0;
-                } else {
-                    for (int parentSearchIndex = 0; parentSearchIndex < transforms.Length; parentSearchIndex++) {
-                        if (transforms[parentSearchIndex] != transforms[transformIndex].parent) continue;
-                        parentIndex = parentSearchIndex + 1;
-                        break;
-                    }
-                }
-                points[i] = new JiggleBoneSimulatedPoint {
-                    position = transforms[transformIndex].position,
-                    lastPosition = transforms[transformIndex].position,
-                    parentIndex = parentIndex,
-                    parameters = _jiggleBoneInputParameters.ToJiggleBoneParameters(),
-                    hasTransform = true,
-                    animated = _animated
-                };
-            }
-            
-            // Assign child indices by searching for parents
-            for (int i = 0; i < points.Length; i++) {
-                int childIndex = 0;
-                if (i < points.Length - tails) {
-                    for (int childCheckIndex = i+1; childCheckIndex < points.Length; childCheckIndex++) {
-                        if (points[childCheckIndex].parentIndex == i) {
-                            points[i].childrenIndices[childIndex] = childCheckIndex;
-                            childIndex++;
-                        }
-                    }
-                }
-                points[i].childenCount = childIndex;
-                while (childIndex < JiggleBoneSimulatedPoint.MAX_CHILDREN) {
-                    points[i].childrenIndices[childIndex] = -1;
-                    childIndex++;
-                }
-            }
-
-            //for (int i = 0; i < points.Length; i++) {
-            //    for (int j = 0; j < JiggleBoneSimulatedPoint.MAX_CHILDREN; j++) {
-            //        Debug.Log(points[i].childrenIndices[j]);
-            //    }
-            //    Debug.Log("----");
-            //}
-        }
-
-        return points;
-    }
-
 #if UNITY_EDITOR
     public VisualElement GetInspectorVisualElement(SerializedProperty serializedProperty) {
         var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AssetDatabase.GUIDToAssetPath("c35a2123f4d44dd469ccb24af7a0ce20"));
@@ -171,6 +87,10 @@ public class JiggleRig : MonoBehaviour {
             nameof(JiggleBoneInputParameters.stiffness),
             "Stiffness"
         );
+        
+        var stiffnessCurveElement = visualElement.Q<CurveField>("StiffnessCurve");
+        stiffnessCurveElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.stiffnessCurve)));
+        stiffnessCurveElement.Q<Label>().text = "Stiffness Curve";
         
         var angleLimitToggleElement = visualElement.Q<Toggle>("AngleLimitToggle");
         angleLimitToggleElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.angleLimitToggle)));
@@ -216,17 +136,37 @@ public class JiggleRig : MonoBehaviour {
             nameof(JiggleBoneInputParameters.airDrag),
             "Air Drag"
         );
-        var floatElement = visualElement.Q<FloatField>("GravityField");
-        floatElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.gravity)));
-        floatElement.Q<Label>().text = "Gravity";
+        var gravityElement = visualElement.Q<FloatField>("GravityField");
+        gravityElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.gravity)));
+        gravityElement.Q<Label>().text = "Gravity";
+        
+        var collisionRadiusElement = visualElement.Q<FloatField>("CollisionRadiusField");
+        collisionRadiusElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.collisionRadius)));
+        collisionRadiusElement.Q<Label>().text = "Collision Radius";
+        
+        var collisionCurveElement = visualElement.Q<CurveField>("CollisionRadiusCurve");
+        collisionCurveElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.collisionRadiusCurve)));
+        collisionCurveElement.Q<Label>().text = "Collision Radius Curve";
         
         var advancedToggleElement = visualElement.Q<Toggle>("AdvancedToggle");
         advancedToggleElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.advancedToggle)));
         advancedToggleElement.Q<Label>().text = "Advanced";
         
-        var detailsSection = visualElement.Q<VisualElement>("AdvancedSection");
+        var collisionToggleElement = visualElement.Q<Toggle>("CollisionToggle");
+        collisionToggleElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.collisionToggle)));
+        collisionToggleElement.Q<Label>().text = "Collision";
+        
+        var advancedSection = visualElement.Q<VisualElement>("AdvancedSection");
+        var advancedSection2 = visualElement.Q<VisualElement>("AdvancedSection2");
         advancedToggleElement.RegisterValueChangedCallback(evt => {
-            detailsSection.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
+            advancedSection.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
+            advancedSection2.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
+            stiffnessCurveElement.style.display = _jiggleBoneInputParameters.advancedToggle ? DisplayStyle.Flex : DisplayStyle.None;
+        });
+        
+        var collisionSection = visualElement.Q<VisualElement>("CollisionSection");
+        collisionToggleElement.RegisterValueChangedCallback(evt => {
+            collisionSection.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
         });
         
         return visualElement;

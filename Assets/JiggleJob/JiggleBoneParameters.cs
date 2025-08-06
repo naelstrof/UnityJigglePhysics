@@ -22,8 +22,10 @@ public struct JiggleBoneParameters {
 [Serializable]
 public struct JiggleBoneInputParameters {
     public bool advancedToggle;
+    public bool collisionToggle;
     public bool angleLimitToggle;
     public float stiffness;
+    public AnimationCurve stiffnessCurve;
     public float soften;
     public float angleLimit;
     public float angleLimitSoften;
@@ -32,9 +34,11 @@ public struct JiggleBoneInputParameters {
     public float drag;
     public float airDrag;
     public float gravity;
+    public float collisionRadius;
+    public AnimationCurve collisionRadiusCurve;
     public float blend;
     
-    public JiggleBoneParameters ToJiggleBoneParameters() {
+    public JiggleBoneParameters ToJiggleBoneParameters(float normalizedDistanceFromRoot) {
         return new JiggleBoneParameters {
             rootElasticity = advancedToggle?1f-rootStretch:0f,
             angleElasticity = Mathf.Pow(stiffness, 2f),
@@ -47,7 +51,7 @@ public struct JiggleBoneInputParameters {
             blend = 1f,
             drag = drag,
             airDrag = airDrag,
-            collisionRadius = 0.01f // TODO
+            collisionRadius = collisionRadius * collisionRadiusCurve.Evaluate(normalizedDistanceFromRoot)
         };
     }
 }

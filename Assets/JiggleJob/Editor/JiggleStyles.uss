@@ -27,3 +27,7 @@
 .unity-slider__label {
     min-width: 100px;
 }
+
+.spacer {
+    min-height: 20px;
+}

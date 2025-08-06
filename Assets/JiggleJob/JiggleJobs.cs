@@ -8,6 +8,8 @@ public class JiggleJobs {
     private int treeCount;
     private int transformCount;
     
+    private JiggleMemoryBus _memoryBus;
+    
     public JobHandle handleColliderRead;
     public bool hasHandleColliderRead;
     
@@ -31,17 +33,23 @@ public class JiggleJobs {
     public JiggleJobSimulate jobSimulate;
     public JiggleJobBulkReadRoots jobBulkReadRoots;
     public JiggleJobInterpolation jobInterpolation;
-    public TransformAccessArray transformAccessArray;
-    public TransformAccessArray transformRootAccessArray;
-    public TransformAccessArray colliderTransformAccessArray;
 
     public JiggleJobTransformWrite jobTransformWrite;
     
-    public JiggleTreeStruct[] jiggleTreeStructs;
-
     public int GetTreeCount() => treeCount;
     public int GetTransformCount() => transformCount;
     private bool disposed = true;
+
+    public JiggleJobs() {
+        _memoryBus = new JiggleMemoryBus();
+        jobSimulate = new JiggleJobSimulate();
+        jobBulkTransformRead = new JiggleJobBulkTransformRead();
+        jobBulkReadRoots = new JiggleJobBulkReadRoots();
+        jobInterpolation = new JiggleJobInterpolation(Time.timeAsDouble);
+        jobBulkColliderTransformRead = new JiggleJobBulkColliderTransformRead();
+        jobTransformWrite = new JiggleJobTransformWrite();
+    }
+    
     public void Dispose() {
         if (disposed) {
             return;
@@ -52,12 +60,6 @@ public class JiggleJobs {
         if (hasHandleSimulate) handleSimulate.Complete();
         if (hasHandleTransformWrite) handleTransformWrite.Complete();
         if (hasHandleInterpolate) handleInterpolate.Complete();
-        if (jiggleTreeStructs != null) {
-            foreach (var tree in jiggleTreeStructs) {
-                tree.Dispose();
-            }
-        }
-
         treeCount = 0;
         transformCount = 0;
         jobBulkColliderTransformRead.Dispose();
@@ -65,30 +67,22 @@ public class JiggleJobs {
         jobBulkReadRoots.Dispose();
         jobSimulate.Dispose();
         jobInterpolation.Dispose();
-        if (transformAccessArray.isCreated) {
-            transformAccessArray.Dispose();
-        }
-        if (colliderTransformAccessArray.isCreated) {
-            colliderTransformAccessArray.Dispose();
-        }
-        if (transformRootAccessArray.isCreated) {
-            transformRootAccessArray.Dispose();
-        }
         jobTransformWrite.Dispose();
+        _memoryBus.Dispose();
         disposed = true;
     }
 
     public JobHandle SchedulePoses(JobHandle dep) {
-        handleRootRead = jobBulkReadRoots.ScheduleReadOnly(transformRootAccessArray, 128, dep);
+        handleRootRead = jobBulkReadRoots.ScheduleReadOnly(_memoryBus.transformRootAccessArray, 128, dep);
         hasHandleRootRead = true;
         
         jobInterpolation.currentTime = Time.timeAsDouble;
         handleInterpolate = jobInterpolation.ScheduleParallel(GetTransformCount(), 128, handleRootRead);
         
         if (hasHandleBulkRead) {
-            handleTransformWrite = jobTransformWrite.Schedule(transformAccessArray, JobHandle.CombineDependencies(handleInterpolate, handleBulkRead));
+            handleTransformWrite = jobTransformWrite.Schedule(_memoryBus.transformAccessArray, JobHandle.CombineDependencies(handleInterpolate, handleBulkRead));
         } else {
-            handleTransformWrite = jobTransformWrite.Schedule(transformAccessArray, handleInterpolate);
+            handleTransformWrite = jobTransformWrite.Schedule(_memoryBus.transformAccessArray, handleInterpolate);
         }
 
         hasHandleTransformWrite = true;
@@ -102,6 +96,7 @@ public class JiggleJobs {
     }
     
     public void Simulate(double currentTime) {
+        
         // TODO: Use an external monobehavior to update gravity?
         var gravity = Physics.gravity;
         if (hasHandleSimulate) {
@@ -125,10 +120,10 @@ public class JiggleJobs {
             jobSimulate.outputSimulatedRootPosition = tempSimulatedRootPosition;
         }
         
-        handleBulkRead = jobBulkTransformRead.ScheduleReadOnly(transformAccessArray, 128);
+        handleBulkRead = jobBulkTransformRead.ScheduleReadOnly(_memoryBus.transformAccessArray, 128);
         hasHandleBulkRead = true;
 
-        handleColliderRead = jobBulkColliderTransformRead.ScheduleReadOnly(colliderTransformAccessArray, 128);
+        handleColliderRead = jobBulkColliderTransformRead.ScheduleReadOnly(_memoryBus.colliderTransformAccessArray, 128);
         hasHandleColliderRead = true;
         
         var handle = JiggleTreeUtility.GetJiggleJobs().SchedulePoses(JobHandle.CombineDependencies(handleBulkRead, handleColliderRead));
@@ -140,62 +135,54 @@ public class JiggleJobs {
     }
     
     public void Set(JiggleTree[] jiggleTrees, Transform[] colliderTransforms) {
-        List<JiggleTreeStruct> structs = new List<JiggleTreeStruct>(jiggleTrees.Length);
-        List<Transform> jiggledTransforms = new  List<Transform>(jiggleTrees.Length);
-        List<Transform> colliderTransformList = new List<Transform>(colliderTransforms.Length);
-        List<JiggleTransform> jiggleTransformPoses = new List<JiggleTransform>(jiggleTrees.Length);
-        List<JiggleTransform> jiggleTransformLocalPoses = new List<JiggleTransform>(jiggleTrees.Length);
-        List<Vector3> colliders = new List<Vector3>(colliderTransforms.Length);
         foreach(var tree in jiggleTrees) {
-            structs.Add(tree.GetStructAndUpdateLists(jiggledTransforms, jiggleTransformPoses, jiggleTransformLocalPoses));
+            if (tree.dirty) _memoryBus.Add(tree, new JiggleTreeStruct(tree.bones, tree.points));
         }
 
         for (var index = 0; index < colliderTransforms.Length; index++) {
             Debug.DrawLine(Vector3.zero, colliderTransforms[index].position, Color.red, 10f);
-            colliders.Add(colliderTransforms[index].position);
-            colliderTransformList.Add(colliderTransforms[index]);
         }
 
-        var jiggleTransformRootTransforms = new List<Transform>();
-        foreach (var jiggleTree in jiggleTrees) {
-            foreach (var t in jiggleTree.points) {
-                jiggleTransformRootTransforms.Add(jiggleTree.bones[0]);
-            }
-        }
+        treeCount = _memoryBus.treeCount;
+        transformCount = _memoryBus.transformCount;
         
-        transformRootAccessArray = new TransformAccessArray(jiggleTransformRootTransforms.ToArray());
+        jobSimulate.jiggleTrees = _memoryBus.jiggleTreeStructs;
+        jobSimulate.outputSimulatedRootOffset = _memoryBus.simulationOutputRootOffsets;
+        jobSimulate.outputSimulatedRootPosition = _memoryBus.simulationOutputRootPositions;
+        jobSimulate.outputPoses = _memoryBus.simulationOutputPoses;
+        jobSimulate.inputPoses = _memoryBus.simulateInputPoses;
+        jobSimulate.testColliders = _memoryBus.colliderPositions;
         
-        treeCount = structs.Count;
-        transformCount = jiggledTransforms.Count;
+        jobBulkReadRoots.rootOutputPositions = _memoryBus.rootOutputPositions;
         
-        var jiggledTransformPosesArray = jiggleTransformPoses.ToArray();
-        jiggleTreeStructs = structs.ToArray();
-        
-        jobSimulate = new JiggleJobSimulate(jiggleTreeStructs, jiggledTransformPosesArray, colliders.ToArray());
-        
-        jobBulkReadRoots = new JiggleJobBulkReadRoots(jiggleTransformRootTransforms.ToArray());
-        
-        jobInterpolation = new JiggleJobInterpolation(jiggledTransformPosesArray, jobBulkReadRoots);
+        jobBulkTransformRead.simulateInputPoses = _memoryBus.simulateInputPoses;
+        jobBulkTransformRead.restPoseTransforms = _memoryBus.restPoseTransforms;
+        jobBulkTransformRead.previousLocalTransforms = _memoryBus.previousLocalRestPoseTransforms;
 
-        jobBulkTransformRead = new JiggleJobBulkTransformRead(jobSimulate, jiggleTransformLocalPoses.ToArray());
+        jobInterpolation.currentPoses = _memoryBus.interpolationCurrentPoses;
+        jobInterpolation.previousPoses = _memoryBus.interpolationPreviousPoses;
+        jobInterpolation.outputInterpolatedPoses = _memoryBus.interpolationOutputPoses;
+        jobInterpolation.realRootPositions = _memoryBus.rootOutputPositions;
+        jobInterpolation.previousSimulatedRootOffset = _memoryBus.interpolationPreviousRootOffsets;
+        jobInterpolation.currentSimulatedRootOffset = _memoryBus.interpolationCurrentOffsets;
+        jobInterpolation.previousSimulatedRootPosition = _memoryBus.interpolationPreviousRootPositions;
+        jobInterpolation.currentSimulatedRootPosition = _memoryBus.interpolationCurrentPositions;
         
-        jobBulkColliderTransformRead = new JiggleJobBulkColliderTransformRead(jobSimulate, colliderTransformList.ToArray());
-        
-        jobTransformWrite = new JiggleJobTransformWrite(jobBulkTransformRead, jobInterpolation);
+        jobBulkColliderTransformRead.positions = _memoryBus.colliderPositions;
 
-        transformAccessArray = new TransformAccessArray(jiggledTransforms.ToArray());
+        jobTransformWrite.inputInterpolatedPoses = _memoryBus.interpolationOutputPoses;
+        jobTransformWrite.previousLocalPoses = _memoryBus.previousLocalRestPoseTransforms;
         
-        colliderTransformAccessArray = new TransformAccessArray(colliderTransformList.ToArray());
         disposed = false;
     }
 
     public void OnDrawGizmos() {
         if (hasHandleSimulate) {
             handleSimulate.Complete();
-            jobSimulate.jiggleTrees.CopyTo(jiggleTreeStructs);
-            var count = jiggleTreeStructs.Length;
+            jobSimulate.jiggleTrees.CopyTo(_memoryBus.jiggleTreeStructs);
+            var count = _memoryBus.jiggleTreeStructs.Length;
             for (int i = 0; i < count; i++) {
-                var tree = jiggleTreeStructs[i];
+                var tree = _memoryBus.jiggleTreeStructs[i];
                 tree.OnGizmoDraw();
             }
         }

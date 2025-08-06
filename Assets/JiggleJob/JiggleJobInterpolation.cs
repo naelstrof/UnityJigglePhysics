@@ -24,6 +24,20 @@ public struct JiggleJobInterpolation : IJobFor {
     
     public NativeArray<JiggleTransform> outputInterpolatedPoses;
 
+    public JiggleJobInterpolation(double time) {
+        timeStamp = time - JiggleJobManager.FIXED_DELTA_TIME;
+        previousTimeStamp = timeStamp - JiggleJobManager.FIXED_DELTA_TIME;
+        currentTime = timeStamp;
+        previousPoses = default;
+        currentPoses = default;
+        outputInterpolatedPoses = default;
+        previousSimulatedRootOffset = default;
+        currentSimulatedRootOffset = default;
+        previousSimulatedRootPosition = default;
+        currentSimulatedRootPosition = default;
+        realRootPositions = default;
+    }
+
     public JiggleJobInterpolation(JiggleTransform[] poses, JiggleJobBulkReadRoots jiggleJobBulkReadRoots) {
         previousPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
         currentPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
@@ -36,7 +50,7 @@ public struct JiggleJobInterpolation : IJobFor {
         }
         previousSimulatedRootPosition = new NativeArray<float3>(tempPoses, Allocator.Persistent);
         currentSimulatedRootPosition = new NativeArray<float3>(tempPoses, Allocator.Persistent);
-        realRootPositions = jiggleJobBulkReadRoots.outputPositions;
+        realRootPositions = jiggleJobBulkReadRoots.rootOutputPositions;
         
         // Yes the double subtraction is intentional here, otherwise our simulation will share a timestamp on creation.
         timeStamp = Time.timeAsDouble - JiggleJobManager.FIXED_DELTA_TIME;

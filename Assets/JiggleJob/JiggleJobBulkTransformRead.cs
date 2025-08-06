@@ -7,14 +7,14 @@ using UnityEngine.Jobs;
 
 [BurstCompile]
 public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
-    public NativeArray<JiggleTransform> transforms;
+    public NativeArray<JiggleTransform> simulateInputPoses;
     
     public NativeArray<JiggleTransform> restPoseTransforms;
     
     [ReadOnly] public NativeArray<JiggleTransform> previousLocalTransforms;
     
     public JiggleJobBulkTransformRead(JiggleJobSimulate jobSimulate, JiggleTransform[] localPoses) {
-        transforms = jobSimulate.inputPoses;
+        simulateInputPoses = jobSimulate.inputPoses;
         restPoseTransforms = new NativeArray<JiggleTransform>(localPoses, Allocator.Persistent);
         previousLocalTransforms = new NativeArray<JiggleTransform>(localPoses, Allocator.Persistent);
     }
@@ -29,7 +29,7 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
     }
 
     public void Execute(int index, TransformAccess transform) {
-        var jiggleTransform = transforms[index];
+        var jiggleTransform = simulateInputPoses[index];
         if (jiggleTransform.isVirtual) {
             return;
         }
@@ -54,7 +54,7 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
         transform.GetPositionAndRotation(out var position, out var rotation);
         jiggleTransform.position = position;
         jiggleTransform.rotation = rotation;
-        transforms[index] = jiggleTransform;
+        simulateInputPoses[index] = jiggleTransform;
     }
     
 }

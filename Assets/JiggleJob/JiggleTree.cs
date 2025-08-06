@@ -1,90 +1,33 @@
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using Unity.Jobs;
-using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Jobs;
-using UnityEngine.Profiling;
 
-public struct JiggleTransform {
-    public bool isVirtual;
-    public float3 position;
-    public quaternion rotation;
-    public static JiggleTransform Lerp(JiggleTransform a, JiggleTransform b, float t) {
-        return new JiggleTransform() {
-            isVirtual = a.isVirtual,
-            position = math.lerp(a.position, b.position, t),
-            rotation = math.slerp(a.rotation, b.rotation, t),
-        };
-    }
-}
-
-public unsafe struct JiggleTreeStruct {
-    public uint pointCount;
-    public uint transformIndexOffset;
-    public JiggleBoneSimulatedPoint* points;
-
-    public void Dispose() {
-        if (points != null) {
-            UnsafeUtility.Free(points, Allocator.Persistent);
-            points = null;
-        }
-    }
-
-    public void OnGizmoDraw() {
-        for (int i = 0; i < pointCount; i++) {
-            var point = points[i];
-            if (point.hasTransform) {
-                Gizmos.color = Color.cyan;
-                Gizmos.DrawWireSphere(point.position, 0.1f);
-            } else {
-                Gizmos.color = Color.magenta;
-                Gizmos.DrawWireSphere(point.position, 0.1f);
-            }
-
-            if (point.childenCount != 0) {
-                var child = points[point.childrenIndices[0]];
-                Gizmos.color = Color.cyan;
-                Gizmos.DrawLine(point.position, child.position);
-            }
-        }
-    }
-}
-
-public static class JiggleTreeStructExtensions {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static JiggleTransform GetInputPose(this JiggleTreeStruct self, NativeArray<JiggleTransform> inputPoses, int index) {
-        return inputPoses[index + (int)self.transformIndexOffset];
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void WriteOutputPose(this JiggleTreeStruct self, NativeArray<JiggleTransform> outputPoses,
-        int index, JiggleTransform output) {
-        outputPoses[index + (int)self.transformIndexOffset] = output;
-    }
-}
-
-// TODO: One IJobParallelForTransform for each jiggle tree so that it represents a single transform root
-// NOT an IJobParallelForTransform for each bone
 public class JiggleTree {
+    
     public Transform[] bones;
     public JiggleBoneSimulatedPoint[] points;
+    public bool dirty { get; private set; }
 
-    public unsafe JiggleTreeStruct GetStructAndUpdateLists(List<Transform> transforms, List<JiggleTransform> jiggleTransforms, List<JiggleTransform> localJiggleTransforms) {
+    public void SetDirty() => dirty = true;
+    public void ClearDirty() => dirty = false;
+    
+    public unsafe JiggleTreeStruct GetStructAndUpdateLists(
+        List<Transform> transforms, 
+        List<JiggleTransform> jiggleTransforms, 
+        List<JiggleTransform> localJiggleTransforms
+        ) {
         uint pointCount = (uint)points.Length;
         JiggleTreeStruct ret = new JiggleTreeStruct() {
             pointCount = pointCount,
             transformIndexOffset = (uint)transforms.Count,
             points = (JiggleBoneSimulatedPoint*)UnsafeUtility.Malloc(Marshal.SizeOf<JiggleBoneSimulatedPoint>() * pointCount, UnsafeUtility.AlignOf<JiggleBoneSimulatedPoint>(), Allocator.Persistent ),
         };
-        int currentTransformIndex = 0;
         for(int i=0;i < pointCount; i++) {
             var point = points[i];
             if (point.hasTransform) {
-                var bone = bones[currentTransformIndex++];
+                var bone = bones[i];
                 transforms.Add(bone);
                 bone.GetPositionAndRotation(out var position, out var rotation);
                 bone.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
@@ -99,7 +42,7 @@ public class JiggleTree {
                     rotation = localRotation,
                 });
             } else {
-                transforms.Add(bones[0]);
+                transforms.Add(bones[i]);
                 jiggleTransforms.Add(new JiggleTransform() {
                     isVirtual = true,
                 });
@@ -112,8 +55,6 @@ public class JiggleTree {
         return ret;
     }
     
-    public bool dirty;
-
     public JiggleTree(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
         dirty = true;
         var boneCount = bones.Length;

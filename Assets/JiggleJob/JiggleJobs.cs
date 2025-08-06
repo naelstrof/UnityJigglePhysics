@@ -98,7 +98,6 @@ public class JiggleJobs {
         
         _memoryBus.RotateBuffers();
         
-        jobInterpolation.UpdateArrays(_memoryBus);
         jobSimulate.UpdateArrays(_memoryBus);
         jobBulkTransformRead.UpdateArrays(_memoryBus);
         
@@ -108,7 +107,7 @@ public class JiggleJobs {
         //handleColliderRead = jobBulkColliderTransformRead.ScheduleReadOnly(_memoryBus.colliderTransformAccessArray, 128);
         //hasHandleColliderRead = true;
         
-        var handle = JiggleTreeUtility.GetJiggleJobs().SchedulePoses(JobHandle.CombineDependencies(handleBulkRead, handleColliderRead));
+        var handle = SchedulePoses(JobHandle.CombineDependencies(handleBulkRead, handleColliderRead));
 
         jobSimulate.gravity = gravity;
         jobSimulate.timeStamp = currentTime;
@@ -117,8 +116,18 @@ public class JiggleJobs {
     }
     
     public void Set(JiggleTree[] jiggleTrees, Transform[] colliderTransforms) {
+        // Gonna sweep everyone's feet, gotta sync
+        if (hasHandleBulkRead) handleBulkRead.Complete();
+        if (hasHandleRootRead) handleRootRead.Complete();
+        if (hasHandleSimulate) handleSimulate.Complete();
+        if (hasHandleTransformWrite) handleTransformWrite.Complete();
+        if (hasHandleInterpolate) handleInterpolate.Complete();
+        
         foreach(var tree in jiggleTrees) {
             if (tree.dirty && tree.valid) _memoryBus.Add(tree);
+            if (!tree.valid) {
+                Debug.Log("GUH???");
+            }
             if (tree.dirty && !tree.valid) _memoryBus.Remove(tree);
         }
 

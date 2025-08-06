@@ -231,15 +231,15 @@ public static class JiggleTreeUtility {
     }
     
     public static void RemoveJiggleTreeSegment(JiggleTreeSegment jiggleTreeSegment) {
-        jiggleTreeSegment.SetDirty(true);
         if (jiggleTreeSegments.Contains(jiggleTreeSegment)) {
             jiggleTreeSegments.Remove(jiggleTreeSegment);
             jiggleRootLookup.Remove(jiggleTreeSegment.transform);
+            jiggleTreeSegment.SetDirty(true);
         }
-        if (jiggleTreeSegment.parent!=null) RemoveJiggleTreeSegment(jiggleTreeSegment.parent);
-        if (jiggleTreeSegments.Count == 0) {
-            jiggleTrees = null;
-        }
+        //if (jiggleTreeSegment.parent!=null) RemoveJiggleTreeSegment(jiggleTreeSegment.parent);
+        //if (jiggleTreeSegments.Count == 0) {
+            //jiggleTrees = null;
+        //}
     }
 
 }

@@ -14,6 +14,11 @@ public class JiggleTree {
     public void SetDirty(bool removed) {
         dirty = true;
         valid = !removed;
+        if (valid) {
+            Debug.Log("Creating tree...");
+        } else {
+            Debug.Log("Removing tree...");
+        }
     }
     public void ClearDirty() => dirty = false;
     
@@ -26,6 +31,11 @@ public class JiggleTree {
         }
         jiggleTreeStruct = new JiggleTreeStruct(0, points);
         return jiggleTreeStruct;
+    }
+
+    public void SetStruct(JiggleTreeStruct jiggleTreeStruct) {
+        this.jiggleTreeStruct = jiggleTreeStruct;
+        hasJiggleTreeStruct = true;
     }
     
     public JiggleTree(Transform[] bones, JiggleBoneSimulatedPoint[] points) {

@@ -51,20 +51,20 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     public int transformCount { get; private set; }
 
     public void RotateBuffers() {
-        var tempPosesa = interpolationPreviousPoses;
+        var tempPoses = interpolationPreviousPoses;
         interpolationPreviousPoses = interpolationCurrentPoses;
         interpolationCurrentPoses = simulationOutputPoses;
-        simulationOutputPoses = tempPosesa;
+        simulationOutputPoses = tempPoses;
 
-        var tempSimulatedRootOffseta = interpolationPreviousRootOffsets;
+        var tempSimulatedRootOffset = interpolationPreviousRootOffsets;
         interpolationPreviousRootOffsets = interpolationCurrentRootOffsets;
         interpolationCurrentRootOffsets = simulationOutputRootOffsets;
-        simulationOutputRootOffsets = tempSimulatedRootOffseta;
+        simulationOutputRootOffsets = tempSimulatedRootOffset;
 
-        var tempSimulatedRootPositiona = interpolationPreviousRootPositions;
+        var tempSimulatedRootPosition = interpolationPreviousRootPositions;
         interpolationPreviousRootPositions = interpolationCurrentRootPositions;
         interpolationCurrentRootPositions = simulationOutputRootPositions;
-        simulationOutputRootPositions = tempSimulatedRootPositiona;
+        simulationOutputRootPositions = tempSimulatedRootPosition;
     }
     public JiggleMemoryBus() {
         jiggleTreeStructsList = new();
@@ -82,12 +82,13 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         simulationOutputRootOffsetsList = new();
         interpolationCurrentRootOffsetsList = new();
         interpolationPreviousRootOffsetsList = new();
-        interpolationOutputPoses.Dispose();
         
         WriteOut();
         
         transformAccessList = new List<Transform>();
         transformRootAccessList = new List<Transform>();
+        RegnerateAccessArrays();
+        
         colliderTransformAccessArray = new TransformAccessArray(new Transform[] {});
         colliderPositions = new NativeArray<float3>(new float3[]{}, Allocator.Persistent);
         treeCount = 0;
@@ -178,27 +179,52 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
 
     public void Add(JiggleTree jiggleTree) {
         ReadIn();
+        
         var jiggleTreeStruct = jiggleTree.GetStruct();
         jiggleTreeStruct.transformIndexOffset = (uint)transformCount;
+        jiggleTree.SetStruct(jiggleTreeStruct);
+        
         jiggleTreeStructsList.Add(jiggleTreeStruct);
-        var tempJiggleTransforms = new JiggleTransform[jiggleTreeStruct.pointCount];
-        var tempfloat3s = new float3[jiggleTreeStruct.pointCount];
-        simulateInputPosesList.AddRange(tempJiggleTransforms);
-        restPoseTransformsList.AddRange(tempJiggleTransforms);
-        previousLocalRestPoseTransformsList.AddRange(tempJiggleTransforms);
-        rootOutputPositionsList.AddRange(tempfloat3s);
-        simulationOutputPosesList.AddRange(tempJiggleTransforms);
-        interpolationCurrentPosesList.AddRange(tempJiggleTransforms);
-        interpolationPreviousPosesList.AddRange(tempJiggleTransforms);
-        interpolationOutputPosesList.AddRange(tempJiggleTransforms);
-        simulationOutputRootPositionsList.AddRange(tempfloat3s);
-        interpolationCurrentRootPositionsList.AddRange(tempfloat3s);
-        interpolationPreviousRootPositionsList.AddRange(tempfloat3s);
-        simulationOutputRootOffsetsList.AddRange(tempfloat3s);
-        interpolationCurrentRootOffsetsList.AddRange(tempfloat3s);
-        interpolationPreviousRootOffsetsList.AddRange(tempfloat3s);
+        var tempPoses = new JiggleTransform[jiggleTreeStruct.pointCount];
+        var tempLocalPoses = new JiggleTransform[jiggleTreeStruct.pointCount];
+        var tempPosePositions = new float3[jiggleTreeStruct.pointCount];
+        var tempRootPositions = new float3[jiggleTreeStruct.pointCount];
+        var tempRootOffsets = new float3[jiggleTreeStruct.pointCount];
+        for (int i = 0; i < jiggleTreeStruct.pointCount; i++) {
+            unsafe {
+                var point = jiggleTreeStruct.points[i];
+                tempPoses[i] = new JiggleTransform() {
+                    isVirtual = !point.hasTransform,
+                    position = jiggleTree.bones[i].position,
+                    rotation = jiggleTree.bones[i].rotation
+                };
+                tempLocalPoses[i] = new JiggleTransform() {
+                    position = jiggleTree.bones[i].localPosition,
+                    rotation = jiggleTree.bones[i].localRotation
+                };
+                tempPosePositions[i] = jiggleTree.bones[i].position;
+                tempRootPositions[i] = jiggleTree.bones[0].position;
+                tempRootOffsets[i] = new float3(0f);
+            }
+        }
+        
+        simulateInputPosesList.AddRange(tempPoses);
+        restPoseTransformsList.AddRange(tempLocalPoses);
+        previousLocalRestPoseTransformsList.AddRange(tempLocalPoses);
+        rootOutputPositionsList.AddRange(tempRootPositions);
+        simulationOutputPosesList.AddRange(tempPoses);
+        interpolationCurrentPosesList.AddRange(tempPoses);
+        interpolationPreviousPosesList.AddRange(tempPoses);
+        interpolationOutputPosesList.AddRange(tempPoses);
+        simulationOutputRootPositionsList.AddRange(tempRootPositions);
+        interpolationCurrentRootPositionsList.AddRange(tempRootPositions);
+        interpolationPreviousRootPositionsList.AddRange(tempRootPositions);
+        
+        simulationOutputRootOffsetsList.AddRange(tempRootOffsets);
+        interpolationCurrentRootOffsetsList.AddRange(tempRootOffsets);
+        interpolationPreviousRootOffsetsList.AddRange(tempRootOffsets);
+        transformAccessList.AddRange(jiggleTree.bones);
         for (var index = 0; index < jiggleTree.points.Length; index++) {
-            transformAccessList.Add(jiggleTree.bones[index]);
             transformRootAccessList.Add(jiggleTree.bones[0]);
         }
         RegnerateAccessArrays();
@@ -213,25 +239,29 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         var jiggleTreeStruct = jiggleTree.GetStruct();
         var removed = false;
         var removedPointCount = 0u;
-        for (var index = 0; index < jiggleTreeStructs.Length; index++) {
+        JiggleTreeStruct removedJiggleTreeStruct = default;
+        for (var index = 0; index < jiggleTreeStructsList.Count; index++) {
             if (!removed) {
-                if (jiggleTreeStructs[index] == jiggleTreeStruct) {
+                removedJiggleTreeStruct = jiggleTreeStructsList[index];
+                if (removedJiggleTreeStruct == jiggleTreeStruct) {
                     jiggleTreeStructsList.RemoveAt(index);
                     index--;
-                    removedPointCount = jiggleTreeStruct.pointCount;
+                    removedPointCount = removedJiggleTreeStruct.pointCount;
                     removed = true;
-                    RemovePointAndTransformRange(jiggleTreeStruct.transformIndexOffset, jiggleTreeStruct.pointCount);
+                    RemovePointAndTransformRange(removedJiggleTreeStruct.transformIndexOffset, removedJiggleTreeStruct.pointCount);
                 }
                 continue;
             }
             // Adjusting indices of remaining jiggleTreeStructs
-            var modifiedJiggleTreeStruct = jiggleTreeStructs[index];
+            var modifiedJiggleTreeStruct = jiggleTreeStructsList[index];
             modifiedJiggleTreeStruct.transformIndexOffset -= removedPointCount;
-            jiggleTreeStructs[index] = modifiedJiggleTreeStruct;
+            jiggleTreeStructsList[index] = modifiedJiggleTreeStruct;
         }
+        jiggleTree.SetStruct(removedJiggleTreeStruct);
         RegnerateAccessArrays();
         WriteOut();
         treeCount--;
+        jiggleTree.ClearDirty();
     }
 
     void RegnerateAccessArrays() {

@@ -20,7 +20,7 @@ public struct JiggleTransform {
 
 public unsafe struct JiggleTreeStruct {
     public bool Equals(JiggleTreeStruct other) {
-        return points == other.points;
+        return GetHashCode() == other.GetHashCode();
     }
 
     public override bool Equals(object obj) {

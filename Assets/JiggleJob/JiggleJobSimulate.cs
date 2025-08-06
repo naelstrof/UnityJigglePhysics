@@ -13,49 +13,29 @@ public struct JiggleJobSimulate : IJobFor {
     public float3 gravity;
     
     [ReadOnly][NativeDisableParallelForRestriction]
-    public NativeArray<JiggleTransform> inputPoses;
+    public NativeList<JiggleTransform> inputPoses;
     [NativeDisableParallelForRestriction]
-    public NativeArray<JiggleTransform> outputPoses;
+    public NativeList<JiggleTransform> outputPoses;
     [NativeDisableParallelForRestriction]
-    public NativeArray<float3> outputSimulatedRootOffset;
+    public NativeList<float3> outputSimulatedRootOffset;
     [NativeDisableParallelForRestriction]
-    public NativeArray<float3> outputSimulatedRootPosition;
+    public NativeList<float3> outputSimulatedRootPosition;
     [NativeDisableParallelForRestriction]
-    public NativeArray<float3> testColliders;
+    public NativeList<float3> testColliders;
     
-    public NativeArray<JiggleTreeStruct> jiggleTrees;
+    public NativeList<JiggleTreeStruct> jiggleTrees;
     
-    public JiggleJobSimulate(JiggleTreeStruct[] trees, JiggleTransform[] poses, Vector3[] colliders) {
-        inputPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
-        jiggleTrees = new NativeArray<JiggleTreeStruct>(trees, Allocator.Persistent);
-        outputSimulatedRootOffset = new NativeArray<float3>(poses.Length, Allocator.Persistent);
-        var tempPoses = new float3[poses.Length];
-        for (var index = 0; index < poses.Length; index++) {
-            tempPoses[index] = poses[index].position;
-        }
-        outputSimulatedRootPosition = new NativeArray<float3>(tempPoses, Allocator.Persistent);
-        outputPoses = new NativeArray<JiggleTransform>(poses, Allocator.Persistent);
-        var tempColliders = new float3[colliders.Length];
-        for (var index = 0; index < colliders.Length; index++) {
-            tempColliders[index] = colliders[index];
-        }
-        testColliders = new NativeArray<float3>(tempColliders, Allocator.Persistent);
+    public JiggleJobSimulate(JiggleMemoryBus bus) {
+        inputPoses = bus.simulateInputPoses;
+        jiggleTrees = bus.jiggleTreeStructs;
+        outputSimulatedRootOffset = bus.simulationOutputRootOffsets;
+        outputSimulatedRootPosition = bus.simulationOutputRootPositions;
+        outputPoses = bus.simulationOutputPoses;
+        testColliders = bus.colliderPositions;
         timeStamp = Time.timeAsDouble;
         gravity = Physics.gravity;
     }
     
-    public void Dispose() {
-        if (inputPoses.IsCreated) {
-            inputPoses.Dispose();
-        }
-        if (outputPoses.IsCreated) {
-            outputPoses.Dispose();
-        }
-        if (jiggleTrees.IsCreated) {
-            jiggleTrees.Dispose();
-        }
-    }
-
     private unsafe void Cache(JiggleTreeStruct tree) {
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points[i];

@@ -8,6 +8,6 @@ public class JiggleUpdater : MonoBehaviour{
     }
 
     private void OnDrawGizmos() {
-        JiggleJobManager.OnDrawGizmos();
+        //JiggleJobManager.OnDrawGizmos();
     }
 }

@@ -16,10 +16,10 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     public NativeList<JiggleTransform> interpolationPreviousPoses;
     public NativeList<JiggleTransform> interpolationOutputPoses;
     public NativeList<float3> simulationOutputRootPositions;
-    public NativeList<float3> interpolationCurrentPositions;
+    public NativeList<float3> interpolationCurrentRootPositions;
     public NativeList<float3> interpolationPreviousRootPositions;
     public NativeList<float3> simulationOutputRootOffsets;
-    public NativeList<float3> interpolationCurrentOffsets;
+    public NativeList<float3> interpolationCurrentRootOffsets;
     public NativeList<float3> interpolationPreviousRootOffsets;
     public NativeList<float3> colliderPositions;
     public List<Transform> transformAccessList;
@@ -43,18 +43,22 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         interpolationPreviousPoses = new NativeList<JiggleTransform>(Allocator.Persistent);
         interpolationOutputPoses = new NativeList<JiggleTransform>(Allocator.Persistent);
         simulationOutputRootPositions = new NativeList<float3>(Allocator.Persistent);
-        interpolationCurrentPositions = new NativeList<float3>(Allocator.Persistent);
+        interpolationCurrentRootPositions = new NativeList<float3>(Allocator.Persistent);
         interpolationPreviousRootPositions = new NativeList<float3>(Allocator.Persistent);
         simulationOutputRootOffsets = new NativeList<float3>(Allocator.Persistent);
-        interpolationCurrentOffsets = new NativeList<float3>(Allocator.Persistent);
+        interpolationCurrentRootOffsets = new NativeList<float3>(Allocator.Persistent);
         interpolationPreviousRootOffsets = new NativeList<float3>(Allocator.Persistent);
         transformAccessList = new List<Transform>();
         transformRootAccessList = new List<Transform>();
         colliderTransformAccessArray = new TransformAccessArray(new Transform[] {});
         colliderPositions = new NativeList<float3>(Allocator.Persistent);
+        treeCount = 0;
+        transformCount = 0;
     }
 
-    public void Add(JiggleTree jiggleTree, JiggleTreeStruct jiggleTreeStruct) {
+    public void Add(JiggleTree jiggleTree) {
+        var jiggleTreeStruct = jiggleTree.GetStruct();
+        jiggleTreeStruct.transformIndexOffset = (uint)transformCount;
         jiggleTreeStructs.Add(jiggleTreeStruct);
         var tempJiggleTransforms = new NativeArray<JiggleTransform>((int) jiggleTreeStruct.pointCount, Allocator.Temp);
         var tempfloat3s = new NativeArray<float3>((int) jiggleTreeStruct.pointCount, Allocator.Temp);
@@ -67,10 +71,10 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         interpolationPreviousPoses.AddRange(tempJiggleTransforms);
         interpolationOutputPoses.AddRange(tempJiggleTransforms);
         simulationOutputRootPositions.AddRange(tempfloat3s);
-        interpolationCurrentPositions.AddRange(tempfloat3s);
+        interpolationCurrentRootPositions.AddRange(tempfloat3s);
         interpolationPreviousRootPositions.AddRange(tempfloat3s);
         simulationOutputRootOffsets.AddRange(tempfloat3s);
-        interpolationCurrentOffsets.AddRange(tempfloat3s);
+        interpolationCurrentRootOffsets.AddRange(tempfloat3s);
         interpolationPreviousRootOffsets.AddRange(tempfloat3s);
         for (var index = 0; index < jiggleTree.points.Length; index++) {
             transformAccessList.Add(jiggleTree.bones[index]);
@@ -84,7 +88,8 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         jiggleTree.ClearDirty();
     }
 
-    public void Remove(JiggleTreeStruct jiggleTreeStruct) {
+    public void Remove(JiggleTree jiggleTree) {
+        var jiggleTreeStruct = jiggleTree.GetStruct();
         var removed = false;
         var removedPointCount = 0u;
         for (var index = 0; index < jiggleTreeStructs.Length; index++) {
@@ -128,10 +133,10 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         interpolationPreviousPoses.RemoveRange((int)start, (int)count);
         interpolationOutputPoses.RemoveRange((int)start, (int)count);
         simulationOutputRootPositions.RemoveRange((int)start, (int)count);
-        interpolationCurrentPositions.RemoveRange((int)start, (int)count);
+        interpolationCurrentRootPositions.RemoveRange((int)start, (int)count);
         interpolationPreviousRootPositions.RemoveRange((int)start, (int)count);
         simulationOutputRootOffsets.RemoveRange((int)start, (int)count);
-        interpolationCurrentOffsets.RemoveRange((int)start, (int)count);
+        interpolationCurrentRootOffsets.RemoveRange((int)start, (int)count);
         interpolationPreviousRootOffsets.RemoveRange((int)start, (int)count);
         for (var countdown = 0; countdown < count; countdown++) {
             transformAccessList.RemoveAt((int)start);
@@ -141,6 +146,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     }
 
     public void Dispose() {
+        // TODO: Dispose the rest!!
         if (transformAccessArray.isCreated) {
             transformAccessArray.Dispose();
         }

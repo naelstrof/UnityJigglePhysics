@@ -17,9 +17,9 @@ public class JiggleTreeSegment {
         JiggleTreeUtility.AddJiggleTreeSegment(this);
     }
 
-    public void SetDirty() {
-        if (jiggleTree!=null) jiggleTree.SetDirty();
-        parent?.SetDirty();
+    public void SetDirty(bool removed) {
+        if (jiggleTree!=null) jiggleTree.SetDirty(removed);
+        parent?.SetDirty(false);
         JiggleTreeUtility.SetGlobalDirty();
     }
 

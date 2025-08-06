@@ -9,54 +9,28 @@ public class JiggleTree {
     public Transform[] bones;
     public JiggleBoneSimulatedPoint[] points;
     public bool dirty { get; private set; }
+    public bool valid { get; private set; }
 
-    public void SetDirty() => dirty = true;
+    public void SetDirty(bool removed) {
+        dirty = true;
+        valid = !removed;
+    }
     public void ClearDirty() => dirty = false;
     
-    public unsafe JiggleTreeStruct GetStructAndUpdateLists(
-        List<Transform> transforms, 
-        List<JiggleTransform> jiggleTransforms, 
-        List<JiggleTransform> localJiggleTransforms
-        ) {
-        uint pointCount = (uint)points.Length;
-        JiggleTreeStruct ret = new JiggleTreeStruct() {
-            pointCount = pointCount,
-            transformIndexOffset = (uint)transforms.Count,
-            points = (JiggleBoneSimulatedPoint*)UnsafeUtility.Malloc(Marshal.SizeOf<JiggleBoneSimulatedPoint>() * pointCount, UnsafeUtility.AlignOf<JiggleBoneSimulatedPoint>(), Allocator.Persistent ),
-        };
-        for(int i=0;i < pointCount; i++) {
-            var point = points[i];
-            if (point.hasTransform) {
-                var bone = bones[i];
-                transforms.Add(bone);
-                bone.GetPositionAndRotation(out var position, out var rotation);
-                bone.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
-                jiggleTransforms.Add(new JiggleTransform() {
-                    isVirtual = false,
-                    position = position,
-                    rotation = rotation,
-                });
-                localJiggleTransforms.Add(new JiggleTransform() {
-                    isVirtual = false,
-                    position = localPosition,
-                    rotation = localRotation,
-                });
-            } else {
-                transforms.Add(bones[i]);
-                jiggleTransforms.Add(new JiggleTransform() {
-                    isVirtual = true,
-                });
-                localJiggleTransforms.Add(new JiggleTransform() {
-                    isVirtual = true,
-                });
-            }
-            ret.points[i] = point;
+    private bool hasJiggleTreeStruct = false;
+    private JiggleTreeStruct jiggleTreeStruct;
+
+    public JiggleTreeStruct GetStruct() {
+        if (hasJiggleTreeStruct) {
+            return jiggleTreeStruct;
         }
-        return ret;
+        jiggleTreeStruct = new JiggleTreeStruct(0, points);
+        return jiggleTreeStruct;
     }
     
     public JiggleTree(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
         dirty = true;
+        valid = true;
         var boneCount = bones.Length;
         var pointCount = points.Length;
         this.bones = new Transform[boneCount];

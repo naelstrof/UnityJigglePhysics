@@ -36,11 +36,11 @@ public static class JiggleJobManager {
         JiggleTreeUtility.GetJiggleJobs().CompletePoses();
     }
 
-    public static void OnDrawGizmos() {
-        if (!Application.isPlaying) {
-            return;
-        }
-        JiggleTreeUtility.GetJiggleJobs().OnDrawGizmos();
-    }
+    //public static void OnDrawGizmos() {
+        //if (!Application.isPlaying) {
+            //return;
+        //}
+        //JiggleTreeUtility.GetJiggleJobs().OnDrawGizmos();
+    //}
 
 }

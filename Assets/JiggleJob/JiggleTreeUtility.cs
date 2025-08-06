@@ -208,7 +208,7 @@ public static class JiggleTreeUtility {
     }
     
     public static void RemoveJiggleTreeSegment(JiggleTreeSegment jiggleTreeSegment) {
-        jiggleTreeSegment.SetDirty();
+        jiggleTreeSegment.SetDirty(true);
         if (jiggleTreeSegments.Contains(jiggleTreeSegment)) {
             jiggleTreeSegments.Remove(jiggleTreeSegment);
             jiggleRootLookup.Remove(jiggleTreeSegment.transform);

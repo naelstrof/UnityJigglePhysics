@@ -8,14 +8,11 @@ using UnityEngine.Jobs;
 
 [BurstCompile]
 public struct JiggleJobTransformWrite : IJobParallelForTransform {
-    public NativeArray<JiggleTransform> previousLocalPoses;
-    [ReadOnly] public NativeArray<JiggleTransform> inputInterpolatedPoses;
-    public JiggleJobTransformWrite(JiggleJobBulkTransformRead jobBulkRead, JiggleJobInterpolation jobInterpolation) {
-        previousLocalPoses = jobBulkRead.previousLocalTransforms;
-        inputInterpolatedPoses = jobInterpolation.outputInterpolatedPoses;
-    }
-    
-    public void Dispose() {
+    public NativeList<JiggleTransform> previousLocalPoses;
+    [ReadOnly] public NativeList<JiggleTransform> inputInterpolatedPoses;
+    public JiggleJobTransformWrite(JiggleMemoryBus bus) {
+        previousLocalPoses = bus.previousLocalRestPoseTransforms;
+        inputInterpolatedPoses = bus.interpolationOutputPoses;
     }
     
     public void Execute(int index, TransformAccess transform) {

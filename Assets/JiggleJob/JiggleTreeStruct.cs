@@ -38,9 +38,9 @@ public unsafe struct JiggleTreeStruct {
     public uint transformIndexOffset;
     public JiggleBoneSimulatedPoint* points;
 
-    public JiggleTreeStruct(Transform[] transforms, JiggleBoneSimulatedPoint[] inputPoints) {
+    public JiggleTreeStruct(int indexOffset, JiggleBoneSimulatedPoint[] inputPoints) {
         pointCount = (uint) inputPoints.Length;
-        transformIndexOffset = (uint) transforms.Length;
+        transformIndexOffset = (uint)indexOffset;
         points = (JiggleBoneSimulatedPoint*) UnsafeUtility.Malloc(
             Marshal.SizeOf<JiggleBoneSimulatedPoint>() * pointCount,
             UnsafeUtility.AlignOf<JiggleBoneSimulatedPoint>(),

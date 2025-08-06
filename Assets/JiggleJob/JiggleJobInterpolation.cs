@@ -28,25 +28,25 @@ public struct JiggleJobInterpolation : IJobFor {
         timeStamp = time - JiggleJobManager.FIXED_DELTA_TIME;
         previousTimeStamp = timeStamp - JiggleJobManager.FIXED_DELTA_TIME;
         currentTime = timeStamp;
-        previousPoses = bus.interpolationPreviousPosesArray;
-        currentPoses = bus.interpolationCurrentPosesArray;
-        outputInterpolatedPoses = bus.interpolationOutputPosesArray;
-        previousSimulatedRootOffset = bus.interpolationPreviousRootOffsetsArray;
-        currentSimulatedRootOffset = bus.interpolationCurrentRootOffsetsArray;
-        previousSimulatedRootPosition = bus.interpolationPreviousRootPositionsArray;
-        currentSimulatedRootPosition = bus.interpolationCurrentRootPositionsArray;
-        realRootPositions = bus.rootOutputPositionsArray;
+        previousPoses = bus.interpolationPreviousPoses;
+        currentPoses = bus.interpolationCurrentPoses;
+        outputInterpolatedPoses = bus.interpolationOutputPoses;
+        previousSimulatedRootOffset = bus.interpolationPreviousRootOffsets;
+        currentSimulatedRootOffset = bus.interpolationCurrentRootOffsets;
+        previousSimulatedRootPosition = bus.interpolationPreviousRootPositions;
+        currentSimulatedRootPosition = bus.interpolationCurrentRootPositions;
+        realRootPositions = bus.rootOutputPositions;
     }
 
     public void UpdateArrays(JiggleMemoryBus bus) {
-        previousPoses = bus.interpolationPreviousPosesArray;
-        currentPoses = bus.interpolationCurrentPosesArray;
-        outputInterpolatedPoses = bus.interpolationOutputPosesArray;
-        previousSimulatedRootOffset = bus.interpolationPreviousRootOffsetsArray;
-        currentSimulatedRootOffset = bus.interpolationCurrentRootOffsetsArray;
-        previousSimulatedRootPosition = bus.interpolationPreviousRootPositionsArray;
-        currentSimulatedRootPosition = bus.interpolationCurrentRootPositionsArray;
-        realRootPositions = bus.rootOutputPositionsArray;
+        previousPoses = bus.interpolationPreviousPoses;
+        currentPoses = bus.interpolationCurrentPoses;
+        outputInterpolatedPoses = bus.interpolationOutputPoses;
+        previousSimulatedRootOffset = bus.interpolationPreviousRootOffsets;
+        currentSimulatedRootOffset = bus.interpolationCurrentRootOffsets;
+        previousSimulatedRootPosition = bus.interpolationPreviousRootPositions;
+        currentSimulatedRootPosition = bus.interpolationCurrentRootPositions;
+        realRootPositions = bus.rootOutputPositions;
     }
     
     public void Execute(int index) {

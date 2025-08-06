@@ -9,11 +9,11 @@ public struct JiggleJobBulkReadRoots : IJobParallelForTransform {
     public NativeArray<float3> rootOutputPositions;
 
     public JiggleJobBulkReadRoots(JiggleMemoryBus bus) {
-        rootOutputPositions = bus.rootOutputPositionsArray;
+        rootOutputPositions = bus.rootOutputPositions;
     }
     
     public void UpdateArrays(JiggleMemoryBus bus) {
-        rootOutputPositions = bus.rootOutputPositionsArray;
+        rootOutputPositions = bus.rootOutputPositions;
     }
 
     public void Execute(int index, TransformAccess transform) {

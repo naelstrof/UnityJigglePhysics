@@ -14,15 +14,15 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
     [ReadOnly] public NativeArray<JiggleTransform> previousLocalTransforms;
     
     public JiggleJobBulkTransformRead(JiggleMemoryBus bus) {
-        simulateInputPoses = bus.simulateInputPosesArray;
-        restPoseTransforms = bus.restPoseTransformsArray;
-        previousLocalTransforms = bus.previousLocalRestPoseTransformsArray;
+        simulateInputPoses = bus.simulateInputPoses;
+        restPoseTransforms = bus.restPoseTransforms;
+        previousLocalTransforms = bus.previousLocalRestPoseTransforms;
     }
     
     public void UpdateArrays(JiggleMemoryBus bus) {
-        simulateInputPoses = bus.simulateInputPosesArray;
-        restPoseTransforms = bus.restPoseTransformsArray;
-        previousLocalTransforms = bus.previousLocalRestPoseTransformsArray;
+        simulateInputPoses = bus.simulateInputPoses;
+        restPoseTransforms = bus.restPoseTransforms;
+        previousLocalTransforms = bus.previousLocalRestPoseTransforms;
     }
 
     public void Execute(int index, TransformAccess transform) {

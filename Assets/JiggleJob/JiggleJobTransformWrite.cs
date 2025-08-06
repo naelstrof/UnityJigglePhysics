@@ -11,13 +11,13 @@ public struct JiggleJobTransformWrite : IJobParallelForTransform {
     public NativeArray<JiggleTransform> previousLocalPoses;
     [ReadOnly] public NativeArray<JiggleTransform> inputInterpolatedPoses;
     public JiggleJobTransformWrite(JiggleMemoryBus bus) {
-        previousLocalPoses = bus.previousLocalRestPoseTransformsArray;
-        inputInterpolatedPoses = bus.interpolationOutputPosesArray;
+        previousLocalPoses = bus.previousLocalRestPoseTransforms;
+        inputInterpolatedPoses = bus.interpolationOutputPoses;
     }
     
     public void UpdateArrays(JiggleMemoryBus bus) {
-        previousLocalPoses = bus.previousLocalRestPoseTransformsArray;
-        inputInterpolatedPoses = bus.interpolationOutputPosesArray;
+        previousLocalPoses = bus.previousLocalRestPoseTransforms;
+        inputInterpolatedPoses = bus.interpolationOutputPoses;
     }
     
     public void Execute(int index, TransformAccess transform) {

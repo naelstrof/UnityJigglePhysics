@@ -5,44 +5,44 @@ using UnityEngine;
 using UnityEngine.Jobs;
 
 public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
-
-    private NativeList<JiggleTreeStruct> jiggleTreeStructs;
-    private NativeList<JiggleTransform> simulateInputPoses;
-    private NativeList<JiggleTransform> restPoseTransforms;
-    private NativeList<JiggleTransform> previousLocalRestPoseTransforms;
-    private NativeList<float3> rootOutputPositions;
-    private NativeList<JiggleTransform> simulationOutputPoses;
-    private NativeList<JiggleTransform> interpolationCurrentPoses;
-    private NativeList<JiggleTransform> interpolationPreviousPoses;
-    private NativeList<JiggleTransform> interpolationOutputPoses;
-    private NativeList<float3> simulationOutputRootPositions;
-    private NativeList<float3> interpolationCurrentRootPositions;
-    private NativeList<float3> interpolationPreviousRootPositions;
-    private NativeList<float3> simulationOutputRootOffsets;
-    private NativeList<float3> interpolationCurrentRootOffsets;
-    private NativeList<float3> interpolationPreviousRootOffsets;
-    private NativeList<float3> colliderPositions;
+    private List<JiggleTreeStruct> jiggleTreeStructsList;
+    private List<JiggleTransform> simulateInputPosesList;
+    private List<JiggleTransform> restPoseTransformsList;
+    private List<JiggleTransform> previousLocalRestPoseTransformsList;
+    private List<float3> rootOutputPositionsList;
+    private List<JiggleTransform> simulationOutputPosesList;
+    private List<JiggleTransform> interpolationCurrentPosesList;
+    private List<JiggleTransform> interpolationPreviousPosesList;
+    private List<JiggleTransform> interpolationOutputPosesList;
+    private List<float3> simulationOutputRootPositionsList;
+    private List<float3> interpolationCurrentRootPositionsList;
+    private List<float3> interpolationPreviousRootPositionsList;
+    private List<float3> simulationOutputRootOffsetsList;
+    private List<float3> interpolationCurrentRootOffsetsList;
+    private List<float3> interpolationPreviousRootOffsetsList;
+    private List<float3> colliderPositionsList;
     
-    public NativeArray<JiggleTreeStruct> jiggleTreeStructsArray;
-    public NativeArray<JiggleTransform> simulateInputPosesArray;
-    public NativeArray<JiggleTransform> restPoseTransformsArray;
-    public NativeArray<JiggleTransform> previousLocalRestPoseTransformsArray;
-    public NativeArray<float3> rootOutputPositionsArray;
-    public NativeArray<JiggleTransform> simulationOutputPosesArray;
-    public NativeArray<JiggleTransform> interpolationCurrentPosesArray;
-    public NativeArray<JiggleTransform> interpolationPreviousPosesArray;
-    public NativeArray<JiggleTransform> interpolationOutputPosesArray;
-    public NativeArray<float3> simulationOutputRootPositionsArray;
-    public NativeArray<float3> interpolationCurrentRootPositionsArray;
-    public NativeArray<float3> interpolationPreviousRootPositionsArray;
-    public NativeArray<float3> simulationOutputRootOffsetsArray;
-    public NativeArray<float3> interpolationCurrentRootOffsetsArray;
-    public NativeArray<float3> interpolationPreviousRootOffsetsArray;
-    public NativeArray<float3> colliderPositionsArray;
+    public NativeArray<JiggleTreeStruct> jiggleTreeStructs;
+    public NativeArray<JiggleTransform> simulateInputPoses;
+    public NativeArray<JiggleTransform> restPoseTransforms;
+    public NativeArray<JiggleTransform> previousLocalRestPoseTransforms;
+    public NativeArray<float3> rootOutputPositions;
+    public NativeArray<JiggleTransform> simulationOutputPoses;
+    public NativeArray<JiggleTransform> interpolationCurrentPoses;
+    public NativeArray<JiggleTransform> interpolationPreviousPoses;
+    public NativeArray<JiggleTransform> interpolationOutputPoses;
+    public NativeArray<float3> simulationOutputRootPositions;
+    public NativeArray<float3> interpolationCurrentRootPositions;
+    public NativeArray<float3> interpolationPreviousRootPositions;
+    public NativeArray<float3> simulationOutputRootOffsets;
+    public NativeArray<float3> interpolationCurrentRootOffsets;
+    public NativeArray<float3> interpolationPreviousRootOffsets;
+    public NativeArray<float3> colliderPositions;
     
-    public List<Transform> transformAccessList;
-    public List<Transform> transformRootAccessList;
-    public List<Transform> colliderTransformAccessList;
+    private List<Transform> transformAccessList;
+    private List<Transform> transformRootAccessList;
+    private List<Transform> colliderTransformAccessList;
+    
     public TransformAccessArray transformAccessArray;
     public TransformAccessArray transformRootAccessArray;
     public TransformAccessArray colliderTransformAccessArray;
@@ -65,87 +65,158 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         interpolationPreviousRootPositions = interpolationCurrentRootPositions;
         interpolationCurrentRootPositions = simulationOutputRootPositions;
         simulationOutputRootPositions = tempSimulatedRootPositiona;
-        
-        var tempPoses = interpolationPreviousPosesArray;
-        interpolationPreviousPosesArray = interpolationCurrentPosesArray;
-        interpolationCurrentPosesArray = simulationOutputPosesArray;
-        simulationOutputPosesArray = tempPoses;
-
-        var tempSimulatedRootOffset = interpolationPreviousRootOffsetsArray;
-        interpolationPreviousRootOffsetsArray = interpolationCurrentRootOffsetsArray;
-        interpolationCurrentRootOffsetsArray = simulationOutputRootOffsetsArray;
-        simulationOutputRootOffsetsArray = tempSimulatedRootOffset;
-
-        var tempSimulatedRootPosition = interpolationPreviousRootPositionsArray;
-        interpolationPreviousRootPositionsArray = interpolationCurrentRootPositionsArray;
-        interpolationCurrentRootPositionsArray = simulationOutputRootPositionsArray;
-        simulationOutputRootPositionsArray = tempSimulatedRootPosition;
     }
     public JiggleMemoryBus() {
-        jiggleTreeStructs = new NativeList<JiggleTreeStruct>(Allocator.Persistent);
-        simulateInputPoses = new NativeList<JiggleTransform>(Allocator.Persistent);
-        restPoseTransforms = new NativeList<JiggleTransform>(Allocator.Persistent);
-        previousLocalRestPoseTransforms = new NativeList<JiggleTransform>(Allocator.Persistent);
-        rootOutputPositions = new NativeList<float3>(Allocator.Persistent);
-        simulationOutputPoses = new NativeList<JiggleTransform>(Allocator.Persistent);
-        interpolationCurrentPoses = new NativeList<JiggleTransform>(Allocator.Persistent);
-        interpolationPreviousPoses = new NativeList<JiggleTransform>(Allocator.Persistent);
-        interpolationOutputPoses = new NativeList<JiggleTransform>(Allocator.Persistent);
-        simulationOutputRootPositions = new NativeList<float3>(Allocator.Persistent);
-        interpolationCurrentRootPositions = new NativeList<float3>(Allocator.Persistent);
-        interpolationPreviousRootPositions = new NativeList<float3>(Allocator.Persistent);
-        simulationOutputRootOffsets = new NativeList<float3>(Allocator.Persistent);
-        interpolationCurrentRootOffsets = new NativeList<float3>(Allocator.Persistent);
-        interpolationPreviousRootOffsets = new NativeList<float3>(Allocator.Persistent);
+        jiggleTreeStructsList = new();
+        simulateInputPosesList = new();
+        restPoseTransformsList = new();
+        previousLocalRestPoseTransformsList = new();
+        rootOutputPositionsList = new();
+        simulationOutputPosesList = new();
+        interpolationCurrentPosesList = new();
+        interpolationPreviousPosesList = new();
+        interpolationOutputPosesList = new();
+        simulationOutputRootPositionsList = new();
+        interpolationCurrentRootPositionsList = new();
+        interpolationPreviousRootPositionsList = new();
+        simulationOutputRootOffsetsList = new();
+        interpolationCurrentRootOffsetsList = new();
+        interpolationPreviousRootOffsetsList = new();
+        interpolationOutputPoses.Dispose();
+        
+        WriteOut();
+        
         transformAccessList = new List<Transform>();
         transformRootAccessList = new List<Transform>();
         colliderTransformAccessArray = new TransformAccessArray(new Transform[] {});
-        colliderPositions = new NativeList<float3>(Allocator.Persistent);
+        colliderPositions = new NativeArray<float3>(new float3[]{}, Allocator.Persistent);
         treeCount = 0;
         transformCount = 0;
     }
 
+    private void ReadIn() {
+        if (!jiggleTreeStructs.IsCreated) {
+            return;
+        }
+        
+        jiggleTreeStructsList.Clear();
+        jiggleTreeStructsList.AddRange(jiggleTreeStructs.ToArray());
+
+        simulateInputPosesList.Clear();
+        simulateInputPosesList.AddRange(simulateInputPoses.ToArray());
+        
+        restPoseTransformsList.Clear();
+        restPoseTransformsList.AddRange(restPoseTransforms.ToArray());
+        
+        previousLocalRestPoseTransformsList.Clear();
+        previousLocalRestPoseTransformsList.AddRange(previousLocalRestPoseTransforms.ToArray());
+        
+        rootOutputPositionsList.Clear();
+        rootOutputPositionsList.AddRange(rootOutputPositions.ToArray());
+        
+        simulationOutputPosesList.Clear();
+        simulationOutputPosesList.AddRange(simulationOutputPoses.ToArray());
+        
+        interpolationCurrentPosesList.Clear();
+        interpolationCurrentPosesList.AddRange(interpolationCurrentPoses.ToArray());
+        
+        interpolationPreviousPosesList.Clear();
+        interpolationPreviousPosesList.AddRange(interpolationPreviousPoses.ToArray());
+        
+        interpolationOutputPosesList.Clear();
+        interpolationOutputPosesList.AddRange(interpolationOutputPoses.ToArray());
+        
+        interpolationCurrentRootPositionsList.Clear();
+        interpolationCurrentRootPositionsList.AddRange(interpolationCurrentRootPositions.ToArray());
+        
+        interpolationPreviousRootPositionsList.Clear();
+        interpolationPreviousRootPositionsList.AddRange(interpolationPreviousRootPositions.ToArray());
+        
+        simulationOutputRootOffsetsList.Clear();
+        simulationOutputRootOffsetsList.AddRange(simulationOutputRootOffsets.ToArray());
+        
+        interpolationCurrentRootOffsetsList.Clear();
+        interpolationCurrentRootOffsetsList.AddRange(interpolationCurrentRootOffsets.ToArray());
+        
+        interpolationPreviousRootOffsetsList.Clear();
+        interpolationPreviousRootOffsetsList.AddRange(interpolationPreviousRootOffsets.ToArray());
+    }
+
+    private void WriteOut() {
+        if (jiggleTreeStructs.IsCreated) {
+            jiggleTreeStructs.Dispose();
+            simulateInputPoses.Dispose();
+            restPoseTransforms.Dispose();
+            previousLocalRestPoseTransforms.Dispose();
+            rootOutputPositions.Dispose();
+            simulationOutputPoses.Dispose();
+            interpolationCurrentPoses.Dispose();
+            interpolationPreviousPoses.Dispose();
+            interpolationOutputPoses.Dispose();
+            interpolationCurrentRootPositions.Dispose();
+            interpolationPreviousRootPositions.Dispose();
+            simulationOutputRootOffsets.Dispose();
+            interpolationCurrentRootOffsets.Dispose();
+            interpolationPreviousRootOffsets.Dispose();
+        }
+        jiggleTreeStructs = new NativeArray<JiggleTreeStruct>(jiggleTreeStructsList.ToArray(), Allocator.Persistent);
+        simulateInputPoses = new NativeArray<JiggleTransform>(simulateInputPosesList.ToArray(), Allocator.Persistent);
+        restPoseTransforms = new NativeArray<JiggleTransform>(restPoseTransformsList.ToArray(), Allocator.Persistent);
+        previousLocalRestPoseTransforms = new NativeArray<JiggleTransform>(previousLocalRestPoseTransformsList.ToArray(), Allocator.Persistent);
+        rootOutputPositions = new NativeArray<float3>(rootOutputPositionsList.ToArray(), Allocator.Persistent);
+        simulationOutputPoses = new NativeArray<JiggleTransform>(simulationOutputPosesList.ToArray(), Allocator.Persistent);
+        interpolationCurrentPoses = new NativeArray<JiggleTransform>(interpolationCurrentPosesList.ToArray(), Allocator.Persistent);
+        interpolationPreviousPoses = new NativeArray<JiggleTransform>(interpolationPreviousPosesList.ToArray(), Allocator.Persistent);
+        interpolationOutputPoses = new NativeArray<JiggleTransform>(interpolationOutputPosesList.ToArray(), Allocator.Persistent);
+        simulationOutputRootPositions = new NativeArray<float3>(simulationOutputRootPositionsList.ToArray(), Allocator.Persistent);
+        interpolationCurrentRootPositions = new NativeArray<float3>(interpolationCurrentRootPositionsList.ToArray(), Allocator.Persistent);
+        interpolationPreviousRootPositions = new NativeArray<float3>(interpolationPreviousRootPositionsList.ToArray(), Allocator.Persistent);
+        simulationOutputRootOffsets = new NativeArray<float3>(simulationOutputRootOffsetsList.ToArray(), Allocator.Persistent);
+        interpolationCurrentRootOffsets = new NativeArray<float3>(interpolationCurrentRootOffsetsList.ToArray(), Allocator.Persistent);
+        interpolationPreviousRootOffsets = new NativeArray<float3>(interpolationPreviousRootOffsetsList.ToArray(), Allocator.Persistent);
+    }
+
     public void Add(JiggleTree jiggleTree) {
+        ReadIn();
         var jiggleTreeStruct = jiggleTree.GetStruct();
         jiggleTreeStruct.transformIndexOffset = (uint)transformCount;
-        jiggleTreeStructs.Add(jiggleTreeStruct);
-        var tempJiggleTransforms = new NativeArray<JiggleTransform>((int) jiggleTreeStruct.pointCount, Allocator.Temp);
-        var tempfloat3s = new NativeArray<float3>((int) jiggleTreeStruct.pointCount, Allocator.Temp);
-        simulateInputPoses.AddRange(tempJiggleTransforms);
-        restPoseTransforms.AddRange(tempJiggleTransforms);
-        previousLocalRestPoseTransforms.AddRange(tempJiggleTransforms);
-        rootOutputPositions.AddRange(tempfloat3s);
-        simulationOutputPoses.AddRange(tempJiggleTransforms);
-        interpolationCurrentPoses.AddRange(tempJiggleTransforms);
-        interpolationPreviousPoses.AddRange(tempJiggleTransforms);
-        interpolationOutputPoses.AddRange(tempJiggleTransforms);
-        simulationOutputRootPositions.AddRange(tempfloat3s);
-        interpolationCurrentRootPositions.AddRange(tempfloat3s);
-        interpolationPreviousRootPositions.AddRange(tempfloat3s);
-        simulationOutputRootOffsets.AddRange(tempfloat3s);
-        interpolationCurrentRootOffsets.AddRange(tempfloat3s);
-        interpolationPreviousRootOffsets.AddRange(tempfloat3s);
+        jiggleTreeStructsList.Add(jiggleTreeStruct);
+        var tempJiggleTransforms = new JiggleTransform[jiggleTreeStruct.pointCount];
+        var tempfloat3s = new float3[jiggleTreeStruct.pointCount];
+        simulateInputPosesList.AddRange(tempJiggleTransforms);
+        restPoseTransformsList.AddRange(tempJiggleTransforms);
+        previousLocalRestPoseTransformsList.AddRange(tempJiggleTransforms);
+        rootOutputPositionsList.AddRange(tempfloat3s);
+        simulationOutputPosesList.AddRange(tempJiggleTransforms);
+        interpolationCurrentPosesList.AddRange(tempJiggleTransforms);
+        interpolationPreviousPosesList.AddRange(tempJiggleTransforms);
+        interpolationOutputPosesList.AddRange(tempJiggleTransforms);
+        simulationOutputRootPositionsList.AddRange(tempfloat3s);
+        interpolationCurrentRootPositionsList.AddRange(tempfloat3s);
+        interpolationPreviousRootPositionsList.AddRange(tempfloat3s);
+        simulationOutputRootOffsetsList.AddRange(tempfloat3s);
+        interpolationCurrentRootOffsetsList.AddRange(tempfloat3s);
+        interpolationPreviousRootOffsetsList.AddRange(tempfloat3s);
         for (var index = 0; index < jiggleTree.points.Length; index++) {
             transformAccessList.Add(jiggleTree.bones[index]);
             transformRootAccessList.Add(jiggleTree.bones[0]);
         }
-        tempJiggleTransforms.Dispose();
-        tempfloat3s.Dispose();
         RegnerateAccessArrays();
-        RegenerateArrays();
+        WriteOut();
         treeCount++;
         transformCount += (int)jiggleTreeStruct.pointCount;
         jiggleTree.ClearDirty();
     }
 
     public void Remove(JiggleTree jiggleTree) {
+        ReadIn();
         var jiggleTreeStruct = jiggleTree.GetStruct();
         var removed = false;
         var removedPointCount = 0u;
         for (var index = 0; index < jiggleTreeStructs.Length; index++) {
             if (!removed) {
                 if (jiggleTreeStructs[index] == jiggleTreeStruct) {
-                    jiggleTreeStructs.RemoveAt(index);
+                    jiggleTreeStructsList.RemoveAt(index);
                     index--;
                     removedPointCount = jiggleTreeStruct.pointCount;
                     removed = true;
@@ -159,7 +230,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             jiggleTreeStructs[index] = modifiedJiggleTreeStruct;
         }
         RegnerateAccessArrays();
-        RegenerateArrays();
+        WriteOut();
         treeCount--;
     }
 
@@ -174,85 +245,27 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         transformRootAccessArray = new TransformAccessArray(transformRootAccessList.ToArray());
     }
 
-    void RegenerateArrays() {
-        if (jiggleTreeStructsArray.IsCreated) {
-            jiggleTreeStructsArray.Dispose();
-            simulateInputPosesArray.Dispose();
-            restPoseTransformsArray.Dispose();
-            previousLocalRestPoseTransformsArray.Dispose();
-            rootOutputPositionsArray.Dispose();
-            simulationOutputPosesArray.Dispose();
-            interpolationCurrentPosesArray.Dispose();
-            interpolationPreviousPosesArray.Dispose();
-            interpolationOutputPosesArray.Dispose();
-            simulationOutputRootPositionsArray.Dispose();
-            interpolationCurrentRootPositionsArray.Dispose();
-            interpolationPreviousRootPositionsArray.Dispose();
-            simulationOutputRootOffsetsArray.Dispose();
-            interpolationCurrentRootOffsetsArray.Dispose();
-            interpolationPreviousRootOffsetsArray.Dispose();
-            colliderPositionsArray.Dispose();
-        }
-        jiggleTreeStructsArray = jiggleTreeStructs.AsArray();
-        simulateInputPosesArray = simulateInputPoses.AsArray();
-        restPoseTransformsArray = restPoseTransforms.AsArray();
-        previousLocalRestPoseTransformsArray = previousLocalRestPoseTransforms.AsArray();
-        rootOutputPositionsArray = rootOutputPositions.AsArray();
-        simulationOutputPosesArray = simulationOutputPoses.AsArray();
-        interpolationCurrentPosesArray = interpolationCurrentPoses.AsArray();
-        interpolationPreviousPosesArray = interpolationPreviousPoses.AsArray();
-        interpolationOutputPosesArray = interpolationOutputPoses.AsArray();
-        simulationOutputRootPositionsArray = simulationOutputRootPositions.AsArray();
-        interpolationCurrentRootPositionsArray = interpolationCurrentRootPositions.AsArray();
-        interpolationPreviousRootPositionsArray = interpolationPreviousRootPositions.AsArray();
-        simulationOutputRootOffsetsArray = simulationOutputRootOffsets.AsArray();
-        interpolationCurrentRootOffsetsArray = interpolationCurrentRootOffsets.AsArray();
-        interpolationPreviousRootOffsetsArray = interpolationPreviousRootOffsets.AsArray();
-        colliderPositionsArray = colliderPositions.AsArray();
-    }
-
-    public void RemovePointAndTransformRange(uint start, uint count) {
-        simulateInputPoses.RemoveRange((int)start, (int)count);
-        restPoseTransforms.RemoveRange((int)start, (int)count);
-        previousLocalRestPoseTransforms.RemoveRange((int)start, (int)count);
-        rootOutputPositions.RemoveRange((int)start, (int)count);
-        simulationOutputPoses.RemoveRange((int)start, (int)count);
-        interpolationCurrentPoses.RemoveRange((int)start, (int)count);
-        interpolationPreviousPoses.RemoveRange((int)start, (int)count);
-        interpolationOutputPoses.RemoveRange((int)start, (int)count);
-        simulationOutputRootPositions.RemoveRange((int)start, (int)count);
-        interpolationCurrentRootPositions.RemoveRange((int)start, (int)count);
-        interpolationPreviousRootPositions.RemoveRange((int)start, (int)count);
-        simulationOutputRootOffsets.RemoveRange((int)start, (int)count);
-        interpolationCurrentRootOffsets.RemoveRange((int)start, (int)count);
-        interpolationPreviousRootOffsets.RemoveRange((int)start, (int)count);
-        for (var countdown = 0; countdown < count; countdown++) {
-            transformAccessList.RemoveAt((int)start);
-            transformRootAccessList.RemoveAt((int)start);
-        }
+    private void RemovePointAndTransformRange(uint start, uint count) {
+        simulateInputPosesList.RemoveRange((int)start, (int)count);
+        restPoseTransformsList.RemoveRange((int)start, (int)count);
+        previousLocalRestPoseTransformsList.RemoveRange((int)start, (int)count);
+        rootOutputPositionsList.RemoveRange((int)start, (int)count);
+        simulationOutputPosesList.RemoveRange((int)start, (int)count);
+        interpolationCurrentPosesList.RemoveRange((int)start, (int)count);
+        interpolationPreviousPosesList.RemoveRange((int)start, (int)count);
+        interpolationOutputPosesList.RemoveRange((int)start, (int)count);
+        simulationOutputRootPositionsList.RemoveRange((int)start, (int)count);
+        interpolationCurrentRootPositionsList.RemoveRange((int)start, (int)count);
+        interpolationPreviousRootPositionsList.RemoveRange((int)start, (int)count);
+        simulationOutputRootOffsetsList.RemoveRange((int)start, (int)count);
+        interpolationCurrentRootOffsetsList.RemoveRange((int)start, (int)count);
+        interpolationPreviousRootOffsetsList.RemoveRange((int)start, (int)count);
+        transformAccessList.RemoveRange((int)start, (int)count);
+        transformRootAccessList.RemoveRange((int)start, (int)count);
         transformCount -= (int)count;
     }
 
     public void Dispose() {
-        if (jiggleTreeStructsArray.IsCreated) {
-            jiggleTreeStructsArray.Dispose();
-            simulateInputPosesArray.Dispose();
-            restPoseTransformsArray.Dispose();
-            previousLocalRestPoseTransformsArray.Dispose();
-            rootOutputPositionsArray.Dispose();
-            simulationOutputPosesArray.Dispose();
-            interpolationCurrentPosesArray.Dispose();
-            interpolationPreviousPosesArray.Dispose();
-            interpolationOutputPosesArray.Dispose();
-            simulationOutputRootPositionsArray.Dispose();
-            interpolationCurrentRootPositionsArray.Dispose();
-            interpolationPreviousRootPositionsArray.Dispose();
-            simulationOutputRootOffsetsArray.Dispose();
-            interpolationCurrentRootOffsetsArray.Dispose();
-            interpolationPreviousRootOffsetsArray.Dispose();
-            colliderPositionsArray.Dispose();
-        }
-
         if (jiggleTreeStructs.IsCreated) {
             jiggleTreeStructs.Dispose();
             simulateInputPoses.Dispose();

@@ -127,7 +127,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         interpolationPreviousRootOffsets.AddRange(tempfloat3s);
         for (var index = 0; index < jiggleTree.points.Length; index++) {
             transformAccessList.Add(jiggleTree.bones[index]);
-            transformRootAccessList.Add(jiggleTree.bones[index]);
+            transformRootAccessList.Add(jiggleTree.bones[0]);
         }
         tempJiggleTransforms.Dispose();
         tempfloat3s.Dispose();
@@ -234,6 +234,55 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     }
 
     public void Dispose() {
+        if (jiggleTreeStructsArray.IsCreated) {
+            jiggleTreeStructsArray.Dispose();
+            simulateInputPosesArray.Dispose();
+            restPoseTransformsArray.Dispose();
+            previousLocalRestPoseTransformsArray.Dispose();
+            rootOutputPositionsArray.Dispose();
+            simulationOutputPosesArray.Dispose();
+            interpolationCurrentPosesArray.Dispose();
+            interpolationPreviousPosesArray.Dispose();
+            interpolationOutputPosesArray.Dispose();
+            simulationOutputRootPositionsArray.Dispose();
+            interpolationCurrentRootPositionsArray.Dispose();
+            interpolationPreviousRootPositionsArray.Dispose();
+            simulationOutputRootOffsetsArray.Dispose();
+            interpolationCurrentRootOffsetsArray.Dispose();
+            interpolationPreviousRootOffsetsArray.Dispose();
+            colliderPositionsArray.Dispose();
+        }
+
+        if (jiggleTreeStructs.IsCreated) {
+            jiggleTreeStructs.Dispose();
+            simulateInputPoses.Dispose();
+            restPoseTransforms.Dispose();
+            previousLocalRestPoseTransforms.Dispose();
+            rootOutputPositions.Dispose();
+            simulationOutputPoses.Dispose();
+            interpolationCurrentPoses.Dispose();
+            interpolationPreviousPoses.Dispose();
+            interpolationOutputPoses.Dispose();
+            simulationOutputRootPositions.Dispose();
+            interpolationCurrentRootPositions.Dispose();
+            interpolationPreviousRootPositions.Dispose();
+            simulationOutputRootOffsets.Dispose();
+            interpolationCurrentRootOffsets.Dispose();
+            interpolationPreviousRootOffsets.Dispose();
+            colliderPositions.Dispose();
+        }
+
+        if (transformAccessArray.isCreated) {
+            transformAccessArray.Dispose();
+        }
+
+        if (transformRootAccessArray.isCreated) {
+            transformRootAccessArray.Dispose();
+        }
+        
+        if (colliderTransformAccessArray.isCreated) {
+            colliderTransformAccessArray.Dispose();
+        }
     }
     
 }

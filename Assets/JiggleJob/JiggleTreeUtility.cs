@@ -73,7 +73,6 @@ public static class JiggleTreeUtility {
         if (!_globalDirty) {
             return jobs;
         }
-        jobs.Dispose();
         jobs.Set(GetJiggleTrees(), GetColliderTransforms());
         _globalDirty = false;
         return jobs;

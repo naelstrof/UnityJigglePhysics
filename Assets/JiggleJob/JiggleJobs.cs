@@ -57,6 +57,10 @@ public class JiggleJobs {
         if (_memoryBus.transformCount == 0) {
             return default;
         }
+        jobBulkReadRoots.UpdateArrays(_memoryBus);
+        jobInterpolation.UpdateArrays(_memoryBus);
+        jobTransformWrite.UpdateArrays(_memoryBus);
+        
         handleRootRead = jobBulkReadRoots.ScheduleReadOnly(_memoryBus.transformRootAccessArray, 128, dep);
         hasHandleRootRead = true;
         
@@ -88,23 +92,15 @@ public class JiggleJobs {
         if (hasHandleSimulate) {
             handleSimulate.Complete();
         }
+        
         jobInterpolation.previousTimeStamp = jobInterpolation.timeStamp;
         jobInterpolation.timeStamp = jobSimulate.timeStamp;
-
-        var tempPoses = jobInterpolation.previousPoses;
-        jobInterpolation.previousPoses = jobInterpolation.currentPoses;
-        jobInterpolation.currentPoses = jobSimulate.outputPoses;
-        jobSimulate.outputPoses = tempPoses;
-            
-        var tempSimulatedRootOffset = jobInterpolation.previousSimulatedRootOffset;
-        jobInterpolation.previousSimulatedRootOffset = jobInterpolation.currentSimulatedRootOffset;
-        jobInterpolation.currentSimulatedRootOffset = jobSimulate.outputSimulatedRootOffset;
-        jobSimulate.outputSimulatedRootOffset = tempSimulatedRootOffset;
-
-        var tempSimulatedRootPosition = jobInterpolation.previousSimulatedRootPosition;
-        jobInterpolation.previousSimulatedRootPosition = jobInterpolation.currentSimulatedRootPosition;
-        jobInterpolation.currentSimulatedRootPosition = jobSimulate.outputSimulatedRootPosition;
-        jobSimulate.outputSimulatedRootPosition = tempSimulatedRootPosition;
+        
+        _memoryBus.RotateBuffers();
+        
+        jobInterpolation.UpdateArrays(_memoryBus);
+        jobSimulate.UpdateArrays(_memoryBus);
+        jobBulkTransformRead.UpdateArrays(_memoryBus);
         
         handleBulkRead = jobBulkTransformRead.ScheduleReadOnly(_memoryBus.transformAccessArray, 128);
         hasHandleBulkRead = true;

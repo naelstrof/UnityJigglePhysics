@@ -6,10 +6,14 @@ using UnityEngine.Jobs;
 
 [BurstCompile]
 public struct JiggleJobBulkReadRoots : IJobParallelForTransform {
-    public NativeList<float3> rootOutputPositions;
+    public NativeArray<float3> rootOutputPositions;
 
     public JiggleJobBulkReadRoots(JiggleMemoryBus bus) {
-        rootOutputPositions = bus.rootOutputPositions;
+        rootOutputPositions = bus.rootOutputPositionsArray;
+    }
+    
+    public void UpdateArrays(JiggleMemoryBus bus) {
+        rootOutputPositions = bus.rootOutputPositionsArray;
     }
 
     public void Execute(int index, TransformAccess transform) {

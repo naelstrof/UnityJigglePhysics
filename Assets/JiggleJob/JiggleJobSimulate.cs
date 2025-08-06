@@ -13,29 +13,39 @@ public struct JiggleJobSimulate : IJobFor {
     public float3 gravity;
     
     [ReadOnly][NativeDisableParallelForRestriction]
-    public NativeList<JiggleTransform> inputPoses;
+    public NativeArray<JiggleTransform> inputPoses;
     [NativeDisableParallelForRestriction]
-    public NativeList<JiggleTransform> outputPoses;
+    public NativeArray<JiggleTransform> outputPoses;
     [NativeDisableParallelForRestriction]
-    public NativeList<float3> outputSimulatedRootOffset;
+    public NativeArray<float3> outputSimulatedRootOffset;
     [NativeDisableParallelForRestriction]
-    public NativeList<float3> outputSimulatedRootPosition;
+    public NativeArray<float3> outputSimulatedRootPosition;
     [NativeDisableParallelForRestriction]
-    public NativeList<float3> testColliders;
+    public NativeArray<float3> testColliders;
     
-    public NativeList<JiggleTreeStruct> jiggleTrees;
+    public NativeArray<JiggleTreeStruct> jiggleTrees;
     
     public JiggleJobSimulate(JiggleMemoryBus bus) {
-        inputPoses = bus.simulateInputPoses;
-        jiggleTrees = bus.jiggleTreeStructs;
-        outputSimulatedRootOffset = bus.simulationOutputRootOffsets;
-        outputSimulatedRootPosition = bus.simulationOutputRootPositions;
-        outputPoses = bus.simulationOutputPoses;
-        testColliders = bus.colliderPositions;
+        inputPoses = bus.simulateInputPosesArray;
+        jiggleTrees = bus.jiggleTreeStructsArray;
+        outputSimulatedRootOffset = bus.simulationOutputRootOffsetsArray;
+        outputSimulatedRootPosition = bus.simulationOutputRootPositionsArray;
+        outputPoses = bus.simulationOutputPosesArray;
+        testColliders = bus.colliderPositionsArray;
         timeStamp = Time.timeAsDouble;
         gravity = Physics.gravity;
     }
-    
+
+    public void UpdateArrays(JiggleMemoryBus bus) {
+        inputPoses = bus.simulateInputPosesArray;
+        jiggleTrees = bus.jiggleTreeStructsArray;
+        outputSimulatedRootOffset = bus.simulationOutputRootOffsetsArray;
+        outputSimulatedRootPosition = bus.simulationOutputRootPositionsArray;
+        outputPoses = bus.simulationOutputPosesArray;
+        testColliders = bus.colliderPositionsArray;
+    }
+
+
     private unsafe void Cache(JiggleTreeStruct tree) {
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points[i];

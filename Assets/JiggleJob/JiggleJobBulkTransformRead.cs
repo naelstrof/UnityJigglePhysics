@@ -7,16 +7,22 @@ using UnityEngine.Jobs;
 
 [BurstCompile]
 public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
-    public NativeList<JiggleTransform> simulateInputPoses;
+    public NativeArray<JiggleTransform> simulateInputPoses;
     
-    public NativeList<JiggleTransform> restPoseTransforms;
+    public NativeArray<JiggleTransform> restPoseTransforms;
     
-    [ReadOnly] public NativeList<JiggleTransform> previousLocalTransforms;
+    [ReadOnly] public NativeArray<JiggleTransform> previousLocalTransforms;
     
     public JiggleJobBulkTransformRead(JiggleMemoryBus bus) {
-        simulateInputPoses = bus.simulateInputPoses;
-        restPoseTransforms = bus.restPoseTransforms;
-        previousLocalTransforms = bus.previousLocalRestPoseTransforms;
+        simulateInputPoses = bus.simulateInputPosesArray;
+        restPoseTransforms = bus.restPoseTransformsArray;
+        previousLocalTransforms = bus.previousLocalRestPoseTransformsArray;
+    }
+    
+    public void UpdateArrays(JiggleMemoryBus bus) {
+        simulateInputPoses = bus.simulateInputPosesArray;
+        restPoseTransforms = bus.restPoseTransformsArray;
+        previousLocalTransforms = bus.previousLocalRestPoseTransformsArray;
     }
 
     public void Execute(int index, TransformAccess transform) {

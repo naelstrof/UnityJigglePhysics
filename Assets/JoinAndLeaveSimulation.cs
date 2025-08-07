@@ -6,12 +6,12 @@ public class JoinAndLeaveSimulation : MonoBehaviour {
     [SerializeField]
     List<GameObject> objects = new List<GameObject>();
     IEnumerator Start() {
-        var waitForSeconds = new WaitForSeconds(1f);
         while (true) {
-            yield return waitForSeconds;
-            int rng = UnityEngine.Random.Range(0, objects.Count);
+            yield return new WaitForSeconds(Random.Range(0f,1f));
+            //yield return null;
+            int rng = Random.Range(0, objects.Count);
             var obj = objects[rng];
-            obj.SetActive(!obj.activeInHierarchy);
+            obj.SetActive(false);
         }
     }
 }

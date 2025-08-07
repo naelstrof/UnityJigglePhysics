@@ -92,11 +92,16 @@ public class JiggleJobs {
         if (hasHandleSimulate) {
             handleSimulate.Complete();
         }
-        
+
         jobInterpolation.previousTimeStamp = jobInterpolation.timeStamp;
         jobInterpolation.timeStamp = jobSimulate.timeStamp;
         
         _memoryBus.RotateBuffers();
+        
+        if (dirty) {
+            WriteOut();
+            dirty = false;
+        }
         
         jobSimulate.UpdateArrays(_memoryBus);
         jobBulkTransformRead.UpdateArrays(_memoryBus);
@@ -115,25 +120,41 @@ public class JiggleJobs {
         hasHandleSimulate = true;
     }
     
+    private JiggleTree[] jiggleTrees;
+    private Transform[] colliderTransforms;
+    private bool dirty;
     public void Set(JiggleTree[] jiggleTrees, Transform[] colliderTransforms) {
-        // Gonna sweep everyone's feet, gotta sync
-        if (hasHandleBulkRead) handleBulkRead.Complete();
-        if (hasHandleRootRead) handleRootRead.Complete();
-        if (hasHandleSimulate) handleSimulate.Complete();
-        if (hasHandleTransformWrite) handleTransformWrite.Complete();
-        if (hasHandleInterpolate) handleInterpolate.Complete();
-        
+        this.jiggleTrees = jiggleTrees;
+        this.colliderTransforms = colliderTransforms;
+        if (hasHandleBulkRead) {
+            dirty = true;
+            return;
+        }
+        WriteOut();
+    }
+
+    private void WriteOut() {
         foreach(var tree in jiggleTrees) {
             if (tree.dirty && tree.valid) _memoryBus.Add(tree);
-            if (!tree.valid) {
-                Debug.Log("GUH???");
-            }
             if (tree.dirty && !tree.valid) _memoryBus.Remove(tree);
         }
+        jobBulkTransformRead.UpdateArrays(_memoryBus);
+        jobBulkReadRoots.UpdateArrays(_memoryBus);
+        jobInterpolation.UpdateArrays(_memoryBus);
+        jobBulkColliderTransformRead.UpdateArrays(_memoryBus);
+        jobTransformWrite.UpdateArrays(_memoryBus);
+        
+        JiggleTreeUtility.CleanupRemovedJiggleTrees();
+    }
 
-        for (var index = 0; index < colliderTransforms.Length; index++) {
-            Debug.DrawLine(Vector3.zero, colliderTransforms[index].position, Color.red, 10f);
-        }
+    public bool shouldFlipback;
+    public void FlipBack() {
+        //if (hasHandleBulkRead) handleBulkRead.Complete();
+        //if (hasHandleRootRead) handleRootRead.Complete();
+        //if (hasHandleSimulate) handleSimulate.Complete();
+        //if (hasHandleInterpolate) handleInterpolate.Complete();
+        //if (hasHandleTransformWrite) handleTransformWrite.Complete();
+        shouldFlipback = true;
     }
 
     public void OnDrawGizmos() {

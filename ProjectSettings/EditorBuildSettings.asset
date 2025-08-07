@@ -8,5 +8,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/JiggleJob/StanfordArmadillo/ArmadilloTest.unity
     guid: b9f2b7f1296fc36b0b34123b75438ce9
+  - enabled: 0
+    path: Assets/JiggleJob/BasisAvatarTesting/BasisTesting.unity
+    guid: 615c9273dd43c714cb019d01378d0c4e
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

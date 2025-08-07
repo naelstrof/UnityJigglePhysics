@@ -177,6 +177,11 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         interpolationPreviousRootOffsets = new NativeArray<float3>(interpolationPreviousRootOffsetsList.ToArray(), Allocator.Persistent);
     }
 
+    public void Flipback() {
+        ReadIn();
+        WriteOut();
+    }
+    
     public void Add(JiggleTree jiggleTree) {
         ReadIn();
         

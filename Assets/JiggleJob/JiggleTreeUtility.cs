@@ -8,7 +8,7 @@ public static class JiggleTreeUtility {
     private static List<JiggleTreeSegment> jiggleTreeSegments;
     private static Dictionary<Transform, JiggleTreeSegment> jiggleRootLookup;
     private static bool _globalDirty = false;
-    private static JiggleTree[] jiggleTrees;
+    private static List<JiggleTree> jiggleTrees;
     private static Transform[] colliderTransforms;
     private static readonly List<Transform> tempTransforms = new List<Transform>();
     private static readonly List<JiggleBoneSimulatedPoint> tempPoints = new List<JiggleBoneSimulatedPoint>();
@@ -19,7 +19,7 @@ public static class JiggleTreeUtility {
     private static void Initialize() {
         jiggleTreeSegments = new List<JiggleTreeSegment>();
         jiggleRootLookup = new Dictionary<Transform, JiggleTreeSegment>();
-        jiggleTrees = null;
+        jiggleTrees = new List<JiggleTree>();
         colliderTransforms = null;
         _globalDirty = true;
         jobs?.Dispose();
@@ -81,27 +81,31 @@ public static class JiggleTreeUtility {
     public static JiggleTree[] GetJiggleTrees() {
         Profiler.BeginSample("JiggleRoot.GetJiggleTrees");
         // TODO: Cleanup previous trees, or reuse them.
-        var newJiggleTrees = new List<JiggleTree>();
         var rootJiggleTreeSegments = GetRootJiggleTreeSegments();
         foreach (var rootJiggleTreeSegment in rootJiggleTreeSegments) {
-            Profiler.BeginSample("JiggleRoot.FindExistingJiggleTree");
-            // TODO: CHECK FOR DIRTY MEMBER, USE OLD JIGGLE TREE IF NOT DIRTY
-            if (rootJiggleTreeSegment.jiggleTree!=null && !rootJiggleTreeSegment.jiggleTree.dirty) {
-                newJiggleTrees.Add(rootJiggleTreeSegment.jiggleTree);
-                Profiler.EndSample();
+            if (rootJiggleTreeSegment.jiggleTree != null && jiggleTrees.Contains(rootJiggleTreeSegment.jiggleTree)) {
                 continue;
             }
-            Profiler.EndSample();
-            var newJiggleTree = GetJiggleTree(rootJiggleTreeSegment.rig);
-            newJiggleTrees.Add(newJiggleTree);
-            rootJiggleTreeSegment.SetJiggleTree(newJiggleTree);
+            if (rootJiggleTreeSegment.jiggleTree == null) {
+                var newJiggleTree = CreateJiggleTree(rootJiggleTreeSegment.rig);
+                rootJiggleTreeSegment.SetJiggleTree(newJiggleTree);
+            }
+            jiggleTrees.Add(rootJiggleTreeSegment.jiggleTree);
         }
-        jiggleTrees = newJiggleTrees.ToArray();
         Profiler.EndSample();
-        return jiggleTrees;
+        return jiggleTrees.ToArray();
     }
 
-    public static JiggleTree GetJiggleTree(JiggleRig jiggleRig) {
+    public static void CleanupRemovedJiggleTrees() {
+        for (int i=0;i<jiggleTrees.Count;i++) {
+            if (!jiggleTrees[i].dirty && !jiggleTrees[i].valid) {
+                jiggleTrees.RemoveAt(i);
+                i--;
+            }
+        }
+    }
+
+    public static JiggleTree CreateJiggleTree(JiggleRig jiggleRig) {
         tempTransforms.Clear();
         tempPoints.Clear();
         VisitForLength(null, jiggleRig.rootBone, 0f, out float totalLength);
@@ -234,7 +238,7 @@ public static class JiggleTreeUtility {
         if (jiggleTreeSegments.Contains(jiggleTreeSegment)) {
             jiggleTreeSegments.Remove(jiggleTreeSegment);
             jiggleRootLookup.Remove(jiggleTreeSegment.transform);
-            jiggleTreeSegment.SetDirty(true);
+            jiggleTreeSegment.SetDirty();
         }
         //if (jiggleTreeSegment.parent!=null) RemoveJiggleTreeSegment(jiggleTreeSegment.parent);
         //if (jiggleTreeSegments.Count == 0) {

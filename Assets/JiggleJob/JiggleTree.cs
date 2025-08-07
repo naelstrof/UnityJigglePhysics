@@ -11,14 +11,9 @@ public class JiggleTree {
     public bool dirty { get; private set; }
     public bool valid { get; private set; }
 
-    public void SetDirty(bool removed) {
+    public void SetDirty() {
         dirty = true;
-        valid = !removed;
-        if (valid) {
-            Debug.Log("Creating tree...");
-        } else {
-            Debug.Log("Removing tree...");
-        }
+        valid = false;
     }
     public void ClearDirty() => dirty = false;
     

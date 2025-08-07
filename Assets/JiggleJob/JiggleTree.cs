@@ -9,33 +9,21 @@ public class JiggleTree {
     public Transform[] bones;
     public JiggleBoneSimulatedPoint[] points;
     public bool dirty { get; private set; }
-    public bool valid { get; private set; }
-
+    public int rootID { get; private set; }
+    
     public void SetDirty() {
         dirty = true;
-        valid = false;
     }
     public void ClearDirty() => dirty = false;
     
     private bool hasJiggleTreeStruct = false;
-    private JiggleTreeStruct jiggleTreeStruct;
 
     public JiggleTreeStruct GetStruct() {
-        if (hasJiggleTreeStruct) {
-            return jiggleTreeStruct;
-        }
-        jiggleTreeStruct = new JiggleTreeStruct(0, points);
-        return jiggleTreeStruct;
-    }
-
-    public void SetStruct(JiggleTreeStruct jiggleTreeStruct) {
-        this.jiggleTreeStruct = jiggleTreeStruct;
-        hasJiggleTreeStruct = true;
+        return new JiggleTreeStruct(rootID,0, points);
     }
     
     public JiggleTree(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
         dirty = true;
-        valid = true;
         var boneCount = bones.Length;
         var pointCount = points.Length;
         this.bones = new Transform[boneCount];
@@ -46,6 +34,7 @@ public class JiggleTree {
         for(int i=0; i < pointCount; i++) {
             this.points[i] = points[i];
         }
+        rootID = bones[0].GetInstanceID();
     }
     private static void DebugDrawSphere(Vector3 origin, float radius, Color color, float duration, int segments = 8) {
         float angleStep = 360f / segments;

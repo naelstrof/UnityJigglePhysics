@@ -7,11 +7,11 @@ public class JoinAndLeaveSimulation : MonoBehaviour {
     List<GameObject> objects = new List<GameObject>();
     IEnumerator Start() {
         while (true) {
-            yield return new WaitForSeconds(Random.Range(0f,1f));
-            //yield return null;
+            //yield return new WaitForSeconds(Random.Range(0f,1f));
+            yield return null;
             int rng = Random.Range(0, objects.Count);
             var obj = objects[rng];
-            obj.SetActive(false);
+            obj.SetActive(!obj.activeInHierarchy);
         }
     }
 }

@@ -7,7 +7,7 @@ using UnityEngine.Profiling;
 public static class JiggleTreeUtility {
     private static List<JiggleTreeSegment> jiggleTreeSegments;
     private static Dictionary<Transform, JiggleTreeSegment> jiggleRootLookup;
-    private static bool _globalDirty = false;
+    private static bool _globalDirty = true;
     private static List<JiggleTree> jiggleTrees;
     private static Transform[] colliderTransforms;
     private static readonly List<Transform> tempTransforms = new List<Transform>();
@@ -73,12 +73,12 @@ public static class JiggleTreeUtility {
         if (!_globalDirty) {
             return jobs;
         }
-        jobs.Set(GetJiggleTrees(), GetColliderTransforms());
+        GetJiggleTrees();
         _globalDirty = false;
         return jobs;
     }
 
-    public static JiggleTree[] GetJiggleTrees() {
+    public static void GetJiggleTrees() {
         Profiler.BeginSample("JiggleRoot.GetJiggleTrees");
         // TODO: Cleanup previous trees, or reuse them.
         var rootJiggleTreeSegments = GetRootJiggleTreeSegments();
@@ -89,20 +89,11 @@ public static class JiggleTreeUtility {
             if (rootJiggleTreeSegment.jiggleTree == null) {
                 var newJiggleTree = CreateJiggleTree(rootJiggleTreeSegment.rig);
                 rootJiggleTreeSegment.SetJiggleTree(newJiggleTree);
+                jiggleTrees.Add(rootJiggleTreeSegment.jiggleTree);
+                GetJiggleJobs().Add(rootJiggleTreeSegment.jiggleTree);
             }
-            jiggleTrees.Add(rootJiggleTreeSegment.jiggleTree);
         }
         Profiler.EndSample();
-        return jiggleTrees.ToArray();
-    }
-
-    public static void CleanupRemovedJiggleTrees() {
-        for (int i=0;i<jiggleTrees.Count;i++) {
-            if (!jiggleTrees[i].dirty && !jiggleTrees[i].valid) {
-                jiggleTrees.RemoveAt(i);
-                i--;
-            }
-        }
     }
 
     public static JiggleTree CreateJiggleTree(JiggleRig jiggleRig) {
@@ -239,6 +230,10 @@ public static class JiggleTreeUtility {
             jiggleTreeSegments.Remove(jiggleTreeSegment);
             jiggleRootLookup.Remove(jiggleTreeSegment.transform);
             jiggleTreeSegment.SetDirty();
+            if (jiggleTreeSegment.jiggleTree != null) {
+                GetJiggleJobs().Remove(jiggleTreeSegment.jiggleTree);
+                jiggleTreeSegment.SetJiggleTree(null);
+            }
         }
         //if (jiggleTreeSegment.parent!=null) RemoveJiggleTreeSegment(jiggleTreeSegment.parent);
         //if (jiggleTreeSegments.Count == 0) {

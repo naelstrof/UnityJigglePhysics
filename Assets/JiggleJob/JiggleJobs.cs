@@ -85,6 +85,7 @@ public class JiggleJobs {
     
     public void Simulate(double currentTime) {
         if (_memoryBus.transformCount == 0) {
+            _memoryBus.Commit();
             return;
         }
         // TODO: Use an external monobehavior to update gravity?
@@ -98,10 +99,7 @@ public class JiggleJobs {
         
         _memoryBus.RotateBuffers();
         
-        if (dirty) {
-            WriteOut();
-            dirty = false;
-        }
+        _memoryBus.Commit();
         
         jobSimulate.UpdateArrays(_memoryBus);
         jobBulkTransformRead.UpdateArrays(_memoryBus);
@@ -120,41 +118,12 @@ public class JiggleJobs {
         hasHandleSimulate = true;
     }
     
-    private JiggleTree[] jiggleTrees;
-    private Transform[] colliderTransforms;
-    private bool dirty;
-    public void Set(JiggleTree[] jiggleTrees, Transform[] colliderTransforms) {
-        this.jiggleTrees = jiggleTrees;
-        this.colliderTransforms = colliderTransforms;
-        if (hasHandleBulkRead) {
-            dirty = true;
-            return;
-        }
-        WriteOut();
+    public void Add(JiggleTree tree) {
+        _memoryBus.Add(tree);
     }
-
-    private void WriteOut() {
-        foreach(var tree in jiggleTrees) {
-            if (tree.dirty && tree.valid) _memoryBus.Add(tree);
-            if (tree.dirty && !tree.valid) _memoryBus.Remove(tree);
-        }
-        jobBulkTransformRead.UpdateArrays(_memoryBus);
-        jobBulkReadRoots.UpdateArrays(_memoryBus);
-        jobInterpolation.UpdateArrays(_memoryBus);
-        jobBulkColliderTransformRead.UpdateArrays(_memoryBus);
-        jobTransformWrite.UpdateArrays(_memoryBus);
-        
-        JiggleTreeUtility.CleanupRemovedJiggleTrees();
-    }
-
-    public bool shouldFlipback;
-    public void FlipBack() {
-        //if (hasHandleBulkRead) handleBulkRead.Complete();
-        //if (hasHandleRootRead) handleRootRead.Complete();
-        //if (hasHandleSimulate) handleSimulate.Complete();
-        //if (hasHandleInterpolate) handleInterpolate.Complete();
-        //if (hasHandleTransformWrite) handleTransformWrite.Complete();
-        shouldFlipback = true;
+    
+    public void Remove(JiggleTree tree) {
+        _memoryBus.Remove(tree.rootID);
     }
 
     public void OnDrawGizmos() {

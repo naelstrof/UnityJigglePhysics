@@ -39,10 +39,6 @@ public static class JiggleJobManager {
         jobs?.CompletePoses();
     }
 
-    public static void Flipback() {
-        jobs?.FlipBack();
-    }
-
     public static void OnDrawGizmos() {
         if (!Application.isPlaying) {
             return;

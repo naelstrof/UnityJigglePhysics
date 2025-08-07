@@ -34,11 +34,13 @@ public unsafe struct JiggleTreeStruct {
     public static bool operator == (JiggleTreeStruct left, JiggleTreeStruct right) => left.Equals(right);
     public static bool operator != (JiggleTreeStruct left, JiggleTreeStruct right) => !left.Equals(right);
 
+    public int rootID;
     public uint pointCount;
     public uint transformIndexOffset;
     public JiggleBoneSimulatedPoint* points;
 
-    public JiggleTreeStruct(int indexOffset, JiggleBoneSimulatedPoint[] inputPoints) {
+    public JiggleTreeStruct(int rootID, int indexOffset, JiggleBoneSimulatedPoint[] inputPoints) {
+        this.rootID = rootID;
         pointCount = (uint) inputPoints.Length;
         transformIndexOffset = (uint)indexOffset;
         points = (JiggleBoneSimulatedPoint*) UnsafeUtility.Malloc(

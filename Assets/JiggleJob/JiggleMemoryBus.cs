@@ -275,7 +275,6 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             var currentRemoveID = pendingRemoveTrees[i];
             for (var index = 0; index < treeCount; index++) {
                 if (jiggleTreeStructsArray[index].rootID == currentRemoveID) {
-                    Debug.Log($"Found and removing tree with ID: {currentRemoveID} at index {index}");
                     RemoveTreeAt(index);
                     break;
                 }

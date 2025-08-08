@@ -86,6 +86,12 @@ public class JiggleJobs {
     public void Simulate(double currentTime) {
         if (_memoryBus.transformCount == 0) {
             _memoryBus.Commit();
+            jobSimulate.UpdateArrays(_memoryBus);
+            jobBulkTransformRead.UpdateArrays(_memoryBus);
+            jobBulkReadRoots.UpdateArrays(_memoryBus);
+            jobInterpolation.UpdateArrays(_memoryBus);
+            jobBulkColliderTransformRead.UpdateArrays(_memoryBus);
+            jobTransformWrite.UpdateArrays(_memoryBus);
             return;
         }
         // TODO: Use an external monobehavior to update gravity?

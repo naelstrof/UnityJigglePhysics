@@ -1,9 +1,11 @@
 {
-    "name": "Naelstrof.JigglePhysics",
+    "name": "com.naelstrof.jigglephysics.editor",
     "rootNamespace": "",
     "references": [],
     "includePlatforms": [],
-    "excludePlatforms": [],
+    "excludePlatforms": [
+        "Editor"
+    ],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],

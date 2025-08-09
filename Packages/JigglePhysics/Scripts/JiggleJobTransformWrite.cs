@@ -21,6 +21,9 @@ public struct JiggleJobTransformWrite : IJobParallelForTransform {
     }
     
     public void Execute(int index, TransformAccess transform) {
+        if (!transform.isValid) {
+            return;
+        }
         var pose = inputInterpolatedPoses[index];
         if (pose.isVirtual) {
             return;

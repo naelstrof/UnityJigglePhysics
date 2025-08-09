@@ -27,7 +27,7 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
 
     public void Execute(int index, TransformAccess transform) {
         var jiggleTransform = simulateInputPoses[index];
-        if (jiggleTransform.isVirtual) {
+        if (!transform.isValid || jiggleTransform.isVirtual) {
             return;
         }
         

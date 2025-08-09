@@ -17,6 +17,9 @@ public struct JiggleJobBulkReadRoots : IJobParallelForTransform {
     }
 
     public void Execute(int index, TransformAccess transform) {
+        if (!transform.isValid) {
+            return;
+        }
         rootOutputPositions[index] = transform.position;
     }
 }

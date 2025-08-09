@@ -48,13 +48,22 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     
     public TransformAccessArray transformAccessArray;
     public TransformAccessArray transformRootAccessArray;
+    
+    public TransformAccessArray newTransformAccessArray;
+    public TransformAccessArray newTransformRootAccessArray;
+    
     public TransformAccessArray colliderTransformAccessArray;
     
     private List<JiggleTree> pendingAddTrees;
     private List<int> pendingRemoveTrees;
     
-    public int treeCount { get; private set; }
-    public int transformCount { get; private set; }
+    private List<JiggleTree> pendingProcessingAdds;
+    private List<int> pendingProcessingRemoves;
+    
+    public int transformCount;
+    public int treeCount;
+    
+    private int currentTransformAccessIndex = 0;
 
     public void RotateBuffers() {
         var tempPoses = interpolationPreviousPoses;
@@ -141,21 +150,21 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             interpolationCurrentRootOffsets.Dispose();
             interpolationPreviousRootOffsets.Dispose();
         }
-        jiggleTreeStructs = new NativeArray<JiggleTreeStruct>(newTransformCapacity, Allocator.Persistent);
-        simulateInputPoses = new NativeArray<JiggleTransform>(newTransformCapacity, Allocator.Persistent);
-        restPoseTransforms = new NativeArray<JiggleTransform>(newTransformCapacity, Allocator.Persistent);
-        previousLocalRestPoseTransforms = new NativeArray<JiggleTransform>(newTransformCapacity, Allocator.Persistent);
-        rootOutputPositions = new NativeArray<float3>(newTransformCapacity, Allocator.Persistent);
-        simulationOutputPoses = new NativeArray<JiggleTransform>(newTransformCapacity, Allocator.Persistent);
-        interpolationCurrentPoses = new NativeArray<JiggleTransform>(newTransformCapacity, Allocator.Persistent);
-        interpolationPreviousPoses = new NativeArray<JiggleTransform>(newTransformCapacity, Allocator.Persistent);
-        interpolationOutputPoses = new NativeArray<JiggleTransform>(newTransformCapacity, Allocator.Persistent);
-        simulationOutputRootPositions = new NativeArray<float3>(newTransformCapacity, Allocator.Persistent);
-        interpolationCurrentRootPositions = new NativeArray<float3>(newTransformCapacity, Allocator.Persistent);
-        interpolationPreviousRootPositions = new NativeArray<float3>(newTransformCapacity, Allocator.Persistent);
-        simulationOutputRootOffsets = new NativeArray<float3>(newTransformCapacity, Allocator.Persistent);
-        interpolationCurrentRootOffsets = new NativeArray<float3>(newTransformCapacity, Allocator.Persistent);
-        interpolationPreviousRootOffsets = new NativeArray<float3>(newTransformCapacity, Allocator.Persistent);
+        jiggleTreeStructs = new NativeArray<JiggleTreeStruct>(jiggleTreeStructsArray, Allocator.Persistent);
+        simulateInputPoses = new NativeArray<JiggleTransform>(simulateInputPosesArray, Allocator.Persistent);
+        restPoseTransforms = new NativeArray<JiggleTransform>(restPoseTransformsArray, Allocator.Persistent);
+        previousLocalRestPoseTransforms = new NativeArray<JiggleTransform>(previousLocalRestPoseTransformsArray, Allocator.Persistent);
+        rootOutputPositions = new NativeArray<float3>(rootOutputPositionsArray, Allocator.Persistent);
+        simulationOutputPoses = new NativeArray<JiggleTransform>(simulationOutputPosesArray, Allocator.Persistent);
+        interpolationCurrentPoses = new NativeArray<JiggleTransform>(interpolationCurrentPosesArray, Allocator.Persistent);
+        interpolationPreviousPoses = new NativeArray<JiggleTransform>(interpolationPreviousPosesArray, Allocator.Persistent);
+        interpolationOutputPoses = new NativeArray<JiggleTransform>(interpolationOutputPosesArray, Allocator.Persistent);
+        simulationOutputRootPositions = new NativeArray<float3>(simulationOutputRootPositionsArray, Allocator.Persistent);
+        interpolationCurrentRootPositions = new NativeArray<float3>(interpolationCurrentRootPositionsArray, Allocator.Persistent);
+        interpolationPreviousRootPositions = new NativeArray<float3>(interpolationPreviousRootPositionsArray, Allocator.Persistent);
+        simulationOutputRootOffsets = new NativeArray<float3>(simulationOutputRootOffsetsArray, Allocator.Persistent);
+        interpolationCurrentRootOffsets = new NativeArray<float3>(interpolationCurrentRootOffsetsArray, Allocator.Persistent);
+        interpolationPreviousRootOffsets = new NativeArray<float3>(interpolationPreviousRootOffsetsArray, Allocator.Persistent);
         
         transformCapacity = newTransformCapacity;
         treeCapacity = newTreeCapacity;
@@ -164,19 +173,22 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     public JiggleMemoryBus() {
         pendingAddTrees = new();
         pendingRemoveTrees = new();
+        pendingProcessingRemoves = new();
+        pendingProcessingAdds = new();
 
-        Resize(2048, 256);
+        Resize(50000, 1000);
         
         WriteOut();
         
         transformAccessList = new List<Transform>();
         transformRootAccessList = new List<Transform>();
-        RegnerateAccessArrays();
+        transformAccessArray = new TransformAccessArray(new Transform[] {});
+        transformRootAccessArray = new TransformAccessArray(new Transform[] {});
         
         colliderTransformAccessArray = new TransformAccessArray(new Transform[] {});
         colliderPositions = new NativeArray<float3>(new float3[]{}, Allocator.Persistent);
-        treeCount = 0;
         transformCount = 0;
+        treeCount = 0;
     }
 
     private void ReadIn<T>(NativeArray<T> native, T[] array, int count) where T : struct {
@@ -186,6 +198,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     private void ReadIn() {
         Profiler.BeginSample("JiggleMemoryBus.ReadIn");
         if (!jiggleTreeStructs.IsCreated) {
+            Profiler.EndSample();
             return;
         }
         
@@ -225,128 +238,178 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         NativeArray<float3>.Copy(simulationOutputRootOffsetsArray, simulationOutputRootOffsets, transformCount);
         NativeArray<float3>.Copy(interpolationCurrentRootOffsetsArray, interpolationCurrentRootOffsets, transformCount);
         NativeArray<float3>.Copy(interpolationPreviousRootOffsetsArray, interpolationPreviousRootOffsets, transformCount);
+        if (transformAccessArray.isCreated) {
+            transformAccessArray.Dispose();
+        }
+        transformAccessArray = newTransformAccessArray;
+        if (transformRootAccessArray.isCreated) {
+            transformRootAccessArray.Dispose();
+        }
+        transformRootAccessArray = newTransformRootAccessArray;
         Profiler.EndSample();
     }
 
-    private void RemoveTreeAt(int index) {
-        var removedTree = jiggleTreeStructsArray[index];
-        for (int i = index; i < treeCount; i++) {
-            var shift = jiggleTreeStructsArray[i + 1];
-            shift.transformIndexOffset -= removedTree.pointCount;
-            jiggleTreeStructsArray[i] = shift;
+    private void RemoveTransformsForTree(int id) {
+        for (int i = 0; i < treeCount; i++) {
+            var removedTree = jiggleTreeStructsArray[i];
+            if (removedTree.rootID != id) continue;
+            for (int j = i; j < treeCount; j++) {
+                var shift = jiggleTreeStructsArray[j + 1];
+                shift.transformIndexOffset -= removedTree.pointCount;
+                jiggleTreeStructsArray[j] = shift;
+            }
+            transformAccessList.RemoveRange((int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            transformRootAccessList.RemoveRange((int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            break;
         }
-        treeCount--;
-        RemoveRange(simulateInputPosesArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        RemoveRange(restPoseTransformsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        RemoveRange(previousLocalRestPoseTransformsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        RemoveRange(rootOutputPositionsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        RemoveRange(simulationOutputPosesArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        RemoveRange(interpolationCurrentPosesArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        RemoveRange(interpolationPreviousPosesArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        RemoveRange(interpolationOutputPosesArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        RemoveRange(simulationOutputRootPositionsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        RemoveRange(interpolationCurrentRootPositionsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        RemoveRange(interpolationPreviousRootPositionsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        RemoveRange(simulationOutputRootOffsetsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        RemoveRange(interpolationCurrentRootOffsetsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        RemoveRange(interpolationPreviousRootOffsetsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        
-        transformAccessList.RemoveRange((int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        transformRootAccessList.RemoveRange((int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
-        transformCount -= (int)removedTree.pointCount;
+    }
+
+    private void RemoveTree(int id) {
+        for (int i = 0; i < treeCount; i++) {
+            var removedTree = jiggleTreeStructsArray[i];
+            if (removedTree.rootID != id) continue;
+            for (int j = i; j < treeCount; j++) {
+                var shift = jiggleTreeStructsArray[j + 1];
+                shift.transformIndexOffset -= removedTree.pointCount;
+                jiggleTreeStructsArray[j] = shift;
+            }
+            treeCount--;
+            RemoveRange(simulateInputPosesArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            RemoveRange(restPoseTransformsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            RemoveRange(previousLocalRestPoseTransformsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            RemoveRange(rootOutputPositionsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            RemoveRange(simulationOutputPosesArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            RemoveRange(interpolationCurrentPosesArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            RemoveRange(interpolationPreviousPosesArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            RemoveRange(interpolationOutputPosesArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            RemoveRange(simulationOutputRootPositionsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            RemoveRange(interpolationCurrentRootPositionsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            RemoveRange(interpolationPreviousRootPositionsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            RemoveRange(simulationOutputRootOffsetsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            RemoveRange(interpolationCurrentRootOffsetsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            RemoveRange(interpolationPreviousRootOffsetsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            transformCount -= (int)removedTree.pointCount;
+            break;
+        }
     }
     
     private static void RemoveRange<T>(T[] array, int index, int count) {
         if (index < 0 || index >= array.Length || count < 0 || index + count > array.Length) {
             throw new System.ArgumentOutOfRangeException();
         }
-
-        for (int i = 0; i < array.Length - (index+count); i++) {
-            array[index+i] = array[index + i + count];
-        }
-        //System.Array.Copy(array, index + count, array, index, array.Length - (index + count));
+        System.Array.Copy(array, index + count, array, index, array.Length - (index + count));
     }
 
+    private enum CommitState {
+        Idle,
+        Processing,
+    }
+    
+    private CommitState commitState = CommitState.Idle;
+
     public void Commit() {
-        var pendingRemoveCount = pendingRemoveTrees.Count;
-        var pendingAddCount = pendingAddTrees.Count;
-        if (pendingRemoveCount == 0 && pendingAddCount == 0) {
-            return;
-        }
-        ReadIn();
-        
-        Profiler.BeginSample("JiggleMemoryBus.Commit.Remove");
-        #region Removing
-        for (int i = 0; i < pendingRemoveCount; i++) {
-            var currentRemoveID = pendingRemoveTrees[i];
-            for (var index = 0; index < treeCount; index++) {
-                if (jiggleTreeStructsArray[index].rootID == currentRemoveID) {
-                    RemoveTreeAt(index);
-                    break;
-                }
-            }
-        }
-        pendingRemoveTrees.Clear();
-        #endregion
-        Profiler.EndSample();
-
-        Profiler.BeginSample("JiggleMemoryBus.Commit.Add");
-        #region Adding
-        for (int i = 0; i < pendingAddCount; i++) {
-            var jiggleTree = pendingAddTrees[i];
-            if (treeCount+1 > treeCapacity || transformCount + jiggleTree.points.Length > transformCapacity) {
-                Resize(transformCapacity*2, treeCapacity*2);
-            }
+        if (commitState == CommitState.Idle) {
+            var pendingRemoveCount = pendingRemoveTrees.Count;
+            var pendingAddCount = pendingAddTrees.Count;
             
-            var jiggleTreeStruct = jiggleTree.GetStruct();
-            jiggleTreeStruct.transformIndexOffset = (uint)transformCount;
+            if (pendingRemoveCount == 0 && pendingAddCount == 0) {
+                return;
+            }
 
-            jiggleTreeStructsArray[treeCount] = jiggleTreeStruct;
-            float3 rootPos = jiggleTree.bones[0].position;
-            for (int o = 0; o < jiggleTreeStruct.pointCount; o++) {
-                unsafe {
-                    var point = jiggleTreeStruct.points[o];
-                    jiggleTree.bones[o].GetPositionAndRotation(out var pos, out var rot);
-                    jiggleTree.bones[o].GetLocalPositionAndRotation(out var lpos, out var lrot);
-                    var pose = new JiggleTransform() {
-                        isVirtual = !point.hasTransform,
-                        position = pos,
-                        rotation = rot,
-                    };
-                    var localPose = new JiggleTransform() {
-                        isVirtual = !point.hasTransform,
-                        position = lpos,
-                        rotation = lrot,
-                    };
-                    simulateInputPosesArray[transformCount + o] = pose;
-                    restPoseTransformsArray[transformCount + o] = localPose;
-                    previousLocalRestPoseTransformsArray[transformCount + o] = localPose;
-                    rootOutputPositionsArray[transformCount + o] = rootPos;
-                    simulationOutputPosesArray[transformCount + o] = pose;
-                    interpolationCurrentPosesArray[transformCount + o] = pose;
-                    interpolationPreviousPosesArray[transformCount + o] = pose;
-                    interpolationOutputPosesArray[transformCount + o] = pose;
-                    simulationOutputRootPositionsArray[transformCount + o] = rootPos;
-                    interpolationCurrentRootPositionsArray[transformCount + o] = rootPos;
-                    interpolationPreviousRootPositionsArray[transformCount + o] = rootPos;
-                    simulationOutputRootOffsetsArray[transformCount + o] = new float3(0f);
-                    interpolationCurrentRootOffsetsArray[transformCount + o] = new float3(0f);
-                    interpolationPreviousRootOffsetsArray[transformCount + o] = new float3(0f);
+            for (int i = 0; i < pendingAddCount; i++) {
+                var jiggleTree = pendingAddTrees[i];
+                //if (transformAccessList.Count + jiggleTree.points.Length > transformCapacity) {
+                //Resize(transformCapacity * 2, treeCapacity * 2);
+                //}
+
+                transformAccessList.AddRange(jiggleTree.bones);
+                for (var index = 0; index < jiggleTree.points.Length; index++) {
+                    transformRootAccessList.Add(jiggleTree.bones[0]);
                 }
             }
-            transformAccessList.AddRange(jiggleTree.bones);
-            for (var index = 0; index < jiggleTree.points.Length; index++) {
-                transformRootAccessList.Add(jiggleTree.bones[0]);
-            }
-            treeCount++;
-            transformCount += (int)jiggleTreeStruct.pointCount;
-        }
-        pendingAddTrees.Clear();
-        Profiler.EndSample();
 
-        RegnerateAccessArrays();
-        WriteOut();
-        #endregion
+            pendingProcessingAdds.AddRange(pendingAddTrees);
+            pendingAddTrees.Clear();
+
+            for (int i = 0; i < pendingRemoveCount; i++) {
+                var currentRemoveID = pendingRemoveTrees[i];
+                RemoveTransformsForTree(currentRemoveID);
+            }
+
+            pendingProcessingRemoves.AddRange(pendingRemoveTrees);
+            pendingRemoveTrees.Clear();
+            
+            currentTransformAccessIndex = 0;
+            commitState = CommitState.Processing;
+        } else if (commitState == CommitState.Processing) {
+            GenerateNewAccessArrays(ref currentTransformAccessIndex, out var hasFinished);
+            if (!hasFinished) return;
+            ReadIn();
+            var processingPendingRemoveCount = pendingProcessingRemoves.Count;
+            var processingPendingAddCount = pendingProcessingAdds.Count;
+            
+            #region Adding
+            Profiler.BeginSample("JiggleMemoryBus.Commit.Add");
+            for (int i = 0; i < processingPendingAddCount; i++) {
+                var jiggleTree = pendingProcessingAdds[i];
+                
+                var jiggleTreeStruct = jiggleTree.GetStruct();
+                jiggleTreeStruct.transformIndexOffset = (uint)transformCount;
+
+                jiggleTreeStructsArray[treeCount] = jiggleTreeStruct;
+                float3 rootPos = jiggleTree.bones[0].position;
+                for (int o = 0; o < jiggleTreeStruct.pointCount; o++) {
+                    unsafe {
+                        var point = jiggleTreeStruct.points[o];
+                        jiggleTree.bones[o].GetPositionAndRotation(out var pos, out var rot);
+                        jiggleTree.bones[o].GetLocalPositionAndRotation(out var lpos, out var lrot);
+                        var pose = new JiggleTransform() {
+                            isVirtual = !point.hasTransform,
+                            position = pos,
+                            rotation = rot,
+                        };
+                        var localPose = new JiggleTransform() {
+                            isVirtual = !point.hasTransform,
+                            position = lpos,
+                            rotation = lrot,
+                        };
+                        simulateInputPosesArray[transformCount + o] = pose;
+                        restPoseTransformsArray[transformCount + o] = localPose;
+                        previousLocalRestPoseTransformsArray[transformCount + o] = localPose;
+                        rootOutputPositionsArray[transformCount + o] = rootPos;
+                        simulationOutputPosesArray[transformCount + o] = pose;
+                        interpolationCurrentPosesArray[transformCount + o] = pose;
+                        interpolationPreviousPosesArray[transformCount + o] = pose;
+                        interpolationOutputPosesArray[transformCount + o] = pose;
+                        simulationOutputRootPositionsArray[transformCount + o] = rootPos;
+                        interpolationCurrentRootPositionsArray[transformCount + o] = rootPos;
+                        interpolationPreviousRootPositionsArray[transformCount + o] = rootPos;
+                        simulationOutputRootOffsetsArray[transformCount + o] = new float3(0f);
+                        interpolationCurrentRootOffsetsArray[transformCount + o] = new float3(0f);
+                        interpolationPreviousRootOffsetsArray[transformCount + o] = new float3(0f);
+                    }
+                }
+                treeCount++;
+                transformCount += (int)jiggleTreeStruct.pointCount;
+            }
+            pendingProcessingAdds.Clear();
+            Profiler.EndSample();
+            #endregion
+            
+            #region Removing
+            Profiler.BeginSample("JiggleMemoryBus.Commit.Remove");
+            for (int i = 0; i < processingPendingRemoveCount; i++) {
+                var currentRemoveID = pendingProcessingRemoves[i];
+                RemoveTree(currentRemoveID);
+            }
+            pendingProcessingRemoves.Clear();
+            Profiler.EndSample();
+            #endregion
+
+            
+            WriteOut();
+            commitState = CommitState.Idle;
+        }
     }
     
     public void Add(JiggleTree jiggleTree) {
@@ -357,28 +420,27 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         pendingRemoveTrees.Add(rootBoneInstanceID);
     }
 
-    void RegnerateAccessArrays() {
+    void GenerateNewAccessArrays(ref int currentIndex, out bool hasFinished) {
         Profiler.BeginSample("RegenerateTransformAccessArrays");
-        if (transformAccessArray.isCreated) {
-            transformAccessArray.Dispose();
+        var count = transformAccessList.Count;
+        if (currentIndex == 0) {
+            newTransformAccessArray = new TransformAccessArray(count);
+            newTransformRootAccessArray = new TransformAccessArray(count);
         }
-        if (transformRootAccessArray.isCreated) {
-            transformRootAccessArray.Dispose();
+        int addedSoFar = 0;
+        for (var index = currentIndex; index < count && addedSoFar < 512; index++) {
+            newTransformAccessArray.Add(transformAccessList[index]);
+            newTransformRootAccessArray.Add(transformRootAccessList[index]);
+            addedSoFar++;
         }
-        transformAccessArray = new TransformAccessArray(10000);
-        transformRootAccessArray = new TransformAccessArray(10000);
-        Profiler.BeginSample("AddTransformAccesses1000");
-        for (var index = 0; index < Mathf.Min(1000,transformAccessList.Count); index++) {
-            transformAccessArray.Add(transformAccessList[index]);
-            transformRootAccessArray.Add(transformRootAccessList[index]);
+        currentIndex += addedSoFar;
+        
+        if (currentIndex == count) {
+            hasFinished = true;
+            return;
         }
-        Profiler.EndSample();
-        Profiler.BeginSample("AddTransformAccessesRemaining");
-        for (var index = 1000; index < transformAccessList.Count; index++) {
-            transformAccessArray.Add(transformAccessList[index]);
-            transformRootAccessArray.Add(transformRootAccessList[index]);
-        }
-        Profiler.EndSample();
+
+        hasFinished = false;
         Profiler.EndSample();
     }
 

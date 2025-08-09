@@ -6,7 +6,6 @@ public class JiggleTreeSegment {
     public JiggleTree jiggleTree { get; private set; }
     public JiggleTreeSegment parent { get; private set; }
     public JiggleRig rig { get; private set; }
-
     
     public void SetJiggleTree(JiggleTree jiggleTree) => this.jiggleTree = jiggleTree;
     public void SetParent(JiggleTreeSegment jiggleTree) => parent = jiggleTree;

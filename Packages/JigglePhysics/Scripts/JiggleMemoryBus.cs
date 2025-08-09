@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
+using UnityEngine.Profiling;
 
 public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     private int treeCapacity = 0;
@@ -183,6 +184,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     }
 
     private void ReadIn() {
+        Profiler.BeginSample("JiggleMemoryBus.ReadIn");
         if (!jiggleTreeStructs.IsCreated) {
             return;
         }
@@ -203,9 +205,11 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         ReadIn(simulationOutputRootOffsets, simulationOutputRootOffsetsArray, transformCount);
         ReadIn(interpolationCurrentRootOffsets, interpolationCurrentRootOffsetsArray, transformCount);
         ReadIn(interpolationPreviousRootOffsets, interpolationPreviousRootOffsetsArray, transformCount);
+        Profiler.EndSample();
     }
 
     private void WriteOut() {
+        Profiler.BeginSample("JiggleMemoryBus.WriteOut");
         NativeArray<JiggleTreeStruct>.Copy(jiggleTreeStructsArray, jiggleTreeStructs, treeCount);
         NativeArray<JiggleTransform>.Copy(simulateInputPosesArray, simulateInputPoses, transformCount);
         NativeArray<JiggleTransform>.Copy(restPoseTransformsArray, restPoseTransforms, transformCount);
@@ -221,6 +225,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         NativeArray<float3>.Copy(simulationOutputRootOffsetsArray, simulationOutputRootOffsets, transformCount);
         NativeArray<float3>.Copy(interpolationCurrentRootOffsetsArray, interpolationCurrentRootOffsets, transformCount);
         NativeArray<float3>.Copy(interpolationPreviousRootOffsetsArray, interpolationPreviousRootOffsets, transformCount);
+        Profiler.EndSample();
     }
 
     private void RemoveTreeAt(int index) {
@@ -270,6 +275,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         }
         ReadIn();
         
+        Profiler.BeginSample("JiggleMemoryBus.Commit.Remove");
         #region Removing
         for (int i = 0; i < pendingRemoveCount; i++) {
             var currentRemoveID = pendingRemoveTrees[i];
@@ -282,7 +288,9 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         }
         pendingRemoveTrees.Clear();
         #endregion
+        Profiler.EndSample();
 
+        Profiler.BeginSample("JiggleMemoryBus.Commit.Add");
         #region Adding
         for (int i = 0; i < pendingAddCount; i++) {
             var jiggleTree = pendingAddTrees[i];
@@ -334,6 +342,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             transformCount += (int)jiggleTreeStruct.pointCount;
         }
         pendingAddTrees.Clear();
+        Profiler.EndSample();
 
         RegnerateAccessArrays();
         WriteOut();
@@ -349,14 +358,28 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     }
 
     void RegnerateAccessArrays() {
+        Profiler.BeginSample("RegenerateTransformAccessArrays");
         if (transformAccessArray.isCreated) {
             transformAccessArray.Dispose();
         }
         if (transformRootAccessArray.isCreated) {
             transformRootAccessArray.Dispose();
         }
-        transformAccessArray = new TransformAccessArray(transformAccessList.ToArray());
-        transformRootAccessArray = new TransformAccessArray(transformRootAccessList.ToArray());
+        transformAccessArray = new TransformAccessArray(10000);
+        transformRootAccessArray = new TransformAccessArray(10000);
+        Profiler.BeginSample("AddTransformAccesses1000");
+        for (var index = 0; index < Mathf.Min(1000,transformAccessList.Count); index++) {
+            transformAccessArray.Add(transformAccessList[index]);
+            transformRootAccessArray.Add(transformRootAccessList[index]);
+        }
+        Profiler.EndSample();
+        Profiler.BeginSample("AddTransformAccessesRemaining");
+        for (var index = 1000; index < transformAccessList.Count; index++) {
+            transformAccessArray.Add(transformAccessList[index]);
+            transformRootAccessArray.Add(transformRootAccessList[index]);
+        }
+        Profiler.EndSample();
+        Profiler.EndSample();
     }
 
     public void Dispose() {

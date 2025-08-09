@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -76,3 +77,5 @@ public class JiggleRigEditor : Editor {
     }
     
 }
+
+#endif

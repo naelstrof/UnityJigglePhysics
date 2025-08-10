@@ -249,7 +249,7 @@ public static class JiggleTreeUtility {
             jiggleRootLookup.Remove(jiggleTreeSegment.transform);
             jiggleTreeSegment.SetDirty();
             if (jiggleTreeSegment.jiggleTree != null) {
-                GetJiggleJobs().Remove(jiggleTreeSegment.jiggleTree);
+                jobs.Remove(jiggleTreeSegment.jiggleTree);
                 jiggleTreeSegment.SetJiggleTree(null);
             }
         }

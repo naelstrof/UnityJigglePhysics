@@ -13,7 +13,6 @@ public class JiggleTreeSegment {
     public JiggleTreeSegment(Transform transform, JiggleRig rig) {
         this.transform = transform;
         this.rig = rig;
-        JiggleTreeUtility.AddJiggleTreeSegment(this);
     }
 
     public void SetDirty() {

@@ -47,13 +47,11 @@ public class JiggleRig : MonoBehaviour {
             // DO DFS HERE
         }*/
         _jiggleTreeSegment ??= new JiggleTreeSegment(_rootBone, this);
+        JiggleTreeUtility.AddJiggleTreeSegment(_jiggleTreeSegment);
     }
 
     private void OnDisable() {
-        if (_jiggleTreeSegment != null) {
-            JiggleTreeUtility.RemoveJiggleTreeSegment(_jiggleTreeSegment);
-            _jiggleTreeSegment = null;
-        }
+        JiggleTreeUtility.RemoveJiggleTreeSegment(_jiggleTreeSegment);
     }
 
     public JiggleBoneParameters GetJiggleBoneParameter(float normalizedDistanceFromRoot) {

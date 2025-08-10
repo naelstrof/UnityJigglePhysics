@@ -22,18 +22,10 @@ public class JiggleTree {
         return new JiggleTreeStruct(rootID,0, points);
     }
     
-    public JiggleTree(Transform[] bones, JiggleBoneSimulatedPoint[] points) {
+    public JiggleTree(List<Transform> bones, List<JiggleBoneSimulatedPoint> points) {
         dirty = true;
-        var boneCount = bones.Length;
-        var pointCount = points.Length;
-        this.bones = new Transform[boneCount];
-        this.points = new JiggleBoneSimulatedPoint[pointCount];
-        for(int i=0; i < boneCount; i++) {
-            this.bones[i] = bones[i];
-        }
-        for(int i=0; i < pointCount; i++) {
-            this.points[i] = points[i];
-        }
+        this.bones = bones.ToArray();
+        this.points = points.ToArray();
         rootID = bones[0].GetInstanceID();
     }
     private static void DebugDrawSphere(Vector3 origin, float radius, Color color, float duration, int segments = 8) {

@@ -31,3 +31,13 @@
 .spacer {
     min-height: 20px;
 }
+
+.curvableCurve {
+    align-self: flex-end;
+    min-width: 40%;
+}
+
+.curvableCurve > .unity-label {
+    width: 0;
+    min-width: 0;
+}

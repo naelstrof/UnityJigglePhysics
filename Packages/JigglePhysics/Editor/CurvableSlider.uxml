@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Assets/JiggleJob/Editor/JiggleStyles.uss?fileID=7433441132597879392&amp;guid=9a2f78f6a51166c4ca0e12830ed7e7ab&amp;type=3#JiggleStyles" />
+    <ui:VisualElement style="flex-grow: 0; flex-direction: row;">
+        <ui:Slider label="Slider" value="42" high-value="1" name="CurvableSlider" style="align-self: auto; flex-direction: row; flex-grow: 1;">
+            <Bindings>
+                <ui:DataBinding property="label" data-source-path="Label" binding-mode="ToTarget" />
+            </Bindings>
+        </ui:Slider>
+        <ui:Button text="~" style="align-items: stretch; align-self: flex-end; -unity-font-style: normal;" />
+    </ui:VisualElement>
+    <uie:CurveField label="Curve" value="{0,0,0,0,0,0,Free,Free,False,None};{5,8,0,0,0,0,Free,Free,False,None};{10,4,0,0,0,0,Free,Free,False,None}+(ClampForever,ClampForever)" name="CurvableCurve" class="curvableCurve" />
+</ui:UXML>

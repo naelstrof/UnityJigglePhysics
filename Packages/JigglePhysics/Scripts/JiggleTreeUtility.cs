@@ -116,7 +116,7 @@ public static class JiggleTreeUtility {
         Profiler.BeginSample("JiggleTreeUtility.CreateJiggleTree");
         tempTransforms.Clear();
         tempPoints.Clear();
-        VisitForLength(null, jiggleRig.rootBone, 0f, out float totalLength);
+        VisitForLength(jiggleRig.rootBone, jiggleRig, jiggleRig.rootBone.position, 0f, out var totalLength);
         var backProjection = Vector3.zero;
         if (jiggleRig.rootBone.childCount != 0) {
             var pos = jiggleRig.rootBone.position;
@@ -154,13 +154,17 @@ public static class JiggleTreeUtility {
         return colliderTransforms;
     }
 
-    private static void VisitForLength(Transform lastT, Transform currentT, float currentLength, out float totalLength) {
-        if (lastT != null) {
-            currentLength += Vector3.Distance(lastT.position, currentT.position);
+    private static void VisitForLength(Transform t, JiggleRig rig, Vector3 lastPosition, float currentLength, out float totalLength) {
+        if (rig.CheckExcluded(t)) {
+            totalLength = currentLength;
+            return;
         }
+        currentLength += Vector3.Distance(lastPosition, t.position);
         totalLength = currentLength;
-        foreach (Transform child in currentT.transform) {
-            VisitForLength(currentT, child, currentLength, out var maxLength);
+        var validChildren = GetValidChildren(t, rig);
+        for (int i = 0; i < validChildren.Count; i++) {
+            var child = validChildren[i];
+            VisitForLength(child, rig, t.position, currentLength, out var maxLength);
             totalLength = Mathf.Max(totalLength, maxLength);
         }
     }
@@ -257,10 +261,7 @@ public static class JiggleTreeUtility {
                 jiggleTreeSegment.SetJiggleTree(null);
             }
         }
-        //if (jiggleTreeSegment.parent!=null) RemoveJiggleTreeSegment(jiggleTreeSegment.parent);
-        //if (jiggleTreeSegments.Count == 0) {
-            //jiggleTrees = null;
-        //}
+        if (jiggleTreeSegment.parent!=null) jiggleTreeSegment.parent.SetDirty();
     }
 
 }

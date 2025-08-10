@@ -46,6 +46,9 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     private List<Transform> transformRootAccessList;
     private List<Transform> colliderTransformAccessList;
     
+    public TransformAccessArray oldTransformAccessArray;
+    public TransformAccessArray oldTransformRootAccessArray;
+    
     public TransformAccessArray transformAccessArray;
     public TransformAccessArray transformRootAccessArray;
     
@@ -179,6 +182,8 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         Resize(50000, 1000);
         
         WriteOut();
+        ClearTransformAccessArray();
+        ClearRootTransformAccessArray();
         
         transformAccessList = new List<Transform>();
         transformRootAccessList = new List<Transform>();
@@ -238,15 +243,33 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         NativeArray<float3>.Copy(simulationOutputRootOffsetsArray, simulationOutputRootOffsets, transformCount);
         NativeArray<float3>.Copy(interpolationCurrentRootOffsetsArray, interpolationCurrentRootOffsets, transformCount);
         NativeArray<float3>.Copy(interpolationPreviousRootOffsetsArray, interpolationPreviousRootOffsets, transformCount);
-        if (transformAccessArray.isCreated) {
-            transformAccessArray.Dispose();
-        }
+        Profiler.EndSample();
+    }
+
+    private void ClearTransformAccessArray() {
+        Profiler.BeginSample("JiggleMemoryBus.TransferTransformAccessArray");
+        oldTransformAccessArray = transformAccessArray;
         transformAccessArray = newTransformAccessArray;
-        if (transformRootAccessArray.isCreated) {
-            transformRootAccessArray.Dispose();
+        Profiler.EndSample();
+    }
+    
+    private void DisposeTransformAccessArray() {
+        if (oldTransformAccessArray.isCreated) {
+            oldTransformAccessArray.Dispose();
         }
+    }
+
+    private void ClearRootTransformAccessArray() {
+        Profiler.BeginSample("JiggleMemoryBus.TransferRootTransformAccessArray");
+        oldTransformRootAccessArray = transformRootAccessArray;
         transformRootAccessArray = newTransformRootAccessArray;
         Profiler.EndSample();
+    }
+
+    private void DisposeRootTransformAccessArray() {
+        if (oldTransformRootAccessArray.isCreated) {
+            oldTransformRootAccessArray.Dispose();
+        }
     }
 
     private void RemoveTransformsForTree(int id) {
@@ -265,15 +288,19 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     }
 
     private void RemoveTree(int id) {
+        Profiler.BeginSample("JiggleMemoryBus.RemoveTree");
         for (int i = 0; i < treeCount; i++) {
             var removedTree = jiggleTreeStructsArray[i];
             if (removedTree.rootID != id) continue;
+            Profiler.BeginSample("JiggleMemoryBus.RemoveTree.ArrayManipulation");
             for (int j = i; j < treeCount; j++) {
                 var shift = jiggleTreeStructsArray[j + 1];
                 shift.transformIndexOffset -= removedTree.pointCount;
                 jiggleTreeStructsArray[j] = shift;
             }
             treeCount--;
+            Profiler.EndSample();
+            Profiler.BeginSample("JiggleMemoryBus.RemoveTree.RemoveRanges");
             RemoveRange(simulateInputPosesArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
             RemoveRange(restPoseTransformsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
             RemoveRange(previousLocalRestPoseTransformsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
@@ -289,20 +316,26 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             RemoveRange(interpolationCurrentRootOffsetsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
             RemoveRange(interpolationPreviousRootOffsetsArray, (int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
             transformCount -= (int)removedTree.pointCount;
+            Profiler.EndSample();
             break;
         }
+        Profiler.EndSample();
     }
     
     private static void RemoveRange<T>(T[] array, int index, int count) {
         if (index < 0 || index >= array.Length || count < 0 || index + count > array.Length) {
             throw new System.ArgumentOutOfRangeException();
         }
+        Profiler.BeginSample("JiggleMemoryBus.RemoveRange.Copy");
         System.Array.Copy(array, index + count, array, index, array.Length - (index + count));
+        Profiler.EndSample();
     }
 
     private enum CommitState {
         Idle,
         Processing,
+        RecreatingAccessArrays,
+        RecreatingRootAccessArrays
     }
     
     private CommitState commitState = CommitState.Idle;
@@ -408,6 +441,14 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
 
             
             WriteOut();
+            ClearTransformAccessArray();
+            ClearRootTransformAccessArray();
+            commitState = CommitState.RecreatingAccessArrays;
+        } else if (commitState == CommitState.RecreatingAccessArrays) {
+            DisposeTransformAccessArray();
+            commitState = CommitState.RecreatingRootAccessArrays;
+        } else if (commitState == CommitState.RecreatingRootAccessArrays) {
+            DisposeRootTransformAccessArray();
             commitState = CommitState.Idle;
         }
     }

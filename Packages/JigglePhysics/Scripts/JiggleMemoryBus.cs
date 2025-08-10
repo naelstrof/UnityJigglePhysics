@@ -142,7 +142,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         pendingProcessingRemoves = new();
         pendingProcessingAdds = new();
 
-        Resize(50000, 1000);
+        Resize(4096, 512);
         
         WriteOut();
         ClearTransformAccessArray();
@@ -309,7 +309,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
                 //if (transformAccessList.Count + jiggleTree.points.Length > transformCapacity) {
                 //Resize(transformCapacity * 2, treeCapacity * 2);
                 //}
-
+                
                 transformAccessList.AddRange(jiggleTree.bones);
                 for (var index = 0; index < jiggleTree.points.Length; index++) {
                     transformRootAccessList.Add(jiggleTree.bones[0]);
@@ -346,6 +346,14 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
                 var jiggleTreeStruct = jiggleTree.GetStruct();
                 jiggleTreeStruct.transformIndexOffset = (uint)transformCount;
 
+                if (treeCount + 1 > treeCapacity) {
+                    Resize(transformCapacity, treeCapacity * 2);
+                }
+
+                if (transformCount + jiggleTreeStruct.pointCount >= transformCapacity) {
+                    Resize(transformCapacity * 2, treeCapacity);
+                }
+                
                 jiggleTreeStructsArray[treeCount] = jiggleTreeStruct;
                 float3 rootPos = jiggleTree.bones[0].position;
                 for (int o = 0; o < jiggleTreeStruct.pointCount; o++) {

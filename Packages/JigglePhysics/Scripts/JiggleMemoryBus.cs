@@ -271,7 +271,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     
     private void RemoveRange<T>(T[] array, int index, int count) {
         Profiler.BeginSample("JiggleMemoryBus.RemoveRange.Copy");
-        int tailCount = transformCapacity - (index + count);
+        int tailCount = transformCount - (index + count);
         if (tailCount > 0) {
             System.Array.Copy(array, index + count, array, index, tailCount);
         }
@@ -436,7 +436,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             newTransformRootAccessArray = new TransformAccessArray(count);
         }
         int addedSoFar = 0;
-        for (var index = currentIndex; index < count && addedSoFar < 1024; index++) {
+        for (var index = currentIndex; index < count && addedSoFar < 512; index++) {
             newTransformAccessArray.Add(transformAccessList[index]);
             newTransformRootAccessArray.Add(transformRootAccessList[index]);
             addedSoFar++;

@@ -15,11 +15,7 @@ public struct JiggleJobSimulate : IJobFor {
     [ReadOnly][NativeDisableParallelForRestriction]
     public NativeArray<JiggleTransform> inputPoses;
     [NativeDisableParallelForRestriction]
-    public NativeArray<JiggleTransform> outputPoses;
-    [NativeDisableParallelForRestriction]
-    public NativeArray<float3> outputSimulatedRootOffset;
-    [NativeDisableParallelForRestriction]
-    public NativeArray<float3> outputSimulatedRootPosition;
+    public NativeArray<PoseData> outputPoses;
     [NativeDisableParallelForRestriction]
     public NativeArray<float3> testColliders;
     
@@ -28,9 +24,7 @@ public struct JiggleJobSimulate : IJobFor {
     public JiggleJobSimulate(JiggleMemoryBus bus) {
         inputPoses = bus.simulateInputPoses;
         jiggleTrees = bus.jiggleTreeStructs;
-        outputSimulatedRootOffset = bus.simulationOutputRootOffsets;
-        outputSimulatedRootPosition = bus.simulationOutputRootPositions;
-        outputPoses = bus.simulationOutputPoses;
+        outputPoses = bus.simulationOutputPoseData;
         testColliders = bus.colliderPositions;
         timeStamp = Time.timeAsDouble;
         gravity = Physics.gravity;
@@ -39,9 +33,7 @@ public struct JiggleJobSimulate : IJobFor {
     public void UpdateArrays(JiggleMemoryBus bus) {
         inputPoses = bus.simulateInputPoses;
         jiggleTrees = bus.jiggleTreeStructs;
-        outputSimulatedRootOffset = bus.simulationOutputRootOffsets;
-        outputSimulatedRootPosition = bus.simulationOutputRootPositions;
-        outputPoses = bus.simulationOutputPoses;
+        outputPoses = bus.simulationOutputPoseData;
         testColliders = bus.colliderPositions;
     }
 
@@ -55,7 +47,7 @@ public struct JiggleJobSimulate : IJobFor {
                 var childPose = tree.GetInputPose(inputPoses, point.childrenIndices[0]);
                 var childChildPose = tree.GetInputPose(inputPoses, child.childrenIndices[0]);
                 if (!childChild.hasTransform) { // edge case where it's a singular isolated root bone
-                    point.pose = childPose.position - new float3(0f, 0.25f, 0f);;
+                    point.pose = childPose.position - new float3(0f, 0.25f, 0f);
                     point.parentPose = childPose.position - new float3(0f, 0.5f, 0f);
                     point.desiredLengthToParent = 0.25f;
                 } else {
@@ -254,6 +246,8 @@ public struct JiggleJobSimulate : IJobFor {
     }
 
     private unsafe void ApplyPose(JiggleTreeStruct tree) {
+        var rootSimulationPosition = tree.points[1].workingPosition;
+        var rootPose = tree.GetInputPose(inputPoses, 1).position;
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points[i];
             if (point.childenCount <= 0) {
@@ -297,17 +291,8 @@ public struct JiggleJobSimulate : IJobFor {
                 isVirtual = false,
                 position = point.workingPosition,
                 rotation = math.mul(animPoseToPhysicsPose, tree.GetInputPose(inputPoses, i).rotation),
-            });
+            }, rootSimulationPosition - rootPose, rootSimulationPosition);
             tree.points[i] = point;
-        }
-    }
-
-    private unsafe void RecordRootOffsets(JiggleTreeStruct tree) {
-        var rootSimulationPosition = tree.points[1].workingPosition;
-        var rootPose = tree.GetInputPose(inputPoses, 1).position;
-        for (int i = 0; i < tree.pointCount; i++) {
-            outputSimulatedRootOffset[i+(int)tree.transformIndexOffset] = rootSimulationPosition - rootPose;
-            outputSimulatedRootPosition[i+(int)tree.transformIndexOffset] = rootSimulationPosition;
         }
     }
 
@@ -319,6 +304,5 @@ public struct JiggleJobSimulate : IJobFor {
         Constrain(tree);
         FinishStep(tree);
         ApplyPose(tree);
-        RecordRootOffsets(tree);
     }
 }

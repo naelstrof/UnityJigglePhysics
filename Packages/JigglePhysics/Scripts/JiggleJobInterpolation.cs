@@ -9,18 +9,12 @@ using UnityEngine.Jobs;
 public struct JiggleJobInterpolation : IJobFor {
     [ReadOnly] public NativeArray<float3> realRootPositions;
     
-    [ReadOnly] public NativeArray<JiggleTransform> previousPoses;
-    [ReadOnly] public NativeArray<JiggleTransform> currentPoses;
+    [ReadOnly] public NativeArray<PoseData> previousPoses;
+    [ReadOnly] public NativeArray<PoseData> currentPoses;
     
     public double timeStamp;
     public double previousTimeStamp;
     public double currentTime;
-    
-    [ReadOnly] public NativeArray<float3> previousSimulatedRootOffset;
-    [ReadOnly] public NativeArray<float3> currentSimulatedRootOffset;
-    
-    [ReadOnly] public NativeArray<float3> previousSimulatedRootPosition;
-    [ReadOnly] public NativeArray<float3> currentSimulatedRootPosition;
     
     public NativeArray<JiggleTransform> outputInterpolatedPoses;
 
@@ -28,24 +22,16 @@ public struct JiggleJobInterpolation : IJobFor {
         timeStamp = time - JiggleJobManager.FIXED_DELTA_TIME;
         previousTimeStamp = timeStamp - JiggleJobManager.FIXED_DELTA_TIME;
         currentTime = timeStamp;
-        previousPoses = bus.interpolationPreviousPoses;
-        currentPoses = bus.interpolationCurrentPoses;
+        previousPoses = bus.interpolationPreviousPoseData;
+        currentPoses = bus.interpolationCurrentPoseData;
         outputInterpolatedPoses = bus.interpolationOutputPoses;
-        previousSimulatedRootOffset = bus.interpolationPreviousRootOffsets;
-        currentSimulatedRootOffset = bus.interpolationCurrentRootOffsets;
-        previousSimulatedRootPosition = bus.interpolationPreviousRootPositions;
-        currentSimulatedRootPosition = bus.interpolationCurrentRootPositions;
         realRootPositions = bus.rootOutputPositions;
     }
 
     public void UpdateArrays(JiggleMemoryBus bus) {
-        previousPoses = bus.interpolationPreviousPoses;
-        currentPoses = bus.interpolationCurrentPoses;
+        previousPoses = bus.interpolationPreviousPoseData;
+        currentPoses = bus.interpolationCurrentPoseData;
         outputInterpolatedPoses = bus.interpolationOutputPoses;
-        previousSimulatedRootOffset = bus.interpolationPreviousRootOffsets;
-        currentSimulatedRootOffset = bus.interpolationCurrentRootOffsets;
-        previousSimulatedRootPosition = bus.interpolationPreviousRootPositions;
-        currentSimulatedRootPosition = bus.interpolationCurrentRootPositions;
         realRootPositions = bus.rootOutputPositions;
     }
     
@@ -59,13 +45,10 @@ public struct JiggleJobInterpolation : IJobFor {
         }
         const double timeCorrection = JiggleJobManager.FIXED_DELTA_TIME * 2f;
         var t = (currentTime-timeCorrection - previousTimeStamp) / diff;
-        var interPose = JiggleTransform.Lerp(prevPose, newPose, (float)t);
+        var interPose = PoseData.Lerp(prevPose, newPose, (float)t);
         
-        var simulatedRootPosition = math.lerp(previousSimulatedRootPosition[index], currentSimulatedRootPosition[index], (float)t);
-        var simulatedRootOffset = math.lerp(previousSimulatedRootOffset[index], currentSimulatedRootOffset[index], (float)t);
-        
-        var snapToReal = realRootPositions[index]-simulatedRootPosition;
-        interPose.position += snapToReal + simulatedRootOffset;
-        outputInterpolatedPoses[index] = interPose;
+        var snapToReal = realRootPositions[index]-interPose.rootPosition;
+        interPose.pose.position += snapToReal + interPose.rootOffset;
+        outputInterpolatedPoses[index] = interPose.pose;
     }
 }

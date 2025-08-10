@@ -293,10 +293,12 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             var removedTree = jiggleTreeStructsArray[i];
             if (removedTree.rootID != id) continue;
             Profiler.BeginSample("JiggleMemoryBus.RemoveTree.ArrayManipulation");
-            for (int j = i; j < treeCount; j++) {
-                var shift = jiggleTreeStructsArray[j + 1];
-                shift.transformIndexOffset -= removedTree.pointCount;
-                jiggleTreeStructsArray[j] = shift;
+            int shiftCount = treeCount - i - 1;
+            if (shiftCount > 0) {
+                System.Array.Copy(jiggleTreeStructsArray, i + 1, jiggleTreeStructsArray, i, shiftCount);
+                for (int j = i; j < i + shiftCount; j++) {
+                    jiggleTreeStructsArray[j].transformIndexOffset -= removedTree.pointCount;
+                }
             }
             treeCount--;
             Profiler.EndSample();
@@ -322,12 +324,12 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         Profiler.EndSample();
     }
     
-    private static void RemoveRange<T>(T[] array, int index, int count) {
-        if (index < 0 || index >= array.Length || count < 0 || index + count > array.Length) {
-            throw new System.ArgumentOutOfRangeException();
-        }
+    private void RemoveRange<T>(T[] array, int index, int count) {
         Profiler.BeginSample("JiggleMemoryBus.RemoveRange.Copy");
-        System.Array.Copy(array, index + count, array, index, array.Length - (index + count));
+        int tailCount = transformCapacity - (index + count);
+        if (tailCount > 0) {
+            System.Array.Copy(array, index + count, array, index, tailCount);
+        }
         Profiler.EndSample();
     }
 
@@ -349,6 +351,14 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
                 return;
             }
 
+            for (int i = 0; i < pendingRemoveCount; i++) {
+                var currentRemoveID = pendingRemoveTrees[i];
+                RemoveTransformsForTree(currentRemoveID);
+            }
+
+            pendingProcessingRemoves.AddRange(pendingRemoveTrees);
+            pendingRemoveTrees.Clear();
+            
             for (int i = 0; i < pendingAddCount; i++) {
                 var jiggleTree = pendingAddTrees[i];
                 //if (transformAccessList.Count + jiggleTree.points.Length > transformCapacity) {
@@ -363,14 +373,6 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
 
             pendingProcessingAdds.AddRange(pendingAddTrees);
             pendingAddTrees.Clear();
-
-            for (int i = 0; i < pendingRemoveCount; i++) {
-                var currentRemoveID = pendingRemoveTrees[i];
-                RemoveTransformsForTree(currentRemoveID);
-            }
-
-            pendingProcessingRemoves.AddRange(pendingRemoveTrees);
-            pendingRemoveTrees.Clear();
             
             currentTransformAccessIndex = 0;
             commitState = CommitState.Processing;
@@ -380,6 +382,16 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             ReadIn();
             var processingPendingRemoveCount = pendingProcessingRemoves.Count;
             var processingPendingAddCount = pendingProcessingAdds.Count;
+            
+            #region Removing
+            Profiler.BeginSample("JiggleMemoryBus.Commit.Remove");
+            for (int i = 0; i < processingPendingRemoveCount; i++) {
+                var currentRemoveID = pendingProcessingRemoves[i];
+                RemoveTree(currentRemoveID);
+            }
+            pendingProcessingRemoves.Clear();
+            Profiler.EndSample();
+            #endregion
             
             #region Adding
             Profiler.BeginSample("JiggleMemoryBus.Commit.Add");
@@ -428,16 +440,6 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             pendingProcessingAdds.Clear();
             Profiler.EndSample();
             #endregion
-            
-            #region Removing
-            Profiler.BeginSample("JiggleMemoryBus.Commit.Remove");
-            for (int i = 0; i < processingPendingRemoveCount; i++) {
-                var currentRemoveID = pendingProcessingRemoves[i];
-                RemoveTree(currentRemoveID);
-            }
-            pendingProcessingRemoves.Clear();
-            Profiler.EndSample();
-            #endregion
 
             
             WriteOut();
@@ -454,10 +456,23 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     }
     
     public void Add(JiggleTree jiggleTree) {
+        var count = pendingAddTrees.Count;
+        for (int i = 0; i < count; i++) {
+            if (pendingAddTrees[i].rootID == jiggleTree.rootID) {
+                return;
+            }
+        }
         pendingAddTrees.Add(jiggleTree);
     }
 
     public void Remove(int rootBoneInstanceID) {
+        var count = pendingAddTrees.Count;
+        for (int i = 0; i < count; i++) {
+            if (pendingAddTrees[i].rootID == rootBoneInstanceID) {
+                pendingAddTrees.RemoveAt(i);
+                return;
+            }
+        }
         pendingRemoveTrees.Add(rootBoneInstanceID);
     }
 
@@ -469,7 +484,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             newTransformRootAccessArray = new TransformAccessArray(count);
         }
         int addedSoFar = 0;
-        for (var index = currentIndex; index < count && addedSoFar < 512; index++) {
+        for (var index = currentIndex; index < count && addedSoFar < 1024; index++) {
             newTransformAccessArray.Add(transformAccessList[index]);
             newTransformRootAccessArray.Add(transformRootAccessList[index]);
             addedSoFar++;

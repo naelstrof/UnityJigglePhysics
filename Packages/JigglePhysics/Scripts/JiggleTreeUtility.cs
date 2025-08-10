@@ -245,10 +245,14 @@ public static class JiggleTreeUtility {
     
     public static void RemoveJiggleTreeSegment(JiggleTreeSegment jiggleTreeSegment) {
         if (jiggleTreeSegments.Contains(jiggleTreeSegment)) {
+            if (rootJiggleTreeSegments.Contains(jiggleTreeSegment)) {
+                rootJiggleTreeSegments.Remove(jiggleTreeSegment);
+            }
             jiggleTreeSegments.Remove(jiggleTreeSegment);
             jiggleRootLookup.Remove(jiggleTreeSegment.transform);
             jiggleTreeSegment.SetDirty();
             if (jiggleTreeSegment.jiggleTree != null) {
+                jiggleTrees.Remove(jiggleTreeSegment.jiggleTree);
                 jobs.Remove(jiggleTreeSegment.jiggleTree);
                 jiggleTreeSegment.SetJiggleTree(null);
             }

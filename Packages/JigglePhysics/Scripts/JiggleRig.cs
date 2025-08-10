@@ -46,12 +46,13 @@ public class JiggleRig : MonoBehaviour {
             List<JiggleRig> finished = new List<JiggleRig>();
             // DO DFS HERE
         }*/
-        _jiggleTreeSegment = new JiggleTreeSegment(_rootBone, this);
+        _jiggleTreeSegment ??= new JiggleTreeSegment(_rootBone, this);
     }
 
     private void OnDisable() {
         if (_jiggleTreeSegment != null) {
             JiggleTreeUtility.RemoveJiggleTreeSegment(_jiggleTreeSegment);
+            _jiggleTreeSegment = null;
         }
     }
 

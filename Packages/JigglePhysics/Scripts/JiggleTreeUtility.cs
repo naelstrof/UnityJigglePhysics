@@ -106,7 +106,7 @@ public static class JiggleTreeUtility {
                 var newJiggleTree = CreateJiggleTree(rootJiggleTreeSegment.rig);
                 rootJiggleTreeSegment.SetJiggleTree(newJiggleTree);
                 jiggleTrees.Add(rootJiggleTreeSegment.jiggleTree);
-                GetJiggleJobs().Add(rootJiggleTreeSegment.jiggleTree);
+                jobs.Add(rootJiggleTreeSegment.jiggleTree);
             }
         }
         Profiler.EndSample();

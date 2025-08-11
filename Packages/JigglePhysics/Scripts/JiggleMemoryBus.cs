@@ -268,7 +268,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
 
     private enum CommitState {
         Idle,
-        Processing,
+        ProcessingTransformAccess,
         RecreatingAccessArrays,
         RecreatingRootAccessArrays
     }
@@ -308,8 +308,8 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             pendingAddTrees.Clear();
             
             currentTransformAccessIndex = 0;
-            commitState = CommitState.Processing;
-        } else if (commitState == CommitState.Processing) {
+            commitState = CommitState.ProcessingTransformAccess;
+        } else if (commitState == CommitState.ProcessingTransformAccess) {
             GenerateNewAccessArrays(ref currentTransformAccessIndex, out var hasFinished);
             if (!hasFinished) return;
             ReadIn();

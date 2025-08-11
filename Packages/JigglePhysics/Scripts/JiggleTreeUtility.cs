@@ -64,6 +64,7 @@ public static class JiggleTreeUtility {
         var foundParent = GetParentJiggleTreeSegment(jiggleTreeSegment.transform, out var parentJiggleTreeSegment);
         if (foundParent) {
             jiggleTreeSegment.SetParent(parentJiggleTreeSegment);
+            parentJiggleTreeSegment.SetDirty();
             return false;
         } else {
             rootJiggleTreeSegments.Add(jiggleTreeSegment);

@@ -47,6 +47,7 @@ public class JiggleRig : MonoBehaviour {
             // DO DFS HERE
         }*/
         _jiggleTreeSegment ??= new JiggleTreeSegment(_rootBone, this);
+        _jiggleTreeSegment.SetDirty();
         JiggleTreeUtility.AddJiggleTreeSegment(_jiggleTreeSegment);
     }
 
@@ -67,6 +68,11 @@ public class JiggleRig : MonoBehaviour {
         isValid = _rootBone.IsChildOf(gameObject.transform);
         if (_excludedTransforms == null) _excludedTransforms = new List<Transform>();
         ValidateCurve(ref _jiggleBoneInputParameters.stiffnessCurve);
+        ValidateCurve(ref _jiggleBoneInputParameters.angleLimitCurve);
+        ValidateCurve(ref _jiggleBoneInputParameters.stretchCurve);
+        ValidateCurve(ref _jiggleBoneInputParameters.dragCurve);
+        ValidateCurve(ref _jiggleBoneInputParameters.airDragCurve);
+        ValidateCurve(ref _jiggleBoneInputParameters.gravityCurve);
         ValidateCurve(ref _jiggleBoneInputParameters.collisionRadiusCurve);
     }
 
@@ -81,15 +87,14 @@ public class JiggleRig : MonoBehaviour {
         var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AssetDatabase.GUIDToAssetPath("c35a2123f4d44dd469ccb24af7a0ce20"));
         var visualElement = new VisualElement();
         visualTreeAsset.CloneTree(visualElement);
-        SetSlider(visualElement, serializedProperty,
-            "StiffnessSlider",
+        SetCurvableSlider(
+            visualElement,
+            serializedProperty,
+            "StiffnessControl",
             nameof(JiggleBoneInputParameters.stiffness),
+            nameof(JiggleBoneInputParameters.stiffnessCurve),
             "Stiffness"
         );
-        
-        var stiffnessCurveElement = visualElement.Q<CurveField>("StiffnessCurve");
-        stiffnessCurveElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.stiffnessCurve)));
-        stiffnessCurveElement.Q<Label>().text = "Stiffness Curve";
         
         var angleLimitToggleElement = visualElement.Q<Toggle>("AngleLimitToggle");
         angleLimitToggleElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.angleLimitToggle)));
@@ -100,52 +105,77 @@ public class JiggleRig : MonoBehaviour {
             angleLimitSection.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
         });
 
-        SetSlider(visualElement, serializedProperty,
-            "AngleLimitSlider",
+        SetCurvableSlider(
+            visualElement,
+            serializedProperty,
+            "AngleLimitControl",
             nameof(JiggleBoneInputParameters.angleLimit),
+            nameof(JiggleBoneInputParameters.angleLimitCurve),
             "Angle Limit"
         );
-        SetSlider(visualElement, serializedProperty,
+        SetSlider(
+            visualElement,
+            serializedProperty,
             "AngleLimitSoftenSlider",
             nameof(JiggleBoneInputParameters.angleLimitSoften),
             "Angle Limit Soften"
         );
-        SetSlider(visualElement, serializedProperty,
+        SetSlider(
+            visualElement,
+            serializedProperty,
             "SoftenSlider",
             nameof(JiggleBoneInputParameters.soften),
             "Soften"
         );
-        SetSlider(visualElement, serializedProperty,
+        SetSlider(
+            visualElement,
+            serializedProperty,
             "RootStretchSlider",
             nameof(JiggleBoneInputParameters.rootStretch),
             "Root Stretch"
         );
-        SetSlider(visualElement, serializedProperty,
-            "StretchSlider",
+        SetCurvableSlider(
+            visualElement,
+            serializedProperty,
+            "StretchControl",
             nameof(JiggleBoneInputParameters.stretch),
+            nameof(JiggleBoneInputParameters.stretchCurve),
             "Stretch"
         );
-        SetSlider(visualElement, serializedProperty,
-            "DragSlider",
+        SetCurvableSlider(
+            visualElement,
+            serializedProperty,
+            "DragControl",
             nameof(JiggleBoneInputParameters.drag),
+            nameof(JiggleBoneInputParameters.dragCurve),
             "Drag"
         );
-        SetSlider(visualElement, serializedProperty,
-            "AirDragSlider",
+        SetCurvableSlider(
+            visualElement,
+            serializedProperty,
+            "AirDragControl",
             nameof(JiggleBoneInputParameters.airDrag),
+            nameof(JiggleBoneInputParameters.airDragCurve),
             "Air Drag"
         );
-        var gravityElement = visualElement.Q<FloatField>("GravityField");
-        gravityElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.gravity)));
-        gravityElement.Q<Label>().text = "Gravity";
+
+        SetCurvableFloat(
+            visualElement,
+            serializedProperty,
+            "GravityControl",
+            nameof(JiggleBoneInputParameters.gravity),
+            nameof(JiggleBoneInputParameters.gravityCurve),
+            "Gravity"
+        );
         
-        var collisionRadiusElement = visualElement.Q<FloatField>("CollisionRadiusField");
-        collisionRadiusElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.collisionRadius)));
-        collisionRadiusElement.Q<Label>().text = "Collision Radius";
-        
-        var collisionCurveElement = visualElement.Q<CurveField>("CollisionRadiusCurve");
-        collisionCurveElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.collisionRadiusCurve)));
-        collisionCurveElement.Q<Label>().text = "Collision Radius Curve";
+        SetCurvableFloat(
+            visualElement,
+            serializedProperty,
+            "CollisionRadiusControl",
+            nameof(JiggleBoneInputParameters.collisionRadius),
+            nameof(JiggleBoneInputParameters.collisionRadiusCurve),
+            "Collision Radius"
+        );
         
         var advancedToggleElement = visualElement.Q<Toggle>("AdvancedToggle");
         advancedToggleElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.advancedToggle)));
@@ -160,7 +190,6 @@ public class JiggleRig : MonoBehaviour {
         advancedToggleElement.RegisterValueChangedCallback(evt => {
             advancedSection.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
             advancedSection2.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
-            stiffnessCurveElement.style.display = _jiggleBoneInputParameters.advancedToggle ? DisplayStyle.Flex : DisplayStyle.None;
         });
         
         var collisionSection = visualElement.Q<VisualElement>("CollisionSection");
@@ -176,6 +205,25 @@ public class JiggleRig : MonoBehaviour {
         sliderElement.BindProperty(serializedProperty.FindPropertyRelative(parameter));
         sliderElement.Q<Label>().text = name;
     }
+
+    void SetCurvableSlider(VisualElement visualElement, SerializedProperty serializedProperty, string id, string sliderParameter, string curveParameter, string name) {
+        var sliderElement = visualElement.Q<VisualElement>(id);
+        var sliderElementSlider = sliderElement.Q<Slider>("CurvableSlider");
+        sliderElementSlider.BindProperty(serializedProperty.FindPropertyRelative(sliderParameter));
+        sliderElementSlider.Q<Label>().text = name;
+        var stiffnessCurveElement = sliderElement.Q<CurveField>("CurvableCurve");
+        stiffnessCurveElement.BindProperty(serializedProperty.FindPropertyRelative(curveParameter));
+    }
+
+    void SetCurvableFloat(VisualElement visualElement, SerializedProperty serializedProperty, string id, string floatParameter, string curveParameter, string name) {
+        var sliderElement = visualElement.Q<VisualElement>(id);
+        var curvableFloat = sliderElement.Q<FloatField>("CurvableFloat");
+        curvableFloat.BindProperty(serializedProperty.FindPropertyRelative(floatParameter));
+        curvableFloat.Q<Label>().text = name;
+        var stiffnessCurveElement = sliderElement.Q<CurveField>("CurvableCurve");
+        stiffnessCurveElement.BindProperty(serializedProperty.FindPropertyRelative(curveParameter));
+    }
+
 #endif
     
 }

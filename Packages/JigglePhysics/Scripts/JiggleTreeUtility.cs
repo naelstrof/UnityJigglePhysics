@@ -71,21 +71,6 @@ public static class JiggleTreeUtility {
         }
     }
     
-    private static List<JiggleTreeSegment> GetRootJiggleTreeSegments() {
-        Profiler.BeginSample("JiggleTreeUtility.GetRootJiggleTreeSegments");
-        rootJiggleTreeSegments.Clear();
-        foreach (var jiggleTreeSegment in jiggleTreeSegments) {
-            var foundParent = GetParentJiggleTreeSegment(jiggleTreeSegment.transform, out var parentJiggleTreeSegment);
-            if (foundParent) {
-                jiggleTreeSegment.SetParent(parentJiggleTreeSegment);
-            } else {
-                rootJiggleTreeSegments.Add(jiggleTreeSegment);
-            }
-        }
-        Profiler.EndSample();
-        return rootJiggleTreeSegments;
-    }
-
     public static JiggleJobs GetJiggleJobs() {
         if (!_globalDirty) {
             return jobs;
@@ -99,10 +84,12 @@ public static class JiggleTreeUtility {
         Profiler.BeginSample("JiggleRoot.GetJiggleTrees");
         // TODO: Cleanup previous trees, or reuse them.
         foreach (var rootJiggleTreeSegment in rootJiggleTreeSegments) {
-            if (rootJiggleTreeSegment.jiggleTree != null && jiggleTrees.Contains(rootJiggleTreeSegment.jiggleTree)) {
+            var currentTree = rootJiggleTreeSegment.jiggleTree;
+            if (currentTree != null && jiggleTrees.Contains(currentTree) && !currentTree.dirty) {
                 continue;
             }
-            if (rootJiggleTreeSegment.jiggleTree == null) {
+            if (currentTree == null || currentTree.dirty) {
+                currentTree?.Dispose();
                 var newJiggleTree = CreateJiggleTree(rootJiggleTreeSegment.rig);
                 rootJiggleTreeSegment.SetJiggleTree(newJiggleTree);
             }
@@ -263,20 +250,30 @@ public static class JiggleTreeUtility {
     }
     
     public static void RemoveJiggleTreeSegment(JiggleTreeSegment jiggleTreeSegment) {
+        if (rootJiggleTreeSegments.Contains(jiggleTreeSegment)) {
+            rootJiggleTreeSegments.Remove(jiggleTreeSegment);
+        }
+
+        jiggleRootLookup.Remove(jiggleTreeSegment.transform);
+
         if (jiggleTreeSegments.Contains(jiggleTreeSegment)) {
-            if (rootJiggleTreeSegments.Contains(jiggleTreeSegment)) {
-                rootJiggleTreeSegments.Remove(jiggleTreeSegment);
-            }
             jiggleTreeSegments.Remove(jiggleTreeSegment);
-            jiggleRootLookup.Remove(jiggleTreeSegment.transform);
-            jiggleTreeSegment.SetDirty();
-            if (jiggleTreeSegment.jiggleTree != null) {
+        }
+        
+        if (jiggleTreeSegment.jiggleTree != null) {
+            if (jiggleTrees.Contains(jiggleTreeSegment.jiggleTree)) {
                 jiggleTrees.Remove(jiggleTreeSegment.jiggleTree);
                 jobs.Remove(jiggleTreeSegment.jiggleTree);
-                jiggleTreeSegment.jiggleTree.Dispose();
             }
+            jiggleTreeSegment.jiggleTree.Dispose();
         }
-        if (jiggleTreeSegment.parent!=null) jiggleTreeSegment.parent.SetDirty();
+
+        if (jiggleTreeSegment.parent != null) {
+            jiggleTreeSegment.parent.SetDirty();
+            jiggleTreeSegment.SetParent(null);
+        }
+        
+        SetGlobalDirty();
     }
 
 }

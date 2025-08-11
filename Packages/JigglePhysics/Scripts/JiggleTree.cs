@@ -12,6 +12,7 @@ public class JiggleTree {
     public int rootID { get; private set; }
     
     public void SetDirty() {
+        Debug.Log("SET DIRTY!");
         dirty = true;
     }
     public void ClearDirty() => dirty = false;
@@ -35,7 +36,7 @@ public class JiggleTree {
     }
     
     public JiggleTree(List<Transform> bones, List<JiggleBoneSimulatedPoint> points) {
-        dirty = true;
+        dirty = false;
         this.bones = bones.ToArray();
         this.points = points.ToArray();
         rootID = bones[0].GetInstanceID();

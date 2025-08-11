@@ -203,12 +203,13 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     
     private void ClearTransformAccessArrays(out bool isDone) {
         var length = newTransformAccessArray.length;
-        for (int i = 0; i < 512 && length > 0; i++) {
-            newTransformAccessArray.RemoveAtSwapBack(i);
-            newTransformRootAccessArray.RemoveAtSwapBack(i);
-            length--;
+        int removedSoFar = 0;
+        for (int i = 0; i < length && removedSoFar < 512; i++) {
+            newTransformAccessArray.RemoveAtSwapBack(0);
+            newTransformRootAccessArray.RemoveAtSwapBack(0);
+            removedSoFar++;
         }
-        isDone = length == 0;
+        isDone = removedSoFar == length;
     }
 
     private void RemoveTransformsForTree(int id) {
@@ -270,7 +271,6 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         Idle,
         ProcessingTransformAccess,
         RecreatingAccessArrays,
-        RecreatingRootAccessArrays
     }
     
     private CommitState commitState = CommitState.Idle;
@@ -389,8 +389,6 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             ClearTransformAccessArrays(out var hasFinished);
             if (hasFinished) {
                 commitState = CommitState.Idle;
-            } else {
-                commitState = CommitState.RecreatingRootAccessArrays;
             }
         }
     }

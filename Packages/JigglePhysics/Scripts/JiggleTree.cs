@@ -17,9 +17,21 @@ public class JiggleTree {
     public void ClearDirty() => dirty = false;
     
     private bool hasJiggleTreeStruct = false;
+    private JiggleTreeStruct jiggleTreeStruct;
 
     public JiggleTreeStruct GetStruct() {
-        return new JiggleTreeStruct(rootID,0, points);
+        if (hasJiggleTreeStruct) {
+            return jiggleTreeStruct;
+        }
+        jiggleTreeStruct = new JiggleTreeStruct(rootID,0, points);
+        return jiggleTreeStruct;
+    }
+
+    public void Dispose() {
+        if (hasJiggleTreeStruct) {
+            jiggleTreeStruct.Dispose();
+            hasJiggleTreeStruct = false;
+        }
     }
     
     public JiggleTree(List<Transform> bones, List<JiggleBoneSimulatedPoint> points) {

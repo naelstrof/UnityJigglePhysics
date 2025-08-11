@@ -66,7 +66,6 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     public int treeCount;
     
     private int currentTransformAccessIndex = 0;
-    private int currentTransformRemoveIndex = 0;
 
     public void RotateBuffers() {
         var tempPoses = interpolationPreviousPoseData;
@@ -132,10 +131,6 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         
         transformCapacity = newTransformCapacity;
         treeCapacity = newTreeCapacity;
-        if (!newTransformAccessArray.isCreated) {
-            newTransformAccessArray = new TransformAccessArray(transformCount);
-            newTransformRootAccessArray = new TransformAccessArray(transformCount);
-        }
     }
     
     public JiggleMemoryBus() {
@@ -150,8 +145,10 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         
         transformAccessList = new List<Transform>();
         transformRootAccessList = new List<Transform>();
-        transformAccessArray = new TransformAccessArray(new Transform[] {});
-        transformRootAccessArray = new TransformAccessArray(new Transform[] {});
+        transformAccessArray = new TransformAccessArray(100);
+        transformRootAccessArray = new TransformAccessArray(100);
+        newTransformAccessArray = new TransformAccessArray(100);
+        newTransformRootAccessArray = new TransformAccessArray(100);
         
         colliderTransformAccessArray = new TransformAccessArray(new Transform[] {});
         colliderPositions = new NativeArray<float3>(new float3[]{}, Allocator.Persistent);
@@ -204,18 +201,14 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         Profiler.EndSample();
     }
     
-    private void DisposeTransformAccessArray(ref int index, out bool isDone) {
+    private void ClearTransformAccessArrays(out bool isDone) {
         var length = newTransformAccessArray.length;
-        for (int i = index; i < 512 && i < length; i++) {
+        for (int i = 0; i < 512 && length > 0; i++) {
             newTransformAccessArray.RemoveAtSwapBack(i);
             newTransformRootAccessArray.RemoveAtSwapBack(i);
+            length--;
         }
-        index += 512;
-        if (index >= transformCount) {
-            isDone = true;
-        } else {
-            isDone = false;
-        }
+        isDone = length == 0;
     }
 
     private void RemoveTransformsForTree(int id) {
@@ -391,10 +384,9 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             
             WriteOut();
             FlipTransformAccessArrays();
-            currentTransformRemoveIndex = 0;
             commitState = CommitState.RecreatingAccessArrays;
         } else if (commitState == CommitState.RecreatingAccessArrays) {
-            DisposeTransformAccessArray(ref currentTransformRemoveIndex, out var hasFinished);
+            ClearTransformAccessArrays(out var hasFinished);
             if (hasFinished) {
                 commitState = CommitState.Idle;
             } else {
@@ -468,6 +460,14 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
 
         if (transformRootAccessArray.isCreated) {
             transformRootAccessArray.Dispose();
+        }
+        
+        if (newTransformAccessArray.isCreated) {
+            newTransformAccessArray.Dispose();
+        }
+
+        if (newTransformRootAccessArray.isCreated) {
+            newTransformRootAccessArray.Dispose();
         }
         
         if (colliderTransformAccessArray.isCreated) {

@@ -52,7 +52,6 @@ public unsafe struct JiggleTreeStruct {
             points[i] = inputPoints[i];
         }
     }
-
     public void Dispose() {
         if (points != null) {
             UnsafeUtility.Free(points, Allocator.Persistent);

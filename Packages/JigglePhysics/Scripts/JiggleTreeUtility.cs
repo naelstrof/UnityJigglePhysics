@@ -273,6 +273,7 @@ public static class JiggleTreeUtility {
             if (jiggleTreeSegment.jiggleTree != null) {
                 jiggleTrees.Remove(jiggleTreeSegment.jiggleTree);
                 jobs.Remove(jiggleTreeSegment.jiggleTree);
+                jiggleTreeSegment.jiggleTree.Dispose();
             }
         }
         if (jiggleTreeSegment.parent!=null) jiggleTreeSegment.parent.SetDirty();

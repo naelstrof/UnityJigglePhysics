@@ -12,7 +12,6 @@ public class JiggleTree {
     public int rootID { get; private set; }
     
     public void SetDirty() {
-        Debug.Log("SET DIRTY!");
         dirty = true;
     }
     public void ClearDirty() => dirty = false;

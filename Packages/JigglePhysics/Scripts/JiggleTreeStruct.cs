@@ -88,10 +88,12 @@ public static class JiggleTreeStructExtensions {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void WriteOutputPose(this JiggleTreeStruct self, NativeArray<PoseData> outputPoses,
         int index, JiggleTransform pose, float3 rootOffset, float3 rootPosition) {
-        outputPoses[index + (int)self.transformIndexOffset] = new PoseData {
-            pose = pose,
-            rootOffset = rootOffset,
-            rootPosition = rootPosition,
-        };
+        var old = outputPoses[index + (int)self.transformIndexOffset];
+        pose.isVirtual = old.pose.isVirtual;
+        old.pose = pose;
+        old.rootOffset = rootOffset;
+        old.rootPosition = rootPosition;
+
+        outputPoses[index + (int)self.transformIndexOffset] = old;
     }
 }

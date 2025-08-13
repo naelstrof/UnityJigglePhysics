@@ -288,7 +288,7 @@ public struct JiggleJobSimulate : IJobFor {
             var animPoseToPhysicsPose = math.slerp(quaternion.identity, FromToRotation(cachedAnimatedVector, simulatedVector), point.parameters.blend);
 
             tree.WriteOutputPose(outputPoses, i, new JiggleTransform() {
-                isVirtual = false,
+                isVirtual = !point.hasTransform,
                 position = point.workingPosition,
                 rotation = math.mul(animPoseToPhysicsPose, tree.GetInputPose(inputPoses, i).rotation),
             }, rootSimulationPosition - rootPose, rootSimulationPosition);

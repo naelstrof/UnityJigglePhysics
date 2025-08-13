@@ -292,7 +292,9 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         }
 
         var rootBone = jiggleTree.bones[0];
-        while (transformAccessList.Count < transformCapacity) {
+        
+        var desiredCount = index + (int)jiggleTreeStruct.pointCount;
+        while (transformAccessList.Count < desiredCount) {
             transformAccessList.Add(rootBone);
             transformRootAccessList.Add(rootBone);
         }

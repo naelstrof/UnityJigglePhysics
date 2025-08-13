@@ -61,16 +61,16 @@ public class JiggleJobs {
         jobInterpolation.UpdateArrays(_memoryBus);
         jobTransformWrite.UpdateArrays(_memoryBus);
         
-        handleRootRead = jobBulkReadRoots.ScheduleReadOnly(_memoryBus.transformRootAccessArray, 128, dep);
+        handleRootRead = jobBulkReadRoots.ScheduleReadOnly(_memoryBus.GetTransformRootAccessArray(), 128, dep);
         hasHandleRootRead = true;
         
         jobInterpolation.currentTime = Time.timeAsDouble;
         handleInterpolate = jobInterpolation.ScheduleParallel(_memoryBus.transformCount, 128, handleRootRead);
         
         if (hasHandleBulkRead) {
-            handleTransformWrite = jobTransformWrite.Schedule(_memoryBus.transformAccessArray, JobHandle.CombineDependencies(handleInterpolate, handleBulkRead));
+            handleTransformWrite = jobTransformWrite.Schedule(_memoryBus.GetTransformAccessArray(), JobHandle.CombineDependencies(handleInterpolate, handleBulkRead));
         } else {
-            handleTransformWrite = jobTransformWrite.Schedule(_memoryBus.transformAccessArray, handleInterpolate);
+            handleTransformWrite = jobTransformWrite.Schedule(_memoryBus.GetTransformAccessArray(), handleInterpolate);
         }
 
         hasHandleTransformWrite = true;
@@ -110,7 +110,7 @@ public class JiggleJobs {
         jobSimulate.UpdateArrays(_memoryBus);
         jobBulkTransformRead.UpdateArrays(_memoryBus);
         
-        handleBulkRead = jobBulkTransformRead.ScheduleReadOnly(_memoryBus.transformAccessArray, 128);
+        handleBulkRead = jobBulkTransformRead.ScheduleReadOnly(_memoryBus.GetTransformAccessArray(), 128);
         hasHandleBulkRead = true;
 
         //handleColliderRead = jobBulkColliderTransformRead.ScheduleReadOnly(_memoryBus.colliderTransformAccessArray, 128);

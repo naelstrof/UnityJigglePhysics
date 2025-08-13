@@ -54,6 +54,9 @@ public class JiggleJobs {
     }
 
     public JobHandle SchedulePoses(JobHandle dep) {
+        if (_memoryBus.transformCount == 0) {
+            return dep;
+        }
         jobBulkReadRoots.UpdateArrays(_memoryBus);
         jobInterpolation.UpdateArrays(_memoryBus);
         jobTransformWrite.UpdateArrays(_memoryBus);

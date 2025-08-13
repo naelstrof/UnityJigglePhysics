@@ -24,8 +24,18 @@ public static class JiggleTreeUtility {
         jiggleTrees = new HashSet<JiggleTree>();
         colliderTransforms = null;
         _globalDirty = true;
-        jobs?.Dispose();
         jobs = new JiggleJobs();
+    }
+
+    public static void Dispose() {
+        jobs?.Dispose();
+        jiggleTreeSegments = new HashSet<JiggleTreeSegment>();
+        rootJiggleTreeSegments = new List<JiggleTreeSegment>();
+        jiggleRootLookup = new Dictionary<Transform, JiggleTreeSegment>();
+        jiggleTrees = new HashSet<JiggleTree>();
+        colliderTransforms = null;
+        _globalDirty = true;
+        jobs = null;
     }
     
     public static void SetGlobalDirty() => _globalDirty = true;

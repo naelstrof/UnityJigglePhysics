@@ -19,6 +19,7 @@ public static class JiggleJobManager {
     private static void Initialize() {
         accumulatedTime = 0f;
         time = 0f;
+        jobs = null;
     }
     
     public static void ScheduleUpdate(double deltaTime) {

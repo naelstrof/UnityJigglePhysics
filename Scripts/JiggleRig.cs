@@ -22,7 +22,7 @@ public class JiggleRig : MonoBehaviour {
     [SerializeField] protected bool _advanced;
     [SerializeField] protected bool _animated;
     [SerializeField] protected bool _excludeRoot;
-    [FormerlySerializedAs("_jiggleBoneInputParameters")] [SerializeField] protected JiggleTreeInputParameters jiggleTreeInputParameters;
+    [SerializeField] protected JiggleTreeInputParameters jiggleTreeInputParameters;
     [SerializeField] protected List<Transform> _excludedTransforms = new List<Transform>();
     [SerializeField, HideInInspector] List<BoneNormalizedDistanceFromRoot> _boneNormalizedDistanceFromRootList;
 

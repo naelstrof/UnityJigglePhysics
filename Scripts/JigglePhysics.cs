@@ -55,10 +55,10 @@ public static class JigglePhysics {
         jiggleRootLookup = new Dictionary<Transform, JiggleTreeSegment>();
         jiggleTrees = new HashSet<JiggleTree>();
         _globalDirty = true;
-        jobs = new JiggleJobs();
         accumulatedTime = 0f;
         time = 0f;
-        jobs = null;
+        jobs?.Dispose();
+        jobs = new JiggleJobs();
     }
 
     public static void Dispose() {

@@ -50,7 +50,7 @@ public class JiggleRigEditor : Editor {
         var script = (JiggleRig)target;
         var cam = SceneView.lastActiveSceneView.camera;
         var transforms = script.GetJiggleBoneTransforms();
-        var jiggleTree = JiggleTreeUtility.CreateJiggleTree(script, null);
+        var jiggleTree = JigglePhysics.CreateJiggleTree(script, null);
         var points = jiggleTree.points;
         for (var index = 0; index < points.Length; index++) {
             var simulatedPoint = points[index];
@@ -61,20 +61,20 @@ public class JiggleRigEditor : Editor {
         }
     }
 
-    public void DrawBone(Vector3 boneHead, Vector3 boneTail, JiggleBoneParameters jiggleBoneParameters, Camera cam) {
+    public void DrawBone(Vector3 boneHead, Vector3 boneTail, JigglePointParameters jigglePointParameters, Camera cam) {
         var camForward = cam.transform.forward;
         var fixedScreenSize = 0.01f;
         var toCam = cam.transform.position - boneHead;
         var distance = toCam.magnitude;
         var scale = distance * fixedScreenSize;
-        scale = jiggleBoneParameters.collisionRadius;
+        scale = jigglePointParameters.collisionRadius;
         Handles.DrawWireDisc(boneHead, camForward, scale);
         Handles.DrawLine(boneHead, boneTail);
         var boneDirection = (boneTail - boneHead).normalized;
         var angleLimitScale = 0.05f;
         Handles.DrawWireDisc(
-            boneHead + boneDirection * (angleLimitScale * Mathf.Cos(jiggleBoneParameters.angleLimit * Mathf.Deg2Rad)),
-            boneDirection, angleLimitScale * Mathf.Sin(jiggleBoneParameters.angleLimit * Mathf.Deg2Rad));
+            boneHead + boneDirection * (angleLimitScale * Mathf.Cos(jigglePointParameters.angleLimit * Mathf.Deg2Rad)),
+            boneDirection, angleLimitScale * Mathf.Sin(jigglePointParameters.angleLimit * Mathf.Deg2Rad));
     }
 
 }

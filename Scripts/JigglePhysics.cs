@@ -4,16 +4,49 @@ using UnityEngine.Profiling;
 
 namespace GatorDragonGames.JigglePhysics {
 
-public static class JiggleTreeUtility {
+public static class JigglePhysics {
     private static HashSet<JiggleTreeSegment> jiggleTreeSegments;
     private static Dictionary<Transform, JiggleTreeSegment> jiggleRootLookup;
     private static bool _globalDirty = true;
     private static HashSet<JiggleTree> jiggleTrees;
     private static readonly List<Transform> tempTransforms = new List<Transform>();
-    private static readonly List<JiggleBoneSimulatedPoint> tempPoints = new List<JiggleBoneSimulatedPoint>();
+    private static readonly List<JiggleSimulatedPoint> tempPoints = new List<JiggleSimulatedPoint>();
     private static List<JiggleTreeSegment> rootJiggleTreeSegments;
 
-    public static JiggleJobs jobs;
+    private static double accumulatedTime = 0f;
+    private static double time = 0f;
+    public const double FIXED_DELTA_TIME = 1.0 / 30.0;
+    public const double FIXED_DELTA_TIME_SQUARED = FIXED_DELTA_TIME * FIXED_DELTA_TIME;
+
+    private static JiggleJobs jobs;
+
+    public static void ScheduleUpdate(double deltaTime) {
+        accumulatedTime += deltaTime;
+        if (accumulatedTime < FIXED_DELTA_TIME) {
+            jobs?.SchedulePoses(default);
+            return;
+        }
+
+        while (accumulatedTime >= FIXED_DELTA_TIME) {
+            accumulatedTime -= FIXED_DELTA_TIME;
+            time += FIXED_DELTA_TIME;
+        }
+
+        jobs = GetJiggleJobs();
+        jobs.Simulate(time);
+    }
+
+    public static void CompleteUpdate() {
+        jobs?.CompletePoses();
+    }
+
+    public static void OnDrawGizmos() {
+        if (!Application.isPlaying) {
+            return;
+        }
+
+        GetJiggleJobs().OnDrawGizmos();
+    }
     
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void Initialize() {
@@ -23,6 +56,9 @@ public static class JiggleTreeUtility {
         jiggleTrees = new HashSet<JiggleTree>();
         _globalDirty = true;
         jobs = new JiggleJobs();
+        accumulatedTime = 0f;
+        time = 0f;
+        jobs = null;
     }
 
     public static void Dispose() {
@@ -123,11 +159,10 @@ public static class JiggleTreeUtility {
         } else {
             backProjection = jiggleRig.rootBone.position;
         }
-        tempPoints.Add(new JiggleBoneSimulatedPoint() { // Back projected virtual root
+        tempPoints.Add(new JiggleSimulatedPoint() { // Back projected virtual root
             position = backProjection,
             lastPosition = backProjection,
             childenCount = 1,
-            distanceFromRoot = 0f,
             parameters = jiggleRig.GetJiggleBoneParameter(0f),
             parentIndex = -1,
             hasTransform = false,
@@ -168,7 +203,7 @@ public static class JiggleTreeUtility {
         }
     }
 
-    private static void Visit(Transform t, List<Transform> transforms, List<JiggleBoneSimulatedPoint> points, int parentIndex, JiggleRig lastJiggleRig, Vector3 lastPosition, float currentLength, out int newIndex) {
+    private static void Visit(Transform t, List<Transform> transforms, List<JiggleSimulatedPoint> points, int parentIndex, JiggleRig lastJiggleRig, Vector3 lastPosition, float currentLength, out int newIndex) {
         if (Application.isPlaying && GetJiggleTreeSegmentByBone(t, out JiggleTreeSegment currentJiggleTreeSegment)) {
             lastJiggleRig = currentJiggleTreeSegment.rig;
         }
@@ -176,7 +211,7 @@ public static class JiggleTreeUtility {
             transforms.Add(t);
             var parameters = lastJiggleRig.GetJiggleBoneParameter(lastJiggleRig.GetNormalizedDistanceFromRoot(t));
             if ((lastJiggleRig.rootExcluded && t == lastJiggleRig.rootBone) || lastJiggleRig.CheckExcluded(t)) {
-                parameters = new JiggleBoneParameters() {
+                parameters = new JigglePointParameters() {
                     angleElasticity = 1f,
                     lengthElasticity = 1f,
                     rootElasticity = 1f,
@@ -191,7 +226,7 @@ public static class JiggleTreeUtility {
             var currentPosition = t.position;
 
             var validChildrenCount = GetValidChildrenCount(t, lastJiggleRig);
-            points.Add(new JiggleBoneSimulatedPoint() { // Regular point
+            points.Add(new JiggleSimulatedPoint() { // Regular point
                 position = currentPosition,
                 lastPosition = currentPosition,
                 childenCount = validChildrenCount == 0 ? 1 : validChildrenCount,
@@ -205,7 +240,7 @@ public static class JiggleTreeUtility {
             
             if (validChildrenCount == 0) {
                 transforms.Add(t);
-                points.Add(new JiggleBoneSimulatedPoint() { // virtual projected tip
+                points.Add(new JiggleSimulatedPoint() { // virtual projected tip
                     position = currentPosition + (currentPosition - lastPosition),
                     lastPosition = currentPosition + (currentPosition - lastPosition),
                     childenCount = 0,

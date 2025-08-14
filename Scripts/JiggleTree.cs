@@ -1,7 +1,4 @@
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
 namespace GatorDragonGames.JigglePhysics {
@@ -9,7 +6,7 @@ namespace GatorDragonGames.JigglePhysics {
 public class JiggleTree {
 
     public Transform[] bones;
-    public JiggleBoneSimulatedPoint[] points;
+    public JiggleSimulatedPoint[] points;
     public bool dirty { get; private set; }
     public int rootID { get; private set; }
 
@@ -20,32 +17,32 @@ public class JiggleTree {
     public void ClearDirty() => dirty = false;
 
     private bool hasJiggleTreeStruct = false;
-    private JiggleTreeStruct jiggleTreeStruct;
+    private JiggleTreeJobData jiggleTreeJobData;
 
-    public JiggleTreeStruct GetStruct() {
+    public JiggleTreeJobData GetStruct() {
         if (hasJiggleTreeStruct) {
-            return jiggleTreeStruct;
+            return jiggleTreeJobData;
         }
 
-        jiggleTreeStruct = new JiggleTreeStruct(rootID, 0, points);
-        return jiggleTreeStruct;
+        jiggleTreeJobData = new JiggleTreeJobData(rootID, 0, points);
+        return jiggleTreeJobData;
     }
 
     public void Dispose() {
         if (hasJiggleTreeStruct) {
-            jiggleTreeStruct.Dispose();
+            jiggleTreeJobData.Dispose();
             hasJiggleTreeStruct = false;
         }
     }
 
-    public JiggleTree(List<Transform> bones, List<JiggleBoneSimulatedPoint> points) {
+    public JiggleTree(List<Transform> bones, List<JiggleSimulatedPoint> points) {
         dirty = false;
         this.bones = bones.ToArray();
         this.points = points.ToArray();
         rootID = bones[0].GetInstanceID();
     }
 
-    public void Set(List<Transform> bones, List<JiggleBoneSimulatedPoint> points) {
+    public void Set(List<Transform> bones, List<JiggleSimulatedPoint> points) {
         var bonesCount = bones.Count;
         var pointsCount = points.Count;
         if (bonesCount == this.bones.Length && pointsCount == this.points.Length) {
@@ -63,7 +60,7 @@ public class JiggleTree {
 
         rootID = bones[0].GetInstanceID();
         if (hasJiggleTreeStruct) {
-            jiggleTreeStruct.Set(rootID, this.points);
+            jiggleTreeJobData.Set(rootID, this.points);
         }
 
         dirty = false;

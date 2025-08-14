@@ -18,7 +18,7 @@ public struct JiggleJobSimulate : IJobFor {
     [NativeDisableParallelForRestriction] public NativeArray<PoseData> outputPoses;
     [NativeDisableParallelForRestriction] public NativeArray<float3> testColliders;
 
-    public NativeArray<JiggleTreeStruct> jiggleTrees;
+    public NativeArray<JiggleTreeJobData> jiggleTrees;
 
     public JiggleJobSimulate(JiggleMemoryBus bus) {
         inputPoses = bus.simulateInputPoses;
@@ -37,7 +37,7 @@ public struct JiggleJobSimulate : IJobFor {
     }
 
 
-    private unsafe void Cache(JiggleTreeStruct tree) {
+    private unsafe void Cache(JiggleTreeJobData tree) {
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points[i];
             if (point.parentIndex == -1) {
@@ -78,7 +78,7 @@ public struct JiggleJobSimulate : IJobFor {
         }
     }
 
-    private unsafe void VerletIntegrate(JiggleTreeStruct tree) {
+    private unsafe void VerletIntegrate(JiggleTreeJobData tree) {
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points[i];
             if (point.parentIndex == -1) {
@@ -94,12 +94,12 @@ public struct JiggleJobSimulate : IJobFor {
                 point.workingPosition = point.position + velocity * (1f - parent.parameters.airDrag) +
                                         localSpaceVelocity * (1f - parent.parameters.drag) + gravity *
                                         parent.parameters.gravityMultiplier *
-                                        (float)JiggleJobManager.FIXED_DELTA_TIME_SQUARED;
+                                        (float)JigglePhysics.FIXED_DELTA_TIME_SQUARED;
             } else {
                 point.workingPosition = point.position + velocity * (1f - point.parameters.airDrag) +
                                         localSpaceVelocity * (1f - point.parameters.drag) + gravity *
                                         point.parameters.gravityMultiplier *
-                                        (float)JiggleJobManager.FIXED_DELTA_TIME_SQUARED;
+                                        (float)JigglePhysics.FIXED_DELTA_TIME_SQUARED;
             }
 
             tree.points[i] = point;
@@ -116,7 +116,7 @@ public struct JiggleJobSimulate : IJobFor {
         return math.degrees(math.acos(math.clamp(math.dot(math.normalizesafe(a, new float3(0,0,1)), math.normalizesafe(b, new float3(0,0,1))), -1f, 1f)));
     }
 
-    private unsafe void Constrain(JiggleTreeStruct tree) {
+    private unsafe void Constrain(JiggleTreeJobData tree) {
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points[i];
 
@@ -274,7 +274,7 @@ public struct JiggleJobSimulate : IJobFor {
         }
     }
 
-    private unsafe void FinishStep(JiggleTreeStruct tree) {
+    private unsafe void FinishStep(JiggleTreeJobData tree) {
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points[i];
             point.lastPosition = point.position;
@@ -283,7 +283,7 @@ public struct JiggleJobSimulate : IJobFor {
         }
     }
 
-    private unsafe void ApplyPose(JiggleTreeStruct tree) {
+    private unsafe void ApplyPose(JiggleTreeJobData tree) {
         var rootSimulationPosition = tree.points[1].workingPosition;
         var rootPose = tree.GetInputPose(inputPoses, 1).position;
         for (int i = 0; i < tree.pointCount; i++) {

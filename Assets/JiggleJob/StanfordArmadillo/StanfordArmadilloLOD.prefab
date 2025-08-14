@@ -178,9 +178,24 @@ MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 1782508238367030601, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &791291526442415813 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1996864990316792980, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1641500693017796026 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1700635982630530011 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 492209822946546058, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1936377964600207993 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8389620975322476504, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
 --- !u!23 &2064202532113915557 stripped
@@ -206,20 +221,191 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _rootBone: {fileID: 3621395473087321750}
+  _advanced: 0
   _animated: 1
   _excludeRoot: 0
   _jiggleBoneInputParameters:
     advancedToggle: 1
+    collisionToggle: 1
     angleLimitToggle: 1
-    stiffness: 0.638
+    stiffness: 0.657
+    stiffnessCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
     soften: 0.461
-    angleLimit: 24.7
+    angleLimit: 1
+    angleLimitCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
     angleLimitSoften: 0.438
     rootStretch: 0.096
     stretch: 0.187
+    stretchCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
     drag: 0.19
+    dragCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
     airDrag: 0
+    airDragCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
     gravity: 1
+    gravityCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    collisionRadius: 0.27
+    collisionRadiusCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: -0.7985954
+        outSlope: -0.7985954
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0.20140457
+        inSlope: -0.7985954
+        outSlope: -0.7985954
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
     blend: 0
   _excludedTransforms:
   - {fileID: 8255344140854802057}
@@ -237,6 +423,45 @@ MonoBehaviour:
   - {fileID: 8351974499152798566}
   - {fileID: 7487477589395673440}
   - {fileID: 3312696343161446861}
+  _boneNormalizedDistanceFromRootList:
+  - bone: {fileID: 3621395473087321750}
+    normalizedDistanceFromRoot: 0
+  - bone: {fileID: 4005986313920151804}
+    normalizedDistanceFromRoot: 0.16777489
+  - bone: {fileID: 8633496001689150107}
+    normalizedDistanceFromRoot: 0.45114687
+  - bone: {fileID: 6529000040755562270}
+    normalizedDistanceFromRoot: 0.6031589
+  - bone: {fileID: 6741114186472516256}
+    normalizedDistanceFromRoot: 0.7775632
+  - bone: {fileID: 2636989250736996664}
+    normalizedDistanceFromRoot: 0.8429288
+  - bone: {fileID: 6727539069870592055}
+    normalizedDistanceFromRoot: 0.91878194
+  - bone: {fileID: 1936377964600207993}
+    normalizedDistanceFromRoot: 0.7713763
+  - bone: {fileID: 8775478108529102606}
+    normalizedDistanceFromRoot: 0.83427274
+  - bone: {fileID: 9195763597024933208}
+    normalizedDistanceFromRoot: 0.9101878
+  - bone: {fileID: 2963195145665492893}
+    normalizedDistanceFromRoot: 0.7275297
+  - bone: {fileID: 6584903380823294427}
+    normalizedDistanceFromRoot: 0.38164994
+  - bone: {fileID: 5926739402192531816}
+    normalizedDistanceFromRoot: 0.55080634
+  - bone: {fileID: 7821723255740660825}
+    normalizedDistanceFromRoot: 0.76019186
+  - bone: {fileID: 791291526442415813}
+    normalizedDistanceFromRoot: 1
+  - bone: {fileID: 2620789519507219426}
+    normalizedDistanceFromRoot: 0.37177747
+  - bone: {fileID: 1700635982630530011}
+    normalizedDistanceFromRoot: 0.51869565
+  - bone: {fileID: 2782747151077295754}
+    normalizedDistanceFromRoot: 0.6875768
+  - bone: {fileID: 4308341065098162957}
+    normalizedDistanceFromRoot: 0.9533156
 --- !u!23 &2311527194450025130 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 3555944776404967675, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
@@ -245,6 +470,26 @@ MeshRenderer:
 --- !u!23 &2346207495333752530 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 3585452558021645443, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2620789519507219426 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3824571470312642995, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2636989250736996664 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -5344358153940321431, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2782747151077295754 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -5200746513215636261, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2963195145665492893 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4058327219268931020, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
 --- !u!23 &3205806486236068434 stripped
@@ -280,6 +525,16 @@ Transform:
 --- !u!4 &3963800410751119265 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6462860991985003024, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &4005986313920151804 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2798263691489245869, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &4308341065098162957 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3064484097229850972, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
 --- !u!23 &4357432955584057311 stripped
@@ -342,6 +597,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4748995522363588001, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &5926739402192531816 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4831644721075997497, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &5935801676312389187 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4840601588179131410, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
@@ -357,9 +617,29 @@ MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 5270311034050440314, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &6529000040755562270 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5464796688585620815, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &6584903380823294427 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -3877819254080095350, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
 --- !u!23 &6656658480702856828 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: -3662478947880410067, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &6727539069870592055 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -3742363264627135898, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &6741114186472516256 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -3692864895632207631, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
 --- !u!23 &7234477385806603083 stripped
@@ -375,6 +655,11 @@ Transform:
 --- !u!23 &7720836910658157008 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: -402899470781545599, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &7821723255740660825 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9061566323192628744, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &8140592584355694757 stripped
@@ -400,5 +685,20 @@ Transform:
 --- !u!23 &8459504219987345431 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 7217936594376653382, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8633496001689150107 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7394109648031226058, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8775478108529102606 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7531623365560726879, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &9195763597024933208 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -1238319375640113399, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}

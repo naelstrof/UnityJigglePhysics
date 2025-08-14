@@ -113,7 +113,7 @@ public static class JiggleTreeUtility {
         Profiler.BeginSample("JiggleTreeUtility.CreateJiggleTree");
         tempTransforms.Clear();
         tempPoints.Clear();
-        VisitForLength(jiggleRig.rootBone, jiggleRig, jiggleRig.rootBone.position, 0f, out var totalLength);
+        if (!jiggleRig.normalizedDistanceFromRootListIsValid) jiggleRig.BuildNormalizedDistanceFromRootList();
         var backProjection = Vector3.zero;
         if (jiggleRig.rootBone.childCount != 0) {
             var pos = jiggleRig.rootBone.position;
@@ -134,7 +134,7 @@ public static class JiggleTreeUtility {
             animated = false,
         });
         tempTransforms.Add(jiggleRig.rootBone);
-        Visit(jiggleRig.rootBone, tempTransforms, tempPoints, 0, jiggleRig, jiggleRig.rootBone.position, 0f, totalLength, out int childIndex);
+        Visit(jiggleRig.rootBone, tempTransforms, tempPoints, 0, jiggleRig, jiggleRig.rootBone.position, 0f, out int childIndex);
         unsafe {
             var rootPoint = tempPoints[0];
             rootPoint.childrenIndices[0] = childIndex;
@@ -160,7 +160,7 @@ public static class JiggleTreeUtility {
         return colliderTransforms;
     }
 
-    private static void VisitForLength(Transform t, JiggleRig rig, Vector3 lastPosition, float currentLength, out float totalLength) {
+    public static void VisitForLength(Transform t, JiggleRig rig, Vector3 lastPosition, float currentLength, out float totalLength) {
         if (rig.CheckExcluded(t)) {
             totalLength = currentLength;
             return;
@@ -175,13 +175,13 @@ public static class JiggleTreeUtility {
         }
     }
 
-    private static void Visit(Transform t, List<Transform> transforms, List<JiggleBoneSimulatedPoint> points, int parentIndex, JiggleRig lastJiggleRig, Vector3 lastPosition, float currentLength, float totalLength, out int newIndex) {
+    private static void Visit(Transform t, List<Transform> transforms, List<JiggleBoneSimulatedPoint> points, int parentIndex, JiggleRig lastJiggleRig, Vector3 lastPosition, float currentLength, out int newIndex) {
         if (Application.isPlaying && GetJiggleTreeSegmentByBone(t, out JiggleTreeSegment currentJiggleTreeSegment)) {
             lastJiggleRig = currentJiggleTreeSegment.rig;
         }
         if (!lastJiggleRig.CheckExcluded(t)) {
             transforms.Add(t);
-            var parameters = lastJiggleRig.GetJiggleBoneParameter(currentLength / totalLength);
+            var parameters = lastJiggleRig.GetJiggleBoneParameter(lastJiggleRig.GetNormalizedDistanceFromRoot(t));
             if ((lastJiggleRig.rootExcluded && t == lastJiggleRig.rootBone) || lastJiggleRig.CheckExcluded(t)) {
                 parameters = new JiggleBoneParameters() {
                     angleElasticity = 1f,
@@ -217,7 +217,7 @@ public static class JiggleTreeUtility {
                     lastPosition = currentPosition + (currentPosition - lastPosition),
                     childenCount = 0,
                     distanceFromRoot = currentLength,
-                    parameters = lastJiggleRig.GetJiggleBoneParameter(currentLength / totalLength),
+                    parameters = lastJiggleRig.GetJiggleBoneParameter(lastJiggleRig.GetNormalizedDistanceFromRoot(t)),
                     parentIndex = newIndex,
                     hasTransform = false,
                     animated = false,
@@ -230,7 +230,7 @@ public static class JiggleTreeUtility {
             } else {
                 for (int i = 0; i < validChildrenCount; i++) {
                     var child = GetValidChild(t, lastJiggleRig, i);
-                    Visit(child, transforms, points, newIndex, lastJiggleRig, currentPosition, currentLength, totalLength, out int childIndex);
+                    Visit(child, transforms, points, newIndex, lastJiggleRig, currentPosition, currentLength, out int childIndex);
                     unsafe { // WEIRD
                         var record = points[newIndex];
                         record.childrenIndices[i] = childIndex;
@@ -244,7 +244,7 @@ public static class JiggleTreeUtility {
 
     }
 
-    private static int GetValidChildrenCount(Transform t, JiggleRig jiggleRig) {
+    public static int GetValidChildrenCount(Transform t, JiggleRig jiggleRig) {
         int count = 0;
         var childCount = t.childCount;
         for(int i=0;i<childCount;i++) {
@@ -254,7 +254,7 @@ public static class JiggleTreeUtility {
         return count;
     }
 
-    private static Transform GetValidChild(Transform t, JiggleRig jiggleRig, int index) {
+    public static Transform GetValidChild(Transform t, JiggleRig jiggleRig, int index) {
         int count = 0;
         var childCount = t.childCount;
         for(int i=0;i<childCount;i++) {

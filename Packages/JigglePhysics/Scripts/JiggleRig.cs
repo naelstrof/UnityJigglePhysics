@@ -9,6 +9,12 @@ using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 #endif
 
+[Serializable]
+public struct BoneNormalizedDistanceFromRoot {
+    public Transform bone;
+    public float normalizedDistanceFromRoot;
+}
+
 public class JiggleRig : MonoBehaviour {
     [SerializeField] protected Transform _rootBone;
     [SerializeField] protected bool _advanced;
@@ -16,13 +22,20 @@ public class JiggleRig : MonoBehaviour {
     [SerializeField] protected bool _excludeRoot;
     [SerializeField] protected JiggleBoneInputParameters _jiggleBoneInputParameters;
     [SerializeField] protected List<Transform> _excludedTransforms = new List<Transform>();
-    
+    [SerializeField, HideInInspector] List<BoneNormalizedDistanceFromRoot> _boneNormalizedDistanceFromRootList;
     
     private JiggleTreeSegment _jiggleTreeSegment;
     bool isValid = false;
     public bool rootExcluded => _excludeRoot;
     public Transform rootBone => _rootBone;
     public bool CheckExcluded(Transform t) => _excludedTransforms.Contains(t);
+    
+    public float GetNormalizedDistanceFromRoot(Transform t) {
+        var entry = _boneNormalizedDistanceFromRootList.Find(x => x.bone == t);
+        return entry.bone ? entry.normalizedDistanceFromRoot : 0f;
+    }
+    
+    public bool normalizedDistanceFromRootListIsValid => _boneNormalizedDistanceFromRootList.Count!=null && _boneNormalizedDistanceFromRootList.Count > 0;
 
     public bool rootTransformError => !(!_rootBone || isValid);
 
@@ -55,6 +68,29 @@ public class JiggleRig : MonoBehaviour {
         ValidateCurve(ref _jiggleBoneInputParameters.airDragCurve);
         ValidateCurve(ref _jiggleBoneInputParameters.gravityCurve);
         ValidateCurve(ref _jiggleBoneInputParameters.collisionRadiusCurve);
+        BuildNormalizedDistanceFromRootList();
+    }
+    
+    public void BuildNormalizedDistanceFromRootList() {
+        JiggleTreeUtility.VisitForLength(_rootBone, this, _rootBone.position, 0f, out var totalLength);
+        _boneNormalizedDistanceFromRootList = new List<BoneNormalizedDistanceFromRoot>();
+        VisitAndSetNormalizedDistanceFromRoot(_rootBone, _rootBone.position, 0f, totalLength);
+    }
+    
+    public void VisitAndSetNormalizedDistanceFromRoot(Transform t, Vector3 lastPosition, float currentLength, float totalLength) {
+        if (CheckExcluded(t)) {
+            return;
+        }
+        currentLength += Vector3.Distance(lastPosition, t.position);
+        _boneNormalizedDistanceFromRootList.Add(new BoneNormalizedDistanceFromRoot() {
+            bone = t,
+            normalizedDistanceFromRoot = currentLength / totalLength
+        });
+        var validChildrenCount = JiggleTreeUtility.GetValidChildrenCount(t, this);
+        for (int i = 0; i < validChildrenCount; i++) {
+            var child = JiggleTreeUtility.GetValidChild(t, this, i);
+            VisitAndSetNormalizedDistanceFromRoot(child, t.position, currentLength, totalLength);
+        }
     }
 
     void ValidateCurve(ref AnimationCurve animationCurve) {

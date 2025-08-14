@@ -17,7 +17,7 @@ A jobs-based relativistic squash-and-stretch jiggle physics solution for transfo
 
 ## Installation
 
-Simply add `https://github.com/naelstrof/UnityJigglePhysics.git#upm` as a package using the package manager.
+Simply add `https://github.com/naelstrof/UnityJigglePhysics.git#upm` as a package using the package manager. Ideally you'd want to use a real version tag like `v11.0.0` in place of `upm` in a build system though!
 
 Or if that doesn't work, add it to the manifest.json like so.
 

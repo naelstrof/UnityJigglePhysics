@@ -134,7 +134,7 @@ public static class JiggleTreeUtility {
             animated = false,
         });
         tempTransforms.Add(jiggleRig.rootBone);
-        Visit(jiggleRig.rootBone, tempTransforms, tempPoints, 0, jiggleRig, jiggleRig.rootBone.position, 0f, out int childIndex);
+        Visit(jiggleRig.rootBone, tempTransforms, tempPoints, 0, jiggleRig, backProjection, 0f, out int childIndex);
         unsafe {
             var rootPoint = tempPoints[0];
             rootPoint.childrenIndices[0] = childIndex;

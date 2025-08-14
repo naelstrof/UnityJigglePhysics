@@ -42,7 +42,6 @@ public class JiggleTree {
     }
 
     public void Set(List<Transform> bones, List<JiggleBoneSimulatedPoint> points) {
-        Dispose();
         var bonesCount = bones.Count;
         var pointsCount = points.Count;
         if (bonesCount == this.bones.Length && pointsCount == this.points.Length) {
@@ -57,6 +56,9 @@ public class JiggleTree {
             this.points = points.ToArray();
         }
         rootID = bones[0].GetInstanceID();
+        if (hasJiggleTreeStruct) {
+            jiggleTreeStruct.Set(rootID, this.points);
+        }
         dirty = false;
     }
     private static void DebugDrawSphere(Vector3 origin, float radius, Color color, float duration, int segments = 8) {

@@ -100,7 +100,6 @@ public static class JiggleTreeUtility {
                 continue;
             }
             if (currentTree == null || currentTree.dirty) {
-                currentTree?.Dispose();
                 CreateJiggleTree(rootJiggleTreeSegment.rig, rootJiggleTreeSegment);
             }
             jiggleTrees.Add(rootJiggleTreeSegment.jiggleTree);

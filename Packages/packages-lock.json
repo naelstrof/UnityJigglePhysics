@@ -1,7 +1,7 @@
 {
   "dependencies": {
-    "com.naelstrof.jigglephysics": {
-      "version": "file:JigglePhysics",
+    "com.gator-dragon-games.jigglephysics": {
+      "version": "file:com.gator-dragon-games.jigglephysics",
       "depth": 0,
       "source": "embedded",
       "dependencies": {}

@@ -1,13 +1,15 @@
 {
-    "name": "Naelstrof.JigglePhysics",
+    "name": "com.gator-dragon-games.jigglephysics.editor",
     "rootNamespace": "",
     "references": [
-        "GUID:d8b63aba1907145bea998dd612889d6b",
-        "GUID:2665a8d13d1b3f18800f46e256720795"
+        "GUID:2684ea0d564097444a05d23355ff46a1",
+        "GUID:d8b63aba1907145bea998dd612889d6b"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
-    "allowUnsafeCode": true,
+    "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,

@@ -9,7 +9,6 @@ public static class JiggleTreeUtility {
     private static Dictionary<Transform, JiggleTreeSegment> jiggleRootLookup;
     private static bool _globalDirty = true;
     private static HashSet<JiggleTree> jiggleTrees;
-    private static Transform[] colliderTransforms;
     private static readonly List<Transform> tempTransforms = new List<Transform>();
     private static readonly List<JiggleBoneSimulatedPoint> tempPoints = new List<JiggleBoneSimulatedPoint>();
     private static List<JiggleTreeSegment> rootJiggleTreeSegments;
@@ -22,7 +21,6 @@ public static class JiggleTreeUtility {
         rootJiggleTreeSegments = new List<JiggleTreeSegment>();
         jiggleRootLookup = new Dictionary<Transform, JiggleTreeSegment>();
         jiggleTrees = new HashSet<JiggleTree>();
-        colliderTransforms = null;
         _globalDirty = true;
         jobs = new JiggleJobs();
     }
@@ -33,7 +31,6 @@ public static class JiggleTreeUtility {
         rootJiggleTreeSegments = new List<JiggleTreeSegment>();
         jiggleRootLookup = new Dictionary<Transform, JiggleTreeSegment>();
         jiggleTrees = new HashSet<JiggleTree>();
-        colliderTransforms = null;
         _globalDirty = true;
         jobs = null;
     }

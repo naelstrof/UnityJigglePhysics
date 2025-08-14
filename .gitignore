@@ -101,3 +101,6 @@ InitTestScene*.unity*
 
 # Custom
 /.idea/
+/Thry
+Assets/csc.rsp
+Assets/csc.rsp.meta

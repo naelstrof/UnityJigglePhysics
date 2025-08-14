@@ -26,19 +26,20 @@ public class JiggleRigEditor : Editor {
         });
         errorSection.style.display = script.rootTransformError ? DisplayStyle.Flex : DisplayStyle.None;
 
-        var animatedToggleElement = visualElement.Q<Toggle>("AnimatedToggle");
-        animatedToggleElement.BindProperty(serializedObject.FindProperty("_animated"));
-        animatedToggleElement.Q<Label>().text = "Animated";
-
         var excludeRootToggleElement = visualElement.Q<Toggle>("ExcludeRootToggle");
         excludeRootToggleElement.BindProperty(serializedObject.FindProperty("_excludeRoot"));
-        excludeRootToggleElement.Q<Label>().text = "Exclude Root";
+        excludeRootToggleElement.Q<Label>().text = "Motionless Root";
 
         var excludedTransformsElement = visualElement.Q<PropertyField>("IgnoredTransformsField");
         excludedTransformsElement.BindProperty(serializedObject.FindProperty("_excludedTransforms"));
 
         visualElement.Add(script.GetInspectorVisualElement(serializedObject.FindProperty("_jiggleBoneInputParameters")));
         
+        var rootSection = visualElement.Q<VisualElement>("RootSection");
+        excludeRootToggleElement.RegisterValueChangedCallback(evt => {
+            rootSection.style.display = evt.newValue ? DisplayStyle.None : DisplayStyle.Flex;
+        });
+
         return visualElement;
     }
 

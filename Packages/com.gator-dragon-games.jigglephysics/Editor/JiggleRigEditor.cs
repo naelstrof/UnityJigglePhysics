@@ -1,22 +1,25 @@
 #if UNITY_EDITOR
-using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 using UnityEditor;
 using UnityEditor.UIElements;
 
+namespace GatorDragonGames.JigglePhysics {
+
 [CustomEditor(typeof(JiggleRig), true)]
 public class JiggleRigEditor : Editor {
-    
+
     public override VisualElement CreateInspectorGUI() {
-        
+
         var script = (JiggleRig)target;
 
-        var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AssetDatabase.GUIDToAssetPath("3b91b5cf6b975bd4d83d8a940258c420"));
+        var visualTreeAsset =
+            AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
+                AssetDatabase.GUIDToAssetPath("3b91b5cf6b975bd4d83d8a940258c420"));
         var visualElement = new VisualElement();
         visualTreeAsset.CloneTree(visualElement);
-        
+
         var rootElement = visualElement.Q<ObjectField>("RootField");
         rootElement.BindProperty(serializedObject.FindProperty("_rootBone"));
         rootElement.Q<Label>().text = "Root Transform";
@@ -53,7 +56,8 @@ public class JiggleRigEditor : Editor {
             var simulatedPoint = points[index];
             if (simulatedPoint.parentIndex == -1) continue;
             if (!points[simulatedPoint.parentIndex].hasTransform) continue;
-            DrawBone(points[simulatedPoint.parentIndex].position, simulatedPoint.position, simulatedPoint.parameters, cam);
+            DrawBone(points[simulatedPoint.parentIndex].position, simulatedPoint.position, simulatedPoint.parameters,
+                cam);
         }
     }
 
@@ -68,9 +72,13 @@ public class JiggleRigEditor : Editor {
         Handles.DrawLine(boneHead, boneTail);
         var boneDirection = (boneTail - boneHead).normalized;
         var angleLimitScale = 0.05f;
-        Handles.DrawWireDisc(boneHead + boneDirection * angleLimitScale * Mathf.Cos(jiggleBoneParameters.angleLimit*Mathf.Deg2Rad), boneDirection, angleLimitScale * Mathf.Sin(jiggleBoneParameters.angleLimit*Mathf.Deg2Rad));
+        Handles.DrawWireDisc(
+            boneHead + boneDirection * (angleLimitScale * Mathf.Cos(jiggleBoneParameters.angleLimit * Mathf.Deg2Rad)),
+            boneDirection, angleLimitScale * Mathf.Sin(jiggleBoneParameters.angleLimit * Mathf.Deg2Rad));
     }
-    
+
+}
+
 }
 
 #endif

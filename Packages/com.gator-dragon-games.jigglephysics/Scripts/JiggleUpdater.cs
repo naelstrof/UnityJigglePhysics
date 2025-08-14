@@ -1,5 +1,6 @@
-using System;
 using UnityEngine;
+
+namespace GatorDragonGames.JigglePhysics {
 
 public class JiggleUpdater : MonoBehaviour {
     private void LateUpdate() {
@@ -14,4 +15,6 @@ public class JiggleUpdater : MonoBehaviour {
     private void OnDrawGizmos() {
         JiggleJobManager.OnDrawGizmos();
     }
+}
+
 }

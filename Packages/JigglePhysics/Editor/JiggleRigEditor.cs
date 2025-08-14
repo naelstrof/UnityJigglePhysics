@@ -46,7 +46,7 @@ public class JiggleRigEditor : Editor {
         var script = (JiggleRig)target;
         var cam = SceneView.lastActiveSceneView.camera;
         var transforms = script.GetJiggleBoneTransforms();
-        var jiggleTree = JiggleTreeUtility.CreateJiggleTree(script);
+        var jiggleTree = JiggleTreeUtility.CreateJiggleTree(script, null);
         var points = jiggleTree.points;
         for (var index = 0; index < points.Length; index++) {
             var simulatedPoint = points[index];

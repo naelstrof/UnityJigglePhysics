@@ -40,6 +40,25 @@ public class JiggleTree {
         this.points = points.ToArray();
         rootID = bones[0].GetInstanceID();
     }
+
+    public void Set(List<Transform> bones, List<JiggleBoneSimulatedPoint> points) {
+        Dispose();
+        var bonesCount = bones.Count;
+        var pointsCount = points.Count;
+        if (bonesCount == this.bones.Length && pointsCount == this.points.Length) {
+            for (int i = 0; i < bonesCount; i++) {
+                this.bones[i] = bones[i];
+            }
+            for (int i = 0; i < pointsCount; i++) {
+                this.points[i] = points[i];
+            }
+        } else {
+            this.bones = bones.ToArray();
+            this.points = points.ToArray();
+        }
+        rootID = bones[0].GetInstanceID();
+        dirty = false;
+    }
     private static void DebugDrawSphere(Vector3 origin, float radius, Color color, float duration, int segments = 8) {
         float angleStep = 360f / segments;
         Vector3 prevPoint = Vector3.zero;

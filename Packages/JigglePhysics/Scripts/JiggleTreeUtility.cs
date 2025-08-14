@@ -101,8 +101,7 @@ public static class JiggleTreeUtility {
             }
             if (currentTree == null || currentTree.dirty) {
                 currentTree?.Dispose();
-                var newJiggleTree = CreateJiggleTree(rootJiggleTreeSegment.rig);
-                rootJiggleTreeSegment.SetJiggleTree(newJiggleTree);
+                CreateJiggleTree(rootJiggleTreeSegment.rig, rootJiggleTreeSegment);
             }
             jiggleTrees.Add(rootJiggleTreeSegment.jiggleTree);
             jobs.Add(rootJiggleTreeSegment.jiggleTree);
@@ -110,7 +109,7 @@ public static class JiggleTreeUtility {
         Profiler.EndSample();
     }
 
-    public static JiggleTree CreateJiggleTree(JiggleRig jiggleRig) {
+    public static JiggleTree CreateJiggleTree(JiggleRig jiggleRig, JiggleTreeSegment segment) {
         Profiler.BeginSample("JiggleTreeUtility.CreateJiggleTree");
         tempTransforms.Clear();
         tempPoints.Clear();
@@ -142,7 +141,16 @@ public static class JiggleTreeUtility {
             tempPoints[0] = rootPoint;
         }
         Profiler.EndSample();
-        return new JiggleTree(tempTransforms, tempPoints);
+        bool hasSegment = segment != null;
+        if (hasSegment && segment.jiggleTree != null) {
+            segment.jiggleTree.Set(tempTransforms, tempPoints);
+            return segment.jiggleTree;
+        } else if (hasSegment) {
+            segment.SetJiggleTree(new JiggleTree(tempTransforms, tempPoints));
+            return segment.jiggleTree;
+        } else {
+            return new JiggleTree(tempTransforms, tempPoints);
+        }
     }
 
     // TODO: Make this respect excluded transforms

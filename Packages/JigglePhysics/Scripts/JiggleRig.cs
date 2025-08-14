@@ -10,7 +10,6 @@ using UnityEngine.UIElements;
 #endif
 
 public class JiggleRig : MonoBehaviour {
-
     [SerializeField] protected Transform _rootBone;
     [SerializeField] protected bool _advanced;
     [SerializeField] protected bool _animated;
@@ -18,34 +17,16 @@ public class JiggleRig : MonoBehaviour {
     [SerializeField] protected JiggleBoneInputParameters _jiggleBoneInputParameters;
     [SerializeField] protected List<Transform> _excludedTransforms = new List<Transform>();
     
+    
     private JiggleTreeSegment _jiggleTreeSegment;
     bool isValid = false;
     public bool rootExcluded => _excludeRoot;
     public Transform rootBone => _rootBone;
     public bool CheckExcluded(Transform t) => _excludedTransforms.Contains(t);
 
-    public bool rootTransformError => !(_rootBone == null || isValid);
+    public bool rootTransformError => !(!_rootBone || isValid);
 
     private void OnEnable() {
-        //JiggleJobManager.AddJiggleTree(new JiggleTree(GetJiggleBoneTransforms(), GetJiggleBoneSimulatedPoints()));
-        /*JiggleRig parentMostRootBone = null;
-        var childRigs = GetComponentsInChildren<JiggleRig>();
-        while (childRigs.Length > 0) {
-            var rig = childRigs[0];
-            parentMostRootBone = rig;
-            for (Transform t = rig._rootBone; t != transform; t = t.parent) {
-                for (int i = 0; i < childRigs.Length; i++) {
-                    if (childRigs[i] == rig) {
-                        continue;
-                    }
-                    if (t == childRigs[i]._rootBone) {
-                        parentMostRootBone = childRigs[i];
-                    }
-                }
-            }
-            List<JiggleRig> finished = new List<JiggleRig>();
-            // DO DFS HERE
-        }*/
         _jiggleTreeSegment ??= new JiggleTreeSegment(_rootBone, this);
         _jiggleTreeSegment.SetDirty();
         JiggleTreeUtility.AddJiggleTreeSegment(_jiggleTreeSegment);

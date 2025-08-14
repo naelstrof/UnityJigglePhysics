@@ -1,0 +1,13 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Assets/JiggleJob/Editor/JiggleStyles.uss?fileID=7433441132597879392&amp;guid=9a2f78f6a51166c4ca0e12830ed7e7ab&amp;type=3#JiggleStyles" />
+    <ui:Label text="Jiggle Rig" class="title" />
+    <ui:VisualElement style="height: 10px;" />
+    <uie:ObjectField label="Object Field" name="RootField" />
+    <ui:VisualElement name="RootTransformErrorSection">
+        <ui:Label text="Root Transform must be part of the transform hierarchy of this component" style="white-space: normal; color: rgb(255, 0, 0); padding-left: 8px; padding-right: 8px;" />
+    </ui:VisualElement>
+    <ui:Toggle label="Toggle" name="AnimatedToggle" />
+    <ui:Toggle label="Toggle" name="ExcludeRootToggle" />
+    <uie:PropertyField name="IgnoredTransformsField" />
+    <ui:VisualElement style="height: 10px;" />
+</ui:UXML>

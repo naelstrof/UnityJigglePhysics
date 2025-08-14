@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Packages/com.naelstrof.jigglephysics/Editor/JiggleStyles.uss?fileID=7433441132597879392&amp;guid=9a2f78f6a51166c4ca0e12830ed7e7ab&amp;type=3#JiggleStyles" />
+    <ui:VisualElement style="flex-grow: 0; flex-direction: row;">
+        <ui:FloatField label="Float" value="1" name="CurvableFloat" style="flex-grow: 1;" />
+        <ui:Button text="~" style="align-items: stretch; align-self: flex-end; -unity-font-style: normal;" />
+    </ui:VisualElement>
+    <uie:CurveField label="Curve" value="{0,0,0,0,0,0,Free,Free,False,None};{5,8,0,0,0,0,Free,Free,False,None};{10,4,0,0,0,0,Free,Free,False,None}+(ClampForever,ClampForever)" name="CurvableCurve" class="curvableCurve" />
+</ui:UXML>

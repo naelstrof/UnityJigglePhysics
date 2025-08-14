@@ -1,6 +1,7 @@
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.Assertions;
+
+namespace GatorDragonGames.JigglePhysics {
 
 public class JiggleMemoryFragmentCollection {
     private struct Fragment {
@@ -10,7 +11,7 @@ public class JiggleMemoryFragmentCollection {
 
     private int startingSize;
     private List<Fragment> fragments;
-    
+
     public JiggleMemoryFragmentCollection(int size) {
         fragments = new List<Fragment> {
             new() {
@@ -20,7 +21,7 @@ public class JiggleMemoryFragmentCollection {
         };
         startingSize = size;
     }
-    
+
     public bool TryAllocate(int size, out int startIndex) {
         var fragmentCount = fragments.Count;
         for (int i = 0; i < fragmentCount; i++) {
@@ -34,9 +35,11 @@ public class JiggleMemoryFragmentCollection {
                     fragment.count -= size;
                     fragments[i] = fragment;
                 }
+
                 return true;
             }
         }
+
         startIndex = -1;
         return false;
     }
@@ -47,7 +50,7 @@ public class JiggleMemoryFragmentCollection {
         fragment.count += newSize - startingSize;
         fragments[^1] = fragment;
     }
-    
+
     public void Free(int startIndex, int size) {
         var fragmentCount = fragments.Count;
         for (int i = 0; i < fragmentCount; i++) {
@@ -65,7 +68,7 @@ public class JiggleMemoryFragmentCollection {
                 return;
             }
         }
-        
+
         // No merge, add new fragment
         var newFragment = new Fragment {
             startIndex = startIndex,
@@ -73,17 +76,20 @@ public class JiggleMemoryFragmentCollection {
         };
         for (int i = 0; i < fragmentCount; i++) {
             var fragment = fragments[i];
-            if (fragment.startIndex >= startIndex+size) {
+            if (fragment.startIndex >= startIndex + size) {
                 fragments.Insert(i, newFragment);
                 return;
             }
         }
+
         fragments.Add(newFragment);
     }
-    
+
     public void CopyFrom(JiggleMemoryFragmentCollection other) {
         startingSize = other.startingSize;
         fragments.Clear();
         fragments.AddRange(other.fragments);
     }
+}
+
 }

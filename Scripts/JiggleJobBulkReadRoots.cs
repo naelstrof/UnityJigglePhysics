@@ -1,8 +1,9 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
-using UnityEngine;
 using UnityEngine.Jobs;
+
+namespace GatorDragonGames.JigglePhysics {
 
 [BurstCompile]
 public struct JiggleJobBulkReadRoots : IJobParallelForTransform {
@@ -11,7 +12,7 @@ public struct JiggleJobBulkReadRoots : IJobParallelForTransform {
     public JiggleJobBulkReadRoots(JiggleMemoryBus bus) {
         rootOutputPositions = bus.rootOutputPositions;
     }
-    
+
     public void UpdateArrays(JiggleMemoryBus bus) {
         rootOutputPositions = bus.rootOutputPositions;
     }
@@ -20,6 +21,9 @@ public struct JiggleJobBulkReadRoots : IJobParallelForTransform {
         if (!transform.isValid) {
             return;
         }
+
         rootOutputPositions[index] = transform.position;
     }
+}
+
 }

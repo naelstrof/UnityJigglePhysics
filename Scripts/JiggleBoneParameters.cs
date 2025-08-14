@@ -1,7 +1,7 @@
 using System;
-using System.Drawing.Drawing2D;
 using UnityEngine;
-using UnityEngine.Serialization;
+
+namespace GatorDragonGames.JigglePhysics {
 
 [Serializable]
 public struct JiggleBoneParameters {
@@ -42,13 +42,15 @@ public struct JiggleBoneInputParameters {
     public float collisionRadius;
     public AnimationCurve collisionRadiusCurve;
     public float blend;
-    
+
     public JiggleBoneParameters ToJiggleBoneParameters(float normalizedDistanceFromRoot) {
         return new JiggleBoneParameters {
-            rootElasticity = advancedToggle?1f-rootStretch:0f,
+            rootElasticity = advancedToggle ? 1f - rootStretch : 0f,
             angleElasticity = Mathf.Pow(stiffness * stiffnessCurve.Evaluate(normalizedDistanceFromRoot), 2f),
-            lengthElasticity = advancedToggle?Mathf.Pow(1f-stretch * stretchCurve.Evaluate(normalizedDistanceFromRoot),2f):0f,
-            elasticitySoften = advancedToggle?Mathf.Pow(soften,2f):0f,
+            lengthElasticity = advancedToggle
+                ? Mathf.Pow(1f - stretch * stretchCurve.Evaluate(normalizedDistanceFromRoot), 2f)
+                : 0f,
+            elasticitySoften = advancedToggle ? Mathf.Pow(soften, 2f) : 0f,
             gravityMultiplier = gravity * gravityCurve.Evaluate(normalizedDistanceFromRoot),
             angleLimited = angleLimitToggle,
             angleLimit = angleLimit * angleLimitCurve.Evaluate(normalizedDistanceFromRoot),
@@ -59,4 +61,6 @@ public struct JiggleBoneInputParameters {
             collisionRadius = collisionRadius * collisionRadiusCurve.Evaluate(normalizedDistanceFromRoot)
         };
     }
+}
+
 }

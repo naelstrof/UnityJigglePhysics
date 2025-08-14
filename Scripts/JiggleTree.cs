@@ -4,18 +4,21 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 
+namespace GatorDragonGames.JigglePhysics {
+
 public class JiggleTree {
-    
+
     public Transform[] bones;
     public JiggleBoneSimulatedPoint[] points;
     public bool dirty { get; private set; }
     public int rootID { get; private set; }
-    
+
     public void SetDirty() {
         dirty = true;
     }
+
     public void ClearDirty() => dirty = false;
-    
+
     private bool hasJiggleTreeStruct = false;
     private JiggleTreeStruct jiggleTreeStruct;
 
@@ -23,7 +26,8 @@ public class JiggleTree {
         if (hasJiggleTreeStruct) {
             return jiggleTreeStruct;
         }
-        jiggleTreeStruct = new JiggleTreeStruct(rootID,0, points);
+
+        jiggleTreeStruct = new JiggleTreeStruct(rootID, 0, points);
         return jiggleTreeStruct;
     }
 
@@ -33,7 +37,7 @@ public class JiggleTree {
             hasJiggleTreeStruct = false;
         }
     }
-    
+
     public JiggleTree(List<Transform> bones, List<JiggleBoneSimulatedPoint> points) {
         dirty = false;
         this.bones = bones.ToArray();
@@ -48,6 +52,7 @@ public class JiggleTree {
             for (int i = 0; i < bonesCount; i++) {
                 this.bones[i] = bones[i];
             }
+
             for (int i = 0; i < pointsCount; i++) {
                 this.points[i] = points[i];
             }
@@ -55,12 +60,15 @@ public class JiggleTree {
             this.bones = bones.ToArray();
             this.points = points.ToArray();
         }
+
         rootID = bones[0].GetInstanceID();
         if (hasJiggleTreeStruct) {
             jiggleTreeStruct.Set(rootID, this.points);
         }
+
         dirty = false;
     }
+
     private static void DebugDrawSphere(Vector3 origin, float radius, Color color, float duration, int segments = 8) {
         float angleStep = 360f / segments;
         Vector3 prevPoint = Vector3.zero;
@@ -90,5 +98,7 @@ public class JiggleTree {
             prevPoint = currPoint;
         }
     }
-    
+
+}
+
 }

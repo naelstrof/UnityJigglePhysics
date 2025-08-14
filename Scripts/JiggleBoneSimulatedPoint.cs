@@ -1,8 +1,10 @@
 using Unity.Mathematics;
-using UnityEngine;
+
+namespace GatorDragonGames.JigglePhysics {
 
 public unsafe struct JiggleBoneSimulatedPoint {
     public const int MAX_CHILDREN = 16;
+
     // Generated at runtime
     public float3 lastPosition;
     public float3 position;
@@ -20,6 +22,7 @@ public unsafe struct JiggleBoneSimulatedPoint {
     public fixed int childrenIndices[MAX_CHILDREN];
     public int childenCount;
     public bool hasTransform;
+
     public override string ToString() {
         return $"(position: {position},\nlastPosition: {lastPosition},\n" +
                $"workingPosition: {workingPosition},\ndesiredConstraint: {desiredConstraint},\n" +
@@ -27,4 +30,6 @@ public unsafe struct JiggleBoneSimulatedPoint {
                $"animated: {animated},\n parameters: {parameters},\n parentIndex: {parentIndex},\n " +
                $"children: [{childrenIndices[0]}, ...],\n childenCount: {childenCount},\n hasTransform: {hasTransform})";
     }
+}
+
 }

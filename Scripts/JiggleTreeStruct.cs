@@ -5,16 +5,23 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 
+namespace GatorDragonGames.JigglePhysics {
+
 public struct JiggleTransform {
     public bool isVirtual;
     public float3 position;
     public quaternion rotation;
+
     public static JiggleTransform Lerp(JiggleTransform a, JiggleTransform b, float t) {
         return new JiggleTransform() {
             isVirtual = a.isVirtual,
             position = math.lerp(a.position, b.position, t),
             rotation = math.slerp(a.rotation, b.rotation, t),
         };
+    }
+
+    public override string ToString() {
+        return $"Virtual: {isVirtual}, Position: {position}, Quaternion: {rotation}";
     }
 }
 
@@ -28,11 +35,11 @@ public unsafe struct JiggleTreeStruct {
     }
 
     public override int GetHashCode() {
-        return unchecked((int) (long) points);
+        return unchecked((int)(long)points);
     }
-    
-    public static bool operator == (JiggleTreeStruct left, JiggleTreeStruct right) => left.Equals(right);
-    public static bool operator != (JiggleTreeStruct left, JiggleTreeStruct right) => !left.Equals(right);
+
+    public static bool operator ==(JiggleTreeStruct left, JiggleTreeStruct right) => left.Equals(right);
+    public static bool operator !=(JiggleTreeStruct left, JiggleTreeStruct right) => !left.Equals(right);
 
     public int rootID;
     public uint pointCount;
@@ -41,13 +48,13 @@ public unsafe struct JiggleTreeStruct {
 
     public JiggleTreeStruct(int rootID, int indexOffset, JiggleBoneSimulatedPoint[] inputPoints) {
         this.rootID = rootID;
-        pointCount = (uint) inputPoints.Length;
+        pointCount = (uint)inputPoints.Length;
         transformIndexOffset = (uint)indexOffset;
-        points = (JiggleBoneSimulatedPoint*) UnsafeUtility.Malloc(
+        points = (JiggleBoneSimulatedPoint*)UnsafeUtility.Malloc(
             Marshal.SizeOf<JiggleBoneSimulatedPoint>() * pointCount,
             UnsafeUtility.AlignOf<JiggleBoneSimulatedPoint>(),
             Allocator.Persistent
-            );
+        );
         fixed (JiggleBoneSimulatedPoint* src = inputPoints) {
             UnsafeUtility.MemCpy(points, src, sizeof(JiggleBoneSimulatedPoint) * pointCount);
         }
@@ -61,14 +68,15 @@ public unsafe struct JiggleTreeStruct {
             }
         } else {
             Dispose();
-            pointCount = (uint) inputPoints.Length;
-            points = (JiggleBoneSimulatedPoint*) UnsafeUtility.Malloc(
+            pointCount = (uint)inputPoints.Length;
+            points = (JiggleBoneSimulatedPoint*)UnsafeUtility.Malloc(
                 Marshal.SizeOf<JiggleBoneSimulatedPoint>() * pointCount,
                 UnsafeUtility.AlignOf<JiggleBoneSimulatedPoint>(),
                 Allocator.Persistent
             );
         }
     }
+
     public void Dispose() {
         if (points != null) {
             UnsafeUtility.Free(points, Allocator.Persistent);
@@ -98,7 +106,8 @@ public unsafe struct JiggleTreeStruct {
 
 public static class JiggleTreeStructExtensions {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static JiggleTransform GetInputPose(this JiggleTreeStruct self, NativeArray<JiggleTransform> inputPoses, int index) {
+    public static JiggleTransform GetInputPose(this JiggleTreeStruct self, NativeArray<JiggleTransform> inputPoses,
+        int index) {
         return inputPoses[index + (int)self.transformIndexOffset];
     }
 
@@ -113,4 +122,6 @@ public static class JiggleTreeStructExtensions {
 
         outputPoses[index + (int)self.transformIndexOffset] = old;
     }
+}
+
 }

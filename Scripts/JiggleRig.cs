@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 #endif
+
+namespace GatorDragonGames.JigglePhysics {
 
 [Serializable]
 public struct BoneNormalizedDistanceFromRoot {
@@ -23,19 +24,20 @@ public class JiggleRig : MonoBehaviour {
     [SerializeField] protected JiggleBoneInputParameters _jiggleBoneInputParameters;
     [SerializeField] protected List<Transform> _excludedTransforms = new List<Transform>();
     [SerializeField, HideInInspector] List<BoneNormalizedDistanceFromRoot> _boneNormalizedDistanceFromRootList;
-    
+
     private JiggleTreeSegment _jiggleTreeSegment;
     bool isValid = false;
     public bool rootExcluded => _excludeRoot;
     public Transform rootBone => _rootBone;
     public bool CheckExcluded(Transform t) => _excludedTransforms.Contains(t);
-    
+
     public float GetNormalizedDistanceFromRoot(Transform t) {
         var entry = _boneNormalizedDistanceFromRootList.Find(x => x.bone == t);
         return entry.bone ? entry.normalizedDistanceFromRoot : 0f;
     }
-    
-    public bool normalizedDistanceFromRootListIsValid => _boneNormalizedDistanceFromRootList!=null && _boneNormalizedDistanceFromRootList.Count > 0;
+
+    public bool normalizedDistanceFromRootListIsValid => _boneNormalizedDistanceFromRootList != null &&
+                                                         _boneNormalizedDistanceFromRootList.Count > 0;
 
     public bool rootTransformError => !(!_rootBone || isValid);
 
@@ -70,17 +72,19 @@ public class JiggleRig : MonoBehaviour {
         ValidateCurve(ref _jiggleBoneInputParameters.collisionRadiusCurve);
         BuildNormalizedDistanceFromRootList();
     }
-    
+
     public void BuildNormalizedDistanceFromRootList() {
         JiggleTreeUtility.VisitForLength(_rootBone, this, _rootBone.position, 0f, out var totalLength);
         _boneNormalizedDistanceFromRootList = new List<BoneNormalizedDistanceFromRoot>();
         VisitAndSetNormalizedDistanceFromRoot(_rootBone, _rootBone.position, 0f, totalLength);
     }
-    
-    public void VisitAndSetNormalizedDistanceFromRoot(Transform t, Vector3 lastPosition, float currentLength, float totalLength) {
+
+    public void VisitAndSetNormalizedDistanceFromRoot(Transform t, Vector3 lastPosition, float currentLength,
+        float totalLength) {
         if (CheckExcluded(t)) {
             return;
         }
+
         currentLength += Vector3.Distance(lastPosition, t.position);
         _boneNormalizedDistanceFromRootList.Add(new BoneNormalizedDistanceFromRoot() {
             bone = t,
@@ -98,10 +102,12 @@ public class JiggleRig : MonoBehaviour {
             animationCurve = AnimationCurve.Linear(0f, 1f, 1f, 1f);
         }
     }
-    
+
 #if UNITY_EDITOR
     public VisualElement GetInspectorVisualElement(SerializedProperty serializedProperty) {
-        var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(AssetDatabase.GUIDToAssetPath("c35a2123f4d44dd469ccb24af7a0ce20"));
+        var visualTreeAsset =
+            AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
+                AssetDatabase.GUIDToAssetPath("c35a2123f4d44dd469ccb24af7a0ce20"));
         var visualElement = new VisualElement();
         visualTreeAsset.CloneTree(visualElement);
         SetCurvableSlider(
@@ -112,11 +118,12 @@ public class JiggleRig : MonoBehaviour {
             nameof(JiggleBoneInputParameters.stiffnessCurve),
             "Stiffness"
         );
-        
+
         var angleLimitToggleElement = visualElement.Q<Toggle>("AngleLimitToggle");
-        angleLimitToggleElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.angleLimitToggle)));
+        angleLimitToggleElement.BindProperty(
+            serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.angleLimitToggle)));
         angleLimitToggleElement.Q<Label>().text = "Angle Limit";
-        
+
         var angleLimitSection = visualElement.Q<VisualElement>("AngleLimitSection");
         angleLimitToggleElement.RegisterValueChangedCallback(evt => {
             angleLimitSection.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
@@ -184,7 +191,7 @@ public class JiggleRig : MonoBehaviour {
             nameof(JiggleBoneInputParameters.gravityCurve),
             "Gravity"
         );
-        
+
         SetCurvableFloat(
             visualElement,
             serializedProperty,
@@ -193,37 +200,41 @@ public class JiggleRig : MonoBehaviour {
             nameof(JiggleBoneInputParameters.collisionRadiusCurve),
             "Collision Radius"
         );
-        
+
         var advancedToggleElement = visualElement.Q<Toggle>("AdvancedToggle");
-        advancedToggleElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.advancedToggle)));
+        advancedToggleElement.BindProperty(
+            serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.advancedToggle)));
         advancedToggleElement.Q<Label>().text = "Advanced";
-        
+
         var collisionToggleElement = visualElement.Q<Toggle>("CollisionToggle");
-        collisionToggleElement.BindProperty(serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.collisionToggle)));
+        collisionToggleElement.BindProperty(
+            serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.collisionToggle)));
         collisionToggleElement.Q<Label>().text = "Collision";
-        
+
         var advancedSection = visualElement.Q<VisualElement>("AdvancedSection");
         var advancedSection2 = visualElement.Q<VisualElement>("AdvancedSection2");
         advancedToggleElement.RegisterValueChangedCallback(evt => {
             advancedSection.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
             advancedSection2.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
         });
-        
+
         var collisionSection = visualElement.Q<VisualElement>("CollisionSection");
         collisionToggleElement.RegisterValueChangedCallback(evt => {
             collisionSection.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
         });
-        
+
         return visualElement;
     }
 
-    void SetSlider(VisualElement visualElement, SerializedProperty serializedProperty, string id, string parameter, string name) {
+    void SetSlider(VisualElement visualElement, SerializedProperty serializedProperty, string id, string parameter,
+        string name) {
         var sliderElement = visualElement.Q<Slider>(id);
         sliderElement.BindProperty(serializedProperty.FindPropertyRelative(parameter));
         sliderElement.Q<Label>().text = name;
     }
 
-    void SetCurvableSlider(VisualElement visualElement, SerializedProperty serializedProperty, string id, string sliderParameter, string curveParameter, string name) {
+    void SetCurvableSlider(VisualElement visualElement, SerializedProperty serializedProperty, string id,
+        string sliderParameter, string curveParameter, string name) {
         var sliderElement = visualElement.Q<VisualElement>(id);
         var sliderElementSlider = sliderElement.Q<Slider>("CurvableSlider");
         sliderElementSlider.BindProperty(serializedProperty.FindPropertyRelative(sliderParameter));
@@ -232,7 +243,8 @@ public class JiggleRig : MonoBehaviour {
         stiffnessCurveElement.BindProperty(serializedProperty.FindPropertyRelative(curveParameter));
     }
 
-    void SetCurvableFloat(VisualElement visualElement, SerializedProperty serializedProperty, string id, string floatParameter, string curveParameter, string name) {
+    void SetCurvableFloat(VisualElement visualElement, SerializedProperty serializedProperty, string id,
+        string floatParameter, string curveParameter, string name) {
         var sliderElement = visualElement.Q<VisualElement>(id);
         var curvableFloat = sliderElement.Q<FloatField>("CurvableFloat");
         curvableFloat.BindProperty(serializedProperty.FindPropertyRelative(floatParameter));
@@ -242,5 +254,7 @@ public class JiggleRig : MonoBehaviour {
     }
 
 #endif
-    
+
+}
+
 }

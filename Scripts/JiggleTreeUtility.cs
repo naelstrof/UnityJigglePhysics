@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Profiling;
+
+namespace GatorDragonGames.JigglePhysics {
 
 public static class JiggleTreeUtility {
     private static HashSet<JiggleTreeSegment> jiggleTreeSegments;
@@ -287,5 +287,7 @@ public static class JiggleTreeUtility {
         
         SetGlobalDirty();
     }
+
+}
 
 }

@@ -35,7 +35,7 @@ public class JiggleRig : MonoBehaviour {
         return entry.bone ? entry.normalizedDistanceFromRoot : 0f;
     }
     
-    public bool normalizedDistanceFromRootListIsValid => _boneNormalizedDistanceFromRootList.Count!=null && _boneNormalizedDistanceFromRootList.Count > 0;
+    public bool normalizedDistanceFromRootListIsValid => _boneNormalizedDistanceFromRootList!=null && _boneNormalizedDistanceFromRootList.Count > 0;
 
     public bool rootTransformError => !(!_rootBone || isValid);
 

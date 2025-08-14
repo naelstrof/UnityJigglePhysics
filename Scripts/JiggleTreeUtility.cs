@@ -155,11 +155,11 @@ public static class JiggleTreeUtility {
 
     public static void VisitForLength(Transform t, JiggleRig rig, Vector3 lastPosition, float currentLength, out float totalLength) {
         if (rig.CheckExcluded(t)) {
-            totalLength = currentLength;
+            totalLength = Mathf.Max(currentLength, 0.001f);
             return;
         }
         currentLength += Vector3.Distance(lastPosition, t.position);
-        totalLength = currentLength;
+        totalLength = Mathf.Max(currentLength, 0.001f);
         var validChildrenCount = GetValidChildrenCount(t, rig);
         for (int i = 0; i < validChildrenCount; i++) {
             var child = GetValidChild(t, rig, i);

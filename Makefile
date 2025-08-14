@@ -1,2 +1,2 @@
 deploy:
-	git subtree push --prefix Packages/JigglePhysics origin upm
+	git subtree push --prefix Packages/com.gator-dragon-games.jigglephysics origin upm

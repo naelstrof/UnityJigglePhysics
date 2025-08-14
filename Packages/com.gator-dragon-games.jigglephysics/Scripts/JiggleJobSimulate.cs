@@ -113,7 +113,7 @@ public struct JiggleJobSimulate : IJobFor {
     }
 
     float float3Angle(float3 a, float3 b) {
-        return math.degrees(math.acos(math.clamp(math.dot(math.normalizesafe(a), math.normalizesafe(b)), -1f, 1f)));
+        return math.degrees(math.acos(math.clamp(math.dot(math.normalizesafe(a, new float3(0,0,1)), math.normalizesafe(b, new float3(0,0,1))), -1f, 1f)));
     }
 
     private unsafe void Constrain(JiggleTreeStruct tree) {
@@ -145,16 +145,16 @@ public struct JiggleJobSimulate : IJobFor {
 
             #region Angle Constraint
 
-            var parentAimPose = math.normalizesafe(point.parentPose - parent.parentPose);
-            var parentAim = math.normalizesafe(parent.desiredConstraint - parent.parentPose);
+            var parentAimPose = math.normalizesafe(point.parentPose - parent.parentPose, new float3(0,0,1));
+            var parentAim = math.normalizesafe(parent.desiredConstraint - parent.parentPose, new float3(0,0,1));
             if (parent.parentIndex != -1) {
                 var parentParent = tree.points[parent.parentIndex];
-                parentAim = math.normalizesafe(parent.desiredConstraint - parentParent.desiredConstraint);
+                parentAim = math.normalizesafe(parent.desiredConstraint - parentParent.desiredConstraint, new float3(0,0,1));
             }
 
             var currentLength = math.length(point.workingPosition - parent.desiredConstraint);
             var from_to_rot = FromToRotation(parentAimPose, parentAim);
-            var current_pose_dir = math.normalizesafe(point.pose - point.parentPose);
+            var current_pose_dir = math.normalizesafe(point.pose - point.parentPose, new float3(0,0,1));
             var constraintTarget = math.rotate(from_to_rot, (current_pose_dir * currentLength));
 
             var desiredPosition = parent.desiredConstraint + constraintTarget;
@@ -180,7 +180,7 @@ public struct JiggleJobSimulate : IJobFor {
                 var distanceToCollider = math.length(vectorFromCollider);
                 var minDistance = point.parameters.collisionRadius + 1f;
                 if (distanceToCollider < minDistance) {
-                    var correctionDir = math.normalizesafe(vectorFromCollider);
+                    var correctionDir = math.normalizesafe(vectorFromCollider, new float3(0,0,1));
                     var correctionDistance = minDistance - distanceToCollider;
                     point.desiredConstraint += correctionDir * correctionDistance * (1f - 0.5f); // TODO: soften
                 }
@@ -207,7 +207,7 @@ public struct JiggleJobSimulate : IJobFor {
                 var oppo = math.sin(angleB_rad);
                 float a = oppo == 0f ? 0f : b * math.sin(angleA_rad) / oppo;
 
-                var correctionDir = math.normalizesafe(desiredPosition - point.desiredConstraint);
+                var correctionDir = math.normalizesafe(desiredPosition - point.desiredConstraint, new float3(0,0,1));
                 var correctionDistance = math.length(desiredPosition - point.desiredConstraint);
 
                 var angleCorrectionDistance = math.max(0f, correctionDistance - a);
@@ -220,7 +220,7 @@ public struct JiggleJobSimulate : IJobFor {
 
             var length_elasticity = parent.parameters.lengthElasticity;
             var diff = point.desiredConstraint - parent.desiredConstraint;
-            var dir = math.normalizesafe(diff);
+            var dir = math.normalizesafe(diff, new float3(0,0,1));
             var forwardConstraint = math.lerp(point.desiredConstraint,
                 parent.desiredConstraint + dir * point.desiredLengthToParent, length_elasticity);
             point.desiredConstraint = forwardConstraint;
@@ -241,8 +241,8 @@ public struct JiggleJobSimulate : IJobFor {
             if (point.childenCount > 0) {
                 // Back-propagated motion specifically for collision enabled chains
                 var child = tree.points[point.childrenIndices[0]];
-                var aim_pose = math.normalizesafe(child.pose - point.parentPose);
-                var aim = math.normalizesafe(child.workingPosition - parent.workingPosition);
+                var aim_pose = math.normalizesafe(child.pose - point.parentPose, new float3(0,0,1));
+                var aim = math.normalizesafe(child.workingPosition - parent.workingPosition, new float3(0,0,1));
                 var from_to_rot_also = FromToRotation(aim_pose, aim);
                 var parent_to_self = math.normalizesafe(point.pose - point.parentPose);
                 var real_length = math.length(point.workingPosition - parent.workingPosition);
@@ -307,8 +307,8 @@ public struct JiggleJobSimulate : IJobFor {
             float3 simulatedVector = cachedAnimatedVector;
 
             if (point.childenCount <= 1) {
-                cachedAnimatedVector = math.normalizesafe(local_child_pose - local_pose);
-                simulatedVector = math.normalizesafe(local_child_working_position - local_working_position);
+                cachedAnimatedVector = math.normalizesafe(local_child_pose - local_pose, new float3(0,0,1));
+                simulatedVector = math.normalizesafe(local_child_working_position - local_working_position, new float3(0,0,1));
             } else {
                 var cachedAnimatedVectorSum = new float3(0f);
                 var simulatedVectorSum = cachedAnimatedVectorSum;
@@ -316,23 +316,24 @@ public struct JiggleJobSimulate : IJobFor {
                     var child_also = tree.points[point.childrenIndices[j]];
                     var local_child_pose_also = child_also.pose;
                     var local_child_working_position_also = child_also.workingPosition;
-                    cachedAnimatedVectorSum += math.normalizesafe(local_child_pose_also - local_pose);
+                    cachedAnimatedVectorSum += math.normalizesafe(local_child_pose_also - local_pose, new float3(0,0,1));
                     simulatedVectorSum +=
-                        math.normalizesafe(local_child_working_position_also - local_working_position);
+                        math.normalizesafe(local_child_working_position_also - local_working_position, new float3(0,0,1));
                 }
 
-                cachedAnimatedVector = math.normalizesafe(cachedAnimatedVectorSum * (1f / point.childenCount));
-                simulatedVector = math.normalizesafe(simulatedVectorSum * (1f / point.childenCount));
+                cachedAnimatedVector = math.normalizesafe(cachedAnimatedVectorSum * (1f / point.childenCount), new float3(0,0,1));
+                simulatedVector = math.normalizesafe(simulatedVectorSum * (1f / point.childenCount), new float3(0,0,1));
             }
 
             var animPoseToPhysicsPose = math.slerp(quaternion.identity,
                 FromToRotation(cachedAnimatedVector, simulatedVector), point.parameters.blend);
 
-            tree.WriteOutputPose(outputPoses, i, new JiggleTransform() {
+            var transform = new JiggleTransform() {
                 isVirtual = !point.hasTransform,
                 position = point.workingPosition,
                 rotation = math.mul(animPoseToPhysicsPose, tree.GetInputPose(inputPoses, i).rotation),
-            }, rootSimulationPosition - rootPose, rootSimulationPosition);
+            };
+            tree.WriteOutputPose(outputPoses, i, transform, rootSimulationPosition - rootPose, rootSimulationPosition);
             tree.points[i] = point;
         }
     }

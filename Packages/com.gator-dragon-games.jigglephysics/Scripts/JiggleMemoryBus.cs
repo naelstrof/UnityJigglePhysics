@@ -19,6 +19,10 @@ public struct PoseData {
             rootOffset = math.lerp(a.rootOffset, b.rootOffset, t),
         };
     }
+
+    public override string ToString() {
+        return $"(Pose: {pose}, RootPosition: {rootPosition}, RootOffset: {rootOffset})";
+    }
 }
 
 public class JiggleMemoryBus {

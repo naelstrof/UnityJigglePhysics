@@ -222,7 +222,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _rootBone: {fileID: 3621395473087321750}
   _advanced: 0
-  _animated: 1
   _excludeRoot: 0
   _jiggleBoneInputParameters:
     advancedToggle: 1

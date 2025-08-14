@@ -20,8 +20,8 @@ public struct JiggleJobInterpolation : IJobFor {
     public NativeArray<JiggleTransform> outputInterpolatedPoses;
 
     public JiggleJobInterpolation(JiggleMemoryBus bus, double time) {
-        timeStamp = time - JiggleJobManager.FIXED_DELTA_TIME;
-        previousTimeStamp = timeStamp - JiggleJobManager.FIXED_DELTA_TIME;
+        timeStamp = time - JigglePhysics.FIXED_DELTA_TIME;
+        previousTimeStamp = timeStamp - JigglePhysics.FIXED_DELTA_TIME;
         currentTime = timeStamp;
         previousPoses = bus.interpolationPreviousPoseData;
         currentPoses = bus.interpolationCurrentPoseData;
@@ -45,7 +45,7 @@ public struct JiggleJobInterpolation : IJobFor {
             throw new UnityException($"Time difference is zero ({timeStamp}-{previousTimeStamp}), cannot interpolate.");
         }
 
-        const double timeCorrection = JiggleJobManager.FIXED_DELTA_TIME * 2f;
+        const double timeCorrection = JigglePhysics.FIXED_DELTA_TIME * 2f;
         var t = (currentTime - timeCorrection - previousTimeStamp) / diff;
         var interPose = PoseData.Lerp(prevPose, newPose, (float)t);
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -21,7 +22,7 @@ public class JiggleRig : MonoBehaviour {
     [SerializeField] protected bool _advanced;
     [SerializeField] protected bool _animated;
     [SerializeField] protected bool _excludeRoot;
-    [SerializeField] protected JiggleBoneInputParameters _jiggleBoneInputParameters;
+    [FormerlySerializedAs("_jiggleBoneInputParameters")] [SerializeField] protected JiggleTreeInputParameters jiggleTreeInputParameters;
     [SerializeField] protected List<Transform> _excludedTransforms = new List<Transform>();
     [SerializeField, HideInInspector] List<BoneNormalizedDistanceFromRoot> _boneNormalizedDistanceFromRootList;
 
@@ -44,15 +45,15 @@ public class JiggleRig : MonoBehaviour {
     private void OnEnable() {
         _jiggleTreeSegment ??= new JiggleTreeSegment(_rootBone, this);
         _jiggleTreeSegment.SetDirty();
-        JiggleTreeUtility.AddJiggleTreeSegment(_jiggleTreeSegment);
+        JigglePhysics.AddJiggleTreeSegment(_jiggleTreeSegment);
     }
 
     private void OnDisable() {
-        JiggleTreeUtility.RemoveJiggleTreeSegment(_jiggleTreeSegment);
+        JigglePhysics.RemoveJiggleTreeSegment(_jiggleTreeSegment);
     }
 
-    public JiggleBoneParameters GetJiggleBoneParameter(float normalizedDistanceFromRoot) {
-        return _jiggleBoneInputParameters.ToJiggleBoneParameters(normalizedDistanceFromRoot);
+    public JigglePointParameters GetJiggleBoneParameter(float normalizedDistanceFromRoot) {
+        return jiggleTreeInputParameters.ToJigglePointParameters(normalizedDistanceFromRoot);
     }
 
     public Transform[] GetJiggleBoneTransforms() {
@@ -63,18 +64,18 @@ public class JiggleRig : MonoBehaviour {
     void OnValidate() {
         isValid = _rootBone.IsChildOf(gameObject.transform);
         if (_excludedTransforms == null) _excludedTransforms = new List<Transform>();
-        ValidateCurve(ref _jiggleBoneInputParameters.stiffnessCurve);
-        ValidateCurve(ref _jiggleBoneInputParameters.angleLimitCurve);
-        ValidateCurve(ref _jiggleBoneInputParameters.stretchCurve);
-        ValidateCurve(ref _jiggleBoneInputParameters.dragCurve);
-        ValidateCurve(ref _jiggleBoneInputParameters.airDragCurve);
-        ValidateCurve(ref _jiggleBoneInputParameters.gravityCurve);
-        ValidateCurve(ref _jiggleBoneInputParameters.collisionRadiusCurve);
+        ValidateCurve(ref jiggleTreeInputParameters.stiffnessCurve);
+        ValidateCurve(ref jiggleTreeInputParameters.angleLimitCurve);
+        ValidateCurve(ref jiggleTreeInputParameters.stretchCurve);
+        ValidateCurve(ref jiggleTreeInputParameters.dragCurve);
+        ValidateCurve(ref jiggleTreeInputParameters.airDragCurve);
+        ValidateCurve(ref jiggleTreeInputParameters.gravityCurve);
+        ValidateCurve(ref jiggleTreeInputParameters.collisionRadiusCurve);
         BuildNormalizedDistanceFromRootList();
     }
 
     public void BuildNormalizedDistanceFromRootList() {
-        JiggleTreeUtility.VisitForLength(_rootBone, this, _rootBone.position, 0f, out var totalLength);
+        JigglePhysics.VisitForLength(_rootBone, this, _rootBone.position, 0f, out var totalLength);
         _boneNormalizedDistanceFromRootList = new List<BoneNormalizedDistanceFromRoot>();
         VisitAndSetNormalizedDistanceFromRoot(_rootBone, _rootBone.position, 0f, totalLength);
     }
@@ -90,9 +91,9 @@ public class JiggleRig : MonoBehaviour {
             bone = t,
             normalizedDistanceFromRoot = currentLength / totalLength
         });
-        var validChildrenCount = JiggleTreeUtility.GetValidChildrenCount(t, this);
+        var validChildrenCount = JigglePhysics.GetValidChildrenCount(t, this);
         for (int i = 0; i < validChildrenCount; i++) {
-            var child = JiggleTreeUtility.GetValidChild(t, this, i);
+            var child = JigglePhysics.GetValidChild(t, this, i);
             VisitAndSetNormalizedDistanceFromRoot(child, t.position, currentLength, totalLength);
         }
     }
@@ -114,14 +115,14 @@ public class JiggleRig : MonoBehaviour {
             visualElement,
             serializedProperty,
             "StiffnessControl",
-            nameof(JiggleBoneInputParameters.stiffness),
-            nameof(JiggleBoneInputParameters.stiffnessCurve),
+            nameof(JiggleTreeInputParameters.stiffness),
+            nameof(JiggleTreeInputParameters.stiffnessCurve),
             "Stiffness"
         );
 
         var angleLimitToggleElement = visualElement.Q<Toggle>("AngleLimitToggle");
         angleLimitToggleElement.BindProperty(
-            serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.angleLimitToggle)));
+            serializedProperty.FindPropertyRelative(nameof(JiggleTreeInputParameters.angleLimitToggle)));
         angleLimitToggleElement.Q<Label>().text = "Angle Limit";
 
         var angleLimitSection = visualElement.Q<VisualElement>("AngleLimitSection");
@@ -133,53 +134,53 @@ public class JiggleRig : MonoBehaviour {
             visualElement,
             serializedProperty,
             "AngleLimitControl",
-            nameof(JiggleBoneInputParameters.angleLimit),
-            nameof(JiggleBoneInputParameters.angleLimitCurve),
+            nameof(JiggleTreeInputParameters.angleLimit),
+            nameof(JiggleTreeInputParameters.angleLimitCurve),
             "Angle Limit"
         );
         SetSlider(
             visualElement,
             serializedProperty,
             "AngleLimitSoftenSlider",
-            nameof(JiggleBoneInputParameters.angleLimitSoften),
+            nameof(JiggleTreeInputParameters.angleLimitSoften),
             "Angle Limit Soften"
         );
         SetSlider(
             visualElement,
             serializedProperty,
             "SoftenSlider",
-            nameof(JiggleBoneInputParameters.soften),
+            nameof(JiggleTreeInputParameters.soften),
             "Soften"
         );
         SetSlider(
             visualElement,
             serializedProperty,
             "RootStretchSlider",
-            nameof(JiggleBoneInputParameters.rootStretch),
+            nameof(JiggleTreeInputParameters.rootStretch),
             "Root Stretch"
         );
         SetCurvableSlider(
             visualElement,
             serializedProperty,
             "StretchControl",
-            nameof(JiggleBoneInputParameters.stretch),
-            nameof(JiggleBoneInputParameters.stretchCurve),
+            nameof(JiggleTreeInputParameters.stretch),
+            nameof(JiggleTreeInputParameters.stretchCurve),
             "Stretch"
         );
         SetCurvableSlider(
             visualElement,
             serializedProperty,
             "DragControl",
-            nameof(JiggleBoneInputParameters.drag),
-            nameof(JiggleBoneInputParameters.dragCurve),
+            nameof(JiggleTreeInputParameters.drag),
+            nameof(JiggleTreeInputParameters.dragCurve),
             "Drag"
         );
         SetCurvableSlider(
             visualElement,
             serializedProperty,
             "AirDragControl",
-            nameof(JiggleBoneInputParameters.airDrag),
-            nameof(JiggleBoneInputParameters.airDragCurve),
+            nameof(JiggleTreeInputParameters.airDrag),
+            nameof(JiggleTreeInputParameters.airDragCurve),
             "Air Drag"
         );
 
@@ -187,8 +188,8 @@ public class JiggleRig : MonoBehaviour {
             visualElement,
             serializedProperty,
             "GravityControl",
-            nameof(JiggleBoneInputParameters.gravity),
-            nameof(JiggleBoneInputParameters.gravityCurve),
+            nameof(JiggleTreeInputParameters.gravity),
+            nameof(JiggleTreeInputParameters.gravityCurve),
             "Gravity"
         );
 
@@ -196,19 +197,19 @@ public class JiggleRig : MonoBehaviour {
             visualElement,
             serializedProperty,
             "CollisionRadiusControl",
-            nameof(JiggleBoneInputParameters.collisionRadius),
-            nameof(JiggleBoneInputParameters.collisionRadiusCurve),
+            nameof(JiggleTreeInputParameters.collisionRadius),
+            nameof(JiggleTreeInputParameters.collisionRadiusCurve),
             "Collision Radius"
         );
 
         var advancedToggleElement = visualElement.Q<Toggle>("AdvancedToggle");
         advancedToggleElement.BindProperty(
-            serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.advancedToggle)));
+            serializedProperty.FindPropertyRelative(nameof(JiggleTreeInputParameters.advancedToggle)));
         advancedToggleElement.Q<Label>().text = "Advanced";
 
         var collisionToggleElement = visualElement.Q<Toggle>("CollisionToggle");
         collisionToggleElement.BindProperty(
-            serializedProperty.FindPropertyRelative(nameof(JiggleBoneInputParameters.collisionToggle)));
+            serializedProperty.FindPropertyRelative(nameof(JiggleTreeInputParameters.collisionToggle)));
         collisionToggleElement.Q<Label>().text = "Collision";
 
         var advancedSection = visualElement.Q<VisualElement>("AdvancedSection");

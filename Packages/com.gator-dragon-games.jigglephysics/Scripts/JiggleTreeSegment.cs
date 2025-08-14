@@ -15,7 +15,7 @@ public class JiggleTreeSegment {
         parent?.SetDirty();
         parent = jiggleTree;
         parent?.SetDirty();
-        JiggleTreeUtility.SetGlobalDirty();
+        JigglePhysics.SetGlobalDirty();
     }
 
     public JiggleTreeSegment(Transform transform, JiggleRig rig) {
@@ -26,7 +26,7 @@ public class JiggleTreeSegment {
     public void SetDirty() {
         jiggleTree?.SetDirty();
         parent?.SetDirty();
-        JiggleTreeUtility.SetGlobalDirty();
+        JigglePhysics.SetGlobalDirty();
     }
 
 }

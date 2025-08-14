@@ -1,0 +1,23 @@
+using Unity.Mathematics;
+
+namespace GatorDragonGames.JigglePhysics {
+
+public struct JiggleTransform {
+    public bool isVirtual;
+    public float3 position;
+    public quaternion rotation;
+
+    public static JiggleTransform Lerp(JiggleTransform a, JiggleTransform b, float t) {
+        return new JiggleTransform() {
+            isVirtual = a.isVirtual,
+            position = math.lerp(a.position, b.position, t),
+            rotation = math.slerp(a.rotation, b.rotation, t),
+        };
+    }
+
+    public override string ToString() {
+        return $"Virtual: {isVirtual}, Position: {position}, Quaternion: {rotation}";
+    }
+}
+
+}

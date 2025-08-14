@@ -3,7 +3,7 @@ using UnityEngine.Assertions;
 
 namespace GatorDragonGames.JigglePhysics {
 
-public class JiggleMemoryFragmentCollection {
+public class JiggleMemoryFragmenter {
     private struct Fragment {
         public int startIndex;
         public int count;
@@ -12,7 +12,7 @@ public class JiggleMemoryFragmentCollection {
     private int startingSize;
     private List<Fragment> fragments;
 
-    public JiggleMemoryFragmentCollection(int size) {
+    public JiggleMemoryFragmenter(int size) {
         fragments = new List<Fragment> {
             new() {
                 startIndex = 0,
@@ -85,7 +85,7 @@ public class JiggleMemoryFragmentCollection {
         fragments.Add(newFragment);
     }
 
-    public void CopyFrom(JiggleMemoryFragmentCollection other) {
+    public void CopyFrom(JiggleMemoryFragmenter other) {
         startingSize = other.startingSize;
         fragments.Clear();
         fragments.AddRange(other.fragments);

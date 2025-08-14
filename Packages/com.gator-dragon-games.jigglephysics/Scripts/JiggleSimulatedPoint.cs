@@ -2,7 +2,7 @@ using Unity.Mathematics;
 
 namespace GatorDragonGames.JigglePhysics {
 
-public unsafe struct JiggleBoneSimulatedPoint {
+public unsafe struct JiggleSimulatedPoint {
     public const int MAX_CHILDREN = 16;
 
     // Generated at runtime
@@ -16,7 +16,7 @@ public unsafe struct JiggleBoneSimulatedPoint {
     public bool animated;
 
     // Set at initialization
-    public JiggleBoneParameters parameters;
+    public JigglePointParameters parameters;
     public float distanceFromRoot;
     public int parentIndex;
     public fixed int childrenIndices[MAX_CHILDREN];

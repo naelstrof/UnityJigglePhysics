@@ -4,7 +4,7 @@ using UnityEngine;
 namespace GatorDragonGames.JigglePhysics {
 
 [Serializable]
-public struct JiggleBoneParameters {
+public struct JigglePointParameters {
     public float rootElasticity;
     public float angleElasticity;
     public bool angleLimited;
@@ -20,7 +20,7 @@ public struct JiggleBoneParameters {
 }
 
 [Serializable]
-public struct JiggleBoneInputParameters {
+public struct JiggleTreeInputParameters {
     public bool advancedToggle;
     public bool collisionToggle;
     public bool angleLimitToggle;
@@ -43,8 +43,8 @@ public struct JiggleBoneInputParameters {
     public AnimationCurve collisionRadiusCurve;
     public float blend;
 
-    public JiggleBoneParameters ToJiggleBoneParameters(float normalizedDistanceFromRoot) {
-        return new JiggleBoneParameters {
+    public JigglePointParameters ToJigglePointParameters(float normalizedDistanceFromRoot) {
+        return new JigglePointParameters {
             rootElasticity = advancedToggle ? 1f - rootStretch : 0f,
             angleElasticity = Mathf.Pow(stiffness * stiffnessCurve.Evaluate(normalizedDistanceFromRoot), 2f),
             lengthElasticity = advancedToggle

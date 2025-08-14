@@ -36,7 +36,7 @@ public class JiggleRigEditor : Editor {
         var excludedTransformsElement = visualElement.Q<PropertyField>("IgnoredTransformsField");
         excludedTransformsElement.BindProperty(serializedObject.FindProperty("_excludedTransforms"));
 
-        visualElement.Add(script.GetInspectorVisualElement(serializedObject.FindProperty("_jiggleBoneInputParameters")));
+        visualElement.Add(script.GetInspectorVisualElement(serializedObject.FindProperty("jiggleTreeInputParameters")));
         
         var rootSection = visualElement.Q<VisualElement>("RootSection");
         excludeRootToggleElement.RegisterValueChangedCallback(evt => {

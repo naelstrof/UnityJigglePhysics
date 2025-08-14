@@ -48,8 +48,25 @@ public unsafe struct JiggleTreeStruct {
             UnsafeUtility.AlignOf<JiggleBoneSimulatedPoint>(),
             Allocator.Persistent
             );
-        for(int i=0;i < pointCount; i++) {
-            points[i] = inputPoints[i];
+        fixed (JiggleBoneSimulatedPoint* src = inputPoints) {
+            UnsafeUtility.MemCpy(points, src, sizeof(JiggleBoneSimulatedPoint) * pointCount);
+        }
+    }
+
+    public void Set(int rootID, JiggleBoneSimulatedPoint[] inputPoints) {
+        this.rootID = rootID;
+        if (inputPoints.Length == pointCount) {
+            fixed (JiggleBoneSimulatedPoint* src = inputPoints) {
+                UnsafeUtility.MemCpy(points, src, sizeof(JiggleBoneSimulatedPoint) * pointCount);
+            }
+        } else {
+            Dispose();
+            pointCount = (uint) inputPoints.Length;
+            points = (JiggleBoneSimulatedPoint*) UnsafeUtility.Malloc(
+                Marshal.SizeOf<JiggleBoneSimulatedPoint>() * pointCount,
+                UnsafeUtility.AlignOf<JiggleBoneSimulatedPoint>(),
+                Allocator.Persistent
+            );
         }
     }
     public void Dispose() {

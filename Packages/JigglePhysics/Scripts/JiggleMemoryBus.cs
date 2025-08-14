@@ -79,11 +79,9 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     }
 
 
-    private void Resize(int newTransformCapacity, int newTreeCapacity) {
-        Debug.Log($"Resized to {newTransformCapacity} transforms and {newTreeCapacity} trees.");
+    private void ResizeTransformCapacity(int newTransformCapacity) {
         preMemoryFragmentCollection.Resize(newTransformCapacity);
         memoryFragmentCollection.Resize(newTransformCapacity);
-        var newJiggleTreeStructsArray = new JiggleTreeStruct[newTreeCapacity];
         var newSimulateInputPosesArray = new JiggleTransform[newTransformCapacity];
         var newRestPoseTransformsArray = new JiggleTransform[newTransformCapacity];
         var newPreviousLocalRestPoseTransformsArray = new JiggleTransform[newTransformCapacity];
@@ -94,7 +92,6 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         var newInterpolationPreviousPoseDataArray = new PoseData[newTransformCapacity];
         
         if (jiggleTreeStructsArray != null) {
-            System.Array.Copy(jiggleTreeStructsArray, newJiggleTreeStructsArray, System.Math.Min(treeCount, newTreeCapacity));
             System.Array.Copy(simulateInputPosesArray, newSimulateInputPosesArray, System.Math.Min(transformCount, newTransformCapacity));
             System.Array.Copy(restPoseTransformsArray, newRestPoseTransformsArray, System.Math.Min(transformCount, newTransformCapacity));
             System.Array.Copy(previousLocalRestPoseTransformsArray, newPreviousLocalRestPoseTransformsArray, System.Math.Min(transformCount, newTransformCapacity));
@@ -105,7 +102,6 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             System.Array.Copy(interpolationPreviousPoseDataArray, newInterpolationPreviousPoseDataArray, System.Math.Min(transformCount, newTransformCapacity));
         }
         
-        jiggleTreeStructsArray = newJiggleTreeStructsArray;
         simulateInputPosesArray = newSimulateInputPosesArray;
         restPoseTransformsArray = newRestPoseTransformsArray;
         previousLocalRestPoseTransformsArray = newPreviousLocalRestPoseTransformsArray;
@@ -116,7 +112,6 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         interpolationPreviousPoseDataArray = newInterpolationPreviousPoseDataArray;
         
         if (jiggleTreeStructs.IsCreated) {
-            jiggleTreeStructs.Dispose();
             simulateInputPoses.Dispose();
             restPoseTransforms.Dispose();
             previousLocalRestPoseTransforms.Dispose();
@@ -126,7 +121,6 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
             interpolationCurrentPoseData.Dispose();
             interpolationPreviousPoseData.Dispose();
         }
-        jiggleTreeStructs = new NativeArray<JiggleTreeStruct>(jiggleTreeStructsArray, Allocator.Persistent);
         simulateInputPoses = new NativeArray<JiggleTransform>(simulateInputPosesArray, Allocator.Persistent);
         restPoseTransforms = new NativeArray<JiggleTransform>(restPoseTransformsArray, Allocator.Persistent);
         previousLocalRestPoseTransforms = new NativeArray<JiggleTransform>(previousLocalRestPoseTransformsArray, Allocator.Persistent);
@@ -137,6 +131,21 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         interpolationPreviousPoseData = new NativeArray<PoseData>(interpolationPreviousPoseDataArray, Allocator.Persistent);
         
         transformCapacity = newTransformCapacity;
+    }
+    
+    private void ResizeTreeCapacity(int newTreeCapacity) {
+        var newJiggleTreeStructsArray = new JiggleTreeStruct[newTreeCapacity];
+        
+        if (jiggleTreeStructsArray != null) {
+            System.Array.Copy(jiggleTreeStructsArray, newJiggleTreeStructsArray, System.Math.Min(treeCount, newTreeCapacity));
+        }
+        
+        jiggleTreeStructsArray = newJiggleTreeStructsArray;
+        
+        if (jiggleTreeStructs.IsCreated) {
+            jiggleTreeStructs.Dispose();
+        }
+        jiggleTreeStructs = new NativeArray<JiggleTreeStruct>(jiggleTreeStructsArray, Allocator.Persistent);
         treeCapacity = newTreeCapacity;
     }
     
@@ -148,7 +157,8 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         preMemoryFragmentCollection = new JiggleMemoryFragmentCollection(4096);
         memoryFragmentCollection = new JiggleMemoryFragmentCollection(4096);
 
-        Resize(4096, 512);
+        ResizeTransformCapacity(4096);
+        ResizeTreeCapacity(512);
         
         WriteOut();
         
@@ -214,14 +224,11 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         for (int i = 0; i < treeCount; i++) {
             var removedTree = jiggleTreeStructsArray[i];
             if (removedTree.rootID != id) continue;
-            Profiler.BeginSample("JiggleMemoryBus.RemoveTree.ArrayManipulation");
             int shiftCount = treeCount - i - 1;
             if (shiftCount > 0) {
                 System.Array.Copy(jiggleTreeStructsArray, i + 1, jiggleTreeStructsArray, i, shiftCount);
             }
             treeCount--;
-            Profiler.EndSample();
-            Profiler.BeginSample("JiggleMemoryBus.RemoveTree.MarkVirtual");
             for (int j = (int)removedTree.transformIndexOffset;j < removedTree.transformIndexOffset + removedTree.pointCount; j++) {
                 var pose = simulationOutputPoseDataArray[j].pose;
                 pose.isVirtual = true;
@@ -236,7 +243,6 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
                 interpolationPreviousPoseDataArray[j].pose = interpPose2;
             }
             memoryFragmentCollection.Free((int)removedTree.transformIndexOffset,(int)removedTree.pointCount);
-            Profiler.EndSample();
             break;
         }
         Profiler.EndSample();
@@ -252,11 +258,11 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
 
     private void AddTransformsToSlice(int index, JiggleTree jiggleTree, JiggleTreeStruct jiggleTreeStruct) {
         if (treeCount + 1 > treeCapacity) {
-            Resize(transformCapacity, treeCapacity * 2);
+            ResizeTreeCapacity(treeCapacity * 2);
         }
 
         if (index + jiggleTreeStruct.pointCount >= transformCapacity) {
-            Resize(transformCapacity * 2, treeCapacity);
+            ResizeTransformCapacity(transformCapacity * 2);
         }
 
         var rootBone = jiggleTree.bones[0];
@@ -278,11 +284,11 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         jiggleTreeStruct.transformIndexOffset = (uint)index;
 
         if (treeCount + 1 > treeCapacity) {
-            Resize(transformCapacity, treeCapacity * 2);
+            ResizeTreeCapacity(treeCapacity * 2);
         }
 
         if (index + jiggleTreeStruct.pointCount >= transformCapacity) {
-            Resize(transformCapacity * 2, treeCapacity);
+            ResizeTransformCapacity(transformCapacity * 2);
         }
         
         jiggleTreeStructsArray[treeCount] = jiggleTreeStruct;
@@ -348,7 +354,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
 
                 var found = preMemoryFragmentCollection.TryAllocate((int)jiggleTreeStruct.pointCount, out var startIndex);
                 if (!found) {
-                    Resize(transformCapacity*2, treeCapacity);
+                    ResizeTransformCapacity(transformCapacity*2);
                     preMemoryFragmentCollection.TryAllocate((int)jiggleTreeStruct.pointCount, out startIndex);
                 }
                 AddTransformsToSlice(startIndex, jiggleTree, jiggleTreeStruct);
@@ -384,7 +390,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
                 
                 var found = memoryFragmentCollection.TryAllocate((int)jiggleTreeStruct.pointCount, out var startIndex);
                 if (!found) {
-                    Resize(transformCapacity*2, treeCapacity);
+                    ResizeTransformCapacity(transformCapacity*2);
                     memoryFragmentCollection.TryAllocate((int)jiggleTreeStruct.pointCount, out startIndex);
                 }
                 

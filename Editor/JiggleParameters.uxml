@@ -1,13 +1,13 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
-    <ui:Template name="CurvableSlider" src="project://database/Packages/com.naelstrof.jigglephysics/Editor/CurvableSlider.uxml?fileID=9197481963319205126&amp;guid=7693635f8c8f1794e81f146e773e4423&amp;type=3#CurvableSlider" />
-    <ui:Template name="CurvableFloat" src="project://database/Packages/com.naelstrof.jigglephysics/Editor/CurvableFloat.uxml?fileID=9197481963319205126&amp;guid=0a4d9d770f5ddbb418464fdbd209e960&amp;type=3#CurvableFloat" />
-    <Style src="project://database/Packages/com.naelstrof.jigglephysics/Editor/JiggleStyles.uss?fileID=7433441132597879392&amp;guid=9a2f78f6a51166c4ca0e12830ed7e7ab&amp;type=3#JiggleStyles" />
+    <ui:Template name="CurvableSlider" src="project://database/Packages/com.gator-dragon-games.jigglephysics/Editor/CurvableSlider.uxml?fileID=9197481963319205126&amp;guid=7693635f8c8f1794e81f146e773e4423&amp;type=3#CurvableSlider" />
+    <ui:Template name="CurvableFloat" src="project://database/Packages/com.gator-dragon-games.jigglephysics/Editor/CurvableFloat.uxml?fileID=9197481963319205126&amp;guid=0a4d9d770f5ddbb418464fdbd209e960&amp;type=3#CurvableFloat" />
+    <Style src="project://database/Packages/com.gator-dragon-games.jigglephysics/Editor/JiggleStyles.uss?fileID=7433441132597879392&amp;guid=9a2f78f6a51166c4ca0e12830ed7e7ab&amp;type=3#JiggleStyles" />
     <ui:Label text="Settings" class="title" />
     <ui:VisualElement name="Spacer" class="spacer" />
     <ui:VisualElement name="VisualElement">
-        <ui:Toggle label="Advanced" name="AdvancedToggle" />
+        <ui:Toggle label="Advanced" name="AdvancedToggle" style="flex-shrink: 0;" />
         <ui:Instance template="CurvableSlider" name="StiffnessControl" />
-        <ui:VisualElement name="AdvancedSection" style="flex-grow: 1;">
+        <ui:VisualElement name="AdvancedSection" style="flex-grow: 0; flex-shrink: 0;">
             <ui:Slider label="Soften" value="42" high-value="1" name="SoftenSlider" />
             <ui:Instance template="CurvableSlider" name="StretchControl" />
             <ui:Slider label="RootStretch" value="42" high-value="1" name="RootStretchSlider" />
@@ -23,7 +23,7 @@
         <ui:Instance template="CurvableSlider" name="AirDragControl" />
         <ui:VisualElement name="Spacer" class="spacer" />
         <ui:Instance template="CurvableFloat" name="GravityControl" />
-        <ui:VisualElement name="AdvancedSection2" style="flex-grow: 1;">
+        <ui:VisualElement name="AdvancedSection2" style="flex-grow: 0; flex-shrink: 0;">
             <ui:VisualElement name="Spacer" class="spacer" />
             <ui:Toggle label="Collision" name="CollisionToggle" />
             <ui:VisualElement name="CollisionSection" style="flex-grow: 1;">

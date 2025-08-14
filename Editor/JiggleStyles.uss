@@ -1,4 +1,5 @@
 :root {
+    flex-shrink: 0;
 }
 
 .title {
@@ -30,6 +31,7 @@
 
 .spacer {
     min-height: 20px;
+    flex-shrink: 0;
 }
 
 .curvableCurve {

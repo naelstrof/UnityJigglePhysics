@@ -108,6 +108,10 @@ public static class JiggleTreeUtility {
         Profiler.EndSample();
     }
 
+    public static int AddSphere(Transform t) {
+        return jobs.AddSphere(t);
+    }
+
     public static JiggleTree CreateJiggleTree(JiggleRig jiggleRig, JiggleTreeSegment segment) {
         Profiler.BeginSample("JiggleTreeUtility.CreateJiggleTree");
         tempTransforms.Clear();
@@ -150,13 +154,6 @@ public static class JiggleTreeUtility {
         } else {
             return new JiggleTree(tempTransforms, tempPoints);
         }
-    }
-
-    // TODO: Make this respect excluded transforms
-    private static Transform[] GetColliderTransforms() {
-        var colliderTransforms = UnityEngine.Object.FindObjectsOfType<JigglePhysicsCollider>().Select(c => c.transform)
-            .ToArray();
-        return colliderTransforms;
     }
 
     public static void VisitForLength(Transform t, JiggleRig rig, Vector3 lastPosition, float currentLength, out float totalLength) {

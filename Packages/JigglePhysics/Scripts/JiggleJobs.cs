@@ -113,8 +113,8 @@ public class JiggleJobs {
         handleBulkRead = jobBulkTransformRead.ScheduleReadOnly(_memoryBus.GetTransformAccessArray(), 128);
         hasHandleBulkRead = true;
 
-        //handleColliderRead = jobBulkColliderTransformRead.ScheduleReadOnly(_memoryBus.colliderTransformAccessArray, 128);
-        //hasHandleColliderRead = true;
+        handleColliderRead = jobBulkColliderTransformRead.ScheduleReadOnly(_memoryBus.colliderTransformAccessArray, 128);
+        hasHandleColliderRead = true;
         
         var handle = SchedulePoses(JobHandle.CombineDependencies(handleBulkRead, handleColliderRead));
 
@@ -126,6 +126,10 @@ public class JiggleJobs {
     
     public void Add(JiggleTree tree) {
         _memoryBus.Add(tree);
+    }
+
+    public int AddSphere(Transform sphere) {
+        return _memoryBus.AddSphere(sphere);
     }
     
     public void Remove(JiggleTree tree) {

@@ -1,16 +1,12 @@
+using System;
 using UnityEngine;
 
-public class JigglePhysicsCollider : MonoBehaviour
-{
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
+public class JigglePhysicsCollider : MonoBehaviour {
+    private int id;
+    private void OnEnable() {
+        id = JiggleTreeUtility.AddSphere(transform);
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+    private void OnDisable() {
+        //JiggleTreeUtility.RemoveSphere(id);
     }
 }

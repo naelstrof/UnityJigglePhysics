@@ -46,7 +46,6 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
     
     private List<Transform> transformAccessList;
     private List<Transform> transformRootAccessList;
-    private List<Transform> colliderTransformAccessList;
     
     public JiggleDoubleBufferTransformAccessArray doubleBufferTransformAccessArray;
     
@@ -166,7 +165,7 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         transformRootAccessList = new List<Transform>();
         doubleBufferTransformAccessArray = new JiggleDoubleBufferTransformAccessArray(128);
         
-        colliderTransformAccessArray = new TransformAccessArray(new Transform[] {});
+        colliderTransformAccessArray = new TransformAccessArray(128);
         colliderPositions = new NativeArray<float3>(new float3[]{}, Allocator.Persistent);
         transformCount = 0;
         treeCount = 0;
@@ -416,6 +415,13 @@ public class JiggleMemoryBus {// : IContainer<JiggleTreeStruct> {
         pendingAddTrees.Add(jiggleTree);
     }
 
+    public int AddSphere(Transform transform) {
+        colliderTransformAccessArray.Add(transform);
+        colliderPositions.Dispose();
+        colliderPositions = new NativeArray<float3>(colliderTransformAccessArray.length, Allocator.Persistent);
+        return colliderTransformAccessArray.length-1;
+    }
+    
     public void Remove(int rootBoneInstanceID) {
         var count = pendingAddTrees.Count;
         for (int i = 0; i < count; i++) {

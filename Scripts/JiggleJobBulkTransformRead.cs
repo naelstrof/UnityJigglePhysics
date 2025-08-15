@@ -51,6 +51,7 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
         transform.GetPositionAndRotation(out var position, out var rotation);
         jiggleTransform.position = position;
         jiggleTransform.rotation = rotation;
+        jiggleTransform.scale = transform.localToWorldMatrix.lossyScale;
         simulateInputPoses[index] = jiggleTransform;
     }
 

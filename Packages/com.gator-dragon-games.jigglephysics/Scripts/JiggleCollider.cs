@@ -1,17 +1,28 @@
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace GatorDragonGames.JigglePhysics {
 
-public class JiggleCollider : MonoBehaviour {
-    private int id;
+[System.Serializable]
+public struct JiggleColliderSerializable {
+    public Transform transform;
+    public JiggleCollider collider;
+}
 
-    private void OnEnable() {
-        id = JigglePhysics.AddSphere(transform);
+[System.Serializable]
+public struct JiggleCollider {
+    public enum JiggleColliderType {
+        Sphere,
+        Capsule,
+        Plane
     }
 
-    private void OnDisable() {
-        //JiggleTreeUtility.RemoveSphere(id);
-    }
+    public JiggleColliderType type;
+    
+    public float4x4 localToWorldMatrix;
+    
+    public float radius;
+    public float length;
 }
 
 }

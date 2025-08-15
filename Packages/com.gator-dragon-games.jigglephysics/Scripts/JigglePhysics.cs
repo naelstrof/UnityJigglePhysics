@@ -11,6 +11,8 @@ public static class JigglePhysics {
     private static HashSet<JiggleTree> jiggleTrees;
     private static readonly List<Transform> tempTransforms = new List<Transform>();
     private static readonly List<JiggleSimulatedPoint> tempPoints = new List<JiggleSimulatedPoint>();
+    private static readonly List<JiggleCollider> tempColliders = new List<JiggleCollider>();
+    private static readonly List<Transform> tempColliderTransforms = new List<Transform>();
     private static List<JiggleTreeSegment> rootJiggleTreeSegments;
 
     private static double accumulatedTime = 0f;
@@ -141,14 +143,12 @@ public static class JigglePhysics {
         Profiler.EndSample();
     }
 
-    public static int AddSphere(Transform t) {
-        return jobs.AddSphere(t);
-    }
-
     public static JiggleTree CreateJiggleTree(JiggleRig jiggleRig, JiggleTreeSegment segment) {
         Profiler.BeginSample("JiggleTreeUtility.CreateJiggleTree");
         tempTransforms.Clear();
         tempPoints.Clear();
+        jiggleRig.GetJiggleColliders(tempColliders);
+        jiggleRig.GetJiggleColliderTransforms(tempColliderTransforms);
         if (!jiggleRig.normalizedDistanceFromRootListIsValid) jiggleRig.BuildNormalizedDistanceFromRootList();
         var backProjection = Vector3.zero;
         if (jiggleRig.rootBone.childCount != 0) {
@@ -178,13 +178,13 @@ public static class JigglePhysics {
         Profiler.EndSample();
         bool hasSegment = segment != null;
         if (hasSegment && segment.jiggleTree != null) {
-            segment.jiggleTree.Set(tempTransforms, tempPoints);
+            segment.jiggleTree.Set(tempTransforms, tempPoints, tempColliderTransforms, tempColliders);
             return segment.jiggleTree;
         } else if (hasSegment) {
-            segment.SetJiggleTree(new JiggleTree(tempTransforms, tempPoints));
+            segment.SetJiggleTree(new JiggleTree(tempTransforms, tempPoints, tempColliderTransforms, tempColliders));
             return segment.jiggleTree;
         } else {
-            return new JiggleTree(tempTransforms, tempPoints);
+            return new JiggleTree(tempTransforms, tempPoints, tempColliderTransforms, tempColliders);
         }
     }
 

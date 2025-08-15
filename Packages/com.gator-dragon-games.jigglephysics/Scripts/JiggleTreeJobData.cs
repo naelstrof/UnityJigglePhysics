@@ -23,12 +23,16 @@ public unsafe struct JiggleTreeJobData {
     public int rootID;
     public uint pointCount;
     public uint transformIndexOffset;
+    public uint colliderIndexOffset;
+    public uint colliderCount;
     public JiggleSimulatedPoint* points;
 
-    public JiggleTreeJobData(int rootID, int indexOffset, JiggleSimulatedPoint[] inputPoints) {
+    public JiggleTreeJobData(int rootID, int transformIndexOffset, int colliderIndexOffset, int colliderCount, JiggleSimulatedPoint[] inputPoints) {
         this.rootID = rootID;
         pointCount = (uint)inputPoints.Length;
-        transformIndexOffset = (uint)indexOffset;
+        this.colliderIndexOffset = (uint)colliderIndexOffset;
+        this.transformIndexOffset = (uint)transformIndexOffset;
+        this.colliderCount = (uint)colliderCount;
         points = (JiggleSimulatedPoint*)UnsafeUtility.Malloc(
             Marshal.SizeOf<JiggleSimulatedPoint>() * pointCount,
             UnsafeUtility.AlignOf<JiggleSimulatedPoint>(),

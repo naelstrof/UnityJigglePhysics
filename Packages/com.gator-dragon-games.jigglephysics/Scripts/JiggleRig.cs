@@ -25,12 +25,27 @@ public class JiggleRig : MonoBehaviour {
     [SerializeField] protected JiggleTreeInputParameters jiggleTreeInputParameters;
     [SerializeField] protected List<Transform> _excludedTransforms = new List<Transform>();
     [SerializeField, HideInInspector] List<BoneNormalizedDistanceFromRoot> _boneNormalizedDistanceFromRootList;
+    [SerializeField] List<JiggleColliderSerializable> jiggleColliders = new List<JiggleColliderSerializable>();
 
     private JiggleTreeSegment _jiggleTreeSegment;
     bool isValid = false;
     public bool rootExcluded => _excludeRoot;
     public Transform rootBone => _rootBone;
     public bool CheckExcluded(Transform t) => _excludedTransforms.Contains(t);
+    
+    public void GetJiggleColliders(List<JiggleCollider> colliders) {
+        colliders.Clear();
+        foreach (var collider in jiggleColliders) {
+            colliders.Add(collider.collider);
+        }
+    }
+    
+    public void GetJiggleColliderTransforms(List<Transform> colliderTransforms) {
+        colliderTransforms.Clear();
+        foreach (var collider in jiggleColliders) {
+            colliderTransforms.Add(collider.transform);
+        }
+    }
 
     public float GetNormalizedDistanceFromRoot(Transform t) {
         var entry = _boneNormalizedDistanceFromRootList.Find(x => x.bone == t);

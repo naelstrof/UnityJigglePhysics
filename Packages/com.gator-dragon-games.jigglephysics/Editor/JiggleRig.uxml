@@ -8,5 +8,6 @@
     </ui:VisualElement>
     <ui:Toggle label="Toggle" name="ExcludeRootToggle" />
     <uie:PropertyField name="IgnoredTransformsField" />
+    <uie:PropertyField name="PersonalCollidersField" />
     <ui:VisualElement style="height: 10px;" />
 </ui:UXML>

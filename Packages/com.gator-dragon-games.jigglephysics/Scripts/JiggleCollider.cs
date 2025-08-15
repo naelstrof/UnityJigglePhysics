@@ -19,10 +19,10 @@ public struct JiggleCollider {
 
     public JiggleColliderType type;
     
-    public float4x4 localToWorldMatrix;
-    
     public float radius;
     public float length;
+    
+    [HideInInspector] public float4x4 localToWorldMatrix;
 }
 
 }

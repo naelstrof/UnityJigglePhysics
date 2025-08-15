@@ -23,9 +23,9 @@ public class JiggleRig : MonoBehaviour {
     [FormerlySerializedAs("_excludeRoot")] [SerializeField] protected bool excludeRoot;
     [SerializeField] protected JiggleTreeInputParameters jiggleTreeInputParameters;
     [FormerlySerializedAs("_excludedTransforms")] [SerializeField] protected List<Transform> excludedTransforms = new List<Transform>();
-    [FormerlySerializedAs("_personalColliders")] [SerializeField] protected List<JiggleCollider> personalColliders = new List<JiggleCollider>();
+    [SerializeField] protected List<JiggleCollider> personalColliders = new List<JiggleCollider>();
     [SerializeField, HideInInspector] List<BoneNormalizedDistanceFromRoot> _boneNormalizedDistanceFromRootList;
-    [SerializeField] List<JiggleColliderSerializable> jiggleColliders = new List<JiggleColliderSerializable>();
+    [SerializeField] protected List<JiggleColliderSerializable> jiggleColliders = new List<JiggleColliderSerializable>();
 
     private JiggleTreeSegment _jiggleTreeSegment;
     bool isValid = false;

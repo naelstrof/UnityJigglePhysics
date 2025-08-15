@@ -258,6 +258,7 @@ public class JiggleMemoryBus {
         NativeArray<PoseData>.Copy(simulationOutputPoseDataArray, simulationOutputPoseData, transformCount);
         NativeArray<PoseData>.Copy(interpolationCurrentPoseDataArray, interpolationCurrentPoseData, transformCount);
         NativeArray<PoseData>.Copy(interpolationPreviousPoseDataArray, interpolationPreviousPoseData, transformCount);
+        NativeArray<JiggleCollider>.Copy(jiggleCollidersArray, colliders, colliderCount);
         Profiler.EndSample();
     }
 
@@ -320,25 +321,6 @@ public class JiggleMemoryBus {
         if (index + jiggleTreeJobData.pointCount >= transformCapacity) {
             ResizeTransformCapacity(transformCapacity * 2);
         }
-
-        var rootBone = jiggleTree.bones[0];
-
-        var desiredCount = index + (int)jiggleTreeJobData.pointCount;
-        while (transformAccessList.Count < desiredCount) {
-            transformAccessList.Add(rootBone);
-            transformRootAccessList.Add(rootBone);
-        }
-
-        for (int o = 0; o < jiggleTreeJobData.pointCount; o++) {
-            transformAccessList[index + o] = jiggleTree.bones[o];
-            transformRootAccessList[index + o] = rootBone;
-        }
-
-        preTransformCount = math.max(index + (int)jiggleTreeJobData.pointCount, preTransformCount);
-    }
-
-    private void AddTreeToSlice(int index, JiggleTree jiggleTree, JiggleTreeJobData jiggleTreeJobData) {
-        jiggleTreeJobData.transformIndexOffset = (uint)index;
         
         #region AddColliders
 
@@ -364,7 +346,27 @@ public class JiggleMemoryBus {
         }
 
         #endregion
-             
+
+
+        var rootBone = jiggleTree.bones[0];
+
+        var desiredCount = index + (int)jiggleTreeJobData.pointCount;
+        while (transformAccessList.Count < desiredCount) {
+            transformAccessList.Add(rootBone);
+            transformRootAccessList.Add(rootBone);
+        }
+
+        for (int o = 0; o < jiggleTreeJobData.pointCount; o++) {
+            transformAccessList[index + o] = jiggleTree.bones[o];
+            transformRootAccessList[index + o] = rootBone;
+        }
+
+        preTransformCount = math.max(index + (int)jiggleTreeJobData.pointCount, preTransformCount);
+    }
+
+    private void AddTreeToSlice(int index, JiggleTree jiggleTree, JiggleTreeJobData jiggleTreeJobData) {
+        jiggleTreeJobData.transformIndexOffset = (uint)index;
+        
         if (treeCount + 1 > treeCapacity) {
             ResizeTreeCapacity(treeCapacity * 2);
         }

@@ -115,6 +115,13 @@ public struct JiggleJobSimulate : IJobFor {
     float float3Angle(float3 a, float3 b) {
         return math.degrees(math.acos(math.clamp(math.dot(math.normalizesafe(a, new float3(0,0,1)), math.normalizesafe(b, new float3(0,0,1))), -1f, 1f)));
     }
+    
+    float AverageScale(float4x4 matrix) {
+        float sx = math.length(matrix.c0.xyz);
+        float sy = math.length(matrix.c1.xyz);
+        float sz = math.length(matrix.c2.xyz);
+        return (sx + sy + sz) / 3f;
+    }
 
     private unsafe void Constrain(JiggleTreeJobData tree) {
         for (int i = 0; i < tree.pointCount; i++) {
@@ -172,16 +179,27 @@ public struct JiggleJobSimulate : IJobFor {
             #endregion
 
             #region Collisions
+            
+            var inputPose = tree.GetInputPose(inputPoses, i);
+            var averagePointScale = (inputPose.scale.x + inputPose.scale.y + inputPose.scale.z) / 3f;
 
             for (int index = (int)tree.colliderIndexOffset; index < tree.colliderCount; index++) {
                 var collider = testColliders[index];
-                var vectorFromCollider = point.desiredConstraint - collider.localToWorldMatrix.c3.xyz;
-                var distanceToCollider = math.length(vectorFromCollider);
-                var minDistance = point.parameters.collisionRadius + 1f;
-                if (distanceToCollider < minDistance) {
-                    var correctionDir = math.normalizesafe(vectorFromCollider, new float3(0,0,1));
-                    var correctionDistance = minDistance - distanceToCollider;
-                    point.desiredConstraint += correctionDir * correctionDistance * (1f - 0.5f); // TODO: soften
+                switch (collider.type) {
+                    case JiggleCollider.JiggleColliderType.Sphere:
+                        var colliderPosition = collider.localToWorldMatrix.c3.xyz;
+                        var colliderScale = AverageScale(collider.localToWorldMatrix);
+                        var colliderRadius = collider.radius * colliderScale;
+                        
+                        var pointPosition = point.desiredConstraint;
+                        var pointRadius = point.parameters.collisionRadius * averagePointScale;
+                        var sphere_diff = pointPosition - colliderPosition;
+                        var sphere_distance = math.length(sphere_diff);
+                        if (sphere_distance > colliderRadius + pointRadius) {
+                            continue;
+                        }
+                        point.desiredConstraint = colliderPosition + math.normalizesafe(sphere_diff, new float3(0,0,1)) * (colliderRadius + pointRadius);
+                    break;
                 }
             }
 

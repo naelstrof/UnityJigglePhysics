@@ -6,17 +6,19 @@ public struct JiggleTransform {
     public bool isVirtual;
     public float3 position;
     public quaternion rotation;
+    public float3 scale;
 
     public static JiggleTransform Lerp(JiggleTransform a, JiggleTransform b, float t) {
         return new JiggleTransform() {
             isVirtual = a.isVirtual,
             position = math.lerp(a.position, b.position, t),
             rotation = math.slerp(a.rotation, b.rotation, t),
+            scale = math.lerp(a.scale, b.scale, t),
         };
     }
 
     public override string ToString() {
-        return $"Virtual: {isVirtual}, Position: {position}, Quaternion: {rotation}";
+        return $"Virtual: {isVirtual}, Position: {position}, Quaternion: {rotation}, Scale: {scale}";
     }
 }
 

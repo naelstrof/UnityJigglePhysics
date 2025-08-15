@@ -21,6 +21,7 @@ public class JiggleRigEditor : Editor {
         visualTreeAsset.CloneTree(visualElement);
 
         var rootElement = visualElement.Q<ObjectField>("RootField");
+        rootElement.objectType = typeof(Transform);
         rootElement.BindProperty(serializedObject.FindProperty("_rootBone"));
         rootElement.Q<Label>().text = "Root Transform";
         var errorSection = visualElement.Q<VisualElement>("RootTransformErrorSection");
@@ -30,11 +31,14 @@ public class JiggleRigEditor : Editor {
         errorSection.style.display = script.rootTransformError ? DisplayStyle.Flex : DisplayStyle.None;
 
         var excludeRootToggleElement = visualElement.Q<Toggle>("ExcludeRootToggle");
-        excludeRootToggleElement.BindProperty(serializedObject.FindProperty("_excludeRoot"));
+        excludeRootToggleElement.BindProperty(serializedObject.FindProperty("excludeRoot"));
         excludeRootToggleElement.Q<Label>().text = "Motionless Root";
 
         var excludedTransformsElement = visualElement.Q<PropertyField>("IgnoredTransformsField");
-        excludedTransformsElement.BindProperty(serializedObject.FindProperty("_excludedTransforms"));
+        excludedTransformsElement.BindProperty(serializedObject.FindProperty("excludedTransforms"));
+
+        var personalCollidersElement = visualElement.Q<PropertyField>("PersonalCollidersField");
+        personalCollidersElement.BindProperty(serializedObject.FindProperty("personalColliders"));
 
         visualElement.Add(script.GetInspectorVisualElement(serializedObject.FindProperty("jiggleTreeInputParameters")));
         

@@ -56,7 +56,7 @@ public class JiggleRigEditor : Editor {
             var simulatedPoint = points[index];
             if (simulatedPoint.parentIndex == -1) continue;
             if (!points[simulatedPoint.parentIndex].hasTransform) continue;
-            DrawBone(points[simulatedPoint.parentIndex].position, simulatedPoint.position, simulatedPoint.parameters,
+            DrawBone(points[simulatedPoint.parentIndex].position, simulatedPoint.position, points[simulatedPoint.parentIndex].parameters,
                 cam);
         }
     }

@@ -169,7 +169,7 @@ public static class JigglePhysics {
             animated = false,
         });
         tempTransforms.Add(jiggleRig.rootBone);
-        Visit(jiggleRig.rootBone, tempTransforms, tempPoints, 0, jiggleRig, backProjection, 0f, out int childIndex);
+        Visit(jiggleRig.rootBone, tempTransforms, tempPoints, 0, jiggleRig, jiggleRig.rootBone.position, 0f, out int childIndex);
         unsafe {
             var rootPoint = tempPoints[0];
             rootPoint.childrenIndices[0] = childIndex;
@@ -198,8 +198,8 @@ public static class JigglePhysics {
         var validChildrenCount = GetValidChildrenCount(t, rig);
         for (int i = 0; i < validChildrenCount; i++) {
             var child = GetValidChild(t, rig, i);
-            VisitForLength(child, rig, t.position, currentLength, out var maxLength);
-            totalLength = Mathf.Max(totalLength, maxLength);
+            VisitForLength(child, rig, t.position, currentLength, out var siblingMaxLength);
+            totalLength = Mathf.Max(totalLength, siblingMaxLength);
         }
     }
 

@@ -80,12 +80,10 @@ public class JiggleRig : MonoBehaviour {
         VisitAndSetNormalizedDistanceFromRoot(_rootBone, _rootBone.position, 0f, totalLength);
     }
 
-    public void VisitAndSetNormalizedDistanceFromRoot(Transform t, Vector3 lastPosition, float currentLength,
-        float totalLength) {
+    public void VisitAndSetNormalizedDistanceFromRoot(Transform t, Vector3 lastPosition, float currentLength, float totalLength) {
         if (CheckExcluded(t)) {
             return;
         }
-
         currentLength += Vector3.Distance(lastPosition, t.position);
         _boneNormalizedDistanceFromRootList.Add(new BoneNormalizedDistanceFromRoot() {
             bone = t,

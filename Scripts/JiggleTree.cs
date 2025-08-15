@@ -7,6 +7,8 @@ public class JiggleTree {
 
     public Transform[] bones;
     public JiggleSimulatedPoint[] points;
+    public Transform[] personalColliderTransforms;
+    public JiggleCollider[] personalColliders;
     public bool dirty { get; private set; }
     public int rootID { get; private set; }
 
@@ -24,7 +26,7 @@ public class JiggleTree {
             return jiggleTreeJobData;
         }
 
-        jiggleTreeJobData = new JiggleTreeJobData(rootID, 0, points);
+        jiggleTreeJobData = new JiggleTreeJobData(rootID, 0, 0, personalColliders.Length, points);
         return jiggleTreeJobData;
     }
 
@@ -35,14 +37,16 @@ public class JiggleTree {
         }
     }
 
-    public JiggleTree(List<Transform> bones, List<JiggleSimulatedPoint> points) {
+    public JiggleTree(List<Transform> bones, List<JiggleSimulatedPoint> points, List<Transform> personalColliderTransforms, List<JiggleCollider> personalColliders) {
         dirty = false;
         this.bones = bones.ToArray();
         this.points = points.ToArray();
+        this.personalColliders = personalColliders.ToArray();
+        this.personalColliderTransforms = personalColliderTransforms.ToArray();
         rootID = bones[0].GetInstanceID();
     }
 
-    public void Set(List<Transform> bones, List<JiggleSimulatedPoint> points) {
+    public void Set(List<Transform> bones, List<JiggleSimulatedPoint> points, List<Transform> personalColliderTransforms, List<JiggleCollider> personalColliders) {
         var bonesCount = bones.Count;
         var pointsCount = points.Count;
         if (bonesCount == this.bones.Length && pointsCount == this.points.Length) {
@@ -56,6 +60,21 @@ public class JiggleTree {
         } else {
             this.bones = bones.ToArray();
             this.points = points.ToArray();
+        }
+        
+        
+        var personalColliderTransformsCount = personalColliderTransforms.Count;
+        var personalCollidersCount = personalColliders.Count;
+        if (personalCollidersCount == this.personalColliders.Length && personalColliderTransformsCount == this.personalColliderTransforms.Length) {
+            for (int i = 0; i < personalCollidersCount; i++) {
+                this.personalColliders[i] = personalColliders[i];
+            }
+            for (int i = 0; i < personalColliderTransformsCount; i++) {
+                this.personalColliderTransforms[i] = personalColliderTransforms[i];
+            }
+        } else {
+            this.personalColliders = personalColliders.ToArray();
+            this.personalColliderTransforms = personalColliderTransforms.ToArray();
         }
 
         rootID = bones[0].GetInstanceID();

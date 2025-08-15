@@ -16,7 +16,7 @@ public struct JiggleJobSimulate : IJobFor {
     public NativeArray<JiggleTransform> inputPoses;
 
     [NativeDisableParallelForRestriction] public NativeArray<PoseData> outputPoses;
-    [NativeDisableParallelForRestriction] public NativeArray<float3> testColliders;
+    [NativeDisableParallelForRestriction] public NativeArray<JiggleCollider> testColliders;
 
     public NativeArray<JiggleTreeJobData> jiggleTrees;
 
@@ -24,7 +24,7 @@ public struct JiggleJobSimulate : IJobFor {
         inputPoses = bus.simulateInputPoses;
         jiggleTrees = bus.jiggleTreeStructs;
         outputPoses = bus.simulationOutputPoseData;
-        testColliders = bus.colliderPositions;
+        testColliders = bus.colliders;
         timeStamp = Time.timeAsDouble;
         gravity = Physics.gravity;
     }
@@ -33,7 +33,7 @@ public struct JiggleJobSimulate : IJobFor {
         inputPoses = bus.simulateInputPoses;
         jiggleTrees = bus.jiggleTreeStructs;
         outputPoses = bus.simulationOutputPoseData;
-        testColliders = bus.colliderPositions;
+        testColliders = bus.colliders;
     }
 
 
@@ -173,10 +173,9 @@ public struct JiggleJobSimulate : IJobFor {
 
             #region Collisions
 
-            var colliderCount = testColliders.Length;
-            for (int index = 0; index < colliderCount; index++) {
-                var colliderPosition = testColliders[index];
-                var vectorFromCollider = point.desiredConstraint - colliderPosition;
+            for (int index = (int)tree.colliderIndexOffset; index < tree.colliderCount; index++) {
+                var collider = testColliders[index];
+                var vectorFromCollider = point.desiredConstraint - collider.localToWorldMatrix.c3.xyz;
                 var distanceToCollider = math.length(vectorFromCollider);
                 var minDistance = point.parameters.collisionRadius + 1f;
                 if (distanceToCollider < minDistance) {

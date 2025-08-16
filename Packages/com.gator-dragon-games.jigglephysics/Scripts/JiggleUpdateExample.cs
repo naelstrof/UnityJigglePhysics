@@ -4,7 +4,7 @@ namespace GatorDragonGames.JigglePhysics {
 
 public class JiggleUpdateExample : MonoBehaviour {
     private void LateUpdate() {
-        JigglePhysics.ScheduleUpdate(Time.deltaTime);
+        JigglePhysics.ScheduleUpdate(Time.timeAsDouble);
         JigglePhysics.CompleteUpdate();
     }
 

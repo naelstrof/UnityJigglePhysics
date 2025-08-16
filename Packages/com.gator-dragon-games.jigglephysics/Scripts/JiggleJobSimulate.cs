@@ -123,6 +123,25 @@ public struct JiggleJobSimulate : IJobFor {
         return (sx + sy + sz) / 3f;
     }
 
+    private float3 DoDepenetration(float3 inputPosition, float worldInputRadius, JiggleCollider collider) {
+        switch (collider.type) {
+            case JiggleCollider.JiggleColliderType.Sphere:
+                var colliderPosition = collider.localToWorldMatrix.c3.xyz;
+                var colliderScale = AverageScale(collider.localToWorldMatrix);
+                var colliderRadius = collider.radius * colliderScale;
+                        
+                var sphere_diff = inputPosition - colliderPosition;
+                var sphere_distance = math.length(sphere_diff);
+                if (sphere_distance > colliderRadius + worldInputRadius) {
+                    return inputPosition;
+                }
+                var desiredPosition = colliderPosition + math.normalizesafe(sphere_diff, new float3(0,0,1)) * (colliderRadius + worldInputRadius);
+                var hardness = 0.5f;
+                return math.lerp(inputPosition, desiredPosition, hardness);
+        }
+        return inputPosition;
+    }
+
     private unsafe void Constrain(JiggleTreeJobData tree) {
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points[i];
@@ -182,25 +201,8 @@ public struct JiggleJobSimulate : IJobFor {
             
             var inputPose = tree.GetInputPose(inputPoses, i);
             var averagePointScale = (inputPose.scale.x + inputPose.scale.y + inputPose.scale.z) / 3f;
-
             for (int index = (int)tree.colliderIndexOffset; index < tree.colliderCount; index++) {
-                var collider = testColliders[index];
-                switch (collider.type) {
-                    case JiggleCollider.JiggleColliderType.Sphere:
-                        var colliderPosition = collider.localToWorldMatrix.c3.xyz;
-                        var colliderScale = AverageScale(collider.localToWorldMatrix);
-                        var colliderRadius = collider.radius * colliderScale;
-                        
-                        var pointPosition = point.desiredConstraint;
-                        var pointRadius = point.parameters.collisionRadius * averagePointScale;
-                        var sphere_diff = pointPosition - colliderPosition;
-                        var sphere_distance = math.length(sphere_diff);
-                        if (sphere_distance > colliderRadius + pointRadius) {
-                            continue;
-                        }
-                        point.desiredConstraint = colliderPosition + math.normalizesafe(sphere_diff, new float3(0,0,1)) * (colliderRadius + pointRadius);
-                    break;
-                }
+                point.desiredConstraint = DoDepenetration(point.desiredConstraint, averagePointScale*point.parameters.collisionRadius, testColliders[index]);
             }
 
             #endregion
@@ -238,8 +240,16 @@ public struct JiggleJobSimulate : IJobFor {
             var length_elasticity = parent.parameters.lengthElasticity;
             var diff = point.desiredConstraint - parent.desiredConstraint;
             var dir = math.normalizesafe(diff, new float3(0,0,1));
-            var forwardConstraint = math.lerp(point.desiredConstraint,
-                parent.desiredConstraint + dir * point.desiredLengthToParent, length_elasticity);
+
+            var desiredPositionAfterLengthConstraint = parent.desiredConstraint + dir * point.desiredLengthToParent;
+            
+            var errorLength = math.distance(point.desiredConstraint, desiredPositionAfterLengthConstraint);
+            if (point.desiredLengthToParent != 0) {
+                errorLength /= point.desiredLengthToParent;
+            }
+            errorLength = math.min(errorLength, 1.0f);
+            errorLength = math.pow(errorLength, parent.parameters.elasticitySoften);
+            var forwardConstraint = math.lerp(point.desiredConstraint, desiredPositionAfterLengthConstraint, length_elasticity*errorLength);
             point.desiredConstraint = forwardConstraint;
 
             #endregion

@@ -13,14 +13,14 @@ public struct JiggleColliderSerializable {
 public struct JiggleCollider {
     public enum JiggleColliderType {
         Sphere,
-        Capsule,
-        Plane
+        //Capsule,
+        //Plane
     }
 
     public JiggleColliderType type;
     
     public float radius;
-    public float length;
+    //public float length;
     
     [HideInInspector] public float4x4 localToWorldMatrix;
 }

@@ -54,7 +54,7 @@ public class JiggleJobs {
         _memoryBus.Dispose();
     }
 
-    public JobHandle SchedulePoses(JobHandle dep) {
+    public JobHandle SchedulePoses(JobHandle dep, double timeAsDouble) {
         if (_memoryBus.transformCount == 0) {
             return dep;
         }
@@ -66,7 +66,7 @@ public class JiggleJobs {
         handleRootRead = jobBulkReadRoots.ScheduleReadOnly(_memoryBus.GetTransformRootAccessArray(), 128, dep);
         hasHandleRootRead = true;
 
-        jobInterpolation.currentTime = Time.timeAsDouble;
+        jobInterpolation.currentTime = timeAsDouble;
         handleInterpolate = jobInterpolation.ScheduleParallel(_memoryBus.transformCount, 128, handleRootRead);
 
         if (hasHandleBulkRead) {
@@ -86,7 +86,7 @@ public class JiggleJobs {
         }
     }
 
-    public void Simulate(double currentTime) {
+    public void Simulate(double simulateTime, double realTime) {
         if (_memoryBus.transformCount == 0) {
             _memoryBus.Commit();
             jobSimulate.UpdateArrays(_memoryBus);
@@ -121,10 +121,10 @@ public class JiggleJobs {
             jobBulkColliderTransformRead.ScheduleReadOnly(_memoryBus.GetColliderTransformAccessArray(), 128);
         hasHandleColliderRead = true;
 
-        var handle = SchedulePoses(JobHandle.CombineDependencies(handleBulkRead, handleColliderRead));
+        var handle = SchedulePoses(JobHandle.CombineDependencies(handleBulkRead, handleColliderRead), realTime);
 
         jobSimulate.gravity = gravity;
-        jobSimulate.timeStamp = currentTime;
+        jobSimulate.timeStamp = simulateTime;
         handleSimulate = jobSimulate.ScheduleParallel(_memoryBus.treeCount, 1,
             JobHandle.CombineDependencies(handleBulkRead, handleColliderRead, handle));
         hasHandleSimulate = true;

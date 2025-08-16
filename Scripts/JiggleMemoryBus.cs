@@ -547,7 +547,7 @@ public class JiggleMemoryBus {
         }
 
         doubleBufferTransformAccessArray?.Dispose();
-        doubleBufferColliderTransformAccessArray?.Dispose();
+        doubleBufferTransformRootAccessArray?.Dispose();
         doubleBufferColliderTransformAccessArray?.Dispose();
     }
 

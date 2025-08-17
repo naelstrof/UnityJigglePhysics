@@ -679,6 +679,13 @@ public class JiggleMemoryBus {
             sceneColliders.Dispose();
         }
 
+        var values = broadPhaseMap.GetValueArray(Allocator.Temp);
+        var gridCells = new JiggleGridCell[values.Length];
+        values.CopyTo(gridCells);
+        values.Dispose();
+        for (int i = 0; i < gridCells.Length; i++) {
+            gridCells[i].Dispose();
+        }
         broadPhaseMap.Dispose();
 
         doubleBufferTransformAccessArray?.Dispose();

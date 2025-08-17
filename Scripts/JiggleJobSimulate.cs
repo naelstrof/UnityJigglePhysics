@@ -11,12 +11,18 @@ public struct JiggleJobSimulate : IJobFor {
     // TODO: doubles are strictly a bad way to track time, probably should be ints or longs.
     public double timeStamp;
     public float3 gravity;
+    
+    public int sceneColliderCount;
 
     [ReadOnly] [NativeDisableParallelForRestriction]
     public NativeArray<JiggleTransform> inputPoses;
 
     [NativeDisableParallelForRestriction] public NativeArray<PoseData> outputPoses;
-    [NativeDisableParallelForRestriction] public NativeArray<JiggleCollider> testColliders;
+    [NativeDisableParallelForRestriction] public NativeArray<JiggleCollider> personalColliders;
+    [NativeDisableParallelForRestriction] public NativeArray<JiggleCollider> sceneColliders;
+    
+    [ReadOnly]
+    public NativeHashMap<int2,JiggleGridCell> broadPhaseMap;
 
     public NativeArray<JiggleTreeJobData> jiggleTrees;
 
@@ -24,16 +30,22 @@ public struct JiggleJobSimulate : IJobFor {
         inputPoses = bus.simulateInputPoses;
         jiggleTrees = bus.jiggleTreeStructs;
         outputPoses = bus.simulationOutputPoseData;
-        testColliders = bus.colliders;
+        personalColliders = bus.personalColliders;
+        sceneColliders = bus.sceneColliders;
         timeStamp = Time.timeAsDouble;
+        broadPhaseMap = bus.broadPhaseMap;
         gravity = Physics.gravity;
+        sceneColliderCount = 0;
     }
 
     public void UpdateArrays(JiggleMemoryBus bus) {
         inputPoses = bus.simulateInputPoses;
         jiggleTrees = bus.jiggleTreeStructs;
         outputPoses = bus.simulationOutputPoseData;
-        testColliders = bus.colliders;
+        personalColliders = bus.personalColliders;
+        sceneColliders = bus.sceneColliders;
+        sceneColliderCount = bus.sceneColliderCount;
+        broadPhaseMap = bus.broadPhaseMap;
     }
 
 
@@ -116,26 +128,20 @@ public struct JiggleJobSimulate : IJobFor {
         return math.degrees(math.acos(math.clamp(math.dot(math.normalizesafe(a, new float3(0,0,1)), math.normalizesafe(b, new float3(0,0,1))), -1f, 1f)));
     }
     
-    float AverageScale(float4x4 matrix) {
-        float sx = math.length(matrix.c0.xyz);
-        float sy = math.length(matrix.c1.xyz);
-        float sz = math.length(matrix.c2.xyz);
-        return (sx + sy + sz) / 3f;
-    }
 
     private float3 DoDepenetration(float3 inputPosition, float worldInputRadius, JiggleCollider collider) {
+        if (!collider.enabled) {
+            return inputPosition;
+        }
         switch (collider.type) {
             case JiggleCollider.JiggleColliderType.Sphere:
                 var colliderPosition = collider.localToWorldMatrix.c3.xyz;
-                var colliderScale = AverageScale(collider.localToWorldMatrix);
-                var colliderRadius = collider.radius * colliderScale;
-                        
                 var sphere_diff = inputPosition - colliderPosition;
                 var sphere_distance = math.length(sphere_diff);
-                if (sphere_distance > colliderRadius + worldInputRadius) {
+                if (sphere_distance > collider.worldRadius + worldInputRadius) {
                     return inputPosition;
                 }
-                var desiredPosition = colliderPosition + math.normalizesafe(sphere_diff, new float3(0,0,1)) * (colliderRadius + worldInputRadius);
+                var desiredPosition = colliderPosition + math.normalizesafe(sphere_diff, new float3(0,0,1)) * (collider.worldRadius + worldInputRadius);
                 var hardness = 0.5f;
                 return math.lerp(inputPosition, desiredPosition, hardness);
         }
@@ -143,6 +149,7 @@ public struct JiggleJobSimulate : IJobFor {
     }
 
     private unsafe void Constrain(JiggleTreeJobData tree) {
+        var hasGridCell = broadPhaseMap.TryGetValue(JiggleGridCell.GetKey(tree.points[0].position), out var gridCell);
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points[i];
 
@@ -201,8 +208,16 @@ public struct JiggleJobSimulate : IJobFor {
             
             var inputPose = tree.GetInputPose(inputPoses, i);
             var averagePointScale = (inputPose.scale.x + inputPose.scale.y + inputPose.scale.z) / 3f;
+
+            var pointRadius = averagePointScale * point.parameters.collisionRadius;
+            if (hasGridCell) {
+                for (int index = 0; index < gridCell.count; index++) {
+                    point.desiredConstraint = DoDepenetration(point.desiredConstraint, pointRadius, sceneColliders[gridCell.colliderIndices[index]]);
+                }
+            }
+
             for (int index = (int)tree.colliderIndexOffset; index < tree.colliderCount; index++) {
-                point.desiredConstraint = DoDepenetration(point.desiredConstraint, averagePointScale*point.parameters.collisionRadius, testColliders[index]);
+                point.desiredConstraint = DoDepenetration(point.desiredConstraint, pointRadius, personalColliders[index]);
             }
 
             #endregion

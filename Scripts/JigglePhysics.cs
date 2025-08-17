@@ -71,6 +71,14 @@ public static class JigglePhysics {
     
     public static void SetGlobalDirty() => _globalDirty = true;
 
+    public static void AddJiggleCollider(JiggleColliderSerializable collider) {
+        jobs?.Add(collider);
+    }
+
+    public static void RemoveJiggleCollider(JiggleColliderSerializable collider) {
+        jobs?.Remove(collider);
+    }
+    
     public static void AddJiggleTreeSegment(JiggleTreeSegment jiggleTreeSegment) {
         jiggleTreeSegments.Add(jiggleTreeSegment);
         if (TryAddRootJiggleTreeSegment(jiggleTreeSegment)) {

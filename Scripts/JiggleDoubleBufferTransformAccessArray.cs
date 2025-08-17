@@ -6,6 +6,7 @@ using UnityEngine.Profiling;
 namespace GatorDragonGames.JigglePhysics {
 
 public class JiggleDoubleBufferTransformAccessArray {
+    
     private TransformAccessArray transformAccessArray;
     private int transformCount;
 
@@ -55,7 +56,7 @@ public class JiggleDoubleBufferTransformAccessArray {
         Profiler.EndSample();
     }
 
-    public void GenerateNewAccessArrays(ref int currentIndex, out bool hasFinished, List<Transform> transformAccessList, int maxAddCount = 512) {
+    public void GenerateNewAccessArrays(ref int currentIndex, out bool hasFinished, List<Transform> transformAccessList, Transform dummyTransform, int maxAddCount = 512) {
         if (shouldClear) {
             ClearIfNeeded(maxAddCount);
             hasFinished = false;
@@ -66,7 +67,13 @@ public class JiggleDoubleBufferTransformAccessArray {
         var count = transformAccessList.Count;
         int addedSoFar = 0;
         for (var index = currentIndex; index < count && addedSoFar < maxAddCount; index++) {
-            newTransformAccessArray.Add(transformAccessList[index]);
+            var transform = transformAccessList[index];
+            if (!transform) {
+                newTransformAccessArray.Add(dummyTransform);
+            } else {
+                newTransformAccessArray.Add(transform);
+            }
+
             addedSoFar++;
         }
 

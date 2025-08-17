@@ -7,8 +7,11 @@ namespace GatorDragonGames.JigglePhysics {
 public class JiggleJobs {
     private JiggleMemoryBus _memoryBus;
 
-    public JobHandle handleColliderRead;
-    public bool hasHandleColliderRead;
+    public JobHandle handlePersonalColliderRead;
+    public bool hasHandlePersonalColliderRead;
+    
+    public JobHandle handleSceneColliderRead;
+    public bool hasHandleSceneColliderRead;
 
     public JobHandle handleBulkRead;
     public bool hasHandleBulkRead;
@@ -24,12 +27,21 @@ public class JiggleJobs {
 
     public JobHandle handleInterpolate;
     public bool hasHandleInterpolate;
+    
+    public JobHandle handleBroadPhaseClear;
+    public bool hasHandleBroadPhaseClear;
+    
+    public JobHandle handleBroadPhase;
+    public bool hasHandleBroadPhase;
 
-    public JiggleJobBulkColliderTransformRead jobBulkColliderTransformRead;
+    public JiggleJobBulkColliderTransformRead jobBulkPersonalColliderTransformRead;
+    public JiggleJobBulkColliderTransformRead jobBulkSceneColliderTransformRead;
     public JiggleJobBulkTransformRead jobBulkTransformRead;
     public JiggleJobSimulate jobSimulate;
     public JiggleJobBulkReadRoots jobBulkReadRoots;
     public JiggleJobInterpolation jobInterpolation;
+    public JiggleJobBroadPhaseClear jobBroadPhaseClear;
+    public JiggleJobBroadPhase jobBroadPhase;
 
     public JiggleJobTransformWrite jobTransformWrite;
 
@@ -40,8 +52,11 @@ public class JiggleJobs {
         jobBulkTransformRead = new JiggleJobBulkTransformRead(_memoryBus);
         jobBulkReadRoots = new JiggleJobBulkReadRoots(_memoryBus);
         jobInterpolation = new JiggleJobInterpolation(_memoryBus, Time.timeAsDouble);
-        jobBulkColliderTransformRead = new JiggleJobBulkColliderTransformRead(_memoryBus);
+        jobBulkPersonalColliderTransformRead = new JiggleJobBulkColliderTransformRead(_memoryBus.personalColliders);
+        jobBulkSceneColliderTransformRead = new JiggleJobBulkColliderTransformRead(_memoryBus.sceneColliders);
         jobTransformWrite = new JiggleJobTransformWrite(_memoryBus);
+        jobBroadPhase = new JiggleJobBroadPhase(_memoryBus);
+        jobBroadPhaseClear = new JiggleJobBroadPhaseClear(_memoryBus);
     }
 
     public void Dispose() {
@@ -50,7 +65,8 @@ public class JiggleJobs {
         if (hasHandleSimulate) handleSimulate.Complete();
         if (hasHandleTransformWrite) handleTransformWrite.Complete();
         if (hasHandleInterpolate) handleInterpolate.Complete();
-        if (hasHandleColliderRead) handleColliderRead.Complete();
+        if (hasHandlePersonalColliderRead) handlePersonalColliderRead.Complete();
+        if (hasHandleSceneColliderRead) handleSceneColliderRead.Complete();
         _memoryBus.Dispose();
     }
 
@@ -88,13 +104,17 @@ public class JiggleJobs {
 
     public void Simulate(double simulateTime, double realTime) {
         if (_memoryBus.transformCount == 0) {
-            _memoryBus.Commit();
+            _memoryBus.CommitTrees();
+            _memoryBus.CommitColliders();
             jobSimulate.UpdateArrays(_memoryBus);
             jobBulkTransformRead.UpdateArrays(_memoryBus);
             jobBulkReadRoots.UpdateArrays(_memoryBus);
             jobInterpolation.UpdateArrays(_memoryBus);
-            jobBulkColliderTransformRead.UpdateArrays(_memoryBus);
+            jobBulkPersonalColliderTransformRead.UpdateArrays(_memoryBus.personalColliders);
+            jobBulkSceneColliderTransformRead.UpdateArrays(_memoryBus.sceneColliders);
             jobTransformWrite.UpdateArrays(_memoryBus);
+            jobBroadPhase.UpdateArrays(_memoryBus);
+            jobBroadPhaseClear.UpdateArrays(_memoryBus);
             return;
         }
 
@@ -109,24 +129,36 @@ public class JiggleJobs {
 
         _memoryBus.RotateBuffers();
 
-        _memoryBus.Commit();
+        _memoryBus.CommitTrees();
+        _memoryBus.CommitColliders();
 
         jobSimulate.UpdateArrays(_memoryBus);
         jobBulkTransformRead.UpdateArrays(_memoryBus);
+        jobBulkPersonalColliderTransformRead.UpdateArrays(_memoryBus.personalColliders);
+        jobBulkSceneColliderTransformRead.UpdateArrays(_memoryBus.sceneColliders);
+        jobBroadPhase.UpdateArrays(_memoryBus);
+        jobBroadPhaseClear.UpdateArrays(_memoryBus);
 
         handleBulkRead = jobBulkTransformRead.ScheduleReadOnly(_memoryBus.GetTransformAccessArray(), 128);
         hasHandleBulkRead = true;
 
-        handleColliderRead =
-            jobBulkColliderTransformRead.ScheduleReadOnly(_memoryBus.GetColliderTransformAccessArray(), 128);
-        hasHandleColliderRead = true;
+        handlePersonalColliderRead = jobBulkPersonalColliderTransformRead.ScheduleReadOnly(_memoryBus.GetPersonalColliderTransformAccessArray(), 128);
+        hasHandlePersonalColliderRead = true;
+        
+        handleSceneColliderRead = jobBulkSceneColliderTransformRead.ScheduleReadOnly(_memoryBus.GetSceneColliderTransformAccessArray(), 128);
+        hasHandleSceneColliderRead = true;
 
-        var handle = SchedulePoses(JobHandle.CombineDependencies(handleBulkRead, handleColliderRead), realTime);
+        var handle = SchedulePoses(handleBulkRead, realTime);
+        
+        var colliderHandles = JobHandle.CombineDependencies(handlePersonalColliderRead, handleSceneColliderRead);
+        
+        var broadPhaseClearHandle = jobBroadPhaseClear.Schedule();
+        var broadPhaseHandle = jobBroadPhase.Schedule(JobHandle.CombineDependencies(colliderHandles, broadPhaseClearHandle));
 
         jobSimulate.gravity = gravity;
         jobSimulate.timeStamp = simulateTime;
         handleSimulate = jobSimulate.ScheduleParallel(_memoryBus.treeCount, 1,
-            JobHandle.CombineDependencies(handleBulkRead, handleColliderRead, handle));
+            JobHandle.CombineDependencies(broadPhaseHandle, colliderHandles, handle));
         hasHandleSimulate = true;
     }
 
@@ -136,6 +168,14 @@ public class JiggleJobs {
 
     public void Remove(JiggleTree tree) {
         _memoryBus.Remove(tree.rootID);
+    }
+    
+    public void Add(JiggleColliderSerializable collider) {
+        _memoryBus.Add(collider);
+    }
+
+    public void Remove(JiggleColliderSerializable collider) {
+        _memoryBus.Remove(collider);
     }
 
     public void OnDrawGizmos() {

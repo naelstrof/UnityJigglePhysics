@@ -38,7 +38,8 @@ public class JiggleMemoryBus {
     private PoseData[] simulationOutputPoseDataArray;
     private PoseData[] interpolationCurrentPoseDataArray;
     private PoseData[] interpolationPreviousPoseDataArray;
-    private JiggleCollider[] jiggleCollidersArray;
+    private JiggleCollider[] personalColliderArray;
+    private JiggleCollider[] sceneColliderArray;
 
     public NativeArray<JiggleTreeJobData> jiggleTreeStructs;
     public NativeArray<JiggleTransform> simulateInputPoses;
@@ -49,16 +50,21 @@ public class JiggleMemoryBus {
     public NativeArray<PoseData> simulationOutputPoseData;
     public NativeArray<PoseData> interpolationCurrentPoseData;
     public NativeArray<PoseData> interpolationPreviousPoseData;
+    public NativeHashMap<int2, JiggleGridCell> broadPhaseMap;
     
-    public NativeArray<JiggleCollider> colliders;
+    public NativeArray<JiggleCollider> personalColliders;
+    
+    public NativeArray<JiggleCollider> sceneColliders;
 
     private List<Transform> transformAccessList;
     private List<Transform> transformRootAccessList;
-    private List<Transform> colliderTransformAccessList;
+    private List<Transform> personalColliderTransformAccessList;
+    private List<Transform> sceneColliderTransformAccessList;
 
     public JiggleDoubleBufferTransformAccessArray doubleBufferTransformAccessArray;
     public JiggleDoubleBufferTransformAccessArray doubleBufferTransformRootAccessArray;
-    public JiggleDoubleBufferTransformAccessArray doubleBufferColliderTransformAccessArray;
+    public JiggleDoubleBufferTransformAccessArray doubleBufferPersonalColliderTransformAccessArray;
+    public JiggleDoubleBufferTransformAccessArray doubleBufferSceneColliderTransformAccessArray;
 
     private List<JiggleTree> pendingAddTrees;
     private List<int> pendingRemoveTrees;
@@ -69,25 +75,44 @@ public class JiggleMemoryBus {
     private JiggleMemoryFragmenter preMemoryFragmenter;
     private JiggleMemoryFragmenter memoryFragmenter;
     
-    private JiggleMemoryFragmenter colliderMemoryFragmenter;
+    private JiggleMemoryFragmenter personalColliderMemoryFragmenter;
+    private JiggleMemoryFragmenter sceneColliderMemoryFragmenter;
     
+    private List<JiggleColliderSerializable> pendingSceneColliderAdd;
+    private List<JiggleColliderSerializable> pendingSceneColliderRemove;
     
     private int preTransformCount;
 
     public int transformCount;
     public int treeCount;
     
-    public int colliderCount;
-    public int colliderCapacity;
+    public int personalColliderCount;
+    public int personalColliderCapacity;
+    
+    public int sceneColliderCount;
+    public int sceneColliderCapacity;
 
     private int currentTransformAccessIndex = 0;
     private int currentRootTransformAccessIndex = 0;
-    private int currentColliderTransformAccessIndex = 0;
+    private int currentPersonalColliderTransformAccessIndex = 0;
+    private int currentSceneColliderTransformAccessIndex = 0;
+    
+    private static Transform dummyTransform;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void Init() {
+        if (dummyTransform == null) {
+            dummyTransform = new GameObject("JigglePhysicsDummyTransform").transform;
+            Object.DontDestroyOnLoad(dummyTransform.gameObject);
+            dummyTransform.gameObject.hideFlags = HideFlags.HideAndDontSave;
+        }
+    }
 
     public TransformAccessArray GetTransformAccessArray() => doubleBufferTransformAccessArray.GetTransformAccessArray();
 
     public TransformAccessArray GetTransformRootAccessArray() => doubleBufferTransformRootAccessArray.GetTransformAccessArray();
-    public TransformAccessArray GetColliderTransformAccessArray() => doubleBufferColliderTransformAccessArray.GetTransformAccessArray();
+    public TransformAccessArray GetPersonalColliderTransformAccessArray() => doubleBufferPersonalColliderTransformAccessArray.GetTransformAccessArray();
+    public TransformAccessArray GetSceneColliderTransformAccessArray() => doubleBufferSceneColliderTransformAccessArray.GetTransformAccessArray();
 
     public void RotateBuffers() {
         var tempPoses = interpolationPreviousPoseData;
@@ -96,19 +121,34 @@ public class JiggleMemoryBus {
         simulationOutputPoseData = tempPoses;
     }
 
-    private void ResizeColliderCapacity(int newColliderCapacity) {
-        colliderMemoryFragmenter.Resize(newColliderCapacity);
+    private void ResizeSceneColliderCapacity(int newColliderCapacity) {
+        sceneColliderMemoryFragmenter.Resize(newColliderCapacity);
         var newColliders = new JiggleCollider[newColliderCapacity];
-        if (jiggleCollidersArray != null) {
-            System.Array.Copy(jiggleCollidersArray, newColliders,
-                System.Math.Min(colliderCount, newColliderCapacity));
+        if (sceneColliderArray != null) {
+            System.Array.Copy(sceneColliderArray, newColliders,
+                System.Math.Min(sceneColliderCount, newColliderCapacity));
         }
-        jiggleCollidersArray = newColliders;
-        if (colliders.IsCreated) {
-            colliders.Dispose();
+        sceneColliderArray = newColliders;
+        if (sceneColliders.IsCreated) {
+            sceneColliders.Dispose();
         }
-        colliders = new NativeArray<JiggleCollider>(jiggleCollidersArray, Allocator.Persistent);
-        colliderCapacity = newColliderCapacity;
+        sceneColliders = new NativeArray<JiggleCollider>(sceneColliderArray, Allocator.Persistent);
+        sceneColliderCapacity = newColliderCapacity;
+    }
+
+    private void ResizePersonalColliderCapacity(int newColliderCapacity) {
+        personalColliderMemoryFragmenter.Resize(newColliderCapacity);
+        var newColliders = new JiggleCollider[newColliderCapacity];
+        if (personalColliderArray != null) {
+            System.Array.Copy(personalColliderArray, newColliders,
+                System.Math.Min(personalColliderCount, newColliderCapacity));
+        }
+        personalColliderArray = newColliders;
+        if (personalColliders.IsCreated) {
+            personalColliders.Dispose();
+        }
+        personalColliders = new NativeArray<JiggleCollider>(personalColliderArray, Allocator.Persistent);
+        personalColliderCapacity = newColliderCapacity;
     }
 
     private void ResizeTransformCapacity(int newTransformCapacity) {
@@ -201,11 +241,15 @@ public class JiggleMemoryBus {
         pendingRemoveTrees = new();
         pendingProcessingRemoves = new();
         pendingProcessingAdds = new();
+        pendingSceneColliderAdd = new();
+        pendingSceneColliderRemove = new();
         preMemoryFragmenter = new JiggleMemoryFragmenter(4096);
         memoryFragmenter = new JiggleMemoryFragmenter(4096);
-        colliderMemoryFragmenter = new JiggleMemoryFragmenter(4096);
+        personalColliderMemoryFragmenter = new JiggleMemoryFragmenter(2048);
+        sceneColliderMemoryFragmenter = new JiggleMemoryFragmenter(2048);
 
-        ResizeColliderCapacity(4096);
+        ResizeSceneColliderCapacity(2048);
+        ResizePersonalColliderCapacity(2048);
         ResizeTransformCapacity(4096);
         ResizeTreeCapacity(512);
 
@@ -213,13 +257,16 @@ public class JiggleMemoryBus {
 
         transformAccessList = new List<Transform>();
         transformRootAccessList = new List<Transform>();
-        colliderTransformAccessList = new List<Transform>();
+        personalColliderTransformAccessList = new List<Transform>();
+        sceneColliderTransformAccessList = new List<Transform>();
         doubleBufferTransformAccessArray = new JiggleDoubleBufferTransformAccessArray(128);
         doubleBufferTransformRootAccessArray = new JiggleDoubleBufferTransformAccessArray(128);
-        doubleBufferColliderTransformAccessArray = new JiggleDoubleBufferTransformAccessArray(128);
+        doubleBufferPersonalColliderTransformAccessArray = new JiggleDoubleBufferTransformAccessArray(128);
+        doubleBufferSceneColliderTransformAccessArray = new JiggleDoubleBufferTransformAccessArray(128);
 
         transformCount = 0;
         treeCount = 0;
+        broadPhaseMap = new NativeHashMap<int2, JiggleGridCell>(128, Allocator.Persistent);
     }
 
     private void ReadIn<T>(NativeArray<T> native, T[] array, int count) where T : struct {
@@ -258,7 +305,7 @@ public class JiggleMemoryBus {
         NativeArray<PoseData>.Copy(simulationOutputPoseDataArray, simulationOutputPoseData, transformCount);
         NativeArray<PoseData>.Copy(interpolationCurrentPoseDataArray, interpolationCurrentPoseData, transformCount);
         NativeArray<PoseData>.Copy(interpolationPreviousPoseDataArray, interpolationPreviousPoseData, transformCount);
-        NativeArray<JiggleCollider>.Copy(jiggleCollidersArray, colliders, colliderCount);
+        NativeArray<JiggleCollider>.Copy(personalColliderArray, personalColliders, personalColliderCount);
         Profiler.EndSample();
     }
 
@@ -296,6 +343,13 @@ public class JiggleMemoryBus {
                 var interpPose2 = interpolationPreviousPoseDataArray[j].pose;
                 interpPose2.isVirtual = true;
                 interpolationPreviousPoseDataArray[j].pose = interpPose2;
+
+                transformAccessList[j] = dummyTransform;
+                transformRootAccessList[j] = dummyTransform;
+            }
+
+            for (int j = (int)removedTree.colliderIndexOffset; j < removedTree.colliderIndexOffset + removedTree.colliderCount; j++) {
+                personalColliderTransformAccessList[j] = dummyTransform;
             }
 
             memoryFragmenter.Free((int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
@@ -311,7 +365,8 @@ public class JiggleMemoryBus {
     }
 
 
-    private CommitState commitState = CommitState.Idle;
+    private CommitState commitTreeState = CommitState.Idle;
+    private CommitState commitSceneColliderState = CommitState.Idle;
 
     private void AddTransformsToSlice(int index, JiggleTree jiggleTree, JiggleTreeJobData jiggleTreeJobData) {
         if (treeCount + 1 > treeCapacity) {
@@ -326,23 +381,25 @@ public class JiggleMemoryBus {
 
         if (jiggleTreeJobData.colliderCount > 0) {
             var success =
-                colliderMemoryFragmenter.TryAllocate((int)jiggleTreeJobData.colliderCount, out var colliderStartIndex);
+                personalColliderMemoryFragmenter.TryAllocate((int)jiggleTreeJobData.colliderCount, out var colliderStartIndex);
             if (!success) {
-                ResizeColliderCapacity(colliderCapacity * 2);
-                colliderMemoryFragmenter.TryAllocate((int)jiggleTreeJobData.colliderCount, out colliderStartIndex);
+                ResizePersonalColliderCapacity(personalColliderCapacity * 2);
+                personalColliderMemoryFragmenter.TryAllocate((int)jiggleTreeJobData.colliderCount, out colliderStartIndex);
             }
 
             jiggleTreeJobData.colliderIndexOffset = (uint)colliderStartIndex;
-            while (colliderTransformAccessList.Count < colliderStartIndex + (int)jiggleTreeJobData.colliderCount) {
-                colliderTransformAccessList.Add(jiggleTree.bones[0]);
+            while (personalColliderTransformAccessList.Count < colliderStartIndex + (int)jiggleTreeJobData.colliderCount) {
+                personalColliderTransformAccessList.Add(jiggleTree.bones[0]);
             }
 
             for (int i = 0; i < jiggleTreeJobData.colliderCount; i++) {
-                jiggleCollidersArray[colliderStartIndex + i] = jiggleTree.personalColliders[i];
-                colliderTransformAccessList[colliderStartIndex + i] = jiggleTree.personalColliderTransforms[i];
+                var collider = jiggleTree.personalColliders[i];
+                collider.enabled = true;
+                personalColliderArray[colliderStartIndex + i] = collider;
+                personalColliderTransformAccessList[colliderStartIndex + i] = jiggleTree.personalColliderTransforms[i];
             }
 
-            colliderCount = math.max(colliderCount, colliderStartIndex + (int)jiggleTreeJobData.colliderCount);
+            personalColliderCount = math.max(personalColliderCount, colliderStartIndex + (int)jiggleTreeJobData.colliderCount);
         }
 
         #endregion
@@ -412,11 +469,64 @@ public class JiggleMemoryBus {
         transformCount = math.max((int)(index + jiggleTreeJobData.pointCount), transformCount);
     }
 
-    public void Commit() {
-        if (commitState == CommitState.Idle) {
+    public void CommitColliders() {
+        if (commitSceneColliderState == CommitState.Idle) {
+            doubleBufferSceneColliderTransformAccessArray.ClearIfNeeded();
+            var pendingAddSceneColliderCount = pendingSceneColliderAdd.Count;
+            var pendingRemoveSceneColliderCount = pendingSceneColliderRemove.Count;
+
+            if (pendingAddSceneColliderCount == 0 && pendingRemoveSceneColliderCount == 0) {
+                return;
+            }
+            for (int i = 0; i < pendingRemoveSceneColliderCount; i++) {
+                var collider = pendingSceneColliderRemove[i];
+                var id = sceneColliderTransformAccessList.IndexOf(collider.transform);
+                if (id != -1) {
+                    sceneColliderMemoryFragmenter.Free(id, 1);
+                    var sceneCollider = sceneColliderArray[id];
+                    sceneCollider.enabled = false;
+                    sceneColliderArray[id] = sceneCollider;
+                    sceneColliderTransformAccessList[id] = dummyTransform;
+                }
+            }
+            pendingSceneColliderRemove.Clear();
+
+            for (int i = 0; i < pendingAddSceneColliderCount; i++) {
+                var collider = pendingSceneColliderAdd[i];
+                collider.collider.enabled = true;
+                
+                var found = sceneColliderMemoryFragmenter.TryAllocate(1, out var index);
+                if (!found) {
+                    ResizeSceneColliderCapacity(sceneColliderCapacity * 2);
+                    sceneColliderMemoryFragmenter.TryAllocate(1, out index);
+                }
+
+                while (sceneColliderTransformAccessList.Count < index+1) {
+                    sceneColliderTransformAccessList.Add(collider.transform);
+                }
+                sceneColliderTransformAccessList[index] = collider.transform;
+                sceneColliderArray[index] = collider.collider;
+                sceneColliderCount = math.max(index+1, sceneColliderCount);
+            }
+
+            pendingSceneColliderAdd.Clear();
+            currentSceneColliderTransformAccessIndex = 0;
+            commitSceneColliderState = CommitState.ProcessingTransformAccess;
+        } else if (commitSceneColliderState == CommitState.ProcessingTransformAccess) {
+            doubleBufferSceneColliderTransformAccessArray.GenerateNewAccessArrays(ref currentSceneColliderTransformAccessIndex, out var hasFinishedSceneColliders, sceneColliderTransformAccessList, dummyTransform);
+            if (!hasFinishedSceneColliders) return;
+            NativeArray<JiggleCollider>.Copy(sceneColliderArray, sceneColliders, sceneColliderCount);
+            doubleBufferSceneColliderTransformAccessArray.Flip();
+            commitSceneColliderState = CommitState.Idle;
+        }
+    }
+
+    public void CommitTrees() {
+        if (commitTreeState == CommitState.Idle) {
             doubleBufferTransformAccessArray.ClearIfNeeded();
             doubleBufferTransformRootAccessArray.ClearIfNeeded();
-            doubleBufferColliderTransformAccessArray.ClearIfNeeded();
+            doubleBufferPersonalColliderTransformAccessArray.ClearIfNeeded();
+            
             var pendingRemoveCount = pendingRemoveTrees.Count;
             var pendingAddCount = pendingAddTrees.Count;
 
@@ -451,17 +561,17 @@ public class JiggleMemoryBus {
 
             pendingProcessingAdds.AddRange(pendingAddTrees);
             pendingAddTrees.Clear();
-
+            
             currentTransformAccessIndex = 0;
             currentRootTransformAccessIndex = 0;
-            currentColliderTransformAccessIndex = 0;
-            commitState = CommitState.ProcessingTransformAccess;
-        } else if (commitState == CommitState.ProcessingTransformAccess) {
-            doubleBufferTransformAccessArray.GenerateNewAccessArrays(ref currentTransformAccessIndex, out var hasFinishedTransforms, transformAccessList);
+            currentPersonalColliderTransformAccessIndex = 0;
+            commitTreeState = CommitState.ProcessingTransformAccess;
+        } else if (commitTreeState == CommitState.ProcessingTransformAccess) {
+            doubleBufferTransformAccessArray.GenerateNewAccessArrays(ref currentTransformAccessIndex, out var hasFinishedTransforms, transformAccessList, dummyTransform);
             if (!hasFinishedTransforms) return;
-            doubleBufferTransformRootAccessArray.GenerateNewAccessArrays(ref currentRootTransformAccessIndex, out var hasFinishedRoots, transformRootAccessList);
+            doubleBufferTransformRootAccessArray.GenerateNewAccessArrays(ref currentRootTransformAccessIndex, out var hasFinishedRoots, transformRootAccessList, dummyTransform);
             if (!hasFinishedRoots) return;
-            doubleBufferColliderTransformAccessArray.GenerateNewAccessArrays(ref currentColliderTransformAccessIndex, out var hasFinishedColliders, colliderTransformAccessList);
+            doubleBufferPersonalColliderTransformAccessArray.GenerateNewAccessArrays(ref currentPersonalColliderTransformAccessIndex, out var hasFinishedColliders, personalColliderTransformAccessList, dummyTransform);
             if (!hasFinishedColliders) return;
             ReadIn();
             var processingPendingRemoveCount = pendingProcessingRemoves.Count;
@@ -504,9 +614,31 @@ public class JiggleMemoryBus {
             WriteOut();
             doubleBufferTransformAccessArray.Flip();
             doubleBufferTransformRootAccessArray.Flip();
-            doubleBufferColliderTransformAccessArray.Flip();
-            commitState = CommitState.Idle;
+            doubleBufferPersonalColliderTransformAccessArray.Flip();
+            commitTreeState = CommitState.Idle;
         }
+    }
+
+    public void Add(JiggleColliderSerializable jiggleCollider) {
+        var count = pendingSceneColliderAdd.Count;
+        for (int i = 0; i < count; i++) {
+            if (pendingSceneColliderAdd[i].transform == jiggleCollider.transform) {
+                return;
+            }
+        }
+        pendingSceneColliderAdd.Add(jiggleCollider);
+    }
+
+    public void Remove(JiggleColliderSerializable jiggleCollider) {
+        var count = pendingSceneColliderAdd.Count;
+        for (int i = 0; i < count; i++) {
+            if (pendingSceneColliderAdd[i].transform == jiggleCollider.transform) {
+                pendingSceneColliderAdd.RemoveAt(i);
+                return;
+            }
+        }
+
+        pendingSceneColliderRemove.Add(jiggleCollider);
     }
 
     public void Add(JiggleTree jiggleTree) {
@@ -543,12 +675,16 @@ public class JiggleMemoryBus {
             simulationOutputPoseData.Dispose();
             interpolationCurrentPoseData.Dispose();
             interpolationPreviousPoseData.Dispose();
-            colliders.Dispose();
+            personalColliders.Dispose();
+            sceneColliders.Dispose();
         }
+
+        broadPhaseMap.Dispose();
 
         doubleBufferTransformAccessArray?.Dispose();
         doubleBufferTransformRootAccessArray?.Dispose();
-        doubleBufferColliderTransformAccessArray?.Dispose();
+        doubleBufferPersonalColliderTransformAccessArray?.Dispose();
+        doubleBufferSceneColliderTransformAccessArray?.Dispose();
     }
 
 }

@@ -25,6 +25,7 @@ public unsafe struct JiggleTreeJobData {
     public uint transformIndexOffset;
     public uint colliderIndexOffset;
     public uint colliderCount;
+    public float extents;
     public JiggleSimulatedPoint* points;
 
     public JiggleTreeJobData(int rootID, int transformIndexOffset, int colliderIndexOffset, int colliderCount, JiggleSimulatedPoint[] inputPoints) {
@@ -41,6 +42,7 @@ public unsafe struct JiggleTreeJobData {
         fixed (JiggleSimulatedPoint* src = inputPoints) {
             UnsafeUtility.MemCpy(points, src, sizeof(JiggleSimulatedPoint) * pointCount);
         }
+        extents = 1f;
     }
 
     public void Set(int rootID, JiggleSimulatedPoint[] inputPoints) {

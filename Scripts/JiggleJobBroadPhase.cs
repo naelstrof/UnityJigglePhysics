@@ -1,28 +1,30 @@
 using System.Runtime.InteropServices;
-using GatorDragonGames.JigglePhysics;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEngine;
 
+namespace GatorDragonGames.JigglePhysics {
 public unsafe struct JiggleGridCell {
     public static int2 GetKey(float3 position) {
         return (int2)position.xz;
     }
+
     public int staleness;
     public int count;
     public int* colliderIndices;
+
     public JiggleGridCell(int capacity) {
         staleness = 0;
         count = 0;
         colliderIndices = (int*)UnsafeUtility.Malloc(
-            Marshal.SizeOf<int>() * capacity,
+            sizeof(int) * capacity,
             UnsafeUtility.AlignOf<int>(),
             Allocator.Persistent
         );
     }
+
     public void Dispose() {
         if (colliderIndices != null) {
             UnsafeUtility.Free(colliderIndices, Allocator.Persistent);
@@ -33,16 +35,16 @@ public unsafe struct JiggleGridCell {
 
 [BurstCompile]
 public struct JiggleJobBroadPhaseClear : IJob {
-    public NativeHashMap<int2,JiggleGridCell> broadPhaseMap;
-    
+    public NativeHashMap<int2, JiggleGridCell> broadPhaseMap;
+
     public JiggleJobBroadPhaseClear(JiggleMemoryBus bus) {
         broadPhaseMap = bus.broadPhaseMap;
     }
-    
+
     public void UpdateArrays(JiggleMemoryBus bus) {
         broadPhaseMap = bus.broadPhaseMap;
     }
-    
+
     public void Execute() {
         var keyArray = broadPhaseMap.GetKeyArray(Allocator.Temp);
         var keyLength = keyArray.Length;
@@ -58,16 +60,17 @@ public struct JiggleJobBroadPhaseClear : IJob {
                 broadPhaseMap[key] = gridCell;
             }
         }
+
         keyArray.Dispose();
     }
 }
 
 [BurstCompile]
 public struct JiggleJobBroadPhase : IJob {
-    public NativeHashMap<int2,JiggleGridCell> broadPhaseMap;
+    public NativeHashMap<int2, JiggleGridCell> broadPhaseMap;
     public NativeArray<JiggleCollider> jiggleColliders;
     public int jiggleColliderCount;
-    
+
     public JiggleJobBroadPhase(JiggleMemoryBus bus) {
         broadPhaseMap = bus.broadPhaseMap;
         jiggleColliders = bus.sceneColliders;
@@ -79,24 +82,32 @@ public struct JiggleJobBroadPhase : IJob {
         jiggleColliders = bus.sceneColliders;
         jiggleColliderCount = bus.sceneColliderCount;
     }
-    
+
     public void Execute() {
         for (int i = 0; i < jiggleColliderCount; i++) {
             var collider = jiggleColliders[i];
             float3 position = collider.localToWorldMatrix.c3.xyz;
             int2 gridPosition = JiggleGridCell.GetKey(position);
-            if (!broadPhaseMap.ContainsKey(gridPosition)) {
-                broadPhaseMap.Add(gridPosition, new JiggleGridCell(255));
+            int boundingRange = ((int)collider.worldRadius*2);
+            for (int x = -boundingRange; x <= boundingRange; x++) {
+                for (int y = -boundingRange; y <= boundingRange; y++) {
+                    int2 grid = gridPosition + new int2(x, y);
+                    if (!broadPhaseMap.ContainsKey(grid)) {
+                        broadPhaseMap.Add(grid, new JiggleGridCell(255));
+                    }
+                    var gridCell = broadPhaseMap[gridPosition];
+                    gridCell.staleness = 0;
+                    unsafe {
+                        gridCell.colliderIndices[gridCell.count] = i;
+                        gridCell.count = math.min(gridCell.count + 1, 255);
+                    }
+
+                    broadPhaseMap[gridPosition] = gridCell;
+                }
             }
 
-            var gridCell = broadPhaseMap[gridPosition];
-            gridCell.staleness = 0;
-            unsafe {
-                gridCell.colliderIndices[gridCell.count] = i;
-                gridCell.count = math.min(gridCell.count + 1, 255);
-            }
-
-            broadPhaseMap[gridPosition] = gridCell;
         }
     }
+}
+
 }

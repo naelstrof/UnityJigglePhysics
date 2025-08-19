@@ -11,12 +11,18 @@ public struct JiggleJobSimulate : IJobFor {
     // TODO: doubles are strictly a bad way to track time, probably should be ints or longs.
     public double timeStamp;
     public float3 gravity;
+    
+    public int sceneColliderCount;
 
     [ReadOnly] [NativeDisableParallelForRestriction]
     public NativeArray<JiggleTransform> inputPoses;
 
     [NativeDisableParallelForRestriction] public NativeArray<PoseData> outputPoses;
-    [NativeDisableParallelForRestriction] public NativeArray<JiggleCollider> testColliders;
+    [NativeDisableParallelForRestriction] public NativeArray<JiggleCollider> personalColliders;
+    [NativeDisableParallelForRestriction] public NativeArray<JiggleCollider> sceneColliders;
+    
+    [ReadOnly]
+    public NativeHashMap<int2,JiggleGridCell> broadPhaseMap;
 
     public NativeArray<JiggleTreeJobData> jiggleTrees;
 
@@ -24,20 +30,29 @@ public struct JiggleJobSimulate : IJobFor {
         inputPoses = bus.simulateInputPoses;
         jiggleTrees = bus.jiggleTreeStructs;
         outputPoses = bus.simulationOutputPoseData;
-        testColliders = bus.colliders;
+        personalColliders = bus.personalColliders;
+        sceneColliders = bus.sceneColliders;
         timeStamp = Time.timeAsDouble;
+        broadPhaseMap = bus.broadPhaseMap;
         gravity = Physics.gravity;
+        sceneColliderCount = 0;
     }
 
     public void UpdateArrays(JiggleMemoryBus bus) {
         inputPoses = bus.simulateInputPoses;
         jiggleTrees = bus.jiggleTreeStructs;
         outputPoses = bus.simulationOutputPoseData;
-        testColliders = bus.colliders;
+        personalColliders = bus.personalColliders;
+        sceneColliders = bus.sceneColliders;
+        sceneColliderCount = bus.sceneColliderCount;
+        broadPhaseMap = bus.broadPhaseMap;
     }
 
 
     private unsafe void Cache(JiggleTreeJobData tree) {
+        var lengthAccumulation = 0f;
+        var maxColliderRadius = 0f;
+        
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points[i];
             if (point.parentIndex == -1) {
@@ -62,10 +77,14 @@ public struct JiggleJobSimulate : IJobFor {
                 point.workingPosition = point.pose;
             } else if (point.hasTransform) {
                 // "real" particles
+                var inputPose = tree.GetInputPose(inputPoses, i);
                 var parent = tree.points[point.parentIndex];
-                point.pose = tree.GetInputPose(inputPoses, i).position;
+                point.pose = inputPose.position;
                 point.parentPose = parent.pose;
                 point.desiredLengthToParent = math.distance(point.pose, parent.pose);
+                var averagePointScale = (inputPose.scale.x + inputPose.scale.y + inputPose.scale.z) / 3f;
+                point.worldRadius = point.parameters.collisionRadius * averagePointScale;
+                maxColliderRadius = math.max(maxColliderRadius, point.worldRadius);
             } else {
                 // virtual end particles
                 var parent = tree.points[point.parentIndex];
@@ -73,9 +92,10 @@ public struct JiggleJobSimulate : IJobFor {
                 point.parentPose = parent.pose;
                 point.desiredLengthToParent = math.distance(point.pose, point.parentPose);
             }
-
+            lengthAccumulation += point.desiredLengthToParent;
             tree.points[i] = point;
         }
+        tree.extents = lengthAccumulation + maxColliderRadius * 2f;
     }
 
     private unsafe void VerletIntegrate(JiggleTreeJobData tree) {
@@ -116,11 +136,24 @@ public struct JiggleJobSimulate : IJobFor {
         return math.degrees(math.acos(math.clamp(math.dot(math.normalizesafe(a, new float3(0,0,1)), math.normalizesafe(b, new float3(0,0,1))), -1f, 1f)));
     }
     
-    float AverageScale(float4x4 matrix) {
-        float sx = math.length(matrix.c0.xyz);
-        float sy = math.length(matrix.c1.xyz);
-        float sz = math.length(matrix.c2.xyz);
-        return (sx + sy + sz) / 3f;
+
+    private float3 DoDepenetration(float3 inputPosition, float worldInputRadius, JiggleCollider collider) {
+        if (!collider.enabled) {
+            return inputPosition;
+        }
+        switch (collider.type) {
+            case JiggleCollider.JiggleColliderType.Sphere:
+                var colliderPosition = collider.localToWorldMatrix.c3.xyz;
+                var sphere_diff = inputPosition - colliderPosition;
+                var sphere_distance = math.length(sphere_diff);
+                if (sphere_distance > collider.worldRadius + worldInputRadius) {
+                    return inputPosition;
+                }
+                var desiredPosition = colliderPosition + math.normalizesafe(sphere_diff, new float3(0,0,1)) * (collider.worldRadius + worldInputRadius);
+                var hardness = 0.5f;
+                return math.lerp(inputPosition, desiredPosition, hardness);
+        }
+        return inputPosition;
     }
 
     private unsafe void Constrain(JiggleTreeJobData tree) {
@@ -185,27 +218,19 @@ public struct JiggleJobSimulate : IJobFor {
 
             #region Collisions
             
-            var inputPose = tree.GetInputPose(inputPoses, i);
-            var averagePointScale = (inputPose.scale.x + inputPose.scale.y + inputPose.scale.z) / 3f;
+            int extentRange = (int)tree.extents;
+            for (int x = -extentRange; x < extentRange; x++) {
+                for (int y = -extentRange; y < extentRange; y++) {
+                    if (broadPhaseMap.TryGetValue(JiggleGridCell.GetKey(tree.points[0].position), out var gridCell)) {
+                        for (int index = 0; index < gridCell.count; index++) {
+                            point.desiredConstraint = DoDepenetration(point.desiredConstraint, point.worldRadius, sceneColliders[gridCell.colliderIndices[index]]);
+                        }
+                    }
+                }
+            }
 
             for (int index = (int)tree.colliderIndexOffset; index < tree.colliderCount; index++) {
-                var collider = testColliders[index];
-                switch (collider.type) {
-                    case JiggleCollider.JiggleColliderType.Sphere:
-                        var colliderPosition = collider.localToWorldMatrix.c3.xyz;
-                        var colliderScale = AverageScale(collider.localToWorldMatrix);
-                        var colliderRadius = collider.radius * colliderScale;
-                        
-                        var pointPosition = point.desiredConstraint;
-                        var pointRadius = point.parameters.collisionRadius * averagePointScale;
-                        var sphere_diff = pointPosition - colliderPosition;
-                        var sphere_distance = math.length(sphere_diff);
-                        if (sphere_distance > colliderRadius + pointRadius) {
-                            continue;
-                        }
-                        point.desiredConstraint = colliderPosition + math.normalizesafe(sphere_diff, new float3(0,0,1)) * (colliderRadius + pointRadius);
-                    break;
-                }
+                point.desiredConstraint = DoDepenetration(point.desiredConstraint, point.worldRadius, personalColliders[index]);
             }
 
             #endregion
@@ -237,6 +262,25 @@ public struct JiggleJobSimulate : IJobFor {
                     (correctionDir * angleCorrectionDistance) * (1f - point.parameters.angleLimitSoften);
                 point.desiredConstraint += angleCorrection;
             }
+
+            #region Length Constraint
+
+            var length_elasticity = parent.parameters.lengthElasticity;
+            var diff = point.desiredConstraint - parent.desiredConstraint;
+            var dir = math.normalizesafe(diff, new float3(0,0,1));
+
+            var desiredPositionAfterLengthConstraint = parent.desiredConstraint + dir * point.desiredLengthToParent;
+            
+            var errorLength = math.distance(point.desiredConstraint, desiredPositionAfterLengthConstraint);
+            if (point.desiredLengthToParent != 0) {
+                errorLength /= point.desiredLengthToParent;
+            }
+            errorLength = math.min(errorLength, 1.0f);
+            errorLength = math.pow(errorLength, parent.parameters.elasticitySoften);
+            var forwardConstraint = math.lerp(point.desiredConstraint, desiredPositionAfterLengthConstraint, length_elasticity*errorLength);
+            point.desiredConstraint = forwardConstraint;
+
+            #endregion
 
             // TODO: Early out if collisions are disabled
 

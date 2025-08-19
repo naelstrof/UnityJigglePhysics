@@ -34,6 +34,7 @@ public unsafe struct JiggleGridCell {
 }
 
 [BurstCompile]
+// TODO: I don't actually know what a broadphase is, might need to be labelled something different?
 public struct JiggleJobBroadPhaseClear : IJob {
     public NativeHashMap<int2, JiggleGridCell> broadPhaseMap;
 

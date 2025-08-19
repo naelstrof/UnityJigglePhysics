@@ -151,7 +151,8 @@ public struct JiggleJobSimulate : IJobFor {
             #endregion
 
             #region Angle Constraint
-
+            
+            var length_elasticity = parent.parameters.lengthElasticity;
             var parentAimPose = math.normalizesafe(point.parentPose - parent.parentPose, new float3(0,0,1));
             var parentAim = math.normalizesafe(parent.desiredConstraint - parent.parentPose, new float3(0,0,1));
             if (parent.parentIndex != -1) {
@@ -161,13 +162,11 @@ public struct JiggleJobSimulate : IJobFor {
 
             var currentLength = math.length(point.workingPosition - parent.desiredConstraint);
             var from_to_rot = FromToRotation(parentAimPose, parentAim);
-            var current_pose_dir = math.normalizesafe(point.pose - point.parentPose, new float3(0,0,1));
-            var constraintTarget = math.rotate(from_to_rot, (current_pose_dir * currentLength));
+            var constraintTarget = math.rotate(from_to_rot, point.pose - point.parentPose);
 
             var desiredPosition = parent.desiredConstraint + constraintTarget;
 
-
-            var error = math.distance(point.workingPosition, parent.desiredConstraint + constraintTarget);
+            var error = math.distance(point.workingPosition, desiredPosition);
             if (currentLength != 0) {
                 error /= currentLength;
             }
@@ -176,6 +175,12 @@ public struct JiggleJobSimulate : IJobFor {
             point.desiredConstraint = math.lerp(point.workingPosition, desiredPosition,
                 parent.parameters.angleElasticity * error);
 
+            var offsetFromParent = point.desiredConstraint - parent.desiredConstraint;
+            var offsetFromParentNormalized = math.normalizesafe(offsetFromParent, new float3(0, 0, 1));
+            point.desiredConstraint = parent.desiredConstraint + math.lerp(offsetFromParent, offsetFromParentNormalized * point.desiredLengthToParent, length_elasticity);
+
+            var forwardConstraint = point.desiredConstraint;
+            
             #endregion
 
             #region Collisions
@@ -232,17 +237,6 @@ public struct JiggleJobSimulate : IJobFor {
                     (correctionDir * angleCorrectionDistance) * (1f - point.parameters.angleLimitSoften);
                 point.desiredConstraint += angleCorrection;
             }
-
-            #region Length Constraint
-
-            var length_elasticity = parent.parameters.lengthElasticity;
-            var diff = point.desiredConstraint - parent.desiredConstraint;
-            var dir = math.normalizesafe(diff, new float3(0,0,1));
-            var forwardConstraint = math.lerp(point.desiredConstraint,
-                parent.desiredConstraint + dir * point.desiredLengthToParent, length_elasticity);
-            point.desiredConstraint = forwardConstraint;
-
-            #endregion
 
             // TODO: Early out if collisions are disabled
 

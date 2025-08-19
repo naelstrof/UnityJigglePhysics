@@ -49,7 +49,7 @@ public struct JiggleTreeInputParameters {
             angleElasticity = Mathf.Pow(stiffness * stiffnessCurve.Evaluate(normalizedDistanceFromRoot), 2f),
             lengthElasticity = advancedToggle
                 ? Mathf.Pow(1f - stretch * stretchCurve.Evaluate(normalizedDistanceFromRoot), 2f)
-                : 0f,
+                : 1f,
             elasticitySoften = advancedToggle ? Mathf.Pow(soften, 2f) : 0f,
             gravityMultiplier = gravity * gravityCurve.Evaluate(normalizedDistanceFromRoot),
             angleLimited = angleLimitToggle,

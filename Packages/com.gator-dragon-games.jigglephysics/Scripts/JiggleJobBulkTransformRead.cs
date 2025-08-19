@@ -33,10 +33,6 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
 
         transform.GetLocalPositionAndRotation(out var localPosition, out var localRotation);
         var restTransform = restPoseTransforms[index];
-        if (!true) {
-            transform.SetLocalPositionAndRotation(restTransform.position, restTransform.rotation);
-            return;
-        }
 
         var localTransform = previousLocalTransforms[index];
         if (localPosition == (Vector3)localTransform.position &&

@@ -15,27 +15,24 @@ public static class JigglePhysics {
     private static readonly List<Transform> tempColliderTransforms = new List<Transform>();
     private static List<JiggleTreeSegment> rootJiggleTreeSegments;
 
-    private static double accumulatedTime = 0f;
     private static double time = 0f;
     public const double FIXED_DELTA_TIME = 1.0 / 30.0;
     public const double FIXED_DELTA_TIME_SQUARED = FIXED_DELTA_TIME * FIXED_DELTA_TIME;
 
     private static JiggleJobs jobs;
 
-    public static void ScheduleUpdate(double deltaTime) {
-        accumulatedTime += deltaTime;
-        if (accumulatedTime < FIXED_DELTA_TIME) {
-            jobs?.SchedulePoses(default);
+    public static void ScheduleUpdate(double currentTime) {
+        if (currentTime-time < FIXED_DELTA_TIME) {
+            jobs?.SchedulePoses(default, currentTime);
             return;
         }
 
-        while (accumulatedTime >= FIXED_DELTA_TIME) {
-            accumulatedTime -= FIXED_DELTA_TIME;
+        while (currentTime-time >= FIXED_DELTA_TIME) {
             time += FIXED_DELTA_TIME;
         }
 
         jobs = GetJiggleJobs();
-        jobs.Simulate(time);
+        jobs.Simulate(time, currentTime);
     }
 
     public static void CompleteUpdate() {
@@ -57,7 +54,6 @@ public static class JigglePhysics {
         jiggleRootLookup = new Dictionary<Transform, JiggleTreeSegment>();
         jiggleTrees = new HashSet<JiggleTree>();
         _globalDirty = true;
-        accumulatedTime = 0f;
         time = 0f;
         jobs?.Dispose();
         jobs = new JiggleJobs();
@@ -75,6 +71,14 @@ public static class JigglePhysics {
     
     public static void SetGlobalDirty() => _globalDirty = true;
 
+    public static void AddJiggleCollider(JiggleColliderSerializable collider) {
+        jobs?.Add(collider);
+    }
+
+    public static void RemoveJiggleCollider(JiggleColliderSerializable collider) {
+        jobs?.Remove(collider);
+    }
+    
     public static void AddJiggleTreeSegment(JiggleTreeSegment jiggleTreeSegment) {
         jiggleTreeSegments.Add(jiggleTreeSegment);
         if (TryAddRootJiggleTreeSegment(jiggleTreeSegment)) {

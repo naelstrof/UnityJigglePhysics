@@ -263,25 +263,6 @@ public struct JiggleJobSimulate : IJobFor {
                 point.desiredConstraint += angleCorrection;
             }
 
-            #region Length Constraint
-
-            var length_elasticity = parent.parameters.lengthElasticity;
-            var diff = point.desiredConstraint - parent.desiredConstraint;
-            var dir = math.normalizesafe(diff, new float3(0,0,1));
-
-            var desiredPositionAfterLengthConstraint = parent.desiredConstraint + dir * point.desiredLengthToParent;
-            
-            var errorLength = math.distance(point.desiredConstraint, desiredPositionAfterLengthConstraint);
-            if (point.desiredLengthToParent != 0) {
-                errorLength /= point.desiredLengthToParent;
-            }
-            errorLength = math.min(errorLength, 1.0f);
-            errorLength = math.pow(errorLength, parent.parameters.elasticitySoften);
-            var forwardConstraint = math.lerp(point.desiredConstraint, desiredPositionAfterLengthConstraint, length_elasticity*errorLength);
-            point.desiredConstraint = forwardConstraint;
-
-            #endregion
-
             // TODO: Early out if collisions are disabled
 
             #region Back-propagated motion for collisions

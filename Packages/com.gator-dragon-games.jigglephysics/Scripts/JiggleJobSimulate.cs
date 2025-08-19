@@ -95,7 +95,9 @@ public struct JiggleJobSimulate : IJobFor {
             lengthAccumulation += point.desiredLengthToParent;
             tree.points[i] = point;
         }
-        tree.extents = lengthAccumulation + maxColliderRadius * 2f;
+
+        const float extentsBuffer = 1.3f;
+        tree.extents = (lengthAccumulation + maxColliderRadius)*extentsBuffer;
     }
 
     private unsafe void VerletIntegrate(JiggleTreeJobData tree) {
@@ -150,7 +152,7 @@ public struct JiggleJobSimulate : IJobFor {
                     return inputPosition;
                 }
                 var desiredPosition = colliderPosition + math.normalizesafe(sphere_diff, new float3(0,0,1)) * (collider.worldRadius + worldInputRadius);
-                var hardness = 0.5f;
+                var hardness = 1f;
                 return math.lerp(inputPosition, desiredPosition, hardness);
         }
         return inputPosition;
@@ -218,10 +220,11 @@ public struct JiggleJobSimulate : IJobFor {
 
             #region Collisions
             
+            // TODO: to convert a float to a grid location we just cast, but this always rounds towards zero. Probably should be a math.round()
             int extentRange = (int)tree.extents;
             for (int x = -extentRange; x < extentRange; x++) {
                 for (int y = -extentRange; y < extentRange; y++) {
-                    if (broadPhaseMap.TryGetValue(JiggleGridCell.GetKey(tree.points[0].position), out var gridCell)) {
+                    if (broadPhaseMap.TryGetValue(JiggleGridCell.GetKey(tree.points[0].position)+new int2(x,y), out var gridCell)) {
                         for (int index = 0; index < gridCell.count; index++) {
                             point.desiredConstraint = DoDepenetration(point.desiredConstraint, point.worldRadius, sceneColliders[gridCell.colliderIndices[index]]);
                         }

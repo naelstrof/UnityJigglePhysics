@@ -52,7 +52,9 @@ public struct JiggleTreeInputParameters {
     public JiggleTreeCurvedFloat collisionRadius;
     public float blend;
 
-    public JigglePointParameters ToJigglePointParameters(float normalizedDistanceFromRoot) {
+    public JigglePointParameters ToJigglePointParameters(float normalizedDistanceFromRoot, float lossyScaleCached, float lossyScaleReal) {
+        float scaleCorrection = lossyScaleCached*(1f/(lossyScaleReal*lossyScaleReal));
+        
         return new JigglePointParameters {
             rootElasticity = advancedToggle ? 1f - rootStretch : 0f,
             angleElasticity = Mathf.Pow(stiffness.Evaluate(normalizedDistanceFromRoot), 2f),
@@ -67,7 +69,7 @@ public struct JiggleTreeInputParameters {
             blend = 1f,
             drag = drag.Evaluate(normalizedDistanceFromRoot),
             airDrag = airDrag.Evaluate(normalizedDistanceFromRoot),
-            collisionRadius = collisionToggle ? collisionRadius.Evaluate(normalizedDistanceFromRoot) : 0f,
+            collisionRadius = collisionToggle ? collisionRadius.Evaluate(normalizedDistanceFromRoot) * scaleCorrection : 0f,
         };
     }
 

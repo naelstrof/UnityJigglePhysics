@@ -12,9 +12,10 @@ using UnityEngine.UIElements;
 namespace GatorDragonGames.JigglePhysics {
 
 [Serializable]
-public struct BoneNormalizedDistanceFromRoot {
+public struct JiggleTransformCachedData {
     public Transform bone;
     public float normalizedDistanceFromRoot;
+    public float lossyScale;
 }
 
 public class JiggleRig : MonoBehaviour {
@@ -24,7 +25,7 @@ public class JiggleRig : MonoBehaviour {
     [SerializeField] protected JiggleTreeInputParameters jiggleTreeInputParameters = JiggleTreeInputParameters.Default();
     [FormerlySerializedAs("_excludedTransforms")] [SerializeField] protected List<Transform> excludedTransforms = new List<Transform>();
     [SerializeField] protected List<JiggleCollider> personalColliders = new List<JiggleCollider>();
-    [SerializeField, HideInInspector] List<BoneNormalizedDistanceFromRoot> _boneNormalizedDistanceFromRootList;
+    [SerializeField, HideInInspector] List<JiggleTransformCachedData> transformCachedData;
     [SerializeField] protected List<JiggleColliderSerializable> jiggleColliders = new List<JiggleColliderSerializable>();
 
     private JiggleTreeSegment _jiggleTreeSegment;
@@ -56,12 +57,29 @@ public class JiggleRig : MonoBehaviour {
     }
 
     public float GetNormalizedDistanceFromRoot(Transform t) {
-        var entry = _boneNormalizedDistanceFromRootList.Find(x => x.bone == t);
-        return entry.bone ? entry.normalizedDistanceFromRoot : 0f;
+        var count = transformCachedData.Count;
+        for (int i = 0; i < count; i++) {
+            var cachedData = transformCachedData[i];
+            if (cachedData.bone == t) {
+                return cachedData.normalizedDistanceFromRoot;
+            }
+        }
+        return 0f;
+    }
+    
+    public float GetCachedLossyScale(Transform t) {
+        var count = transformCachedData.Count;
+        for (int i = 0; i < count; i++) {
+            var cachedData = transformCachedData[i];
+            if (cachedData.bone == t) {
+                return cachedData.lossyScale;
+            }
+        }
+        return 1f;
     }
 
-    public bool GetNormalizedDistanceFromRootListIsValid() => _boneNormalizedDistanceFromRootList != null &&
-                                                         _boneNormalizedDistanceFromRootList.Count > 0;
+    public bool GetNormalizedDistanceFromRootListIsValid() => transformCachedData != null &&
+                                                         transformCachedData.Count > 0;
 
     public bool GetHasRootTransformError() => !(!_rootBone || isValid);
     
@@ -77,8 +95,8 @@ public class JiggleRig : MonoBehaviour {
         JigglePhysics.RemoveJiggleTreeSegment(_jiggleTreeSegment);
     }
 
-    public JigglePointParameters GetJiggleBoneParameter(float normalizedDistanceFromRoot) {
-        return jiggleTreeInputParameters.ToJigglePointParameters(normalizedDistanceFromRoot);
+    public JigglePointParameters GetJiggleBoneParameter(float normalizedDistanceFromRoot, float lossyCachedSacle, float lossyRealScale) {
+        return jiggleTreeInputParameters.ToJigglePointParameters(normalizedDistanceFromRoot, lossyCachedSacle, lossyRealScale);
     }
 
     public Transform[] GetJiggleBoneTransforms() {
@@ -104,23 +122,25 @@ public class JiggleRig : MonoBehaviour {
             return;
         }
         JigglePhysics.VisitForLength(_rootBone, this, _rootBone.position, 0f, out var totalLength);
-        _boneNormalizedDistanceFromRootList = new List<BoneNormalizedDistanceFromRoot>();
-        VisitAndSetNormalizedDistanceFromRoot(_rootBone, _rootBone.position, 0f, totalLength);
+        transformCachedData = new List<JiggleTransformCachedData>();
+        VisitAndSetCacheData(_rootBone, _rootBone.position, 0f, totalLength);
     }
 
-    public void VisitAndSetNormalizedDistanceFromRoot(Transform t, Vector3 lastPosition, float currentLength, float totalLength) {
+    public void VisitAndSetCacheData(Transform t, Vector3 lastPosition, float currentLength, float totalLength) {
         if (CheckExcluded(t)) {
             return;
         }
         currentLength += Vector3.Distance(lastPosition, t.position);
-        _boneNormalizedDistanceFromRootList.Add(new BoneNormalizedDistanceFromRoot() {
+        var scale = t.lossyScale;
+        transformCachedData.Add(new JiggleTransformCachedData() {
             bone = t,
-            normalizedDistanceFromRoot = currentLength / totalLength
+            normalizedDistanceFromRoot = currentLength / totalLength,
+            lossyScale = (scale.x + scale.y + scale.x)/3f,
         });
         var validChildrenCount = JigglePhysics.GetValidChildrenCount(t, this);
         for (int i = 0; i < validChildrenCount; i++) {
             var child = JigglePhysics.GetValidChild(t, this, i);
-            VisitAndSetNormalizedDistanceFromRoot(child, t.position, currentLength, totalLength);
+            VisitAndSetCacheData(child, t.position, currentLength, totalLength);
         }
     }
 

@@ -26,9 +26,9 @@ public class JiggleRigEditor : Editor {
         rootElement.Q<Label>().text = "Root Transform";
         var errorSection = visualElement.Q<VisualElement>("RootTransformErrorSection");
         rootElement.RegisterValueChangedCallback(evt => {
-            errorSection.style.display = script.rootTransformError ? DisplayStyle.Flex : DisplayStyle.None;
+            errorSection.style.display = script.GetHasRootTransformError() ? DisplayStyle.Flex : DisplayStyle.None;
         });
-        errorSection.style.display = script.rootTransformError ? DisplayStyle.Flex : DisplayStyle.None;
+        errorSection.style.display = script.GetHasRootTransformError() ? DisplayStyle.Flex : DisplayStyle.None;
 
         var excludeRootToggleElement = visualElement.Q<Toggle>("ExcludeRootToggle");
         excludeRootToggleElement.BindProperty(serializedObject.FindProperty("excludeRoot"));
@@ -52,6 +52,9 @@ public class JiggleRigEditor : Editor {
 
     public void OnSceneGUI() {
         var script = (JiggleRig)target;
+        if (!script.GetIsValid()) {
+            return;
+        }
         var cam = SceneView.lastActiveSceneView.camera;
         var jiggleTree = JigglePhysics.CreateJiggleTree(script, null);
         var points = jiggleTree.points;

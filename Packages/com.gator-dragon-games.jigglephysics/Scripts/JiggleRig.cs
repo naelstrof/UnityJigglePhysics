@@ -60,10 +60,12 @@ public class JiggleRig : MonoBehaviour {
         return entry.bone ? entry.normalizedDistanceFromRoot : 0f;
     }
 
-    public bool normalizedDistanceFromRootListIsValid => _boneNormalizedDistanceFromRootList != null &&
+    public bool GetNormalizedDistanceFromRootListIsValid() => _boneNormalizedDistanceFromRootList != null &&
                                                          _boneNormalizedDistanceFromRootList.Count > 0;
 
-    public bool rootTransformError => !(!_rootBone || isValid);
+    public bool GetHasRootTransformError() => !(!_rootBone || isValid);
+    
+    public bool GetIsValid() => isValid;
 
     private void OnEnable() {
         _jiggleTreeSegment ??= new JiggleTreeSegment(_rootBone, this);
@@ -85,8 +87,8 @@ public class JiggleRig : MonoBehaviour {
     }
 
     void OnValidate() {
-        isValid = _rootBone.IsChildOf(gameObject.transform);
-        if (excludedTransforms == null) excludedTransforms = new List<Transform>();
+        isValid = (_rootBone && _rootBone.IsChildOf(gameObject.transform));
+        excludedTransforms ??= new List<Transform>();
         ValidateCurve(ref jiggleTreeInputParameters.stiffness.curve);
         ValidateCurve(ref jiggleTreeInputParameters.angleLimit.curve);
         ValidateCurve(ref jiggleTreeInputParameters.stretch.curve);
@@ -98,6 +100,9 @@ public class JiggleRig : MonoBehaviour {
     }
 
     public void BuildNormalizedDistanceFromRootList() {
+        if (!isValid) {
+            return;
+        }
         JigglePhysics.VisitForLength(_rootBone, this, _rootBone.position, 0f, out var totalLength);
         _boneNormalizedDistanceFromRootList = new List<BoneNormalizedDistanceFromRoot>();
         VisitAndSetNormalizedDistanceFromRoot(_rootBone, _rootBone.position, 0f, totalLength);

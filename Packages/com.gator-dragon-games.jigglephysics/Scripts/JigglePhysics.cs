@@ -153,7 +153,7 @@ public static class JigglePhysics {
         tempPoints.Clear();
         jiggleRig.GetJiggleColliders(tempColliders);
         jiggleRig.GetJiggleColliderTransforms(tempColliderTransforms);
-        if (!jiggleRig.normalizedDistanceFromRootListIsValid) jiggleRig.BuildNormalizedDistanceFromRootList();
+        if (!jiggleRig.GetNormalizedDistanceFromRootListIsValid()) jiggleRig.BuildNormalizedDistanceFromRootList();
         var backProjection = Vector3.zero;
         if (jiggleRig.rootBone.childCount != 0) {
             var pos = jiggleRig.rootBone.position;

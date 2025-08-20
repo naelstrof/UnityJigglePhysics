@@ -163,11 +163,14 @@ public static class JigglePhysics {
         } else {
             backProjection = jiggleRig.rootBone.position;
         }
+        var lossyScaleSample = jiggleRig.rootBone.lossyScale;
+        var lossyScale = (lossyScaleSample.x + lossyScaleSample.y + lossyScaleSample.z)/3f;
+        var cachedScale = jiggleRig.GetCachedLossyScale(jiggleRig.rootBone);
         tempPoints.Add(new JiggleSimulatedPoint() { // Back projected virtual root
             position = backProjection,
             lastPosition = backProjection,
             childenCount = 1,
-            parameters = jiggleRig.GetJiggleBoneParameter(0f),
+            parameters = jiggleRig.GetJiggleBoneParameter(0f, cachedScale, lossyScale),
             parentIndex = -1,
             hasTransform = false,
             animated = false,
@@ -213,7 +216,10 @@ public static class JigglePhysics {
         }
         if (!lastJiggleRig.CheckExcluded(t)) {
             transforms.Add(t);
-            var parameters = lastJiggleRig.GetJiggleBoneParameter(lastJiggleRig.GetNormalizedDistanceFromRoot(t));
+            var lossyScaleSample = t.lossyScale;
+            var lossyScale = (lossyScaleSample.x + lossyScaleSample.y + lossyScaleSample.z) / 3f;
+            var cachedLossyScale = lastJiggleRig.GetCachedLossyScale(t);
+            var parameters = lastJiggleRig.GetJiggleBoneParameter(lastJiggleRig.GetNormalizedDistanceFromRoot(t), cachedLossyScale, lossyScale);
             if ((lastJiggleRig.rootExcluded && t == lastJiggleRig.rootBone) || lastJiggleRig.CheckExcluded(t)) {
                 parameters = new JigglePointParameters() {
                     angleElasticity = 1f,
@@ -249,7 +255,7 @@ public static class JigglePhysics {
                     lastPosition = currentPosition + (currentPosition - lastPosition),
                     childenCount = 0,
                     distanceFromRoot = currentLength,
-                    parameters = lastJiggleRig.GetJiggleBoneParameter(lastJiggleRig.GetNormalizedDistanceFromRoot(t)),
+                    parameters = lastJiggleRig.GetJiggleBoneParameter(lastJiggleRig.GetNormalizedDistanceFromRoot(t), cachedLossyScale, lossyScale),
                     parentIndex = newIndex,
                     hasTransform = false,
                     animated = false,

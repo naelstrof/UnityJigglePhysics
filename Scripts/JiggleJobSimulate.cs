@@ -136,46 +136,54 @@ public struct JiggleJobSimulate : IJobFor {
     }
     
 
-    private unsafe void DoDepenetration(JiggleSimulatedPoint* point, JiggleSimulatedPoint* parentPoint, JiggleCollider collider) {
-        if (!collider.enabled || !point->hasTransform || !parentPoint->hasTransform) {
-            return;
+    private unsafe float3 DoDepenetration(JiggleSimulatedPoint* point, JiggleSimulatedPoint* otherPoint, JiggleCollider collider) {
+        if (!collider.enabled || !point->hasTransform || !otherPoint->hasTransform) {
+            return new float3(0f, 0f, 0f);
         }
         switch (collider.type) {
             case JiggleCollider.JiggleColliderType.Sphere:
                 var colliderPosition = collider.localToWorldMatrix.c3.xyz;
                 var boneClosestPoint = GetClosestPointOnLineSegment(
-                        colliderPosition, 
-                        point->desiredConstraint, 
-                        parentPoint->workingPosition
+                        colliderPosition,
+                        point->desiredConstraint,
+                        otherPoint->workingPosition,
+                        out var tValue
                         );
                 var sphere_diff = boneClosestPoint - colliderPosition;
                 var sphere_distance = math.length(sphere_diff);
-                var depenetrationMagnitude = (collider.worldRadius + parentPoint->worldRadius) - sphere_distance;
+                var depenetrationMagnitude = (collider.worldRadius + point->worldRadius) - sphere_distance;
                 if (depenetrationMagnitude <= 0f) {
-                    return;
+                    return new float3(0f, 0f, 0f);
                 }
                 var depenetrationDir = math.normalizesafe(sphere_diff, new float3(0, 0, 1));
                 var depenetrationVector = depenetrationDir * depenetrationMagnitude;
                 // TODO: find decent rigidbody solve instead of just pushing them both naively
                 var hardness = 1f;
-                if (!(parentPoint->parameters.angleElasticity == 1
-                      && parentPoint->parameters.rootElasticity == 1
-                      && parentPoint->parameters.lengthElasticity == 1)) {
-                    point->desiredConstraint = math.lerp(point->desiredConstraint, point->desiredConstraint + depenetrationVector, hardness);
-                    parentPoint->workingPosition = math.lerp(parentPoint->workingPosition, parentPoint->workingPosition + depenetrationVector, hardness);
+                var pValue = -(tValue - 0.5f * 2f);
+                var ppValue = -pValue;
+                pValue = math.pow(math.clamp(pValue+1f, 0f, 1f),0.5f);
+                ppValue = math.pow(math.clamp(ppValue+1f, 0f, 1f),0.5f);
+                if (!(otherPoint->parameters.angleElasticity == 1
+                      && otherPoint->parameters.rootElasticity == 1
+                      && otherPoint->parameters.lengthElasticity == 1)) {
+                    //point->desiredConstraint = math.lerp(point->desiredConstraint, point->desiredConstraint + depenetrationVector, hardness);
+                    return depenetrationVector * hardness * pValue;
                 }
                 break;
         }
+        return new float3(0f, 0f, 0f);
     }
     
-    private float3 GetClosestPointOnLineSegment(float3 inputPoint, float3 segmentPoint1, float3 segmentPoint2) {
+    private float3 GetClosestPointOnLineSegment(float3 inputPoint, float3 segmentPoint1, float3 segmentPoint2, out float tValue) {
+        tValue = 0f;
         var segment = segmentPoint2 - segmentPoint1;
         var segmentLengthSq = math.dot(segment, segment);
-        if (segmentLengthSq == 0f)
+        if (segmentLengthSq == 0f) {
             return segmentPoint1;
-        var t = math.dot(inputPoint - segmentPoint1, segment) / segmentLengthSq;
-        t = math.clamp(t, 0f, 1f);
-        return segmentPoint1 + t * segment;
+        }
+        tValue = math.dot(inputPoint - segmentPoint1, segment) / segmentLengthSq;
+        tValue = math.clamp(tValue, 0f, 1f);
+        return segmentPoint1 + tValue * segment;
     }
 
     private unsafe void Constrain(JiggleTreeJobData tree) {
@@ -244,14 +252,22 @@ public struct JiggleJobSimulate : IJobFor {
                 for (int y = -extentRange; y < extentRange; y++) {
                     if (broadPhaseMap.TryGetValue(JiggleGridCell.GetKey(tree.points[0].position)+new int2(x,y), out var gridCell)) {
                         for (int index = 0; index < gridCell.count; index++) {
-                            DoDepenetration(point, parent, sceneColliders[gridCell.colliderIndices[index]]);
+                            forwardConstraint += DoDepenetration(point, parent, sceneColliders[gridCell.colliderIndices[index]]);
+                            for (int childIndex = 0; childIndex < point->childenCount; childIndex++) {
+                                var child = tree.points + point->childrenIndices[childIndex];
+                                forwardConstraint += DoDepenetration(point, child, sceneColliders[gridCell.colliderIndices[index]]);
+                            }
                         }
                     }
                 }
             }
 
             for (int index = (int)tree.colliderIndexOffset; index < tree.colliderCount; index++) {
-                DoDepenetration(point, parent, personalColliders[index]);
+                forwardConstraint += DoDepenetration(point, parent, personalColliders[index]);
+                for (int childIndex = 0; childIndex < point->childenCount; childIndex++) {
+                    var child = tree.points + point->childrenIndices[childIndex];
+                    forwardConstraint += DoDepenetration(point, child, personalColliders[index]);
+                }
             }
 
             #endregion
@@ -284,10 +300,10 @@ public struct JiggleJobSimulate : IJobFor {
                 point->desiredConstraint += angleCorrection;
             }
 
-            // TODO: Early out if collisions are disabled
+            // TODO: Early out if collisions are disabled (or don't for a more accurate solve)
 
-            point->workingPosition = forwardConstraint;
-            continue;
+            //point->workingPosition = forwardConstraint;
+            //continue;
 
             #region Back-propagated motion for collisions
 
@@ -322,6 +338,7 @@ public struct JiggleJobSimulate : IJobFor {
                 var cdir = math.normalizesafe(cdiff);
                 backward_constraint = math.lerp(backward_constraint,
                     child.workingPosition + cdir * child.desiredLengthToParent, child_length_elasticity * 0.5f);
+                var foldedBack = 
                 point->workingPosition = math.lerp(forwardConstraint, backward_constraint, 0.5f);
             } else {
                 point->workingPosition = forwardConstraint;

@@ -145,7 +145,7 @@ public struct JiggleJobSimulate : IJobFor {
                 var colliderPosition = collider.localToWorldMatrix.c3.xyz;
                 var boneClosestPoint = GetClosestPointOnLineSegment(
                         colliderPosition,
-                        point->desiredConstraint,
+                        point->workingPosition,
                         otherPoint->workingPosition,
                         out var tValue
                         );
@@ -211,6 +211,46 @@ public struct JiggleJobSimulate : IJobFor {
 
             #endregion
 
+            #region Collisions
+            
+            // TODO: to convert a float to a grid location we just cast, but this always rounds towards zero. Probably should be a math.round()
+            int extentRange = (int)tree.extents;
+            for (int x = -extentRange; x < extentRange; x++) {
+                for (int y = -extentRange; y < extentRange; y++) {
+                    if (broadPhaseMap.TryGetValue(JiggleGridCell.GetKey(tree.points[0].position)+new int2(x,y), out var gridCell)) {
+                        for (int index = 0; index < gridCell.count; index++) {
+                            var collisionDepenetration = new float3(0f, 0f, 0f);
+                            collisionDepenetration = DoDepenetration(point, parent, sceneColliders[gridCell.colliderIndices[index]]);
+                            var maxDepenetrationMagnitude = math.length(collisionDepenetration);
+                            for (int childIndex = 0; childIndex < point->childenCount; childIndex++) {
+                                var child = tree.points + point->childrenIndices[childIndex];
+                                var newCollisionDepenetration = DoDepenetration(point, child, sceneColliders[gridCell.colliderIndices[index]]);
+                                maxDepenetrationMagnitude = math.max(maxDepenetrationMagnitude, math.length(newCollisionDepenetration));
+                                collisionDepenetration += newCollisionDepenetration;
+                                collisionDepenetration = math.normalizesafe(collisionDepenetration, new float3(0,0,1)) * maxDepenetrationMagnitude;
+                            }
+                            point->workingPosition += collisionDepenetration;
+                        }
+                    }
+                }
+            }
+
+            for (int index = (int)tree.colliderIndexOffset; index < tree.colliderCount; index++) {
+                var collisionDepenetration = new float3(0f, 0f, 0f);
+                collisionDepenetration = DoDepenetration(point, parent, personalColliders[index]);
+                var maxDepenetrationMagnitude = math.length(collisionDepenetration);
+                for (int childIndex = 0; childIndex < point->childenCount; childIndex++) {
+                    var child = tree.points + point->childrenIndices[childIndex];
+                    var newCollisionDepenetration = DoDepenetration(point, child, personalColliders[index]);
+                    maxDepenetrationMagnitude = math.max(maxDepenetrationMagnitude, math.length(newCollisionDepenetration));
+                    collisionDepenetration += newCollisionDepenetration;
+                    collisionDepenetration = math.normalizesafe(collisionDepenetration, new float3(0,0,1)) * maxDepenetrationMagnitude;
+                }
+                point->workingPosition += collisionDepenetration;
+            }
+
+            #endregion
+            
             #region Angle Constraint
             
             var length_elasticity = parent->parameters.lengthElasticity;
@@ -243,35 +283,7 @@ public struct JiggleJobSimulate : IJobFor {
             var forwardConstraint = point->desiredConstraint;
             
             #endregion
-
-            #region Collisions
             
-            // TODO: to convert a float to a grid location we just cast, but this always rounds towards zero. Probably should be a math.round()
-            int extentRange = (int)tree.extents;
-            for (int x = -extentRange; x < extentRange; x++) {
-                for (int y = -extentRange; y < extentRange; y++) {
-                    if (broadPhaseMap.TryGetValue(JiggleGridCell.GetKey(tree.points[0].position)+new int2(x,y), out var gridCell)) {
-                        for (int index = 0; index < gridCell.count; index++) {
-                            forwardConstraint += DoDepenetration(point, parent, sceneColliders[gridCell.colliderIndices[index]]);
-                            for (int childIndex = 0; childIndex < point->childenCount; childIndex++) {
-                                var child = tree.points + point->childrenIndices[childIndex];
-                                forwardConstraint += DoDepenetration(point, child, sceneColliders[gridCell.colliderIndices[index]]);
-                            }
-                        }
-                    }
-                }
-            }
-
-            for (int index = (int)tree.colliderIndexOffset; index < tree.colliderCount; index++) {
-                forwardConstraint += DoDepenetration(point, parent, personalColliders[index]);
-                for (int childIndex = 0; childIndex < point->childenCount; childIndex++) {
-                    var child = tree.points + point->childrenIndices[childIndex];
-                    forwardConstraint += DoDepenetration(point, child, personalColliders[index]);
-                }
-            }
-
-            #endregion
-
             if (point->parameters.angleLimited) {
                 // --- Angle Limit Constraint
                 float angleA_deg = point->parameters.angleLimit;
@@ -338,8 +350,8 @@ public struct JiggleJobSimulate : IJobFor {
                 var cdir = math.normalizesafe(cdiff);
                 backward_constraint = math.lerp(backward_constraint,
                     child.workingPosition + cdir * child.desiredLengthToParent, child_length_elasticity * 0.5f);
-                var foldedBack = 
-                point->workingPosition = math.lerp(forwardConstraint, backward_constraint, 0.5f);
+                var notFoldedBack = 0f;//math.clamp(-math.dot(math.normalizesafe(point->workingPosition - parent->workingPosition), aim)*2f,0f,1f);
+                point->workingPosition = math.lerp(forwardConstraint, backward_constraint, 0.5f * notFoldedBack);
             } else {
                 point->workingPosition = forwardConstraint;
             }

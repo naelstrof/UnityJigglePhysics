@@ -8,8 +8,8 @@
         <ui:Toggle label="Advanced" name="AdvancedToggle" style="flex-shrink: 0;" />
         <ui:Instance template="CurvableSlider" name="StiffnessControl" />
         <ui:VisualElement name="AdvancedSection" style="flex-grow: 0; flex-shrink: 0;">
-            <ui:Slider label="Soften" value="42" high-value="1" name="SoftenSlider" show-input-field="true" />
             <ui:Instance template="CurvableSlider" name="StretchControl" />
+            <ui:Slider label="Soften" value="42" high-value="1" name="SoftenSlider" show-input-field="true" />
             <ui:VisualElement name="RootSection" style="flex-grow: 1;">
                 <ui:Slider label="RootStretch" value="42" high-value="1" name="RootStretchSlider" show-input-field="true" />
             </ui:VisualElement>

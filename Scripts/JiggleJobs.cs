@@ -15,6 +15,9 @@ public class JiggleJobs {
 
     public JobHandle handleBulkRead;
     public bool hasHandleBulkRead;
+    
+    public JobHandle handleBulkReset;
+    public bool hasHandleBulkReset;
 
     public JobHandle handleSimulate;
     public bool hasHandleSimulate;
@@ -37,6 +40,7 @@ public class JiggleJobs {
     public JiggleJobBulkColliderTransformRead jobBulkPersonalColliderTransformRead;
     public JiggleJobBulkColliderTransformRead jobBulkSceneColliderTransformRead;
     public JiggleJobBulkTransformRead jobBulkTransformRead;
+    public JiggleJobBulkTransformReset jobBulkTransformReset;
     public JiggleJobSimulate jobSimulate;
     public JiggleJobBulkReadRoots jobBulkReadRoots;
     public JiggleJobInterpolation jobInterpolation;
@@ -50,6 +54,7 @@ public class JiggleJobs {
         _memoryBus = new JiggleMemoryBus();
         jobSimulate = new JiggleJobSimulate(_memoryBus);
         jobBulkTransformRead = new JiggleJobBulkTransformRead(_memoryBus);
+        jobBulkTransformReset = new JiggleJobBulkTransformReset(_memoryBus);
         jobBulkReadRoots = new JiggleJobBulkReadRoots(_memoryBus);
         jobInterpolation = new JiggleJobInterpolation(_memoryBus, Time.timeAsDouble);
         jobBulkPersonalColliderTransformRead = new JiggleJobBulkColliderTransformRead(_memoryBus.personalColliders);
@@ -61,6 +66,7 @@ public class JiggleJobs {
 
     public void Dispose() {
         if (hasHandleBulkRead) handleBulkRead.Complete();
+        if (hasHandleBulkReset) handleBulkReset.Complete();
         if (hasHandleRootRead) handleRootRead.Complete();
         if (hasHandleSimulate) handleSimulate.Complete();
         if (hasHandleTransformWrite) handleTransformWrite.Complete();
@@ -70,7 +76,18 @@ public class JiggleJobs {
         _memoryBus.Dispose();
     }
 
-    public JobHandle SchedulePoses(JobHandle dep, double timeAsDouble) {
+    public JobHandle SchedulePoses(double timeAsDouble) {
+        if (_memoryBus.transformCount == 0) {
+            return default;
+        }
+        jobBulkTransformReset.UpdateArrays(_memoryBus);
+        // TODO: This technically only needs to happen for root bones, as their positions are used for posing. Instead just doing a full reset because I'm lazy.
+        handleBulkReset = jobBulkTransformReset.Schedule(_memoryBus.GetTransformAccessArray());
+        hasHandleBulkReset = true;
+        return SchedulePoses(handleBulkReset, timeAsDouble);
+    }
+
+    private JobHandle SchedulePoses(JobHandle dep, double timeAsDouble) {
         if (_memoryBus.transformCount == 0) {
             return dep;
         }
@@ -138,8 +155,11 @@ public class JiggleJobs {
         jobBulkSceneColliderTransformRead.UpdateArrays(_memoryBus.sceneColliders);
         jobBroadPhase.UpdateArrays(_memoryBus);
         jobBroadPhaseClear.UpdateArrays(_memoryBus);
+        
+        handleBulkReset = jobBulkTransformReset.Schedule(_memoryBus.GetTransformAccessArray());
+        hasHandleBulkReset = true;
 
-        handleBulkRead = jobBulkTransformRead.ScheduleReadOnly(_memoryBus.GetTransformAccessArray(), 128);
+        handleBulkRead = jobBulkTransformRead.ScheduleReadOnly(_memoryBus.GetTransformAccessArray(), 128, handleBulkReset);
         hasHandleBulkRead = true;
 
         handlePersonalColliderRead = jobBulkPersonalColliderTransformRead.ScheduleReadOnly(_memoryBus.GetPersonalColliderTransformAccessArray(), 128);
@@ -148,7 +168,7 @@ public class JiggleJobs {
         handleSceneColliderRead = jobBulkSceneColliderTransformRead.ScheduleReadOnly(_memoryBus.GetSceneColliderTransformAccessArray(), 128);
         hasHandleSceneColliderRead = true;
 
-        var handle = SchedulePoses(handleBulkRead, realTime);
+        var handle = SchedulePoses(handleBulkReset, realTime);
         
         var colliderHandles = JobHandle.CombineDependencies(handlePersonalColliderRead, handleSceneColliderRead);
         

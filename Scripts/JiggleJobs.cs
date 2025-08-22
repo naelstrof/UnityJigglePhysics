@@ -150,6 +150,7 @@ public class JiggleJobs {
         _memoryBus.CommitColliders();
 
         jobSimulate.UpdateArrays(_memoryBus);
+        jobBulkTransformReset.UpdateArrays(_memoryBus);
         jobBulkTransformRead.UpdateArrays(_memoryBus);
         jobBulkPersonalColliderTransformRead.UpdateArrays(_memoryBus.personalColliders);
         jobBulkSceneColliderTransformRead.UpdateArrays(_memoryBus.sceneColliders);

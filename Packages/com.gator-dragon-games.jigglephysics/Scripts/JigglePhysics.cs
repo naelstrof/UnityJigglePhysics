@@ -23,7 +23,7 @@ public static class JigglePhysics {
 
     public static void ScheduleUpdate(double currentTime) {
         if (currentTime-time < FIXED_DELTA_TIME) {
-            jobs?.SchedulePoses(default, currentTime);
+            jobs?.SchedulePoses(currentTime);
             return;
         }
 

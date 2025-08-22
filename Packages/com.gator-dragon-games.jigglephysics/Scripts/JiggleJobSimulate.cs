@@ -199,12 +199,12 @@ public struct JiggleJobSimulate : IJobFor {
 
             if (parent->parentIndex == -1) {
                 var child = tree.points[point->childrenIndices[0]];
-                point->workingPosition = point->workingPosition = math.lerp(point->workingPosition, point->pose,
+                point->workingPosition = math.lerp(point->workingPosition, point->pose,
                     point->parameters.rootElasticity * point->parameters.rootElasticity);
                 var head = point->pose;
                 var tail = child.pose;
                 var diffasdf = head - tail;
-                parent->workingPosition = point->workingPosition + diffasdf;
+                parent->workingPosition += diffasdf;
                 continue;
             }
 
@@ -368,8 +368,10 @@ public struct JiggleJobSimulate : IJobFor {
     }
 
     private unsafe void ApplyPose(JiggleTreeJobData tree) {
-        var rootSimulationPosition = tree.points[1].workingPosition;
-        var rootPose = tree.GetInputPose(inputPoses, 1).position;
+        var rootPoint = tree.points[1];
+        var rootSimulationPosition = rootPoint.position;
+        var rootPose = rootPoint.pose;
+        
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points+i;
             if (point->childenCount <= 0) {

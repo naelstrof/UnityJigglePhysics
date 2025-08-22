@@ -9,7 +9,6 @@ public unsafe struct JiggleSimulatedPoint {
     public float3 lastPosition;
     public float3 position;
     public float3 workingPosition;
-    public float3 desiredConstraint;
     public float3 parentPose;
     public float3 pose;
     public float desiredLengthToParent;
@@ -26,7 +25,7 @@ public unsafe struct JiggleSimulatedPoint {
 
     public override string ToString() {
         return $"(position: {position},\nlastPosition: {lastPosition},\n" +
-               $"workingPosition: {workingPosition},\ndesiredConstraint: {desiredConstraint},\n" +
+               $"workingPosition: {workingPosition},\n" +
                $"parentPose: {parentPose},\npose: {pose},\ndesiredLengthToParent:{desiredLengthToParent},\n" +
                $"animated: {animated},\n parameters: {parameters},\n parentIndex: {parentIndex},\n " +
                $"children: [{childrenIndices[0]}, ...],\n childenCount: {childenCount},\n hasTransform: {hasTransform})";

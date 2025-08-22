@@ -9,46 +9,27 @@ using UnityEditor;
 namespace GatorDragonGames.JigglePhysics {
 
 public class JiggleRig : MonoBehaviour {
-    [SerializeField] private JiggleRigData[] jiggleRigs;
+    [SerializeField] private JiggleRigData jiggleRigData;
 
     private void OnEnable() {
-        var rigCount = jiggleRigs.Length;
-        for (int i = 0; i < rigCount; i++) {
-            jiggleRigs[i].OnEnable();
-        }
+        jiggleRigData.OnEnable();
     }
     
     private void OnDisable() {
-        var rigCount = jiggleRigs.Length;
-        for (int i = 0; i < rigCount; i++) {
-            jiggleRigs[i].OnDisable();
-        }
+        jiggleRigData.OnDisable();
     }
 
     void OnValidate() {
-        if (jiggleRigs == null || jiggleRigs.Length == 0) {
-            return;
+        if (!jiggleRigData.hasSerializedData) {
+            jiggleRigData = JiggleRigData.Default();
         }
-        var rigCount = jiggleRigs.Length;
-        for (int i = 0; i < rigCount; i++) {
-            if (!jiggleRigs[i].hasSerializedData) {
-                jiggleRigs[i] = JiggleRigData.Default();
-            }
-            jiggleRigs[i].OnValidate();
-        }
+        jiggleRigData.OnValidate();
     }
 
 #if UNITY_EDITOR
     public void OnSceneGUI() {
-        if (jiggleRigs == null) {
-            return;
-        }
-        
         var cam = SceneView.lastActiveSceneView.camera;
-        var rigCount = jiggleRigs.Length;
-        for (int i = 0; i < rigCount; i++) {
-            jiggleRigs[i].OnSceneGUI(cam);
-        }
+        jiggleRigData.OnSceneGUI(cam);
     }
 #endif
 

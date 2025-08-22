@@ -13,9 +13,6 @@ public class JiggleRigDataPropertyDrawer : PropertyDrawer {
         var visualElement = new VisualElement();
         visualTreeAsset.CloneTree(visualElement);
         
-        var foldout = visualElement.Q<Foldout>("Foldout");
-        foldout.BindProperty(property.FindPropertyRelative("foldout"));
-        
         var rootElement = visualElement.Q<ObjectField>("RootField");
         rootElement.objectType = typeof(Transform);
         rootElement.BindProperty(property.FindPropertyRelative("rootBone"));

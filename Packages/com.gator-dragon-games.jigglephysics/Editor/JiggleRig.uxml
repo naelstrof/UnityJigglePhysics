@@ -3,11 +3,9 @@
     <ui:Label text="Jiggle Rig" class="title" />
     <ui:VisualElement style="height: 10px;" />
     <uie:ObjectField label="Object Field" name="RootField" />
-    <ui:Foldout text="Settings" name="Foldout" style="flex-grow: 1;">
-        <ui:Toggle label="Toggle" name="ExcludeRootToggle" />
-        <uie:PropertyField name="IgnoredTransformsField" />
-        <uie:PropertyField name="PersonalCollidersField" />
-        <ui:VisualElement style="height: 10px;" />
-        <ui:VisualElement name="Contents" style="flex-grow: 1;" />
-    </ui:Foldout>
+    <ui:Toggle label="Toggle" name="ExcludeRootToggle" />
+    <uie:PropertyField name="IgnoredTransformsField" />
+    <uie:PropertyField name="PersonalCollidersField" />
+    <ui:VisualElement style="height: 10px;" />
+    <ui:VisualElement name="Contents" style="flex-grow: 1;" />
 </ui:UXML>

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Burst;
 using UnityEngine;
 using UnityEngine.Jobs;
 using UnityEngine.Profiling;
@@ -56,7 +57,7 @@ public class JiggleDoubleBufferTransformAccessArray {
         Profiler.EndSample();
     }
 
-    public void GenerateNewAccessArrays(ref int currentIndex, out bool hasFinished, List<Transform> transformAccessList, Transform dummyTransform, int maxAddCount = 512) {
+    public void GenerateNewAccessArrays(ref int currentIndex, out bool hasFinished, List<Transform> transformAccessList, int maxAddCount = 512) {
         if (shouldClear) {
             ClearIfNeeded(maxAddCount);
             hasFinished = false;
@@ -69,7 +70,7 @@ public class JiggleDoubleBufferTransformAccessArray {
         for (var index = currentIndex; index < count && addedSoFar < maxAddCount; index++) {
             var transform = transformAccessList[index];
             if (!transform) {
-                newTransformAccessArray.Add(dummyTransform);
+                newTransformAccessArray.Add(JiggleMemoryBus.GetDummyTransform(index));
             } else {
                 newTransformAccessArray.Add(transform);
             }

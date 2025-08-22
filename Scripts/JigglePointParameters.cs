@@ -85,6 +85,17 @@ public struct JiggleTreeInputParameters {
             collisionRadius = new JiggleTreeCurvedFloat(0.1f),
         };
     }
+
+    public void OnValidate() {
+        collisionRadius.value = Mathf.Max(0f, collisionRadius.value);
+        stiffness.value = Mathf.Clamp01(stiffness.value);
+        angleLimit.value = Mathf.Clamp01(angleLimit.value);
+        drag.value = Mathf.Clamp01(drag.value);
+        airDrag.value = Mathf.Clamp01(airDrag.value);
+        stretch.value = Mathf.Clamp01(stretch.value);
+        soften = Mathf.Clamp01(soften);
+        blend = Mathf.Clamp01(blend);
+    }
 }
 
 }

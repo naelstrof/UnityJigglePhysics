@@ -351,7 +351,7 @@ public struct JiggleJobSimulate : IJobFor {
                 backward_constraint = math.lerp(backward_constraint,
                     child.workingPosition + cdir * child.desiredLengthToParent, child_length_elasticity * 0.5f);
                 var notFoldedBack = math.clamp(-math.dot(math.normalizesafe(point->workingPosition - parent->workingPosition), aim)*2f,0f,1f);
-                point->workingPosition = math.lerp(forwardConstraint, backward_constraint, 0.5f * notFoldedBack);
+                point->workingPosition = math.lerp(forwardConstraint, backward_constraint, 0.5f);
             } else {
                 point->workingPosition = forwardConstraint;
             }

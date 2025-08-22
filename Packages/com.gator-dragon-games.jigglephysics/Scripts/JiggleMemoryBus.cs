@@ -97,19 +97,31 @@ public class JiggleMemoryBus {
     private int currentPersonalColliderTransformAccessIndex = 0;
     private int currentSceneColliderTransformAccessIndex = 0;
     
-    private static Transform dummyTransform;
+    private static List<Transform> dummyTransforms;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void Init() {
-        if (dummyTransform == null) {
-            dummyTransform = new GameObject("JigglePhysicsDummyTransform").transform;
-            Object.DontDestroyOnLoad(dummyTransform.gameObject);
-            dummyTransform.gameObject.hideFlags = HideFlags.HideAndDontSave;
+        if (dummyTransforms != null) {
+            foreach (Transform t in dummyTransforms) {
+                Object.Destroy(t.gameObject);
+            }
+            dummyTransforms.Clear();
+        } else {
+            dummyTransforms = new List<Transform>();
         }
     }
 
-    public TransformAccessArray GetTransformAccessArray() => doubleBufferTransformAccessArray.GetTransformAccessArray();
+    public static Transform GetDummyTransform(int index) {
+        while (dummyTransforms.Count <= index) {
+            Transform dummyTransform = new GameObject($"JigglePhysicsDummyTransform{index}").transform;
+            Object.DontDestroyOnLoad(dummyTransform.gameObject);
+            dummyTransform.gameObject.hideFlags = HideFlags.HideAndDontSave;
+            dummyTransforms.Add(dummyTransform);
+        }
+        return dummyTransforms[index];
+    }
 
+    public TransformAccessArray GetTransformAccessArray() => doubleBufferTransformAccessArray.GetTransformAccessArray();
     public TransformAccessArray GetTransformRootAccessArray() => doubleBufferTransformRootAccessArray.GetTransformAccessArray();
     public TransformAccessArray GetPersonalColliderTransformAccessArray() => doubleBufferPersonalColliderTransformAccessArray.GetTransformAccessArray();
     public TransformAccessArray GetSceneColliderTransformAccessArray() => doubleBufferSceneColliderTransformAccessArray.GetTransformAccessArray();
@@ -344,12 +356,12 @@ public class JiggleMemoryBus {
                 interpPose2.isVirtual = true;
                 interpolationPreviousPoseDataArray[j].pose = interpPose2;
 
-                transformAccessList[j] = dummyTransform;
-                transformRootAccessList[j] = dummyTransform;
+                transformAccessList[j] = GetDummyTransform(j);
+                transformRootAccessList[j] = GetDummyTransform(j);
             }
 
             for (int j = (int)removedTree.colliderIndexOffset; j < removedTree.colliderIndexOffset + removedTree.colliderCount; j++) {
-                personalColliderTransformAccessList[j] = dummyTransform;
+                personalColliderTransformAccessList[j] = GetDummyTransform(j);
             }
 
             memoryFragmenter.Free((int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
@@ -486,7 +498,7 @@ public class JiggleMemoryBus {
                     var sceneCollider = sceneColliderArray[id];
                     sceneCollider.enabled = false;
                     sceneColliderArray[id] = sceneCollider;
-                    sceneColliderTransformAccessList[id] = dummyTransform;
+                    sceneColliderTransformAccessList[id] = GetDummyTransform(id);
                 }
             }
             pendingSceneColliderRemove.Clear();
@@ -513,7 +525,7 @@ public class JiggleMemoryBus {
             currentSceneColliderTransformAccessIndex = 0;
             commitSceneColliderState = CommitState.ProcessingTransformAccess;
         } else if (commitSceneColliderState == CommitState.ProcessingTransformAccess) {
-            doubleBufferSceneColliderTransformAccessArray.GenerateNewAccessArrays(ref currentSceneColliderTransformAccessIndex, out var hasFinishedSceneColliders, sceneColliderTransformAccessList, dummyTransform);
+            doubleBufferSceneColliderTransformAccessArray.GenerateNewAccessArrays(ref currentSceneColliderTransformAccessIndex, out var hasFinishedSceneColliders, sceneColliderTransformAccessList);
             if (!hasFinishedSceneColliders) return;
             NativeArray<JiggleCollider>.Copy(sceneColliderArray, sceneColliders, sceneColliderCount);
             doubleBufferSceneColliderTransformAccessArray.Flip();
@@ -567,11 +579,11 @@ public class JiggleMemoryBus {
             currentPersonalColliderTransformAccessIndex = 0;
             commitTreeState = CommitState.ProcessingTransformAccess;
         } else if (commitTreeState == CommitState.ProcessingTransformAccess) {
-            doubleBufferTransformAccessArray.GenerateNewAccessArrays(ref currentTransformAccessIndex, out var hasFinishedTransforms, transformAccessList, dummyTransform);
+            doubleBufferTransformAccessArray.GenerateNewAccessArrays(ref currentTransformAccessIndex, out var hasFinishedTransforms, transformAccessList);
             if (!hasFinishedTransforms) return;
-            doubleBufferTransformRootAccessArray.GenerateNewAccessArrays(ref currentRootTransformAccessIndex, out var hasFinishedRoots, transformRootAccessList, dummyTransform);
+            doubleBufferTransformRootAccessArray.GenerateNewAccessArrays(ref currentRootTransformAccessIndex, out var hasFinishedRoots, transformRootAccessList);
             if (!hasFinishedRoots) return;
-            doubleBufferPersonalColliderTransformAccessArray.GenerateNewAccessArrays(ref currentPersonalColliderTransformAccessIndex, out var hasFinishedColliders, personalColliderTransformAccessList, dummyTransform);
+            doubleBufferPersonalColliderTransformAccessArray.GenerateNewAccessArrays(ref currentPersonalColliderTransformAccessIndex, out var hasFinishedColliders, personalColliderTransformAccessList);
             if (!hasFinishedColliders) return;
             ReadIn();
             var processingPendingRemoveCount = pendingProcessingRemoves.Count;

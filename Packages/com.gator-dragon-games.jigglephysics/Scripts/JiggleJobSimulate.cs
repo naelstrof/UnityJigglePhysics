@@ -73,7 +73,6 @@ public struct JiggleJobSimulate : IJobFor {
                     point->desiredLengthToParent = math.length(diff);
                 }
 
-                point->desiredConstraint = point->pose;
                 point->workingPosition = point->pose;
             } else if (point->hasTransform) {
                 // "real" particles
@@ -200,12 +199,12 @@ public struct JiggleJobSimulate : IJobFor {
 
             if (parent->parentIndex == -1) {
                 var child = tree.points[point->childrenIndices[0]];
-                point->desiredConstraint = point->workingPosition = math.lerp(point->workingPosition, point->pose,
+                point->workingPosition = point->workingPosition = math.lerp(point->workingPosition, point->pose,
                     point->parameters.rootElasticity * point->parameters.rootElasticity);
                 var head = point->pose;
                 var tail = child.pose;
                 var diffasdf = head - tail;
-                parent->desiredConstraint = point->desiredConstraint + diffasdf;
+                parent->workingPosition = point->workingPosition + diffasdf;
                 continue;
             }
 
@@ -255,17 +254,17 @@ public struct JiggleJobSimulate : IJobFor {
             
             var length_elasticity = parent->parameters.lengthElasticity;
             var parentAimPose = math.normalizesafe(point->parentPose - parent->parentPose, new float3(0,0,1));
-            var parentAim = math.normalizesafe(parent->desiredConstraint - parent->parentPose, new float3(0,0,1));
+            var parentAim = math.normalizesafe(parent->workingPosition - parent->parentPose, new float3(0,0,1));
             if (parent->parentIndex != -1) {
                 var parentParent = tree.points+parent->parentIndex;
-                parentAim = math.normalizesafe(parent->desiredConstraint - parentParent->desiredConstraint, new float3(0,0,1));
+                parentAim = math.normalizesafe(parent->workingPosition - parentParent->workingPosition, new float3(0,0,1));
             }
 
-            var currentLength = math.length(point->workingPosition - parent->desiredConstraint);
+            var currentLength = math.length(point->workingPosition - parent->workingPosition);
             var from_to_rot = FromToRotation(parentAimPose, parentAim);
             var constraintTarget = math.rotate(from_to_rot, point->pose - point->parentPose);
 
-            var desiredPosition = parent->desiredConstraint + constraintTarget;
+            var desiredPosition = parent->workingPosition + constraintTarget;
 
             var error = math.distance(point->workingPosition, desiredPosition);
             if (currentLength != 0) {
@@ -273,14 +272,8 @@ public struct JiggleJobSimulate : IJobFor {
             }
             error = math.min(error, 1.0f);
             error = math.pow(error, parent->parameters.elasticitySoften);
-            point->desiredConstraint = math.lerp(point->workingPosition, desiredPosition,
+            point->workingPosition = math.lerp(point->workingPosition, desiredPosition,
                 parent->parameters.angleElasticity * error);
-
-            var offsetFromParent = point->desiredConstraint - parent->desiredConstraint;
-            var offsetFromParentNormalized = math.normalizesafe(offsetFromParent, new float3(0, 0, 1));
-            point->desiredConstraint = parent->desiredConstraint + math.lerp(offsetFromParent, offsetFromParentNormalized * point->desiredLengthToParent, length_elasticity);
-
-            var forwardConstraint = point->desiredConstraint;
             
             #endregion
             
@@ -289,8 +282,8 @@ public struct JiggleJobSimulate : IJobFor {
                 float angleA_deg = point->parameters.angleLimit;
                 // TODO: This should be radians instead of degrees
                 float angleC_deg = float3Angle(
-                    point->desiredConstraint - desiredPosition,
-                    parent->desiredConstraint - desiredPosition
+                    point->workingPosition - desiredPosition,
+                    parent->workingPosition - desiredPosition
                 ); // known included angle C
 
                 float b = math.distance(point->parentPose, desiredPosition); // known side opposite angle B
@@ -303,46 +296,45 @@ public struct JiggleJobSimulate : IJobFor {
                 var oppo = math.sin(angleB_rad);
                 float a = oppo == 0f ? 0f : b * math.sin(angleA_rad) / oppo;
 
-                var correctionDir = math.normalizesafe(desiredPosition - point->desiredConstraint, new float3(0,0,1));
-                var correctionDistance = math.length(desiredPosition - point->desiredConstraint);
+                var correctionDir = math.normalizesafe(desiredPosition - point->workingPosition, new float3(0,0,1));
+                var correctionDistance = math.length(desiredPosition - point->workingPosition);
 
                 var angleCorrectionDistance = math.max(0f, correctionDistance - a);
                 var angleCorrection =
                     (correctionDir * angleCorrectionDistance) * (1f - point->parameters.angleLimitSoften);
-                point->desiredConstraint += angleCorrection;
+                point->workingPosition += angleCorrection;
             }
 
             // TODO: Early out if collisions are disabled (or don't for a more accurate solve)
 
-            //point->workingPosition = forwardConstraint;
             //continue;
 
             #region Back-propagated motion for collisions
 
-            if (parent->parameters is { angleElasticity: 1f, lengthElasticity: 1f }) {
-                // FIXME: Also check if collisions are disabled
-                point->workingPosition = forwardConstraint;
-                continue;
-            }
+            //if (parent->parameters is { angleElasticity: 1f, lengthElasticity: 1f }) {
+            //    // FIXME: Also check if collisions are disabled
+            //    point->workingPosition = forwardConstraint;
+            //    continue;
+            //}
 
             if (point->childenCount > 0) {
                 // Back-propagated motion specifically for collision enabled chains
                 var child = tree.points[point->childrenIndices[0]];
-                var aim_pose = math.normalizesafe(child.pose - point->parentPose, new float3(0,0,1));
-                var aim = math.normalizesafe(child.workingPosition - parent->workingPosition, new float3(0,0,1));
-                var from_to_rot_also = FromToRotation(aim_pose, aim);
-                var parent_to_self = math.normalizesafe(point->pose - point->parentPose);
-                var real_length = math.length(point->workingPosition - parent->workingPosition);
-                var targetPos = math.rotate(from_to_rot_also, (parent_to_self * real_length)) + parent->workingPosition;
+                var aimPose = math.normalizesafe(child.pose - point->parentPose, new float3(0,0,1));
+                var aimSkip = math.normalizesafe(child.workingPosition - parent->workingPosition, new float3(0,0,1));
+                var rotChildAimToSkip = FromToRotation(aimPose, aimSkip);
+                var aimParentPose = math.normalizesafe(point->pose - point->parentPose);
+                var workingLength = math.length(point->workingPosition - parent->workingPosition);
+                var targetPos = math.rotate(rotChildAimToSkip, (aimParentPose * workingLength)) + parent->workingPosition;
 
-                var error_also = math.length(point->workingPosition - targetPos);
-                if (real_length != 0) {
-                    error_also /= real_length;
+                var errorBackwardConstraint = math.length(point->workingPosition - targetPos);
+                if (workingLength != 0) {
+                    errorBackwardConstraint /= workingLength;
                 }
-                error_also = math.min(error_also, 1.0f);
-                error_also = math.pow(error_also, parent->parameters.elasticitySoften);
+                errorBackwardConstraint = math.min(errorBackwardConstraint, 1.0f);
+                errorBackwardConstraint = math.pow(errorBackwardConstraint, parent->parameters.elasticitySoften);
                 var backward_constraint = math.lerp(point->workingPosition, targetPos,
-                    (parent->parameters.angleElasticity * parent->parameters.angleElasticity * error_also));
+                    (parent->parameters.angleElasticity * parent->parameters.angleElasticity * errorBackwardConstraint));
 
                 var child_length_elasticity = point->parameters.lengthElasticity * point->parameters.lengthElasticity;
 
@@ -350,13 +342,20 @@ public struct JiggleJobSimulate : IJobFor {
                 var cdir = math.normalizesafe(cdiff);
                 backward_constraint = math.lerp(backward_constraint,
                     child.workingPosition + cdir * child.desiredLengthToParent, child_length_elasticity * 0.5f);
-                var notFoldedBack = math.clamp(-math.dot(math.normalizesafe(point->workingPosition - parent->workingPosition), aim)*2f,0f,1f);
-                point->workingPosition = math.lerp(forwardConstraint, backward_constraint, 0.5f);
-            } else {
-                point->workingPosition = forwardConstraint;
+                var notFoldedBack = 1f-math.clamp(math.dot(math.normalizesafe(parent->workingPosition - point->workingPosition), aimSkip)+1f,0f,1f);
+                point->workingPosition = math.lerp(point->workingPosition, backward_constraint, notFoldedBack);
             }
 
             #endregion
+            
+            #region Length Constraint
+
+            var offsetFromParent = point->workingPosition - parent->workingPosition;
+            var offsetFromParentNormalized = math.normalizesafe(offsetFromParent, new float3(0, 0, 1));
+            point->workingPosition = parent->workingPosition + math.lerp(offsetFromParent, offsetFromParentNormalized * point->desiredLengthToParent, length_elasticity);
+
+            #endregion
+            
         }
     }
 

@@ -380,7 +380,14 @@ public class JiggleMemoryBus {
     private CommitState commitTreeState = CommitState.Idle;
     private CommitState commitSceneColliderState = CommitState.Idle;
 
-    private void AddTransformsToSlice(int index, JiggleTree jiggleTree, JiggleTreeJobData jiggleTreeJobData) {
+    private bool TryAddTransformsToSlice(int index, JiggleTree jiggleTree, JiggleTreeJobData jiggleTreeJobData) {
+        // validate
+        for (int o = 0; o < jiggleTreeJobData.pointCount; o++) {
+            if (jiggleTree.bones[o]) continue;
+            Debug.LogError($"JigglePhysics: Cannot add tree with null bone at index {o} to memory bus.");
+            return false;
+        }
+
         if (treeCount + 1 > treeCapacity) {
             ResizeTreeCapacity(treeCapacity * 2);
         }
@@ -431,6 +438,7 @@ public class JiggleMemoryBus {
         }
 
         preTransformCount = math.max(index + (int)jiggleTreeJobData.pointCount, preTransformCount);
+        return true;
     }
 
     private void AddTreeToSlice(int index, JiggleTree jiggleTree, JiggleTreeJobData jiggleTreeJobData) {
@@ -445,12 +453,20 @@ public class JiggleMemoryBus {
         }
         
         jiggleTreeStructsArray[treeCount] = jiggleTreeJobData;
-        float3 rootPos = jiggleTree.bones[0].position;
+        var root = jiggleTree.bones[0];
+        if (!root) {
+            root = GetDummyTransform(index);
+        }
+        float3 rootPos = root.position;
         for (int o = 0; o < jiggleTreeJobData.pointCount; o++) {
             unsafe {
                 var point = jiggleTreeJobData.points[o];
-                jiggleTree.bones[o].GetPositionAndRotation(out var pos, out var rot);
-                jiggleTree.bones[o].GetLocalPositionAndRotation(out var lpos, out var lrot);
+                var bone = jiggleTree.bones[o];
+                if (!bone) {
+                    bone = GetDummyTransform(index + o);
+                }
+                bone.GetPositionAndRotation(out var pos, out var rot);
+                bone.GetLocalPositionAndRotation(out var lpos, out var lrot);
                 var pose = new JiggleTransform() {
                     isVirtual = !point.hasTransform,
                     position = pos,
@@ -560,15 +576,19 @@ public class JiggleMemoryBus {
             for (int i = 0; i < pendingAddCount; i++) {
                 var jiggleTree = pendingAddTrees[i];
                 var jiggleTreeStruct = pendingAddTrees[i].GetStruct();
+                var pointCount = (int)jiggleTreeStruct.pointCount;
 
-                var found = preMemoryFragmenter.TryAllocate((int)jiggleTreeStruct.pointCount,
-                    out var startIndex);
+                var found = preMemoryFragmenter.TryAllocate(pointCount, out var startIndex);
                 if (!found) {
                     ResizeTransformCapacity(transformCapacity * 2);
-                    preMemoryFragmenter.TryAllocate((int)jiggleTreeStruct.pointCount, out startIndex);
+                    preMemoryFragmenter.TryAllocate(pointCount, out startIndex);
                 }
 
-                AddTransformsToSlice(startIndex, jiggleTree, jiggleTreeStruct);
+                if (!TryAddTransformsToSlice(startIndex, jiggleTree, jiggleTreeStruct)) {
+                    preMemoryFragmenter.Free(startIndex, pointCount);
+                    pendingAddTrees.RemoveAt(i);
+                    i=Mathf.Max(i-1,0);
+                }
             }
 
             pendingProcessingAdds.AddRange(pendingAddTrees);
@@ -608,11 +628,12 @@ public class JiggleMemoryBus {
             for (int i = 0; i < processingPendingAddCount; i++) {
                 var jiggleTree = pendingProcessingAdds[i];
                 var jiggleTreeStruct = jiggleTree.GetStruct();
+                int pointCount = (int)jiggleTreeStruct.pointCount;
 
-                var found = memoryFragmenter.TryAllocate((int)jiggleTreeStruct.pointCount, out var startIndex);
+                var found = memoryFragmenter.TryAllocate(pointCount, out var startIndex);
                 if (!found) {
                     ResizeTransformCapacity(transformCapacity * 2);
-                    memoryFragmenter.TryAllocate((int)jiggleTreeStruct.pointCount, out startIndex);
+                    memoryFragmenter.TryAllocate(pointCount, out startIndex);
                 }
 
                 AddTreeToSlice(startIndex, jiggleTree, jiggleTreeStruct);

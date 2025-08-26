@@ -183,6 +183,16 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1996864990316792980, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &1256650632594394096 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -9205933489477619295, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1454476106314934004 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 387915414235946149, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1641500693017796026 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
@@ -220,248 +230,292 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c222ab56bf694d74096e6d709752b25f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _rootBone: {fileID: 3621395473087321750}
-  _advanced: 0
-  _animated: 0
-  _excludeRoot: 0
-  jiggleTreeInputParameters:
-    advancedToggle: 1
-    collisionToggle: 1
-    angleLimitToggle: 1
-    stiffness: 0.657
-    stiffnessCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
+  jiggleRigData:
+    hasSerializedData: 1
+    serializedVersion: v0.0.0
+    rootBone: {fileID: 3621395473087321750}
+    excludeRoot: 0
+    jiggleTreeInputParameters:
+      advancedToggle: 1
+      collisionToggle: 1
+      angleLimitToggle: 0
+      stiffness:
+        value: 0.8
+        curveEnabled: 0
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+      soften: 0
+      angleLimit:
+        value: 0.5
+        curveEnabled: 0
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+      angleLimitSoften: 0
+      rootStretch: 0.1
+      stretch:
+        value: 0.1
+        curveEnabled: 0
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+      drag:
+        value: 0.1
+        curveEnabled: 0
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+      airDrag:
+        value: 0
+        curveEnabled: 0
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+      gravity:
         value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    soften: 0.461
-    angleLimit: 1
-    angleLimitCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    angleLimitSoften: 0.438
-    rootStretch: 0.096
-    stretch: 0.187
-    stretchCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    drag: 0.19
-    dragCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    airDrag: 0
-    airDragCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    gravity: 1
-    gravityCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    collisionRadius: 0.27
-    collisionRadiusCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 1
-        inSlope: -0.7985954
-        outSlope: -0.7985954
-        tangentMode: 34
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0.33333334
-      - serializedVersion: 3
-        time: 1
-        value: 0.20140457
-        inSlope: -0.7985954
-        outSlope: -0.7985954
-        tangentMode: 34
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    blend: 0
-  _excludedTransforms:
-  - {fileID: 8255344140854802057}
-  - {fileID: 3963800410751119265}
-  - {fileID: 3961122839980617495}
-  - {fileID: 5812637591362177008}
-  - {fileID: 4363226291217609869}
-  - {fileID: 3489142694807053335}
-  - {fileID: 4746955888688907679}
-  - {fileID: 4526542582230844617}
-  - {fileID: 5935801676312389187}
-  - {fileID: 469489399274833906}
-  - {fileID: 8140592584355694757}
-  - {fileID: 224291442051684023}
-  - {fileID: 8351974499152798566}
-  - {fileID: 7487477589395673440}
-  - {fileID: 3312696343161446861}
-  _boneNormalizedDistanceFromRootList:
-  - bone: {fileID: 3621395473087321750}
-    normalizedDistanceFromRoot: 0
-  - bone: {fileID: 4005986313920151804}
-    normalizedDistanceFromRoot: 0.16777489
-  - bone: {fileID: 8633496001689150107}
-    normalizedDistanceFromRoot: 0.45114687
-  - bone: {fileID: 6529000040755562270}
-    normalizedDistanceFromRoot: 0.6031589
-  - bone: {fileID: 6741114186472516256}
-    normalizedDistanceFromRoot: 0.7775632
-  - bone: {fileID: 2636989250736996664}
-    normalizedDistanceFromRoot: 0.8429288
-  - bone: {fileID: 6727539069870592055}
-    normalizedDistanceFromRoot: 0.91878194
-  - bone: {fileID: 1936377964600207993}
-    normalizedDistanceFromRoot: 0.7713763
-  - bone: {fileID: 8775478108529102606}
-    normalizedDistanceFromRoot: 0.83427274
-  - bone: {fileID: 9195763597024933208}
-    normalizedDistanceFromRoot: 0.9101878
-  - bone: {fileID: 2963195145665492893}
-    normalizedDistanceFromRoot: 0.7275297
-  - bone: {fileID: 6584903380823294427}
-    normalizedDistanceFromRoot: 0.38164994
-  - bone: {fileID: 5926739402192531816}
-    normalizedDistanceFromRoot: 0.55080634
-  - bone: {fileID: 7821723255740660825}
-    normalizedDistanceFromRoot: 0.76019186
-  - bone: {fileID: 791291526442415813}
-    normalizedDistanceFromRoot: 1
-  - bone: {fileID: 2620789519507219426}
-    normalizedDistanceFromRoot: 0.37177747
-  - bone: {fileID: 1700635982630530011}
-    normalizedDistanceFromRoot: 0.51869565
-  - bone: {fileID: 2782747151077295754}
-    normalizedDistanceFromRoot: 0.6875768
-  - bone: {fileID: 4308341065098162957}
-    normalizedDistanceFromRoot: 0.9533156
+        curveEnabled: 0
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+      collisionRadius:
+        value: 0.1
+        curveEnabled: 0
+        curve:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+      blend: 0
+    excludedTransforms:
+    - {fileID: 2982940088201685152}
+    - {fileID: 8255344140854802057}
+    - {fileID: 3963800410751119265}
+    - {fileID: 3961122839980617495}
+    - {fileID: 4363226291217609869}
+    - {fileID: 4746955888688907679}
+    - {fileID: 5812637591362177008}
+    - {fileID: 3489142694807053335}
+    - {fileID: 4526542582230844617}
+    - {fileID: 5935801676312389187}
+    - {fileID: 469489399274833906}
+    - {fileID: 224291442051684023}
+    - {fileID: 7487477589395673440}
+    - {fileID: 8140592584355694757}
+    - {fileID: 8351974499152798566}
+    - {fileID: 3312696343161446861}
+    - {fileID: 2786531486179026856}
+    - {fileID: 7920955412260405488}
+    - {fileID: 5181513207609511585}
+    - {fileID: 7399367643610947319}
+    - {fileID: 8631707078603747525}
+    - {fileID: 6823907268205642333}
+    - {fileID: 1454476106314934004}
+    - {fileID: 1256650632594394096}
+    transformCachedData:
+    - bone: {fileID: 3621395473087321750}
+      normalizedDistanceFromRoot: 0
+      lossyScale: 0.9999999
+    - bone: {fileID: 4005986313920151804}
+      normalizedDistanceFromRoot: 0.16777489
+      lossyScale: 0.99999994
+    - bone: {fileID: 8633496001689150107}
+      normalizedDistanceFromRoot: 0.45114687
+      lossyScale: 0.9999998
+    - bone: {fileID: 6529000040755562270}
+      normalizedDistanceFromRoot: 0.6031589
+      lossyScale: 0.9999998
+    - bone: {fileID: 6741114186472516256}
+      normalizedDistanceFromRoot: 0.7775632
+      lossyScale: 0.9999998
+    - bone: {fileID: 2636989250736996664}
+      normalizedDistanceFromRoot: 0.8429288
+      lossyScale: 0.99999976
+    - bone: {fileID: 6727539069870592055}
+      normalizedDistanceFromRoot: 0.91878194
+      lossyScale: 0.99999994
+    - bone: {fileID: 1936377964600207993}
+      normalizedDistanceFromRoot: 0.7713763
+      lossyScale: 0.99999976
+    - bone: {fileID: 8775478108529102606}
+      normalizedDistanceFromRoot: 0.83427274
+      lossyScale: 0.9999997
+    - bone: {fileID: 9195763597024933208}
+      normalizedDistanceFromRoot: 0.9101878
+      lossyScale: 0.9999997
+    - bone: {fileID: 2963195145665492893}
+      normalizedDistanceFromRoot: 0.7275297
+      lossyScale: 0.9999998
+    - bone: {fileID: 6584903380823294427}
+      normalizedDistanceFromRoot: 0.38164994
+      lossyScale: 0.9999999
+    - bone: {fileID: 5926739402192531816}
+      normalizedDistanceFromRoot: 0.55080634
+      lossyScale: 0.99999994
+    - bone: {fileID: 7821723255740660825}
+      normalizedDistanceFromRoot: 0.76019186
+      lossyScale: 0.99999994
+    - bone: {fileID: 791291526442415813}
+      normalizedDistanceFromRoot: 1
+      lossyScale: 1
+    - bone: {fileID: 2620789519507219426}
+      normalizedDistanceFromRoot: 0.37177747
+      lossyScale: 0.9999999
+    - bone: {fileID: 1700635982630530011}
+      normalizedDistanceFromRoot: 0.51869565
+      lossyScale: 0.99999976
+    - bone: {fileID: 2782747151077295754}
+      normalizedDistanceFromRoot: 0.6875768
+      lossyScale: 0.9999998
+    - bone: {fileID: 4308341065098162957}
+      normalizedDistanceFromRoot: 0.9533156
+      lossyScale: 0.9999999
+    jiggleColliders: []
 --- !u!23 &2311527194450025130 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 3555944776404967675, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
@@ -487,9 +541,19 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -5200746513215636261, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &2786531486179026856 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -5195237740622701063, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &2963195145665492893 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4058327219268931020, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2982940088201685152 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4046758486520353521, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
 --- !u!23 &3205806486236068434 stripped
@@ -577,6 +641,11 @@ MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 6324021728896649345, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &5181513207609511585 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6243431216210523376, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
 --- !u!23 &5501212105365473634 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: -2516023380860456141, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
@@ -642,9 +711,19 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -3692864895632207631, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &6823907268205642333 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -3459306766682687476, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
 --- !u!23 &7234477385806603083 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 8442973359612238106, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &7399367643610947319 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8638648422467658918, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &7487477589395673440 stripped
@@ -660,6 +739,11 @@ MeshRenderer:
 --- !u!4 &7821723255740660825 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 9061566323192628744, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &7920955412260405488 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8980621487792863905, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &8140592584355694757 stripped
@@ -685,6 +769,11 @@ Transform:
 --- !u!23 &8459504219987345431 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 7217936594376653382, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
+  m_PrefabInstance: {fileID: 1246777275687336529}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8631707078603747525 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -1836190425330103660, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}
   m_PrefabInstance: {fileID: 1246777275687336529}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &8633496001689150107 stripped

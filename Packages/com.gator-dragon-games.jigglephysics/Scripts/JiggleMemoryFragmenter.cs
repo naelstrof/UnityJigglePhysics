@@ -39,16 +39,22 @@ public class JiggleMemoryFragmenter {
                 return true;
             }
         }
-
         startIndex = -1;
         return false;
     }
 
     public void Resize(int newSize) {
         Assert.IsTrue(startingSize <= newSize);
-        var fragment = fragments[^1];
-        fragment.count += newSize - startingSize;
-        fragments[^1] = fragment;
+        if (fragments.Count != 0) {
+            var fragment = fragments[^1];
+            fragment.count += newSize - startingSize;
+            fragments[^1] = fragment;
+        } else {
+            fragments.Add(new Fragment {
+                startIndex = startingSize,
+                count = newSize - startingSize
+            });
+        }
     }
 
     public void Free(int startIndex, int size) {

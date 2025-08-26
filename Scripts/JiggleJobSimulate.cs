@@ -195,21 +195,6 @@ public struct JiggleJobSimulate : IJobFor {
 
             var parent = tree.points+point->parentIndex;
 
-            #region Special root particle solve
-
-            if (parent->parentIndex == -1) {
-                var child = tree.points[point->childrenIndices[0]];
-                point->workingPosition = math.lerp(point->workingPosition, point->pose,
-                    point->parameters.rootElasticity * point->parameters.rootElasticity);
-                var head = point->pose;
-                var tail = child.pose;
-                var diffasdf = head - tail;
-                parent->workingPosition += diffasdf;
-                continue;
-            }
-
-            #endregion
-
             #region Collisions
             
             // TODO: to convert a float to a grid location we just cast, but this always rounds towards zero. Probably should be a math.round()
@@ -250,9 +235,24 @@ public struct JiggleJobSimulate : IJobFor {
 
             #endregion
             
+            #region Special root particle solve
+
+            if (parent->parentIndex == -1) {
+                var child = tree.points[point->childrenIndices[0]];
+                point->workingPosition = point->workingPosition = math.lerp(point->workingPosition, point->pose,
+                    point->parameters.rootElasticity * point->parameters.rootElasticity);
+                var head = point->pose;
+                var tail = child.pose;
+                var diffasdf = head - tail;
+                parent->workingPosition = point->workingPosition + diffasdf;
+                continue;
+            }
+
+            #endregion
+
             #region Angle Constraint
             
-            var length_elasticity = parent->parameters.lengthElasticity;
+            var length_elasticity = parent->parameters.lengthElasticity * parent->parameters.lengthElasticity;
             var parentAimPose = math.normalizesafe(point->parentPose - parent->parentPose, new float3(0,0,1));
             var parentAim = math.normalizesafe(parent->workingPosition - parent->parentPose, new float3(0,0,1));
             if (parent->parentIndex != -1) {
@@ -309,50 +309,48 @@ public struct JiggleJobSimulate : IJobFor {
 
             //continue;
 
-            #region Back-propagated motion for collisions
-
-            //if (parent->parameters is { angleElasticity: 1f, lengthElasticity: 1f }) {
-            //    // FIXME: Also check if collisions are disabled
-            //    point->workingPosition = forwardConstraint;
-            //    continue;
-            //}
-
-            if (point->childenCount > 0) {
-                // Back-propagated motion specifically for collision enabled chains
-                var child = tree.points[point->childrenIndices[0]];
-                var aimPose = math.normalizesafe(child.pose - point->parentPose, new float3(0,0,1));
-                var aimSkip = math.normalizesafe(child.workingPosition - parent->workingPosition, new float3(0,0,1));
-                var rotChildAimToSkip = FromToRotation(aimPose, aimSkip);
-                var aimParentPose = math.normalizesafe(point->pose - point->parentPose);
-                var workingLength = math.length(point->workingPosition - parent->workingPosition);
-                var targetPos = math.rotate(rotChildAimToSkip, (aimParentPose * workingLength)) + parent->workingPosition;
-
-                var errorBackwardConstraint = math.length(point->workingPosition - targetPos);
-                if (workingLength != 0) {
-                    errorBackwardConstraint /= workingLength;
-                }
-                errorBackwardConstraint = math.min(errorBackwardConstraint, 1.0f);
-                errorBackwardConstraint = math.pow(errorBackwardConstraint, parent->parameters.elasticitySoften);
-                var backward_constraint = math.lerp(point->workingPosition, targetPos,
-                    (parent->parameters.angleElasticity * parent->parameters.angleElasticity * errorBackwardConstraint));
-
-                var child_length_elasticity = point->parameters.lengthElasticity * point->parameters.lengthElasticity;
-
-                var cdiff = backward_constraint - child.workingPosition;
-                var cdir = math.normalizesafe(cdiff);
-                backward_constraint = math.lerp(backward_constraint,
-                    child.workingPosition + cdir * child.desiredLengthToParent, child_length_elasticity * 0.5f);
-                var notFoldedBack = 1f-math.clamp(math.dot(math.normalizesafe(parent->workingPosition - point->workingPosition), aimSkip)+1f,0f,1f);
-                point->workingPosition = math.lerp(point->workingPosition, backward_constraint, notFoldedBack);
-            }
-
-            #endregion
-            
             #region Length Constraint
 
             var offsetFromParent = point->workingPosition - parent->workingPosition;
             var offsetFromParentNormalized = math.normalizesafe(offsetFromParent, new float3(0, 0, 1));
             point->workingPosition = parent->workingPosition + math.lerp(offsetFromParent, offsetFromParentNormalized * point->desiredLengthToParent, length_elasticity);
+
+            #endregion
+            
+            #region Back-propagated motion for collisions
+
+            if (point->childenCount > 0) {
+                // Back-propagated motion specifically for collision enabled chains
+                var child = tree.points+point->childrenIndices[0];
+                var child_length_elasticity = point->parameters.lengthElasticity * point->parameters.lengthElasticity;
+                var parentToChildPose = math.normalizesafe(child->pose - point->parentPose, new float3(0,0,1));
+                var parentToChild = math.normalizesafe(child->workingPosition - parent->workingPosition, new float3(0,0,1));
+                var parentToChildRotCorrection = FromToRotation(parentToChildPose, parentToChild);
+                var targetVect = point->pose - parent->pose;
+                var currentPointLength = math.length(point->workingPosition-parent->workingPosition);
+                targetVect = math.normalizesafe(targetVect, new float3(0,0,1)) * currentPointLength;
+                var targetPos = math.rotate(parentToChildRotCorrection, targetVect) + parent->workingPosition;
+
+                //var targetFromChild = targetPos - child->workingPosition;
+                //var targetfromChildDist = math.length(targetFromChild);
+                //targetPos = child->workingPosition + math.lerp(
+                //    targetFromChild,
+                //    math.normalizesafe(targetFromChild, new float3(0,0,1)) * child->desiredLengthToParent,
+                //    child_length_elasticity
+                //    );
+
+                //var errorBackwardConstraint = math.length(point->workingPosition - targetPos);
+                //if (targetfromChildDist != 0) {
+                //    errorBackwardConstraint /= targetfromChildDist;
+                //}
+                //errorBackwardConstraint = math.min(errorBackwardConstraint, 1.0f);
+                //errorBackwardConstraint = math.pow(errorBackwardConstraint, parent->parameters.elasticitySoften);
+                var childAngleElasticity = point->parameters.angleElasticity * point->parameters.angleElasticity;
+                point->workingPosition = math.lerp(point->workingPosition, targetPos, 0.8f);
+
+                //var notFoldedBack = 1f;//-math.clamp(math.dot(math.normalizesafe(parent->workingPosition - point->workingPosition), parentToChild)+1f,0f,1f);
+                //point->workingPosition = math.lerp(point->workingPosition, backward_constraint, notFoldedBack);
+            }
 
             #endregion
             

@@ -200,15 +200,13 @@ public class JiggleJobs {
     }
 
     public void OnDrawGizmos() {
-        if (hasHandleSimulate) {
-            handleSimulate.Complete();
-            jobSimulate.jiggleTrees.CopyTo(_memoryBus.jiggleTreeStructs);
-            var count = _memoryBus.jiggleTreeStructs.Length;
-             for (int i = 0; i < count; i++) {
-                 var tree = _memoryBus.jiggleTreeStructs[i];
-                 tree.OnGizmoDraw();
-             }
-         }
+        if (!hasHandleSimulate || !Application.isEditor) return;
+        handleSimulate.Complete();
+        jobSimulate.jiggleTrees.CopyTo(_memoryBus.jiggleTreeStructs);
+        for (int i = 0; i < _memoryBus.treeCount; i++) {
+            var tree = _memoryBus.jiggleTreeStructs[i];
+            tree.OnGizmoDraw();
+        }
     }
 }
 

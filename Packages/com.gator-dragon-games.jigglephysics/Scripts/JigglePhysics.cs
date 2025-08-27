@@ -176,12 +176,16 @@ public static class JigglePhysics {
             animated = false,
         });
         tempTransforms.Add(jiggleRig.rootBone);
-        Visit(jiggleRig.rootBone, tempTransforms, tempPoints, 0, jiggleRig, jiggleRig.rootBone.position, 0f, out int childIndex);
-        unsafe {
-            var rootPoint = tempPoints[0];
-            rootPoint.childrenIndices[0] = childIndex;
-            tempPoints[0] = rootPoint;
+        Visit(jiggleRig.rootBone, tempTransforms, tempPoints, 0, jiggleRig, backProjection, 0f, out int childIndex);
+        if (childIndex != -1) {
+            unsafe {
+                var rootPoint = tempPoints[0];
+                rootPoint.childrenIndices[rootPoint.childenCount] = childIndex;
+                rootPoint.childenCount++;
+                tempPoints[0] = rootPoint;
+            }
         }
+
         Profiler.EndSample();
         bool hasSegment = segment != null;
         if (hasSegment && segment.jiggleTree != null) {
@@ -215,10 +219,49 @@ public static class JigglePhysics {
             lastJiggleRig = currentJiggleTreeSegment.rig;
         }
         if (!lastJiggleRig.GetIsExcluded(t)) {
-            transforms.Add(t);
+            var validChildrenCount = lastJiggleRig.GetValidChildrenCount(t);
+            var currentPosition = t.position;
             var lossyScaleSample = t.lossyScale;
             var lossyScale = (lossyScaleSample.x + lossyScaleSample.y + lossyScaleSample.z) / 3f;
             var cachedLossyScale = lastJiggleRig.GetCachedLossyScale(t);
+            const float MERGE_DISTANCE = 0.001f;
+            if (Vector3.Distance(t.position, lastPosition) < MERGE_DISTANCE) {
+                if (validChildrenCount > 0) {
+                    for (int i = 0; i < validChildrenCount; i++) {
+                        var child = lastJiggleRig.GetValidChild(t, i);
+                        Visit(child, transforms, points, parentIndex, lastJiggleRig, lastPosition, currentLength, out int childIndex);
+                        unsafe {
+                            // WEIRD
+                            var record = points[parentIndex];
+                            record.childrenIndices[record.childenCount] = childIndex;
+                            record.childenCount++;
+                            points[parentIndex] = record;
+                        }
+                    }
+                    newIndex = -1;
+                } else {
+                    transforms.Add(t);
+                    points.Add(new JiggleSimulatedPoint() { // virtual projected tip
+                        position = currentPosition + (currentPosition - lastPosition),
+                        lastPosition = currentPosition + (currentPosition - lastPosition),
+                        childenCount = 0,
+                        distanceFromRoot = currentLength,
+                        parameters = lastJiggleRig.GetJiggleBoneParameter(lastJiggleRig.GetNormalizedDistanceFromRoot(t), cachedLossyScale, lossyScale),
+                        parentIndex = parentIndex,
+                        hasTransform = false,
+                        animated = false,
+                    });
+                    unsafe { // WEIRD
+                        var record = points[parentIndex];
+                        record.childrenIndices[record.childenCount] = points.Count - 1;
+                        record.childenCount++;
+                        points[parentIndex] = record;
+                    }
+                    newIndex = points.Count - 1;
+                }
+                return;
+            }
+            transforms.Add(t);
             var parameters = lastJiggleRig.GetJiggleBoneParameter(lastJiggleRig.GetNormalizedDistanceFromRoot(t), cachedLossyScale, lossyScale);
             if ((lastJiggleRig.excludeRoot && t == lastJiggleRig.rootBone) || lastJiggleRig.GetIsExcluded(t)) {
                 parameters = new JigglePointParameters() {
@@ -233,13 +276,11 @@ public static class JigglePhysics {
                 currentLength += Vector3.Distance(lastPosition, t.position);
             }
             
-            var currentPosition = t.position;
 
-            var validChildrenCount = lastJiggleRig.GetValidChildrenCount(t);
             points.Add(new JiggleSimulatedPoint() { // Regular point
                 position = currentPosition,
                 lastPosition = currentPosition,
-                childenCount = validChildrenCount == 0 ? 1 : validChildrenCount,
+                childenCount = 0,
                 distanceFromRoot = currentLength,
                 parameters = parameters,
                 parentIndex = parentIndex,
@@ -262,17 +303,22 @@ public static class JigglePhysics {
                 });
                 unsafe { // WEIRD
                     var record = points[newIndex];
-                    record.childrenIndices[0] = points.Count - 1;
+                    record.childrenIndices[record.childenCount] = points.Count - 1;
+                    record.childenCount++;
                     points[newIndex] = record;
                 }
             } else {
                 for (int i = 0; i < validChildrenCount; i++) {
                     var child = lastJiggleRig.GetValidChild(t, i);
                     Visit(child, transforms, points, newIndex, lastJiggleRig, currentPosition, currentLength, out int childIndex);
-                    unsafe { // WEIRD
-                        var record = points[newIndex];
-                        record.childrenIndices[i] = childIndex;
-                        points[newIndex] = record;
+                    if (childIndex != -1) {
+                        unsafe {
+                            // WEIRD
+                            var record = points[newIndex];
+                            record.childrenIndices[record.childenCount] = childIndex;
+                            record.childenCount++;
+                            points[newIndex] = record;
+                        }
                     }
                 }
             }

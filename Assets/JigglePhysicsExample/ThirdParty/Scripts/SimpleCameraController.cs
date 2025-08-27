@@ -2,11 +2,6 @@
 
 namespace UnityTemplateProjects {
     public class SimpleCameraController : MonoBehaviour {
-        public enum UpdateMode {
-            FixedUpdate,
-            LateUpdate,
-        }
-        public UpdateMode mode;
         private Vector3 vel;
         public Transform targetLookat;
         public void SetNewTarget(Transform target) {
@@ -27,10 +22,7 @@ namespace UnityTemplateProjects {
             distance = Mathf.Max(distance, 1f);
         }
         public void LateUpdate() {
-            if (mode == UpdateMode.LateUpdate) {Simulate();}
-        }
-        public void FixedUpdate() {
-            if (mode == UpdateMode.FixedUpdate) {Simulate();}
+            Simulate();
         }
     }
 

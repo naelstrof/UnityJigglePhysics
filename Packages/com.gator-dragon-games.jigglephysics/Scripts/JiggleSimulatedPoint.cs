@@ -11,6 +11,8 @@ public unsafe struct JiggleSimulatedPoint {
     public float3 workingPosition;
     public float3 parentPose;
     public float3 pose;
+    public float3 debug;
+    public float3 debug2;
     public float desiredLengthToParent;
     public bool animated;
     public float worldRadius;

@@ -230,12 +230,14 @@ public static class JigglePhysics {
                     for (int i = 0; i < validChildrenCount; i++) {
                         var child = lastJiggleRig.GetValidChild(t, i);
                         Visit(child, transforms, points, parentIndex, lastJiggleRig, lastPosition, currentLength, out int childIndex);
-                        unsafe {
-                            // WEIRD
-                            var record = points[parentIndex];
-                            record.childrenIndices[record.childenCount] = childIndex;
-                            record.childenCount++;
-                            points[parentIndex] = record;
+                        if (childIndex != -1) {
+                            unsafe {
+                                // WEIRD
+                                var record = points[parentIndex];
+                                record.childrenIndices[record.childenCount] = childIndex;
+                                record.childenCount++;
+                                points[parentIndex] = record;
+                            }
                         }
                     }
                     newIndex = -1;

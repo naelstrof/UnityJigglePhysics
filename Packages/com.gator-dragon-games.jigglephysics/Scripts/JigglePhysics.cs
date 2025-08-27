@@ -169,7 +169,7 @@ public static class JigglePhysics {
         tempPoints.Add(new JiggleSimulatedPoint() { // Back projected virtual root
             position = backProjection,
             lastPosition = backProjection,
-            childenCount = 1,
+            childenCount = 0,
             parameters = jiggleRig.GetJiggleBoneParameter(0f, cachedScale, lossyScale),
             parentIndex = -1,
             hasTransform = false,

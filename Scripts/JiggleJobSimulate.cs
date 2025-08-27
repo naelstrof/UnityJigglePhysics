@@ -124,14 +124,17 @@ public struct JiggleJobSimulate : IJobFor {
         }
     }
 
-    quaternion FromToRotation(float3 from, float3 to) {
-        var axis = math.cross(from, to);
+    quaternion FromToRotationFromNormalizedVectors(float3 from, float3 to) {
+        var axis = math.normalizesafe(math.cross(from, to), new float3(0f, 0f, 1f));
         var angle = math.acos(math.clamp(math.dot(from, to), -1f, 1f));
         return quaternion.AxisAngle(axis, angle);
     }
 
     float float3Angle(float3 a, float3 b) {
-        return math.degrees(math.acos(math.clamp(math.dot(math.normalizesafe(a, new float3(0,0,1)), math.normalizesafe(b, new float3(0,0,1))), -1f, 1f)));
+        return math.acos(math.dot(
+                    math.normalizesafe(a, new float3(0,0,1)), 
+                    math.normalizesafe(b, new float3(0,0,1))
+                    ));
     }
     
 
@@ -161,11 +164,9 @@ public struct JiggleJobSimulate : IJobFor {
                 var pValue = -(tValue - 0.5f * 2f);
                 var ppValue = -pValue;
                 pValue = math.pow(math.clamp(pValue+1f, 0f, 1f),0.5f);
-                ppValue = math.pow(math.clamp(ppValue+1f, 0f, 1f),0.5f);
                 if (!(otherPoint->parameters.angleElasticity == 1
                       && otherPoint->parameters.rootElasticity == 1
                       && otherPoint->parameters.lengthElasticity == 1)) {
-                    //point->desiredConstraint = math.lerp(point->desiredConstraint, point->desiredConstraint + depenetrationVector, hardness);
                     return depenetrationVector * hardness * pValue;
                 }
                 break;
@@ -185,6 +186,20 @@ public struct JiggleJobSimulate : IJobFor {
         return segmentPoint1 + tValue * segment;
     }
 
+    private unsafe void DepenetrateCollider(JiggleTreeJobData tree, JiggleSimulatedPoint* point, JiggleSimulatedPoint* parent, JiggleCollider collider) {
+        var collisionDepenetration = new float3(0f, 0f, 0f);
+        collisionDepenetration = DoDepenetration(point, parent, collider);
+        var maxDepenetrationMagnitude = math.length(collisionDepenetration);
+        for (int childIndex = 0; childIndex < point->childenCount; childIndex++) {
+            var child = tree.points + point->childrenIndices[childIndex];
+            var newCollisionDepenetration = DoDepenetration(point, child, collider);
+            maxDepenetrationMagnitude = math.max(maxDepenetrationMagnitude, math.length(newCollisionDepenetration));
+            collisionDepenetration += newCollisionDepenetration;
+        }
+        collisionDepenetration = math.normalizesafe(collisionDepenetration, new float3(0,0,1)) * maxDepenetrationMagnitude;
+        point->workingPosition += collisionDepenetration;
+    }
+
     private unsafe void Constrain(JiggleTreeJobData tree) {
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points+i;
@@ -201,36 +216,19 @@ public struct JiggleJobSimulate : IJobFor {
             int extentRange = (int)tree.extents;
             for (int x = -extentRange; x < extentRange; x++) {
                 for (int y = -extentRange; y < extentRange; y++) {
-                    if (broadPhaseMap.TryGetValue(JiggleGridCell.GetKey(tree.points[0].position)+new int2(x,y), out var gridCell)) {
+                    if (broadPhaseMap.TryGetValue(
+                            JiggleGridCell.GetKey(tree.points[0].position)+new int2(x,y), 
+                            out var gridCell
+                            )) {
                         for (int index = 0; index < gridCell.count; index++) {
-                            var collisionDepenetration = new float3(0f, 0f, 0f);
-                            collisionDepenetration = DoDepenetration(point, parent, sceneColliders[gridCell.colliderIndices[index]]);
-                            var maxDepenetrationMagnitude = math.length(collisionDepenetration);
-                            for (int childIndex = 0; childIndex < point->childenCount; childIndex++) {
-                                var child = tree.points + point->childrenIndices[childIndex];
-                                var newCollisionDepenetration = DoDepenetration(point, child, sceneColliders[gridCell.colliderIndices[index]]);
-                                maxDepenetrationMagnitude = math.max(maxDepenetrationMagnitude, math.length(newCollisionDepenetration));
-                                collisionDepenetration += newCollisionDepenetration;
-                                collisionDepenetration = math.normalizesafe(collisionDepenetration, new float3(0,0,1)) * maxDepenetrationMagnitude;
-                            }
-                            point->workingPosition += collisionDepenetration;
+                            DepenetrateCollider(tree, point, parent, sceneColliders[gridCell.colliderIndices[index]]);
                         }
                     }
                 }
             }
 
             for (int index = (int)tree.colliderIndexOffset; index < tree.colliderCount; index++) {
-                var collisionDepenetration = new float3(0f, 0f, 0f);
-                collisionDepenetration = DoDepenetration(point, parent, personalColliders[index]);
-                var maxDepenetrationMagnitude = math.length(collisionDepenetration);
-                for (int childIndex = 0; childIndex < point->childenCount; childIndex++) {
-                    var child = tree.points + point->childrenIndices[childIndex];
-                    var newCollisionDepenetration = DoDepenetration(point, child, personalColliders[index]);
-                    maxDepenetrationMagnitude = math.max(maxDepenetrationMagnitude, math.length(newCollisionDepenetration));
-                    collisionDepenetration += newCollisionDepenetration;
-                    collisionDepenetration = math.normalizesafe(collisionDepenetration, new float3(0,0,1)) * maxDepenetrationMagnitude;
-                }
-                point->workingPosition += collisionDepenetration;
+                DepenetrateCollider(tree, point, parent, personalColliders[index]);
             }
 
             #endregion
@@ -250,18 +248,64 @@ public struct JiggleJobSimulate : IJobFor {
 
             #endregion
 
+            #region Back-propagated motion for collisions
+
+            if (point->childenCount > 0) {
+                // Back-propagated motion specifically for collision enabled chains
+                var child = tree.points+point->childrenIndices[0];
+                if (child->hasTransform) {
+                    var child_length_elasticity = point->parameters.lengthElasticity * point->parameters.lengthElasticity;
+                    var parentToChildPose = child->pose - parent->pose;
+                    var parentToChild = child->workingPosition - parent->workingPosition;
+                    var parentToChildPoseNormalized = math.normalizesafe(parentToChildPose, new float3(0,0,1));
+                    var parentToChildNormalized = math.normalizesafe(parentToChild, new float3(0,0,1));
+                    var parentToChildRotCorrection = FromToRotationFromNormalizedVectors(parentToChildPoseNormalized, parentToChildNormalized);
+                    var targetVect = point->pose - parent->pose;
+                    var currentPointLength = math.length(point->workingPosition-parent->workingPosition);
+                    targetVect = math.normalizesafe(targetVect, new float3(0,0,1)) * currentPointLength;
+                    var targetPos = math.rotate(parentToChildRotCorrection, targetVect) + parent->workingPosition;
+
+                    var targetFromChild = targetPos - child->workingPosition;
+                    var targetfromChildDist = math.length(targetFromChild);
+                    targetPos = child->workingPosition + math.lerp(
+                        targetFromChild,
+                        math.normalizesafe(targetFromChild, new float3(0,0,1)) * child->desiredLengthToParent,
+                        child_length_elasticity
+                        );
+
+                    //var errorBackwardConstraint = math.length(point->workingPosition - targetPos);
+                    //if (targetfromChildDist != 0) {
+                    //    errorBackwardConstraint /= targetfromChildDist;
+                    //}
+                    //errorBackwardConstraint = math.min(errorBackwardConstraint, 1.0f);
+                    //errorBackwardConstraint = math.pow(errorBackwardConstraint, parent->parameters.elasticitySoften);
+                    var notFoldedBack = math.clamp(-math.dot(math.normalizesafe(parent->workingPosition - point->workingPosition), math.normalizesafe(child->workingPosition - point->workingPosition))+1f,0f,1f);
+                    var childAngleElasticity = point->parameters.angleElasticity * point->parameters.angleElasticity;
+                    point->workingPosition = math.lerp(point->workingPosition, targetPos, childAngleElasticity * notFoldedBack);
+
+                    //point->workingPosition = math.lerp(point->workingPosition, backward_constraint, notFoldedBack);
+                    }
+            }
+
+            #endregion
+            
             #region Angle Constraint
             
+            var parentParentWorkingPosition = parent->parentPose;
+            if (parent->parentIndex != -1) {
+                var parentParent = tree.points+parent->parentIndex;
+                parentParentWorkingPosition = parentParent->workingPosition;
+            }
             var length_elasticity = parent->parameters.lengthElasticity * parent->parameters.lengthElasticity;
             var parentAimPose = math.normalizesafe(point->parentPose - parent->parentPose, new float3(0,0,1));
-            var parentAim = math.normalizesafe(parent->workingPosition - parent->parentPose, new float3(0,0,1));
+            var parentAim = math.normalizesafe(parent->workingPosition - parentParentWorkingPosition, new float3(0,0,1));
             if (parent->parentIndex != -1) {
                 var parentParent = tree.points+parent->parentIndex;
                 parentAim = math.normalizesafe(parent->workingPosition - parentParent->workingPosition, new float3(0,0,1));
             }
 
             var currentLength = math.length(point->workingPosition - parent->workingPosition);
-            var from_to_rot = FromToRotation(parentAimPose, parentAim);
+            var from_to_rot = FromToRotationFromNormalizedVectors(parentAimPose, parentAim);
             var constraintTarget = math.rotate(from_to_rot, point->pose - point->parentPose);
 
             var desiredPosition = parent->workingPosition + constraintTarget;
@@ -276,34 +320,6 @@ public struct JiggleJobSimulate : IJobFor {
                 parent->parameters.angleElasticity * error);
             
             #endregion
-            
-            if (point->parameters.angleLimited) {
-                // --- Angle Limit Constraint
-                float angleA_deg = point->parameters.angleLimit;
-                // TODO: This should be radians instead of degrees
-                float angleC_deg = float3Angle(
-                    point->workingPosition - desiredPosition,
-                    parent->workingPosition - desiredPosition
-                ); // known included angle C
-
-                float b = math.distance(point->parentPose, desiredPosition); // known side opposite angle B
-
-                float angleB_deg = 180f - angleA_deg - angleC_deg;
-
-                float angleA_rad = angleA_deg * Mathf.Deg2Rad;
-                float angleB_rad = angleB_deg * Mathf.Deg2Rad;
-
-                var oppo = math.sin(angleB_rad);
-                float a = oppo == 0f ? 0f : b * math.sin(angleA_rad) / oppo;
-
-                var correctionDir = math.normalizesafe(desiredPosition - point->workingPosition, new float3(0,0,1));
-                var correctionDistance = math.length(desiredPosition - point->workingPosition);
-
-                var angleCorrectionDistance = math.max(0f, correctionDistance - a);
-                var angleCorrection =
-                    (correctionDir * angleCorrectionDistance) * (1f - point->parameters.angleLimitSoften);
-                point->workingPosition += angleCorrection;
-            }
 
             // TODO: Early out if collisions are disabled (or don't for a more accurate solve)
 
@@ -317,39 +333,47 @@ public struct JiggleJobSimulate : IJobFor {
 
             #endregion
             
-            #region Back-propagated motion for collisions
+            #region Angle Limit Constraint
 
-            if (point->childenCount > 0) {
-                // Back-propagated motion specifically for collision enabled chains
-                var child = tree.points+point->childrenIndices[0];
-                var child_length_elasticity = point->parameters.lengthElasticity * point->parameters.lengthElasticity;
-                var parentToChildPose = math.normalizesafe(child->pose - point->parentPose, new float3(0,0,1));
-                var parentToChild = math.normalizesafe(child->workingPosition - parent->workingPosition, new float3(0,0,1));
-                var parentToChildRotCorrection = FromToRotation(parentToChildPose, parentToChild);
-                var targetVect = point->pose - parent->pose;
-                var currentPointLength = math.length(point->workingPosition-parent->workingPosition);
-                targetVect = math.normalizesafe(targetVect, new float3(0,0,1)) * currentPointLength;
-                var targetPos = math.rotate(parentToChildRotCorrection, targetVect) + parent->workingPosition;
+            if (point->parameters.angleLimited) {
+                var angleLimitParentAimPose = math.normalizesafe(point->parentPose - parent->parentPose, new float3(0,0,1));
+                var angleLimitParentAim = math.normalizesafe(parent->workingPosition - parentParentWorkingPosition, new float3(0,0,1));
+                var angleLimitFromTo = FromToRotationFromNormalizedVectors(angleLimitParentAimPose, angleLimitParentAim);
+                var angleLimitConstraintTarget = math.rotate(angleLimitFromTo, point->pose - point->parentPose);
 
-                //var targetFromChild = targetPos - child->workingPosition;
-                //var targetfromChildDist = math.length(targetFromChild);
-                //targetPos = child->workingPosition + math.lerp(
-                //    targetFromChild,
-                //    math.normalizesafe(targetFromChild, new float3(0,0,1)) * child->desiredLengthToParent,
-                //    child_length_elasticity
-                //    );
+                var angleLimitDesiredPosition = parent->workingPosition + angleLimitConstraintTarget;
+                
+                var currentAngleError = float3Angle(
+                    math.normalizesafe(point->workingPosition - parent->workingPosition, new float3(0f, 0f, 1f)),
+                    math.normalizesafe(angleLimitDesiredPosition - parent->workingPosition, new float3(0f, 0f, 1f))
+                );
+                
+                var A = point->parameters.angleLimit * math.PI * 0.5f;
 
-                //var errorBackwardConstraint = math.length(point->workingPosition - targetPos);
-                //if (targetfromChildDist != 0) {
-                //    errorBackwardConstraint /= targetfromChildDist;
-                //}
-                //errorBackwardConstraint = math.min(errorBackwardConstraint, 1.0f);
-                //errorBackwardConstraint = math.pow(errorBackwardConstraint, parent->parameters.elasticitySoften);
-                var childAngleElasticity = point->parameters.angleElasticity * point->parameters.angleElasticity;
-                point->workingPosition = math.lerp(point->workingPosition, targetPos, 0.8f);
+                if (currentAngleError > A) {
+                    var C = float3Angle(
+                        point->workingPosition - angleLimitDesiredPosition,
+                        parent->workingPosition - angleLimitDesiredPosition
+                    ); // known included angle C
 
-                //var notFoldedBack = 1f;//-math.clamp(math.dot(math.normalizesafe(parent->workingPosition - point->workingPosition), parentToChild)+1f,0f,1f);
-                //point->workingPosition = math.lerp(point->workingPosition, backward_constraint, notFoldedBack);
+                    var b = math.distance(parent->workingPosition, angleLimitDesiredPosition); // known side opposite angle B
+
+                    var B = math.PI - A - C;
+                
+                    var oppositeCheck = math.sin(B);
+                    var a = oppositeCheck == 0f ? 0f : b * math.sin(A) / oppositeCheck;
+
+                    var correctionVector = angleLimitDesiredPosition - point->workingPosition;
+                    var correctionDir = math.normalizesafe(correctionVector, new float3(0,0,1));
+                    var correctionDistance = math.length(correctionVector);
+
+                    var angleCorrectionDistance = math.max(0f, correctionDistance - a);
+                    var angleCorrection =
+                        (correctionDir * angleCorrectionDistance) * (1f - point->parameters.angleLimitSoften * 0.5f);
+                    point->debug = angleCorrection;
+                    point->workingPosition += angleCorrection;
+                }
+                
             }
 
             #endregion
@@ -410,7 +434,7 @@ public struct JiggleJobSimulate : IJobFor {
             }
 
             var animPoseToPhysicsPose = math.slerp(quaternion.identity,
-                FromToRotation(cachedAnimatedVector, simulatedVector), point->parameters.blend);
+                FromToRotationFromNormalizedVectors(cachedAnimatedVector, simulatedVector), point->parameters.blend);
 
             var transform = new JiggleTransform() {
                 isVirtual = !point->hasTransform,

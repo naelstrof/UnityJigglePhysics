@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Unity.Collections;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
@@ -109,6 +110,18 @@ public class JiggleMemoryBus {
         } else {
             dummyTransforms = new List<Transform>();
         }
+    }
+
+    public void GetResults(JobHandle interpolationJobHandle, JobHandle simulateJobHandle, out JiggleTransform[] poses, out JiggleTreeJobData[] treeJobData, out int poseCount, out int treeCount) {
+        interpolationJobHandle.Complete();
+        simulateJobHandle.Complete();
+        
+        ReadIn(interpolationOutputPoses, interpolationOutputPosesArray, transformCount);
+        ReadIn(jiggleTreeStructs, jiggleTreeStructsArray, this.treeCount);
+        poseCount = transformCount;
+        treeCount = this.treeCount;
+        poses = interpolationOutputPosesArray;
+        treeJobData = jiggleTreeStructsArray;
     }
 
     public static Transform GetDummyTransform(int index) {

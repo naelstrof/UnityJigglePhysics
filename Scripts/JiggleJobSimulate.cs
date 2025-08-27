@@ -26,7 +26,9 @@ public struct JiggleJobSimulate : IJobFor {
 
     public NativeArray<JiggleTreeJobData> jiggleTrees;
 
-    public JiggleJobSimulate(JiggleMemoryBus bus) {
+    private float deltaTimeSquared;
+
+    public JiggleJobSimulate(JiggleMemoryBus bus, float fixedDeltaTime) {
         inputPoses = bus.simulateInputPoses;
         jiggleTrees = bus.jiggleTreeStructs;
         outputPoses = bus.simulationOutputPoseData;
@@ -36,6 +38,7 @@ public struct JiggleJobSimulate : IJobFor {
         broadPhaseMap = bus.broadPhaseMap;
         gravity = Physics.gravity;
         sceneColliderCount = 0;
+        deltaTimeSquared = fixedDeltaTime * fixedDeltaTime;
     }
 
     public void UpdateArrays(JiggleMemoryBus bus) {
@@ -112,14 +115,14 @@ public struct JiggleJobSimulate : IJobFor {
             var velocity = delta - localSpaceVelocity;
             if (parent->parentIndex != -1) {
                 point->workingPosition = point->position + velocity * (1f - parent->parameters.airDrag) +
-                                        localSpaceVelocity * (1f - parent->parameters.drag) + gravity *
-                                        parent->parameters.gravityMultiplier *
-                                        (float)JigglePhysics.FIXED_DELTA_TIME_SQUARED;
+                                         localSpaceVelocity * (1f - parent->parameters.drag) + gravity *
+                                         parent->parameters.gravityMultiplier *
+                                         deltaTimeSquared;
             } else {
                 point->workingPosition = point->position + velocity * (1f - point->parameters.airDrag) +
-                                        localSpaceVelocity * (1f - point->parameters.drag) + gravity *
-                                        point->parameters.gravityMultiplier *
-                                        (float)JigglePhysics.FIXED_DELTA_TIME_SQUARED;
+                                         localSpaceVelocity * (1f - point->parameters.drag) + gravity *
+                                         point->parameters.gravityMultiplier *
+                                         deltaTimeSquared;
             }
         }
     }
@@ -370,7 +373,6 @@ public struct JiggleJobSimulate : IJobFor {
                     var angleCorrectionDistance = math.max(0f, correctionDistance - a);
                     var angleCorrection =
                         (correctionDir * angleCorrectionDistance) * (1f - point->parameters.angleLimitSoften * 0.5f);
-                    point->debug = angleCorrection;
                     point->workingPosition += angleCorrection;
                 }
                 

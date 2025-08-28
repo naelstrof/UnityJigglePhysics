@@ -186,13 +186,58 @@ public struct JiggleRigData {
     }
 
     public void OnDrawGizmos() {
-        if (jiggleColliders == null) {
-            return;
+        if (jiggleColliders != null) {
+            var count = jiggleColliders.Length;
+            for(int i=0;i<count;i++) {
+                jiggleColliders[i].OnDrawGizmos();
+            }
         }
-        var count = jiggleColliders.Length;
-        for(int i=0;i<count;i++) {
-            jiggleColliders[i].OnDrawGizmos();
+        
+        if (!rootBone) return;
+        Gizmos.color = Color.whiteSmoke;
+        var jiggleTree = JigglePhysics.CreateJiggleTree(this, null);
+        var points = jiggleTree.points;
+        var pointCount = points.Length;
+        var cam = Camera.current;
+        for (var index = 0; index < pointCount; index++) {
+            var simulatedPoint = points[index];
+            if (simulatedPoint.parentIndex == -1) continue;
+            if (!points[simulatedPoint.parentIndex].hasTransform) continue;
+            DrawBone(points[simulatedPoint.parentIndex].position, simulatedPoint.position, jiggleTree.bones[index].lossyScale, points[simulatedPoint.parentIndex].parameters, cam);
         }
+    }
+    
+    private static void DrawWireDisc(Vector3 center, Vector3 normal, float radius, int segmentCount = 32) {
+        normal.Normalize();
+        Vector3 up = normal;
+        Vector3 forward = Vector3.Slerp(up, -up, 0.5f);
+        Vector3 right = Vector3.Cross(up, forward).normalized * radius;
+
+        float angleStep = 360f / segmentCount;
+        Vector3 prevPoint = center + right;
+        for (int i = 1; i <= segmentCount; i++) {
+            float angle = angleStep * i;
+            Quaternion rot = Quaternion.AngleAxis(angle, up);
+            Vector3 nextPoint = center + rot * right;
+            Gizmos.DrawLine(prevPoint, nextPoint);
+            prevPoint = nextPoint;
+        }
+    }
+    
+    private void DrawBone(Vector3 boneHead, Vector3 boneTail, Vector3 boneScale, JigglePointParameters jigglePointParameters, Camera cam) {
+        var camForward = cam.transform.forward;
+        var fixedScreenSize = 0.01f;
+        var toCam = cam.transform.position - boneHead;
+        var distance = toCam.magnitude;
+        var scale = distance * fixedScreenSize;
+        scale = jigglePointParameters.collisionRadius * (boneScale.x + boneScale.y + boneScale.z)/3f;
+        DrawWireDisc(boneHead, camForward, scale);
+        Gizmos.DrawLine(boneHead, boneTail);
+        var boneDirection = (boneTail - boneHead).normalized;
+        var angleLimitScale = 0.05f;
+        DrawWireDisc(boneHead + boneDirection * (angleLimitScale * Mathf.Cos(jigglePointParameters.angleLimit * Mathf.Deg2Rad)),
+            boneDirection,
+            angleLimitScale * Mathf.Sin(jigglePointParameters.angleLimit * Mathf.Deg2Rad));
     }
 #if UNITY_EDITOR
     public VisualElement GetInspectorVisualElement(SerializedProperty serializedProperty) {
@@ -395,33 +440,6 @@ public struct JiggleRigData {
         toggle.RegisterValueChangedCallback(evt => {
             stiffnessCurveElement.style.display = evt.newValue ? DisplayStyle.Flex : DisplayStyle.None;
         });
-    }
-    
-    private void DrawBone(Vector3 boneHead, Vector3 boneTail, Vector3 boneScale, JigglePointParameters jigglePointParameters, Camera cam) {
-        var camForward = cam.transform.forward;
-        var fixedScreenSize = 0.01f;
-        var toCam = cam.transform.position - boneHead;
-        var distance = toCam.magnitude;
-        var scale = distance * fixedScreenSize;
-        scale = jigglePointParameters.collisionRadius * (boneScale.x + boneScale.y + boneScale.z)/3f;
-        Handles.DrawWireDisc(boneHead, camForward, scale);
-        Handles.DrawLine(boneHead, boneTail);
-        var boneDirection = (boneTail - boneHead).normalized;
-        var angleLimitScale = 0.05f;
-        Handles.DrawWireDisc(
-            boneHead + boneDirection * (angleLimitScale * Mathf.Cos(jigglePointParameters.angleLimit * Mathf.Deg2Rad)),
-            boneDirection, angleLimitScale * Mathf.Sin(jigglePointParameters.angleLimit * Mathf.Deg2Rad));
-    }
-    public void OnSceneGUI(Camera cam) {
-        if (!rootBone) return;
-        var jiggleTree = JigglePhysics.CreateJiggleTree(this, null);
-        var points = jiggleTree.points;
-        for (var index = 0; index < points.Length; index++) {
-            var simulatedPoint = points[index];
-            if (simulatedPoint.parentIndex == -1) continue;
-            if (!points[simulatedPoint.parentIndex].hasTransform) continue;
-            DrawBone(points[simulatedPoint.parentIndex].position, simulatedPoint.position, jiggleTree.bones[index].lossyScale, points[simulatedPoint.parentIndex].parameters, cam);
-        }
     }
 #endif
 }

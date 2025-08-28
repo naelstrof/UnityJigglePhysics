@@ -13,7 +13,7 @@ public class PositionRecord : MonoBehaviour {
         recording.Clear();
     }
 
-    private void Update() {
+    private void FixedUpdate() {
         recording.Record(Time.timeSinceLevelLoad, transform.position);
     }
 

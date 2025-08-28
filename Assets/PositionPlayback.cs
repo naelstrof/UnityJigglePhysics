@@ -9,7 +9,7 @@ public class PositionPlayback : MonoBehaviour {
     private float startTime;
     void OnEnable() {
         float min = float.MaxValue;
-        float max = float.MaxValue;
+        float max = float.MinValue;
         foreach (var key in recording.curveX.keys) {
             if (key.time < min) min = key.time;
             if (key.time > max) max = key.time;

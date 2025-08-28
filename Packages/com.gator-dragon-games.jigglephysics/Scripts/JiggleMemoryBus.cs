@@ -412,13 +412,13 @@ public class JiggleMemoryBus {
         #region AddColliders
 
         if (jiggleTreeJobData.colliderCount > 0) {
-            var success =
-                personalColliderMemoryFragmenter.TryAllocate((int)jiggleTreeJobData.colliderCount, out var colliderStartIndex);
+            var success = personalColliderMemoryFragmenter.TryAllocate((int)jiggleTreeJobData.colliderCount, out var colliderStartIndex);
             if (!success) {
                 ResizePersonalColliderCapacity(personalColliderCapacity * 2);
                 personalColliderMemoryFragmenter.TryAllocate((int)jiggleTreeJobData.colliderCount, out colliderStartIndex);
             }
 
+            jiggleTree.SetColliderIndexOffset(colliderStartIndex);
             jiggleTreeJobData.colliderIndexOffset = (uint)colliderStartIndex;
             while (personalColliderTransformAccessList.Count < colliderStartIndex + (int)jiggleTreeJobData.colliderCount) {
                 personalColliderTransformAccessList.Add(jiggleTree.bones[0]);
@@ -455,6 +455,7 @@ public class JiggleMemoryBus {
     }
 
     private void AddTreeToSlice(int index, JiggleTree jiggleTree, JiggleTreeJobData jiggleTreeJobData) {
+        jiggleTree.SetTransformIndexOffset(index);
         jiggleTreeJobData.transformIndexOffset = (uint)index;
         
         if (treeCount + 1 > treeCapacity) {

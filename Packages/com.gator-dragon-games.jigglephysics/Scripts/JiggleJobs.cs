@@ -167,27 +167,26 @@ public class JiggleJobs {
         jobBulkSceneColliderTransformRead.UpdateArrays(_memoryBus.sceneColliders);
         jobBroadPhase.UpdateArrays(_memoryBus);
         jobBroadPhaseClear.UpdateArrays(_memoryBus);
-        
-        handleBulkReset = jobBulkTransformReset.Schedule(_memoryBus.GetTransformAccessArray());
-        hasHandleBulkReset = true;
 
-        handleBulkRead = jobBulkTransformRead.ScheduleReadOnly(_memoryBus.GetTransformAccessArray(), 128, handleBulkReset);
-        hasHandleBulkRead = true;
-
-        handlePersonalColliderRead = jobBulkPersonalColliderTransformRead.ScheduleReadOnly(_memoryBus.GetPersonalColliderTransformAccessArray(), 128);
-        hasHandlePersonalColliderRead = true;
-        
+        handlePersonalColliderRead = jobBulkPersonalColliderTransformRead.ScheduleReadOnly( _memoryBus.GetPersonalColliderTransformAccessArray(), 128);
         handleSceneColliderRead = jobBulkSceneColliderTransformRead.ScheduleReadOnly(_memoryBus.GetSceneColliderTransformAccessArray(), 128);
+        hasHandlePersonalColliderRead = true;
         hasHandleSceneColliderRead = true;
         
         var colliderHandles = JobHandle.CombineDependencies(handlePersonalColliderRead, handleSceneColliderRead);
         
         var broadPhaseClearHandle = jobBroadPhaseClear.Schedule();
         var broadPhaseHandle = jobBroadPhase.Schedule(JobHandle.CombineDependencies(colliderHandles, broadPhaseClearHandle));
+        
+        handleBulkReset = jobBulkTransformReset.Schedule(_memoryBus.GetTransformAccessArray(), colliderHandles);
+        hasHandleBulkReset = true;
+
+        handleBulkRead = jobBulkTransformRead.ScheduleReadOnly(_memoryBus.GetTransformAccessArray(), 128, handleBulkReset);
+        hasHandleBulkRead = true;
 
         jobSimulate.gravity = gravity;
         jobSimulate.timeStamp = simulateTime;
-        handleSimulate = jobSimulate.ScheduleParallel(_memoryBus.treeCount, 1, JobHandle.CombineDependencies(broadPhaseHandle, colliderHandles, handleBulkRead));
+        handleSimulate = jobSimulate.ScheduleParallel(_memoryBus.treeCount, 1, JobHandle.CombineDependencies(broadPhaseHandle, handleBulkRead));
         hasHandleSimulate = true;
     }
 

@@ -11,4 +11,8 @@ public class JiggleColliderExample : MonoBehaviour {
     private void OnDisable() {
         JigglePhysics.RemoveJiggleCollider(jiggleCollider);
     }
+
+    private void OnDrawGizmos() {
+        jiggleCollider.OnDrawGizmos();
+    }
 }

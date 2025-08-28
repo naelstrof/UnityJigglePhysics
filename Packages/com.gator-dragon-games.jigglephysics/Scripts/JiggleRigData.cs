@@ -184,6 +184,16 @@ public struct JiggleRigData {
             jiggleColliders = Array.Empty<JiggleColliderSerializable>() 
         };
     }
+
+    public void OnDrawGizmos() {
+        if (jiggleColliders == null) {
+            return;
+        }
+        var count = jiggleColliders.Length;
+        for(int i=0;i<count;i++) {
+            jiggleColliders[i].OnDrawGizmos();
+        }
+    }
 #if UNITY_EDITOR
     public VisualElement GetInspectorVisualElement(SerializedProperty serializedProperty) {
         var visualElement = new VisualElement();

@@ -234,7 +234,8 @@ public struct JiggleJobSimulate : IJobFor {
                 }
             }
 
-            for (int index = (int)tree.colliderIndexOffset; index < tree.colliderCount; index++) {
+            var endIndex = tree.colliderIndexOffset + tree.colliderCount;
+            for (int index = (int)tree.colliderIndexOffset; index < endIndex; index++) {
                 DepenetrateCollider(tree, point, parent, personalColliders[index]);
             }
 
@@ -291,7 +292,7 @@ public struct JiggleJobSimulate : IJobFor {
                     point->workingPosition = math.lerp(point->workingPosition, targetPos, childAngleElasticity * notFoldedBack);
 
                     //point->workingPosition = math.lerp(point->workingPosition, backward_constraint, notFoldedBack);
-                    }
+                }
             }
 
             #endregion

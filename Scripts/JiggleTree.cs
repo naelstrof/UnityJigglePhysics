@@ -27,6 +27,7 @@ public class JiggleTree {
         }
 
         jiggleTreeJobData = new JiggleTreeJobData(rootID, 0, 0, personalColliders.Length, points);
+        hasJiggleTreeStruct = true;
         return jiggleTreeJobData;
     }
 
@@ -35,6 +36,20 @@ public class JiggleTree {
             jiggleTreeJobData.Dispose();
             hasJiggleTreeStruct = false;
         }
+    }
+
+    public void SetColliderIndexOffset(int offset) {
+        if (!hasJiggleTreeStruct) {
+            GetStruct();
+        }
+        jiggleTreeJobData.colliderIndexOffset = (uint)offset;
+    }
+    
+    public void SetTransformIndexOffset(int offset) {
+        if (!hasJiggleTreeStruct) {
+            GetStruct();
+        }
+        jiggleTreeJobData.transformIndexOffset = (uint)offset;
     }
 
     public JiggleTree(List<Transform> bones, List<JiggleSimulatedPoint> points, List<Transform> personalColliderTransforms, List<JiggleCollider> personalColliders) {

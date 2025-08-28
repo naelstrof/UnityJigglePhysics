@@ -37,6 +37,10 @@ public struct JiggleJobInterpolation : IJobFor {
         outputInterpolatedPoses = bus.interpolationOutputPoses;
         realRootPositions = bus.rootOutputPositions;
     }
+    
+    public void SetFixedDeltaTime(float fixedDeltaTime) {
+        timeCorrection = fixedDeltaTime*2f;
+    }
 
     public void Execute(int index) {
         var prevPose = previousPoses[index];

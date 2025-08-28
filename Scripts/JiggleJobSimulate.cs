@@ -50,6 +50,10 @@ public struct JiggleJobSimulate : IJobFor {
         sceneColliderCount = bus.sceneColliderCount;
         broadPhaseMap = bus.broadPhaseMap;
     }
+    
+    public void SetFixedDeltaTime(float fixedDeltaTime) {
+        deltaTimeSquared = fixedDeltaTime * fixedDeltaTime;
+    }
 
 
     private unsafe void Cache(JiggleTreeJobData tree) {

@@ -56,7 +56,7 @@ public static class JigglePhysics {
         jiggleTrees = new HashSet<JiggleTree>();
         _globalDirty = true;
         jobs?.Dispose();
-        jobs = null;
+        jobs = new JiggleJobs(Time.timeAsDouble, Time.fixedDeltaTime);
     }
 
     public static void Dispose() {
@@ -72,7 +72,7 @@ public static class JigglePhysics {
     public static void SetGlobalDirty() => _globalDirty = true;
 
     public static void AddJiggleCollider(JiggleColliderSerializable collider) {
-        jobs?.Add(collider);
+        jobs.Add(collider);
     }
 
     public static void RemoveJiggleCollider(JiggleColliderSerializable collider) {
@@ -121,11 +121,12 @@ public static class JigglePhysics {
         }
     }
     
-    public static JiggleJobs GetJiggleJobs(double currentTimeAsDouble, float fixedDeltaTime) {
+    private static JiggleJobs GetJiggleJobs(double currentTimeAsDouble, float fixedDeltaTime) {
         if (!_globalDirty) {
             return jobs;
         }
-        jobs = new JiggleJobs(currentTimeAsDouble, fixedDeltaTime);
+        jobs ??= new JiggleJobs(currentTimeAsDouble, fixedDeltaTime);
+        jobs.SetFixedDeltaTime(fixedDeltaTime);
         GetJiggleTrees();
         _globalDirty = false;
         return jobs;

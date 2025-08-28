@@ -250,7 +250,7 @@ public struct JiggleRigData {
             "StiffnessControl",
             nameof(JiggleTreeInputParameters.stiffness),
             "Stiffness",
-            0.3f,
+            0.2f,
             1f,
             "Stiffness controls how strongly the bone returns to its rest pose. A value of 1 makes it immovable, while a value of 0 makes it fall freely."
         );
@@ -306,7 +306,7 @@ public struct JiggleRigData {
             nameof(JiggleTreeInputParameters.stretch),
             "Stretch",
             0f,
-            1f,
+            0.7f,
             "Stretch controls the elasticity of the bone length, where 0 is no stretch and 1 is full stretch."
         );
         SetCurvableSlider(

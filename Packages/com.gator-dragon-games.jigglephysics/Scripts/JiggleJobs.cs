@@ -63,6 +63,11 @@ public class JiggleJobs {
         jobBroadPhase = new JiggleJobBroadPhase(_memoryBus);
         jobBroadPhaseClear = new JiggleJobBroadPhaseClear(_memoryBus);
     }
+    
+    public void SetFixedDeltaTime(float fixedDeltaTime) {
+        jobSimulate.SetFixedDeltaTime(fixedDeltaTime);
+        jobInterpolation.SetFixedDeltaTime(fixedDeltaTime);
+    }
 
     public void Dispose() {
         if (hasHandleBulkRead) handleBulkRead.Complete();

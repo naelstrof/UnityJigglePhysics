@@ -73,10 +73,6 @@ public unsafe struct JiggleTreeJobData {
         for (int i = 0; i < pointCount; i++) {
             var point = points[i];
             if (point.hasTransform) {
-                Gizmos.color = Color.cyan;
-                Gizmos.DrawLine(point.workingPosition, point.workingPosition+point.debug);
-                Gizmos.color = Color.red;
-                Gizmos.DrawLine(point.workingPosition, point.workingPosition+point.debug2);
                 Gizmos.DrawWireSphere(point.position, point.worldRadius);
             } else {
                 if (point.parentIndex == -1) {

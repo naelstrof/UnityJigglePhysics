@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -15,27 +16,27 @@ public static class JigglePhysics {
     private static readonly List<Transform> tempColliderTransforms = new List<Transform>();
     private static List<JiggleTreeSegment> rootJiggleTreeSegments;
 
-    private static double time = 0f;
-    public const double FIXED_DELTA_TIME = 1.0 / 30.0;
-    public const double FIXED_DELTA_TIME_SQUARED = FIXED_DELTA_TIME * FIXED_DELTA_TIME;
+    private static double lastFixedCurrentTime = 0f;
 
     private static JiggleJobs jobs;
 
-    public static void ScheduleUpdate(double currentTime) {
-        if (currentTime-time < FIXED_DELTA_TIME) {
-            jobs?.SchedulePoses(currentTime);
+    public static void ScheduleSimulate(double currentTime, double fixedCurrentTime, float fixedDeltaTime) {
+        if (Math.Abs(lastFixedCurrentTime - fixedCurrentTime) < 0.0001f) {
             return;
         }
+        
+        lastFixedCurrentTime = fixedCurrentTime;
 
-        while (currentTime-time >= FIXED_DELTA_TIME) {
-            time += FIXED_DELTA_TIME;
-        }
-
-        jobs = GetJiggleJobs();
-        jobs.Simulate(time, currentTime);
+        jobs = GetJiggleJobs(currentTime, fixedDeltaTime);
+        jobs.Simulate(fixedCurrentTime, currentTime);
     }
 
-    public static void CompleteUpdate() {
+    public static void SchedulePose(double currentTime) {
+        jobs?.SchedulePoses(currentTime);
+    }
+
+
+    public static void CompletePose() {
         jobs?.CompletePoses();
     }
 
@@ -44,7 +45,7 @@ public static class JigglePhysics {
             return;
         }
 
-        GetJiggleJobs().OnDrawGizmos();
+        jobs?.OnDrawGizmos();
     }
     
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -54,9 +55,8 @@ public static class JigglePhysics {
         jiggleRootLookup = new Dictionary<Transform, JiggleTreeSegment>();
         jiggleTrees = new HashSet<JiggleTree>();
         _globalDirty = true;
-        time = 0f;
         jobs?.Dispose();
-        jobs = new JiggleJobs();
+        jobs = null;
     }
 
     public static void Dispose() {
@@ -121,10 +121,11 @@ public static class JigglePhysics {
         }
     }
     
-    public static JiggleJobs GetJiggleJobs() {
+    public static JiggleJobs GetJiggleJobs(double currentTimeAsDouble, float fixedDeltaTime) {
         if (!_globalDirty) {
             return jobs;
         }
+        jobs = new JiggleJobs(currentTimeAsDouble, fixedDeltaTime);
         GetJiggleTrees();
         _globalDirty = false;
         return jobs;

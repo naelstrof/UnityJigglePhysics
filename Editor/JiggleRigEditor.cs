@@ -6,6 +6,8 @@ using UnityEditor;
 using UnityEditor.UIElements;
 
 namespace GatorDragonGames.JigglePhysics {
+
+[CanEditMultipleObjects]
 [CustomEditor(typeof(JiggleRig), true)]
 public class JiggleRigEditor : Editor {
     // Required to force the inspector to use UIToolkit. Otherwise it will use IMGUI.

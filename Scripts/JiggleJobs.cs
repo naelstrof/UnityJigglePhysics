@@ -78,6 +78,8 @@ public class JiggleJobs {
         if (hasHandleInterpolate) handleInterpolate.Complete();
         if (hasHandlePersonalColliderRead) handlePersonalColliderRead.Complete();
         if (hasHandleSceneColliderRead) handleSceneColliderRead.Complete();
+        if (hasHandleBroadPhase) handleBroadPhase.Complete();
+        if (hasHandleBroadPhaseClear) handleBroadPhaseClear.Complete();
         _memoryBus.Dispose();
     }
 
@@ -175,8 +177,10 @@ public class JiggleJobs {
         
         var colliderHandles = JobHandle.CombineDependencies(handlePersonalColliderRead, handleSceneColliderRead);
         
-        var broadPhaseClearHandle = jobBroadPhaseClear.Schedule();
-        var broadPhaseHandle = jobBroadPhase.Schedule(JobHandle.CombineDependencies(colliderHandles, broadPhaseClearHandle));
+        handleBroadPhaseClear = jobBroadPhaseClear.Schedule();
+        hasHandleBroadPhaseClear = true;
+        handleBroadPhase = jobBroadPhase.Schedule(JobHandle.CombineDependencies(colliderHandles, handleBroadPhaseClear));
+        hasHandleBroadPhase = true;
         
         handleBulkReset = jobBulkTransformReset.Schedule(_memoryBus.GetTransformAccessArray(), colliderHandles);
         hasHandleBulkReset = true;
@@ -186,7 +190,7 @@ public class JiggleJobs {
 
         jobSimulate.gravity = gravity;
         jobSimulate.timeStamp = simulateTime;
-        handleSimulate = jobSimulate.ScheduleParallel(_memoryBus.treeCount, 1, JobHandle.CombineDependencies(broadPhaseHandle, handleBulkRead));
+        handleSimulate = jobSimulate.ScheduleParallel(_memoryBus.treeCount, 1, JobHandle.CombineDependencies(handleBroadPhase, handleBulkRead));
         hasHandleSimulate = true;
     }
 

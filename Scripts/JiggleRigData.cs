@@ -78,6 +78,10 @@ public struct JiggleRigData {
         ValidateCurve(ref jiggleTreeInputParameters.gravity.curve);
         ValidateCurve(ref jiggleTreeInputParameters.collisionRadius.curve);
         BuildNormalizedDistanceFromRootList();
+        if (jiggleColliders is { Length: > 32 }) {
+            Debug.LogWarning("JigglePhysics: Maximum of 32 personal Jiggle Colliders are supported per tree. Extra colliders will be dropped.");
+            Array.Resize(ref jiggleColliders, 32);
+        }
     }
     public void BuildNormalizedDistanceFromRootList() {
         if (!rootBone) {

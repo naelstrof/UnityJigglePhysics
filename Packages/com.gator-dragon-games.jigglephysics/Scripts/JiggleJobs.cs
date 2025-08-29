@@ -195,7 +195,7 @@ public class JiggleJobs {
     }
 
     public void Remove(JiggleTree tree) {
-        _memoryBus.Remove(tree.rootID);
+        _memoryBus.Remove(tree);
     }
     
     public void Add(JiggleColliderSerializable collider) {
@@ -222,8 +222,8 @@ public class JiggleJobs {
                         Gizmos.color = Color.cyan;
                         Gizmos.DrawWireSphere(pose.position, point.worldRadius);
                     } else {
-                        Gizmos.color = point.parentIndex == -1 ? Color.crimson : Color.magenta;
-                        Gizmos.DrawWireSphere(point.position, 0.025f);
+                        //Gizmos.color = point.parentIndex == -1 ? Color.crimson : Color.magenta;
+                        //Gizmos.DrawWireSphere(point.position, 0.025f);
                     }
 
 
@@ -235,8 +235,8 @@ public class JiggleJobs {
                                 Gizmos.color = Color.cyan;
                                 Gizmos.DrawLine(pose.position, childPose.position);
                             } else {
-                                Gizmos.color = Color.magenta;
-                                Gizmos.DrawLine(point.position, childPoint.position);
+                                //Gizmos.color = Color.magenta;
+                                //Gizmos.DrawLine(point.position, childPoint.position);
                             }
                         }
                     }

@@ -17,7 +17,7 @@ public class SpawnAndDeleteSimulation : MonoBehaviour {
             if (Random.Range(0f, 1f) < 0.5f) {
                 Destroy(instance, 0f);
             } else {
-                Destroy(instance, Random.Range(1f,10f));
+                Destroy(instance, Random.Range(0f,10f));
             }
             yield return null;
         }

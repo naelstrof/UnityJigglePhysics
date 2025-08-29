@@ -16,6 +16,7 @@ public struct JigglePointParameters {
     public float blend;
     public float airDrag;
     public float drag;
+    public float ignoreRootMotion;
     public float collisionRadius;
 }
 
@@ -45,6 +46,7 @@ public struct JiggleTreeInputParameters {
     public JiggleTreeCurvedFloat angleLimit;
     public float angleLimitSoften;
     public float rootStretch;
+    public float ignoreRootMotion;
     public JiggleTreeCurvedFloat stretch;
     public JiggleTreeCurvedFloat drag;
     public JiggleTreeCurvedFloat airDrag;
@@ -66,6 +68,7 @@ public struct JiggleTreeInputParameters {
             angleElasticity = ValidateFloat(Mathf.Pow(stiffness.Evaluate(normalizedDistanceFromRoot), 2f), 0.8f),
             lengthElasticity = ValidateFloat(advancedToggle ? Mathf.Pow(1f - stretch.Evaluate(normalizedDistanceFromRoot), 2f) : 1f, 0f),
             elasticitySoften = ValidateFloat(advancedToggle ? Mathf.Pow(soften, 2f) : 0f, 0f),
+            ignoreRootMotion = ValidateFloat(advancedToggle ? ignoreRootMotion : 0f, 0f),
             gravityMultiplier = float.IsNaN(gravityValue) ? 0f : gravityValue,
             angleLimited = angleLimitToggle,
             angleLimit = ValidateFloat(angleLimit.Evaluate(normalizedDistanceFromRoot), 0f),
@@ -85,6 +88,7 @@ public struct JiggleTreeInputParameters {
             rootStretch = 0f,
             drag = new JiggleTreeCurvedFloat(0.1f),
             airDrag = new JiggleTreeCurvedFloat(0f),
+            ignoreRootMotion = 0f,
             gravity = new JiggleTreeCurvedFloat(1f),
             collisionRadius = new JiggleTreeCurvedFloat(0.1f),
         };
@@ -96,6 +100,7 @@ public struct JiggleTreeInputParameters {
         angleLimit.value = Mathf.Clamp01(angleLimit.value);
         drag.value = Mathf.Clamp01(drag.value);
         airDrag.value = Mathf.Clamp01(airDrag.value);
+        ignoreRootMotion = Mathf.Clamp01(ignoreRootMotion);
         stretch.value = Mathf.Clamp01(stretch.value);
         soften = Mathf.Clamp01(soften);
         blend = Mathf.Clamp01(blend);

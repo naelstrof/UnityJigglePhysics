@@ -11,18 +11,19 @@
             <ui:Instance template="CurvableSlider" name="StretchControl" />
             <ui:Slider label="Soften" value="42" high-value="1" name="SoftenSlider" show-input-field="true" />
             <ui:VisualElement name="RootSection" style="flex-grow: 1;">
-                <ui:Slider label="RootStretch" value="42" high-value="1" name="RootStretchSlider" show-input-field="true" />
+                <ui:Slider label="Root Stretch" value="42" high-value="1" name="RootStretchSlider" show-input-field="true" />
             </ui:VisualElement>
             <ui:VisualElement name="Spacer" class="spacer" />
             <ui:Toggle label="AngleLimit" name="AngleLimitToggle" />
             <ui:VisualElement name="AngleLimitSection" style="flex-grow: 1;">
                 <ui:Instance template="CurvableSlider" name="AngleLimitControl" />
-                <ui:Slider label="AngleLimitSoften" value="42" high-value="1" name="AngleLimitSoftenSlider" show-input-field="true" />
+                <ui:Slider label="Angle Limit Soften" value="42" high-value="1" name="AngleLimitSoftenSlider" show-input-field="true" />
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="Spacer" class="spacer" />
         <ui:Instance template="CurvableSlider" name="DragControl" />
         <ui:Instance template="CurvableSlider" name="AirDragControl" />
+        <ui:Slider label="Ignore Root Motion" value="42" high-value="1" name="IgnoreRootMotionSlider" show-input-field="true" />
         <ui:VisualElement name="Spacer" class="spacer" />
         <ui:Instance template="CurvableFloat" name="GravityControl" />
         <ui:VisualElement name="AdvancedSection2" style="flex-grow: 0; flex-shrink: 0;">

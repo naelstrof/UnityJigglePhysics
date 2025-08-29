@@ -106,27 +106,43 @@ public struct JiggleJobSimulate : IJobFor {
     }
 
     private unsafe void VerletIntegrate(JiggleTreeJobData tree) {
+        
+        var rootPosition = tree.points[0].workingPosition;
+        var rootLastPosition = tree.points[0].position;
+        var rootDelta = rootPosition - rootLastPosition;
+        
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points+i;
             if (point->parentIndex == -1) {
                 continue;
             }
-
+            point->lastPosition += rootDelta * point->parameters.ignoreRootMotion;
+            point->position += rootDelta * point->parameters.ignoreRootMotion;
+        }
+        
+        for (int i = 0; i < tree.pointCount; i++) {
+            var point = tree.points+i;
+            if (point->parentIndex == -1) {
+                continue;
+            }
             var parent = tree.points+point->parentIndex;
 
+            //point->debug = pointLocalPosition;
+
             var delta = point->position - point->lastPosition;
-            var localSpaceVelocity = delta - (parent->position - parent->lastPosition);
+            var parentDelta = parent->position - parent->lastPosition;
+            var localSpaceVelocity = delta - parentDelta;
             var velocity = delta - localSpaceVelocity;
             if (parent->parentIndex != -1) {
-                point->workingPosition = point->position + velocity * (1f - parent->parameters.airDrag) +
-                                         localSpaceVelocity * (1f - parent->parameters.drag) + gravity *
-                                         parent->parameters.gravityMultiplier *
-                                         deltaTimeSquared;
+                point->workingPosition = point->position
+                                         + velocity * (1f - parent->parameters.airDrag)
+                                         +localSpaceVelocity * (1f - parent->parameters.drag)
+                                         + gravity * parent->parameters.gravityMultiplier * deltaTimeSquared;
             } else {
-                point->workingPosition = point->position + velocity * (1f - point->parameters.airDrag) +
-                                         localSpaceVelocity * (1f - point->parameters.drag) + gravity *
-                                         point->parameters.gravityMultiplier *
-                                         deltaTimeSquared;
+                point->workingPosition = point->position
+                                         + velocity * (1f - point->parameters.airDrag)
+                                         +localSpaceVelocity * (1f - point->parameters.drag)
+                                         + gravity * point->parameters.gravityMultiplier * deltaTimeSquared;
             }
         }
     }

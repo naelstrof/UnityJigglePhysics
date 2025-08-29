@@ -221,14 +221,22 @@ public class JiggleJobs {
                     if (!pose.isVirtual) {
                         Gizmos.color = Color.cyan;
                         Gizmos.DrawWireSphere(pose.position, point.worldRadius);
+                    } else {
+                        Gizmos.color = point.parentIndex == -1 ? Color.crimson : Color.magenta;
+                        Gizmos.DrawWireSphere(point.position, 0.025f);
                     }
+
 
                     if (point.childenCount != 0) {
                         for (int j = 0; j < point.childenCount; j++) {
-                            //var childPoint = tree.points[point.childrenIndices[j]];
-                            var childPose = poses[point.childrenIndices[j]+tree.transformIndexOffset];
+                            var childPoint = tree.points[point.childrenIndices[j]];
+                            var childPose = poses[point.childrenIndices[j] + tree.transformIndexOffset];
                             if (!childPose.isVirtual) {
+                                Gizmos.color = Color.cyan;
                                 Gizmos.DrawLine(pose.position, childPose.position);
+                            } else {
+                                Gizmos.color = Color.magenta;
+                                Gizmos.DrawLine(point.position, childPoint.position);
                             }
                         }
                     }

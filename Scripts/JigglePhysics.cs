@@ -163,7 +163,7 @@ public static class JigglePhysics {
             var diff = pos - childPos;
             backProjection = pos + diff;
         } else {
-            backProjection = jiggleRig.rootBone.position;
+            backProjection = jiggleRig.rootBone.position + jiggleRig.rootBone.up * 0.25f;
         }
         var lossyScaleSample = jiggleRig.rootBone.lossyScale;
         var lossyScale = (lossyScaleSample.x + lossyScaleSample.y + lossyScaleSample.z)/3f;

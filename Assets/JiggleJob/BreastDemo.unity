@@ -569,7 +569,7 @@ MonoBehaviour:
       collisionToggle: 1
       angleLimitToggle: 1
       stiffness:
-        value: 0.524
+        value: 0.729
         curveEnabled: 0
         curve:
           serializedVersion: 2
@@ -595,9 +595,9 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-      soften: 0.781
+      soften: 0.882
       angleLimit:
-        value: 1
+        value: 0.541
         curveEnabled: 0
         curve:
           serializedVersion: 2
@@ -623,11 +623,11 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-      angleLimitSoften: 0.797
+      angleLimitSoften: 1
       rootStretch: 0
-      ignoreRootMotion: 0.516
+      ignoreRootMotion: 0.462
       stretch:
-        value: 0.627
+        value: 0.727
         curveEnabled: 0
         curve:
           serializedVersion: 2
@@ -940,6 +940,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 1.961
       objectReference: {fileID: 0}
+    - target: {fileID: 7205140776170859923, guid: d8429cb1d67e4d14e99fc926971baea3, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 67adcbebbdaaf4d47a1fffd9b8fc48af, type: 2}
+    - target: {fileID: 7229618339607114277, guid: d8429cb1d67e4d14e99fc926971baea3, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 67adcbebbdaaf4d47a1fffd9b8fc48af, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

@@ -348,7 +348,6 @@ public static class JigglePhysics {
                 jiggleTrees.Remove(jiggleTreeSegment.jiggleTree);
                 jobs.Remove(jiggleTreeSegment.jiggleTree);
             }
-            jiggleTreeSegment.jiggleTree.Dispose();
         }
 
         if (jiggleTreeSegment.parent != null) {

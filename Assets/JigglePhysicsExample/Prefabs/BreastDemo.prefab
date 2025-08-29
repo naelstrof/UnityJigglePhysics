@@ -340,6 +340,7 @@ MonoBehaviour:
           m_RotationOrder: 4
       angleLimitSoften: 0
       rootStretch: 0.1
+      ignoreRootMotion: 0
       stretch:
         value: 0.8
         curveEnabled: 0
@@ -563,6 +564,7 @@ MonoBehaviour:
           m_RotationOrder: 4
       angleLimitSoften: 0
       rootStretch: 0
+      ignoreRootMotion: 0
       stretch:
         value: 0.1
         curveEnabled: 0
@@ -786,6 +788,7 @@ MonoBehaviour:
           m_RotationOrder: 4
       angleLimitSoften: 0
       rootStretch: 0
+      ignoreRootMotion: 0
       stretch:
         value: 0.1
         curveEnabled: 0
@@ -953,7 +956,7 @@ MonoBehaviour:
       collisionToggle: 1
       angleLimitToggle: 0
       stiffness:
-        value: 0.6241
+        value: 0.5
         curveEnabled: 0
         curve:
           serializedVersion: 2
@@ -979,7 +982,7 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-      soften: 0
+      soften: 0.5
       angleLimit:
         value: 0.5
         curveEnabled: 0
@@ -1009,6 +1012,7 @@ MonoBehaviour:
           m_RotationOrder: 4
       angleLimitSoften: 0
       rootStretch: 0
+      ignoreRootMotion: 0
       stretch:
         value: 0.1
         curveEnabled: 0

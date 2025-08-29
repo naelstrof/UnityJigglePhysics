@@ -184,9 +184,7 @@ public struct JiggleJobSimulate : IJobFor {
                 var depenetrationVector = depenetrationDir * depenetrationMagnitude;
                 // TODO: find decent rigidbody solve instead of just pushing them both naively
                 var hardness = 1f;
-                var pValue = -(tValue - 0.5f * 2f);
-                var ppValue = -pValue;
-                pValue = math.pow(math.clamp(pValue+1f, 0f, 1f),0.5f);
+                var pValue = math.clamp(2f - tValue * 2f, 0f, 1f);
                 if (!(otherPoint->parameters.angleElasticity == 1
                       && otherPoint->parameters.rootElasticity == 1
                       && otherPoint->parameters.lengthElasticity == 1)) {

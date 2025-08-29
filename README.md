@@ -2,7 +2,7 @@
 
 This readme is a work in progress as we incorporate features and demos, check back later!
 
-[![openupm](https://img.shields.io/npm/v/com.naelstrof.jigglephysics?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.naelstrof.jigglephysics/)
+[![openupm](https://img.shields.io/npm/v/com.gator-dragon-games.jigglephysics?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.gator-dragon-games.jigglephysics/)
 
 A jobs-based relativistic squash-and-stretch jiggle physics solution for transforms in Unity.
 
@@ -17,7 +17,7 @@ A jobs-based relativistic squash-and-stretch jiggle physics solution for transfo
 
 ## Installation
 
-Simply add `https://github.com/naelstrof/UnityJigglePhysics.git#upm` as a package using the package manager. Ideally you'd want to use a real version tag like `v11.0.0` in place of `upm` in a build system though!
+Simply add `https://github.com/naelstrof/UnityJigglePhysics.git#upm` as a package using the package manager. Ideally you'd want to use a real version tag like `v13.0.0` in place of `upm` in a build system though!
 
 Or if that doesn't work, add it to the manifest.json like so.
 

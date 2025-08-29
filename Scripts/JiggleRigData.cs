@@ -78,10 +78,6 @@ public struct JiggleRigData {
         ValidateCurve(ref jiggleTreeInputParameters.gravity.curve);
         ValidateCurve(ref jiggleTreeInputParameters.collisionRadius.curve);
         BuildNormalizedDistanceFromRootList();
-        if (jiggleColliders is { Length: > 32 }) {
-            Debug.LogWarning("JigglePhysics: Maximum of 32 personal Jiggle Colliders are supported per tree. Extra colliders will be dropped.");
-            Array.Resize(ref jiggleColliders, 32);
-        }
     }
     public void BuildNormalizedDistanceFromRootList() {
         if (!rootBone) {
@@ -254,7 +250,7 @@ public struct JiggleRigData {
             "StiffnessControl",
             nameof(JiggleTreeInputParameters.stiffness),
             "Stiffness",
-            0.2f,
+            0.3f,
             1f,
             "Stiffness controls how strongly the bone returns to its rest pose. A value of 1 makes it immovable, while a value of 0 makes it fall freely."
         );
@@ -298,6 +294,14 @@ public struct JiggleRigData {
         SetSlider(
             visualElement,
             serializedProperty,
+            "IgnoreRootMotionSlider",
+            nameof(JiggleTreeInputParameters.ignoreRootMotion),
+            "Ignore Root Motion",
+            "Prevents movement from root transform accelleration."
+        );
+        SetSlider(
+            visualElement,
+            serializedProperty,
             "RootStretchSlider",
             nameof(JiggleTreeInputParameters.rootStretch),
             "Root Stretch",
@@ -310,7 +314,7 @@ public struct JiggleRigData {
             nameof(JiggleTreeInputParameters.stretch),
             "Stretch",
             0f,
-            0.7f,
+            1f,
             "Stretch controls the elasticity of the bone length, where 0 is no stretch and 1 is full stretch."
         );
         SetCurvableSlider(

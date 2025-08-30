@@ -100,14 +100,14 @@ public struct JiggleRigData {
         if (GetIsExcluded(t)) {
             return;
         }
-        currentLength += Vector3.Distance(lastPosition, t.position);
+        var validChildrenCount = GetValidChildrenCount(t);
         var scale = t.lossyScale;
+        currentLength += Vector3.Distance(lastPosition, t.position);
         data.Add(new JiggleTransformCachedData() {
             bone = t,
             normalizedDistanceFromRoot = currentLength / totalLength,
             lossyScale = (scale.x + scale.y + scale.x)/3f,
         });
-        var validChildrenCount = GetValidChildrenCount(t);
         for (int i = 0; i < validChildrenCount; i++) {
             var child = GetValidChild(t, i);
             VisitAndSetCacheData(data, child, t.position, currentLength, totalLength);
@@ -158,6 +158,32 @@ public struct JiggleRigData {
         }
         return 0f;
     }
+
+    /// <summary>
+    /// Sends updated parameters to the jiggle tree on the jobs side. Uses the provided list to prevent allocations.
+    /// </summary>
+    /// <param name="parameters">empty list purely used to prevent allocations</param>
+    public void UpdateParameters(List<JigglePointParameters> parameters) {
+        if (segment == null || segment.jiggleTree == null) {
+            return;
+        }
+        
+        parameters.Clear();
+        var bones = segment?.jiggleTree.bones;
+        if (bones == null) {
+            return;
+        }
+        var boneCount = bones.Length;
+        for (int i = 0; i < boneCount; i++) {
+            var bone = bones[i];
+            var normalizedDistanceFromRoot = GetNormalizedDistanceFromRoot(bone);
+            var cachedScale = GetCachedLossyScale(bone);
+            var lossySample = bone.lossyScale;
+            var lossyRealScale = (lossySample.x + lossySample.y + lossySample.z)/3f;
+            parameters.Add(GetJiggleBoneParameter(normalizedDistanceFromRoot, cachedScale, lossyRealScale));
+        }
+        segment?.jiggleTree.SetParameters(parameters);
+    }
     
     public float GetCachedLossyScale(Transform t) {
         var count = transformCachedData.Length;
@@ -204,13 +230,14 @@ public struct JiggleRigData {
         Gizmos.color = Color.whiteSmoke;
         var jiggleTree = JigglePhysics.CreateJiggleTree(this, null);
         var points = jiggleTree.points;
+        var parameters = jiggleTree.parameters;
         var pointCount = points.Length;
         var cam = Camera.current;
         for (var index = 0; index < pointCount; index++) {
             var simulatedPoint = points[index];
             if (simulatedPoint.parentIndex == -1) continue;
             if (!points[simulatedPoint.parentIndex].hasTransform) continue;
-            DrawBone(points[simulatedPoint.parentIndex].position, simulatedPoint.position, jiggleTree.bones[index].lossyScale, points[simulatedPoint.parentIndex].parameters, cam);
+            DrawBone(points[simulatedPoint.parentIndex].position, simulatedPoint.position, jiggleTree.bones[index].lossyScale, parameters[simulatedPoint.parentIndex], cam);
         }
     }
     

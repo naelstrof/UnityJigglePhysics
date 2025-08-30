@@ -7,6 +7,7 @@ public class JiggleTree {
 
     public Transform[] bones;
     public JiggleSimulatedPoint[] points;
+    public JigglePointParameters[] parameters;
     public Transform[] personalColliderTransforms;
     public JiggleCollider[] personalColliders;
     public bool dirty { get; private set; }
@@ -26,7 +27,7 @@ public class JiggleTree {
             return jiggleTreeJobData;
         }
 
-        jiggleTreeJobData = new JiggleTreeJobData(rootID, 0, 0, personalColliders.Length, points);
+        jiggleTreeJobData = new JiggleTreeJobData(rootID, 0, 0, personalColliders.Length, points, parameters);
         hasJiggleTreeStruct = true;
         return jiggleTreeJobData;
     }
@@ -52,16 +53,17 @@ public class JiggleTree {
         jiggleTreeJobData.transformIndexOffset = (uint)offset;
     }
 
-    public JiggleTree(List<Transform> bones, List<JiggleSimulatedPoint> points, List<Transform> personalColliderTransforms, List<JiggleCollider> personalColliders) {
+    public JiggleTree(List<Transform> bones, List<JiggleSimulatedPoint> points, List<JigglePointParameters> parameters, List<Transform> personalColliderTransforms, List<JiggleCollider> personalColliders) {
         dirty = false;
         this.bones = bones.ToArray();
         this.points = points.ToArray();
+        this.parameters = parameters.ToArray();
         this.personalColliders = personalColliders.ToArray();
         this.personalColliderTransforms = personalColliderTransforms.ToArray();
         rootID = bones[0].GetInstanceID();
     }
 
-    public void Set(List<Transform> bones, List<JiggleSimulatedPoint> points, List<Transform> personalColliderTransforms, List<JiggleCollider> personalColliders) {
+    public void Set(List<Transform> bones, List<JiggleSimulatedPoint> points, List<JigglePointParameters> parameters, List<Transform> personalColliderTransforms, List<JiggleCollider> personalColliders) {
         var bonesCount = bones.Count;
         var pointsCount = points.Count;
         if (bonesCount == this.bones.Length && pointsCount == this.points.Length) {
@@ -72,9 +74,13 @@ public class JiggleTree {
             for (int i = 0; i < pointsCount; i++) {
                 this.points[i] = points[i];
             }
+            for (int i = 0; i < pointsCount; i++) {
+                this.parameters[i] = parameters[i];
+            }
         } else {
             this.bones = bones.ToArray();
             this.points = points.ToArray();
+            this.parameters = parameters.ToArray();
         }
         
         
@@ -94,10 +100,27 @@ public class JiggleTree {
 
         rootID = bones[0].GetInstanceID();
         if (hasJiggleTreeStruct) {
-            jiggleTreeJobData.Set(rootID, this.points);
+            jiggleTreeJobData.Set(rootID, this.points, this.parameters);
         }
 
         dirty = false;
+    }
+
+    public void SetParameters(List<JigglePointParameters> parameters) {
+        var pointsCount = points.Length;
+        var parametersCount = parameters.Count;
+        if (pointsCount != parametersCount) {
+            Debug.LogError($"JiggleTree.SetParameters: points count {pointsCount} does not match parameters count {parametersCount}");
+            return;
+        }
+
+        for (int i = 0; i < pointsCount; i++) {
+            this.parameters[i] = parameters[i];
+        }
+
+        if (hasJiggleTreeStruct) {
+            jiggleTreeJobData.SetParameters(this.parameters);
+        }
     }
 
     private static void DebugDrawSphere(Vector3 origin, float radius, Color color, float duration, int segments = 8) {

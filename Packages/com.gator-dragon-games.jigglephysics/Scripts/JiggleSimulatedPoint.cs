@@ -16,7 +16,6 @@ public unsafe struct JiggleSimulatedPoint {
     public float worldRadius;
 
     // Set at initialization
-    public JigglePointParameters parameters;
     public float distanceFromRoot;
     public int parentIndex;
     public fixed int childrenIndices[MAX_CHILDREN];
@@ -27,7 +26,7 @@ public unsafe struct JiggleSimulatedPoint {
         return $"(position: {position},\nlastPosition: {lastPosition},\n" +
                $"workingPosition: {workingPosition},\n" +
                $"parentPose: {parentPose},\npose: {pose},\ndesiredLengthToParent:{desiredLengthToParent},\n" +
-               $"animated: {animated},\n parameters: {parameters},\n parentIndex: {parentIndex},\n " +
+               $"animated: {animated},\n parentIndex: {parentIndex},\n " +
                $"children: [{childrenIndices[0]}, ...],\n childenCount: {childenCount},\n hasTransform: {hasTransform})";
     }
 }

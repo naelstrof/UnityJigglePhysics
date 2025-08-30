@@ -61,45 +61,46 @@ public struct JiggleJobSimulate : IJobFor {
         var maxColliderRadius = 0f;
         
         for (int i = 0; i < tree.pointCount; i++) {
-            var point = tree.points+i;
-            var parameters = tree.parameters + i;
-            if (point->parentIndex == -1) {
+            var point = tree.points[i];
+            var parameters = tree.parameters[i];
+            if (point.parentIndex == -1) {
                 // virtual root particles
-                var child = tree.points[point->childrenIndices[0]];
+                var child = tree.points[point.childrenIndices[0]];
                 var childChild = tree.points[child.childrenIndices[0]];
-                var childPose = tree.GetInputPose(inputPoses, point->childrenIndices[0]);
+                var childPose = tree.GetInputPose(inputPoses, point.childrenIndices[0]);
                 var childChildPose = tree.GetInputPose(inputPoses, child.childrenIndices[0]);
                 if (!childChild.hasTransform) {
                     // edge case where it's a singular isolated root bone
-                    point->pose = childPose.position - new float3(0f, 0.25f, 0f);
-                    point->parentPose = childPose.position - new float3(0f, 0.5f, 0f);
-                    point->desiredLengthToParent = 0.25f;
+                    point.pose = childPose.position - new float3(0f, 0.25f, 0f);
+                    point.parentPose = childPose.position - new float3(0f, 0.5f, 0f);
+                    point.desiredLengthToParent = 0.25f;
                 } else {
                     var diff = childPose.position - childChildPose.position;
-                    point->pose = childPose.position + diff;
-                    point->parentPose = childPose.position + diff * 2f;
-                    point->desiredLengthToParent = math.length(diff);
+                    point.pose = childPose.position + diff;
+                    point.parentPose = childPose.position + diff * 2f;
+                    point.desiredLengthToParent = math.length(diff);
                 }
 
-                point->workingPosition = point->pose;
-            } else if (point->hasTransform) {
+                point.workingPosition = point.pose;
+            } else if (point.hasTransform) {
                 // "real" particles
                 var inputPose = tree.GetInputPose(inputPoses, i);
-                var parent = tree.points+point->parentIndex;
-                point->pose = inputPose.position;
-                point->parentPose = parent->pose;
-                point->desiredLengthToParent = math.distance(point->pose, parent->pose);
+                var parent = tree.points[point.parentIndex];
+                point.pose = inputPose.position;
+                point.parentPose = parent.pose;
+                point.desiredLengthToParent = math.distance(point.pose, parent.pose);
                 var averagePointScale = (inputPose.scale.x + inputPose.scale.y + inputPose.scale.z) / 3f;
-                point->worldRadius = parameters->collisionRadius * averagePointScale;
-                maxColliderRadius = math.max(maxColliderRadius, point->worldRadius);
+                point.worldRadius = parameters.collisionRadius * averagePointScale;
+                maxColliderRadius = math.max(maxColliderRadius, point.worldRadius);
             } else {
                 // virtual end particles
-                var parent = tree.points+point->parentIndex;
-                point->pose = (parent->pose * 2f - parent->parentPose);
-                point->parentPose = parent->pose;
-                point->desiredLengthToParent = math.distance(point->pose, point->parentPose);
+                var parent = tree.points[point.parentIndex];
+                point.pose = (parent.pose * 2f - parent.parentPose);
+                point.parentPose = parent.pose;
+                point.desiredLengthToParent = math.distance(point.pose, point.parentPose);
             }
-            lengthAccumulation += point->desiredLengthToParent;
+            lengthAccumulation += point.desiredLengthToParent;
+            tree.points[i] = point;
         }
 
         const float extentsBuffer = 1.3f;

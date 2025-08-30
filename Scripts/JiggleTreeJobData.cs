@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace GatorDragonGames.JigglePhysics {
 public unsafe struct JiggleTreeJobData {
@@ -27,8 +28,9 @@ public unsafe struct JiggleTreeJobData {
     public uint colliderCount;
     public float extents;
     public JiggleSimulatedPoint* points;
+    public JigglePointParameters* parameters;
 
-    public JiggleTreeJobData(int rootID, int transformIndexOffset, int colliderIndexOffset, int colliderCount, JiggleSimulatedPoint[] inputPoints) {
+    public JiggleTreeJobData(int rootID, int transformIndexOffset, int colliderIndexOffset, int colliderCount, JiggleSimulatedPoint[] inputPoints, JigglePointParameters[] inputParameters) {
         this.rootID = rootID;
         pointCount = (uint)inputPoints.Length;
         this.colliderIndexOffset = (uint)colliderIndexOffset;
@@ -39,19 +41,23 @@ public unsafe struct JiggleTreeJobData {
             UnsafeUtility.AlignOf<JiggleSimulatedPoint>(),
             Allocator.Persistent
         );
+        parameters = (JigglePointParameters*)UnsafeUtility.Malloc(
+            Marshal.SizeOf<JigglePointParameters>() * pointCount,
+            UnsafeUtility.AlignOf<JigglePointParameters>(),
+            Allocator.Persistent
+        );
         fixed (JiggleSimulatedPoint* src = inputPoints) {
             UnsafeUtility.MemCpy(points, src, sizeof(JiggleSimulatedPoint) * pointCount);
+        }
+        fixed (JigglePointParameters* src = inputParameters) {
+            UnsafeUtility.MemCpy(parameters, src, sizeof(JigglePointParameters) * pointCount);
         }
         extents = 1f;
     }
 
-    public void Set(int rootID, JiggleSimulatedPoint[] inputPoints) {
+    public void Set(int rootID, JiggleSimulatedPoint[] inputPoints, JigglePointParameters[] inputParameters) {
         this.rootID = rootID;
-        if (inputPoints.Length == pointCount) {
-            fixed (JiggleSimulatedPoint* src = inputPoints) {
-                UnsafeUtility.MemCpy(points, src, sizeof(JiggleSimulatedPoint) * pointCount);
-            }
-        } else {
+        if (inputPoints.Length != pointCount) {
             Dispose();
             pointCount = (uint)inputPoints.Length;
             points = (JiggleSimulatedPoint*)UnsafeUtility.Malloc(
@@ -59,6 +65,24 @@ public unsafe struct JiggleTreeJobData {
                 UnsafeUtility.AlignOf<JiggleSimulatedPoint>(),
                 Allocator.Persistent
             );
+            parameters = (JigglePointParameters*)UnsafeUtility.Malloc(
+                Marshal.SizeOf<JigglePointParameters>() * pointCount,
+                UnsafeUtility.AlignOf<JigglePointParameters>(),
+                Allocator.Persistent
+            );
+        }
+        fixed (JiggleSimulatedPoint* src = inputPoints) {
+            UnsafeUtility.MemCpy(points, src, sizeof(JiggleSimulatedPoint) * pointCount);
+        }
+        fixed (JigglePointParameters* src = inputParameters) {
+            UnsafeUtility.MemCpy(parameters, src, sizeof(JigglePointParameters) * pointCount);
+        }
+    }
+
+    public void SetParameters(JigglePointParameters[] inputParameters) {
+        Assert.AreEqual(pointCount, inputParameters.Length);
+        fixed (JigglePointParameters* src = inputParameters) {
+            UnsafeUtility.MemCpy(parameters, src, sizeof(JigglePointParameters) * pointCount);
         }
     }
 

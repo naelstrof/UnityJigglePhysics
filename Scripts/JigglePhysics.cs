@@ -183,12 +183,9 @@ public static class JigglePhysics {
         tempTransforms.Add(jiggleRig.rootBone);
         Visit(jiggleRig.rootBone, tempTransforms, tempPoints, tempParameters, 0, jiggleRig, backProjection, 0f, out int childIndex);
         if (childIndex != -1) {
-            unsafe {
-                var rootPoint = tempPoints[0];
-                rootPoint.childrenIndices[rootPoint.childenCount] = childIndex;
-                rootPoint.childenCount++;
-                tempPoints[0] = rootPoint;
-            }
+            var rootPoint = tempPoints[0];
+            AddChildToPoint(ref rootPoint, childIndex);
+            tempPoints[0] = rootPoint;
         }
 
         Profiler.EndSample();
@@ -235,13 +232,9 @@ public static class JigglePhysics {
                         var child = lastJiggleRig.GetValidChild(t, i);
                         Visit(child, transforms, points, parameters, parentIndex, lastJiggleRig, lastPosition, currentLength, out int childIndex);
                         if (childIndex != -1) {
-                            unsafe {
-                                // WEIRD
-                                var record = points[parentIndex];
-                                record.childrenIndices[record.childenCount] = childIndex;
-                                record.childenCount++;
-                                points[parentIndex] = record;
-                            }
+                            var record = points[parentIndex];
+                            AddChildToPoint(ref record, childIndex);
+                            points[parentIndex] = record;
                         }
                     }
                     newIndex = -1;
@@ -257,12 +250,9 @@ public static class JigglePhysics {
                         animated = false,
                     });
                     parameters.Add(lastJiggleRig.GetJiggleBoneParameter(lastJiggleRig.GetNormalizedDistanceFromRoot(t), cachedLossyScale, lossyScale));
-                    unsafe { // WEIRD
-                        var record = points[parentIndex];
-                        record.childrenIndices[record.childenCount] = points.Count - 1;
-                        record.childenCount++;
-                        points[parentIndex] = record;
-                    }
+                    var record = points[parentIndex];
+                    AddChildToPoint(ref record, points.Count - 1);
+                    points[parentIndex] = record;
                     newIndex = points.Count - 1;
                 }
                 return;
@@ -307,24 +297,17 @@ public static class JigglePhysics {
                     animated = false,
                 });
                 parameters.Add(lastJiggleRig.GetJiggleBoneParameter(lastJiggleRig.GetNormalizedDistanceFromRoot(t), cachedLossyScale, lossyScale));
-                unsafe { // WEIRD
-                    var record = points[newIndex];
-                    record.childrenIndices[record.childenCount] = points.Count - 1;
-                    record.childenCount++;
-                    points[newIndex] = record;
-                }
+                var record = points[newIndex];
+                AddChildToPoint(ref record, points.Count - 1);
+                points[newIndex] = record;
             } else {
                 for (int i = 0; i < validChildrenCount; i++) {
                     var child = lastJiggleRig.GetValidChild(t, i);
                     Visit(child, transforms, points, parameters, newIndex, lastJiggleRig, currentPosition, currentLength, out int childIndex);
                     if (childIndex != -1) {
-                        unsafe {
-                            // WEIRD
-                            var record = points[newIndex];
-                            record.childrenIndices[record.childenCount] = childIndex;
-                            record.childenCount++;
-                            points[newIndex] = record;
-                        }
+                        var record = points[newIndex];
+                        AddChildToPoint(ref record, childIndex);
+                        points[newIndex] = record;
                     }
                 }
             }
@@ -332,6 +315,14 @@ public static class JigglePhysics {
             newIndex = points.Count - 1;
         }
 
+    }
+
+    public static unsafe void AddChildToPoint(ref JiggleSimulatedPoint point, int childIndex) {
+        if (point.childenCount>=JiggleSimulatedPoint.MAX_CHILDREN) {
+            return;
+        }
+        point.childrenIndices[point.childenCount] = childIndex;
+        point.childenCount++;
     }
     
     public static void RemoveJiggleTreeSegment(JiggleTreeSegment jiggleTreeSegment) {

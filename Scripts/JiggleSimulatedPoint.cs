@@ -3,7 +3,7 @@ using Unity.Mathematics;
 namespace GatorDragonGames.JigglePhysics {
 
 public unsafe struct JiggleSimulatedPoint {
-    public const int MAX_CHILDREN = 16;
+    public const int MAX_CHILDREN = 32;
 
     // Generated at runtime
     public float3 lastPosition;
@@ -14,6 +14,7 @@ public unsafe struct JiggleSimulatedPoint {
     public float desiredLengthToParent;
     public bool animated;
     public float worldRadius;
+    //public float3 debug;
 
     // Set at initialization
     public float distanceFromRoot;

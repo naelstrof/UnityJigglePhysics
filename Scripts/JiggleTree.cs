@@ -11,6 +11,8 @@ public class JiggleTree {
     public JigglePointParameters[] parameters;
     public Transform[] personalColliderTransforms;
     public JiggleCollider[] personalColliders;
+    public bool isInJobs = false;
+    
     public bool dirty { get; private set; }
     public int rootID { get; private set; }
 
@@ -49,7 +51,6 @@ public class JiggleTree {
 
     /// <summary>
     /// Immediately resamples the rest pose of the bones in the tree. This can be useful if you have modified the bones' transforms on initialization and want to control when the rest pose is sampled.
-    /// This ONLY has an effect if you call it before the next Jiggle Physics update, as we only copy it once to the jobs system.
     /// </summary>
     public void ResampleRestPose() {
         for(int i=0;i<bones.Length;i++) {

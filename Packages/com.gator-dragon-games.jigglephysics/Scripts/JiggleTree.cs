@@ -11,7 +11,6 @@ public class JiggleTree {
     public JigglePointParameters[] parameters;
     public Transform[] personalColliderTransforms;
     public JiggleCollider[] personalColliders;
-    public bool isInJobs = false;
     
     public bool dirty { get; private set; }
     public int rootID { get; private set; }
@@ -51,6 +50,7 @@ public class JiggleTree {
 
     /// <summary>
     /// Immediately resamples the rest pose of the bones in the tree. This can be useful if you have modified the bones' transforms on initialization and want to control when the rest pose is sampled.
+    /// Not used normally because 0 scale bones get merged, and aren't part of the tree. So we typically want to regenerate the entire tree in that case.
     /// </summary>
     public void ResampleRestPose() {
         for(int i=0;i<bones.Length;i++) {

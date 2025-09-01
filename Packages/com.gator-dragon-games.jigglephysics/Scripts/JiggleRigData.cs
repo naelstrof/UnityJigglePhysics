@@ -35,23 +35,8 @@ public struct JiggleRigData {
     /// Immediately resamples the rest pose of the bones in the tree. This can be useful if you have modified the bones' transforms on initialization and want to control when the rest pose is sampled.
     /// </summary>
     public void ResampleRestPose() {
-        if (segment == null) {
-            OnEnable();
-            return;
-        }
-        
-        var tree = segment.jiggleTree;
-        if (tree == null) {
-            OnEnable();
-            return;
-        }
-
-        if (tree.isInJobs) {
-            OnDisable();
-            OnEnable();
-            return;
-        }
-        tree.ResampleRestPose();
+        OnDisable();
+        OnEnable();
     }
 
     public void OnEnable() {

@@ -397,7 +397,6 @@ public class JiggleMemoryBus {
                 System.Array.Copy(jiggleTreeStructsArray, i + 1, jiggleTreeStructsArray, i, shiftCount);
             }
 
-            tree.isInJobs = false;
             treeCount--;
             for (int j = (int)removedTree.transformIndexOffset;
                  j < removedTree.transformIndexOffset + removedTree.pointCount;
@@ -552,7 +551,6 @@ public class JiggleMemoryBus {
         }
 
         treeCount++;
-        jiggleTree.isInJobs = true;
         transformCount = math.max((int)(index + jiggleTreeJobData.pointCount), transformCount);
     }
 

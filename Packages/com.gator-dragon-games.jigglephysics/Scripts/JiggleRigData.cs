@@ -30,6 +30,14 @@ public struct JiggleRigData {
 
     [NonSerialized]
     private JiggleTreeSegment segment;
+    
+    /// <summary>
+    /// Immediately resamples the rest pose of the bones in the tree. This can be useful if you have modified the bones' transforms on initialization and want to control when the rest pose is sampled.
+    /// This ONLY has an effect if you call it before the next Jiggle Physics update, as we only copy it once to the jobs system.
+    /// </summary>
+    public void ResampleRestPose() {
+        segment?.jiggleTree?.ResampleRestPose();
+    }
 
     public void OnEnable() {
         if (rootBone == null) {

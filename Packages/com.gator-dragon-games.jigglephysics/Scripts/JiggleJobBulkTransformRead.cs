@@ -18,15 +18,33 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
         simulateInputPoses = bus.simulateInputPoses;
     }
 
+    private static float3 SanitizeVector(Vector3 position) {
+        float3 pos = position;
+        if (float.IsNaN(pos.x)) {
+            pos.x = 0f;
+        }
+        if (float.IsNaN(pos.y)) {
+            pos.y = 0f;
+        }
+        if (float.IsNaN(pos.z)) {
+            pos.z = 0f;
+        }
+        return pos;
+    }
+    
     public void Execute(int index, TransformAccess transform) {
         var jiggleTransform = simulateInputPoses[index];
         if (!transform.isValid || jiggleTransform.isVirtual) {
             return;
         }
         transform.GetPositionAndRotation(out var position, out var rotation);
-        jiggleTransform.position = position;
+        jiggleTransform.position = SanitizeVector(position);
         jiggleTransform.rotation = rotation;
-        jiggleTransform.scale = transform.localToWorldMatrix.lossyScale;
+        var scale = SanitizeVector(transform.localToWorldMatrix.lossyScale);
+        //if (scale is { x: 0, y: 0, z: 0 }) {
+            //scale = new float3(0.00001f);
+        //}
+        jiggleTransform.scale = scale;
         simulateInputPoses[index] = jiggleTransform;
     }
 

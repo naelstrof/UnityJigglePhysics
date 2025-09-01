@@ -4,12 +4,14 @@ using UnityEngine;
 namespace GatorDragonGames.JigglePhysics {
 
 public class JiggleTree {
-
     public Transform[] bones;
     public JiggleSimulatedPoint[] points;
+    public Vector3[] restPositions;
+    public Quaternion[] restRotations;
     public JigglePointParameters[] parameters;
     public Transform[] personalColliderTransforms;
     public JiggleCollider[] personalColliders;
+    
     public bool dirty { get; private set; }
     public int rootID { get; private set; }
 
@@ -33,9 +35,28 @@ public class JiggleTree {
     }
 
     public void Dispose() {
+        for(int i=0;i<points.Length;i++) {
+            var bone = bones[i];
+            if (bone) {
+                bone.localPosition = restPositions[i];
+                bone.localRotation = restRotations[i];
+            }
+        }
         if (hasJiggleTreeStruct) {
             jiggleTreeJobData.Dispose();
             hasJiggleTreeStruct = false;
+        }
+    }
+
+    /// <summary>
+    /// Immediately resamples the rest pose of the bones in the tree. This can be useful if you have modified the bones' transforms on initialization and want to control when the rest pose is sampled.
+    /// Not used normally because 0 scale bones get merged, and aren't part of the tree. So we typically want to regenerate the entire tree in that case.
+    /// </summary>
+    public void ResampleRestPose() {
+        for(int i=0;i<bones.Length;i++) {
+            bones[i].GetLocalPositionAndRotation(out var pos, out var rot);
+            restPositions[i] = pos;
+            restRotations[i] = rot;
         }
     }
 
@@ -56,6 +77,13 @@ public class JiggleTree {
     public JiggleTree(List<Transform> bones, List<JiggleSimulatedPoint> points, List<JigglePointParameters> parameters, List<Transform> personalColliderTransforms, List<JiggleCollider> personalColliders) {
         dirty = false;
         this.bones = bones.ToArray();
+        restPositions = new Vector3[this.bones.Length];
+        restRotations = new Quaternion[this.bones.Length];
+        for(int i=0;i<this.bones.Length;i++) {
+            bones[i].GetLocalPositionAndRotation(out var pos, out var rot);
+            restPositions[i] = pos;
+            restRotations[i] = rot;
+        }
         this.points = points.ToArray();
         this.parameters = parameters.ToArray();
         this.personalColliders = personalColliders.ToArray();
@@ -70,19 +98,29 @@ public class JiggleTree {
             for (int i = 0; i < bonesCount; i++) {
                 this.bones[i] = bones[i];
             }
-
             for (int i = 0; i < pointsCount; i++) {
                 this.points[i] = points[i];
             }
             for (int i = 0; i < pointsCount; i++) {
                 this.parameters[i] = parameters[i];
             }
+            for(int i=0;i<this.bones.Length;i++) {
+                bones[i].GetLocalPositionAndRotation(out var pos, out var rot);
+                restPositions[i] = pos;
+                restRotations[i] = rot;
+            }
         } else {
             this.bones = bones.ToArray();
             this.points = points.ToArray();
             this.parameters = parameters.ToArray();
+            restPositions = new Vector3[this.bones.Length];
+            restRotations = new Quaternion[this.bones.Length];
+            for(int i=0;i<this.bones.Length;i++) {
+                bones[i].GetLocalPositionAndRotation(out var pos, out var rot);
+                restPositions[i] = pos;
+                restRotations[i] = rot;
+            }
         }
-        
         
         var personalColliderTransformsCount = personalColliderTransforms.Count;
         var personalCollidersCount = personalColliders.Count;

@@ -1,3 +1,4 @@
+using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -114,41 +115,43 @@ public struct JiggleJobSimulate : IJobFor {
         var rootDelta = rootPosition - rootLastPosition;
         
         for (int i = 0; i < tree.pointCount; i++) {
-            var point = tree.points+i;
+            var point = tree.points[i];
             var parameters = tree.parameters + i;
-            if (point->parentIndex == -1) {
+            if (point.parentIndex == -1) {
                 continue;
             }
-            point->lastPosition += rootDelta * parameters->ignoreRootMotion;
-            point->position += rootDelta * parameters->ignoreRootMotion;
+            point.lastPosition += rootDelta * parameters->ignoreRootMotion;
+            point.position += rootDelta * parameters->ignoreRootMotion;
+            tree.points[i] = point;
         }
         
         for (int i = 0; i < tree.pointCount; i++) {
-            var point = tree.points+i;
-            if (point->parentIndex == -1) {
+            var point = tree.points[i];
+            if (point.parentIndex == -1) {
                 continue;
             }
-            var parent = tree.points+point->parentIndex;
+            var parent = tree.points[point.parentIndex];
 
             //point->debug = pointLocalPosition;
 
-            var delta = point->position - point->lastPosition;
-            var parentDelta = parent->position - parent->lastPosition;
+            var delta = point.position - point.lastPosition;
+            var parentDelta = parent.position - parent.lastPosition;
             var localSpaceVelocity = delta - parentDelta;
             var velocity = delta - localSpaceVelocity;
-            if (parent->parentIndex != -1) {
-                var parentParameters = tree.parameters+point->parentIndex;
-                point->workingPosition = point->position
+            if (parent.parentIndex != -1) {
+                var parentParameters = tree.parameters+point.parentIndex;
+                point.workingPosition = point.position
                                          + velocity * (1f - parentParameters->airDrag)
                                          +localSpaceVelocity * (1f - parentParameters->drag)
                                          + gravity * parentParameters->gravityMultiplier * deltaTimeSquared;
             } else {
                 var parameters = tree.parameters + i;
-                point->workingPosition = point->position
+                point.workingPosition = point.position
                                          + velocity * (1f - parameters->airDrag)
                                          +localSpaceVelocity * (1f - parameters->drag)
                                          + gravity * parameters->gravityMultiplier * deltaTimeSquared;
             }
+            tree.points[i] = point;
         }
     }
 
@@ -475,9 +478,21 @@ public struct JiggleJobSimulate : IJobFor {
         }
     }
 
+    private bool Validate(JiggleTreeJobData tree) {
+        if (!tree.GetIsValid(out string failReason)) {
+            throw new Exception(failReason);
+        }
+
+        return true;
+    }
 
     public void Execute(int index) {
         var tree = jiggleTrees[index];
+        #if UNITY_EDITOR
+        if (!Validate(tree)) {
+            return;
+        }
+        #endif
         Cache(tree);
         VerletIntegrate(tree);
         Constrain(tree);

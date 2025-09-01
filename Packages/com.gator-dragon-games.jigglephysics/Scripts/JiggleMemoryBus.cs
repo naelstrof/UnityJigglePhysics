@@ -386,7 +386,8 @@ public class JiggleMemoryBus {
         }
     }
 
-    private void RemoveTree(int id) {
+    private void RemoveTree(JiggleTree tree) {
+        int id = tree.rootID;
         Profiler.BeginSample("JiggleMemoryBus.RemoveTree");
         for (int i = 0; i < treeCount; i++) {
             var removedTree = jiggleTreeStructsArray[i];
@@ -396,6 +397,7 @@ public class JiggleMemoryBus {
                 System.Array.Copy(jiggleTreeStructsArray, i + 1, jiggleTreeStructsArray, i, shiftCount);
             }
 
+            tree.isInJobs = false;
             treeCount--;
             for (int j = (int)removedTree.transformIndexOffset;
                  j < removedTree.transformIndexOffset + removedTree.pointCount;
@@ -550,6 +552,7 @@ public class JiggleMemoryBus {
         }
 
         treeCount++;
+        jiggleTree.isInJobs = true;
         transformCount = math.max((int)(index + jiggleTreeJobData.pointCount), transformCount);
     }
 
@@ -670,8 +673,7 @@ public class JiggleMemoryBus {
             Profiler.BeginSample("JiggleMemoryBus.Commit.Remove");
             for (int i = 0; i < processingPendingRemoveCount; i++) {
                 var tree = pendingProcessingRemoves[i];
-                var currentRemoveID = pendingProcessingRemoves[i].rootID;
-                RemoveTree(currentRemoveID);
+                RemoveTree(tree);
                 tree.Dispose();
             }
 

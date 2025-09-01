@@ -83,9 +83,9 @@ public static class JigglePhysics {
     
     public static void AddJiggleTreeSegment(JiggleTreeSegment jiggleTreeSegment) {
         jiggleTreeSegments.Add(jiggleTreeSegment);
-        if (TryAddRootJiggleTreeSegment(jiggleTreeSegment)) {
-            jiggleRootLookup.Add(jiggleTreeSegment.transform, jiggleTreeSegment);
-        }
+        jiggleRootLookup.Add(jiggleTreeSegment.transform, jiggleTreeSegment);
+        RemoveAddChildren(jiggleTreeSegment.transform);
+        TryAddRootJiggleTreeSegment(jiggleTreeSegment);
         _globalDirty = true;
     }
     
@@ -122,6 +122,18 @@ public static class JigglePhysics {
             return true;
         }
     }
+
+    private static void RemoveAddChildren(Transform t) {
+        foreach (Transform child in t) {
+            foreach (var jiggleTreeSegment in jiggleTreeSegments) {
+                if (jiggleRootLookup.TryGetValue(child, out var jiggleRootSegment)) {
+                    rootJiggleTreeSegments.Remove(jiggleTreeSegment);
+                    TryAddRootJiggleTreeSegment(jiggleTreeSegment);
+                }
+            }
+            RemoveAddChildren(child);
+        }
+    }
     
     private static JiggleJobs GetJiggleJobs(double currentTimeAsDouble, float fixedDeltaTime) {
         if (!_globalDirty) {
@@ -135,6 +147,7 @@ public static class JigglePhysics {
     }
 
     public static void GetJiggleTrees() {
+        Debug.Log(rootJiggleTreeSegments.Count);
         Profiler.BeginSample("JiggleRoot.GetJiggleTrees");
         // TODO: Cleanup previous trees, or reuse them.
         foreach (var rootJiggleTreeSegment in rootJiggleTreeSegments) {

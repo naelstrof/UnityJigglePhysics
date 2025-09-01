@@ -9,7 +9,7 @@ public class JiggleMemoryFragmenter {
         public int count;
     }
 
-    private int startingSize;
+    private int currentSize;
     private List<Fragment> fragments;
 
     public JiggleMemoryFragmenter(int size) {
@@ -19,7 +19,7 @@ public class JiggleMemoryFragmenter {
                 count = size
             }
         };
-        startingSize = size;
+        currentSize = size;
     }
 
     public bool TryAllocate(int size, out int startIndex) {
@@ -44,17 +44,18 @@ public class JiggleMemoryFragmenter {
     }
 
     public void Resize(int newSize) {
-        Assert.IsTrue(startingSize <= newSize);
+        Assert.IsTrue(currentSize <= newSize);
         if (fragments.Count != 0) {
             var fragment = fragments[^1];
-            fragment.count += newSize - startingSize;
+            fragment.count += newSize - currentSize;
             fragments[^1] = fragment;
         } else {
             fragments.Add(new Fragment {
-                startIndex = startingSize,
-                count = newSize - startingSize
+                startIndex = currentSize,
+                count = newSize - currentSize
             });
         }
+        currentSize = newSize;
     }
 
     public void Free(int startIndex, int size) {
@@ -91,8 +92,22 @@ public class JiggleMemoryFragmenter {
         fragments.Add(newFragment);
     }
 
+    public bool GetIsAllocated(int index) {
+        if (index < 0 || index >= currentSize) {
+            return false;
+        }
+        var fragmentCount = fragments.Count;
+        for (int i = 0; i < fragmentCount; i++) {
+            var fragment = fragments[i];
+            if (index >= fragment.startIndex && index < fragment.startIndex + fragment.count) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public void CopyFrom(JiggleMemoryFragmenter other) {
-        startingSize = other.startingSize;
+        currentSize = other.currentSize;
         fragments.Clear();
         fragments.AddRange(other.fragments);
     }

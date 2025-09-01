@@ -29,6 +29,7 @@ public unsafe struct JiggleTreeJobData {
     public float extents;
     public JiggleSimulatedPoint* points;
     public JigglePointParameters* parameters;
+    private const int MAX_POINTS = 10000;
 
     public JiggleTreeJobData(int rootID, int transformIndexOffset, int colliderIndexOffset, int colliderCount, JiggleSimulatedPoint[] inputPoints, JigglePointParameters[] inputParameters) {
         this.rootID = rootID;
@@ -91,6 +92,10 @@ public unsafe struct JiggleTreeJobData {
             UnsafeUtility.Free(points, Allocator.Persistent);
             points = null;
         }
+        if (parameters != null) {
+            UnsafeUtility.Free(parameters, Allocator.Persistent);
+            parameters = null;
+        }
     }
 
     public void OnGizmoDraw() {
@@ -113,6 +118,30 @@ public unsafe struct JiggleTreeJobData {
                 Gizmos.DrawLine(point.position, child.position);
             }
         }
+    }
+
+    public bool GetIsValid(out string failReason) {
+        if (pointCount == 0 || pointCount > 10000) {
+            failReason = $"Invalid point count {pointCount}";
+            return false;
+        }
+        if (points == null) {
+            failReason = "Points pointer is null";
+            return false;
+        }
+        if (parameters == null) {
+            failReason = "Parameters pointer is null";
+            return false;
+        }
+        for (int i = 0; i < pointCount; i++) {
+            var point = points[i];
+            if (!point.GetIsValid((int)pointCount, out failReason)) {
+                return false;
+            }
+        }
+
+        failReason = "All good!";
+        return true;
     }
 }
 }

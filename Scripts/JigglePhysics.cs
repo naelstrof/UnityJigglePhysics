@@ -84,7 +84,9 @@ public static class JigglePhysics {
     public static void AddJiggleTreeSegment(JiggleTreeSegment jiggleTreeSegment) {
         jiggleTreeSegments.Add(jiggleTreeSegment);
         if (TryAddRootJiggleTreeSegment(jiggleTreeSegment)) {
-            jiggleRootLookup.Add(jiggleTreeSegment.transform, jiggleTreeSegment);
+            if (!jiggleRootLookup.TryAdd(jiggleTreeSegment.transform, jiggleTreeSegment)) {
+                Debug.LogError("Multiple Jiggle trees detected targeting the same root transform, Jiggle Physics doesn't support this.", jiggleTreeSegment.transform);
+            }
         }
         _globalDirty = true;
     }

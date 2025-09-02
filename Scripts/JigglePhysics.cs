@@ -144,7 +144,6 @@ public static class JigglePhysics {
     }
 
     public static void GetJiggleTrees() {
-        Debug.Log(rootJiggleTreeSegments.Count);
         Profiler.BeginSample("JiggleRoot.GetJiggleTrees");
         // TODO: Cleanup previous trees, or reuse them.
         foreach (var rootJiggleTreeSegment in rootJiggleTreeSegments) {

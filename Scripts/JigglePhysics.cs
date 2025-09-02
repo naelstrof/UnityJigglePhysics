@@ -6,7 +6,6 @@ using UnityEngine.Profiling;
 namespace GatorDragonGames.JigglePhysics {
 
 public static class JigglePhysics {
-    private static HashSet<JiggleTreeSegment> jiggleTreeSegments;
     private static Dictionary<Transform, JiggleTreeSegment> jiggleRootLookup;
     private static bool _globalDirty = true;
     private static HashSet<JiggleTree> jiggleTrees;
@@ -52,7 +51,6 @@ public static class JigglePhysics {
     
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void Initialize() {
-        jiggleTreeSegments = new HashSet<JiggleTreeSegment>();
         rootJiggleTreeSegments = new List<JiggleTreeSegment>();
         jiggleRootLookup = new Dictionary<Transform, JiggleTreeSegment>();
         jiggleTrees = new HashSet<JiggleTree>();
@@ -63,7 +61,6 @@ public static class JigglePhysics {
 
     public static void Dispose() {
         jobs?.Dispose();
-        jiggleTreeSegments = new HashSet<JiggleTreeSegment>();
         rootJiggleTreeSegments = new List<JiggleTreeSegment>();
         jiggleRootLookup = new Dictionary<Transform, JiggleTreeSegment>();
         jiggleTrees = new HashSet<JiggleTree>();
@@ -82,7 +79,6 @@ public static class JigglePhysics {
     }
     
     public static void AddJiggleTreeSegment(JiggleTreeSegment jiggleTreeSegment) {
-        jiggleTreeSegments.Add(jiggleTreeSegment);
         if (!jiggleRootLookup.TryAdd(jiggleTreeSegment.transform, jiggleTreeSegment)) {
             Debug.LogError("Multiple Jiggle trees detected targeting the same root transform, Jiggle Physics doesn't support this.", jiggleTreeSegment.transform);
             return;
@@ -128,11 +124,9 @@ public static class JigglePhysics {
 
     private static void RemoveAddChildren(Transform t) {
         foreach (Transform child in t) {
-            foreach (var jiggleTreeSegment in jiggleTreeSegments) {
-                if (jiggleRootLookup.TryGetValue(child, out var jiggleRootSegment)) {
-                    rootJiggleTreeSegments.Remove(jiggleTreeSegment);
-                    TryAddRootJiggleTreeSegment(jiggleTreeSegment);
-                }
+            if (jiggleRootLookup.TryGetValue(child, out var jiggleRootSegment)) {
+                rootJiggleTreeSegments.Remove(jiggleRootSegment);
+                TryAddRootJiggleTreeSegment(jiggleRootSegment);
             }
             RemoveAddChildren(child);
         }
@@ -348,10 +342,6 @@ public static class JigglePhysics {
 
         jiggleRootLookup.Remove(jiggleTreeSegment.transform);
 
-        if (jiggleTreeSegments.Contains(jiggleTreeSegment)) {
-            jiggleTreeSegments.Remove(jiggleTreeSegment);
-        }
-        
         if (jiggleTreeSegment.jiggleTree != null) {
             if (jiggleTrees.Contains(jiggleTreeSegment.jiggleTree)) {
                 jiggleTrees.Remove(jiggleTreeSegment.jiggleTree);

@@ -35,7 +35,13 @@ public class JiggleRig : MonoBehaviour {
         jiggleRigData.ResampleRestPose();
     }
 
+    #if !JIGGLEPHYSICS_DISABLE_ANIMATED_PARAMETER_UPDATE
     private void LateUpdate() {
+        UpdateParameters();
+    }
+    #endif
+
+    public void UpdateParameters() {
         if (animatedParameters) {
             jiggleRigData.UpdateParameters(parametersCache);
         }

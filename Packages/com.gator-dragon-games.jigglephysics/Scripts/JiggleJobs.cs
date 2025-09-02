@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Jobs;
@@ -49,6 +53,8 @@ public class JiggleJobs {
 
     public JiggleJobTransformWrite jobTransformWrite;
 
+    public List<IntPtr> freePointers;
+
 
     public JiggleJobs(double timeAsDouble, float fixedDeltaTime) {
         _memoryBus = new JiggleMemoryBus();
@@ -62,6 +68,7 @@ public class JiggleJobs {
         jobTransformWrite = new JiggleJobTransformWrite(_memoryBus);
         jobBroadPhase = new JiggleJobBroadPhase(_memoryBus);
         jobBroadPhaseClear = new JiggleJobBroadPhaseClear(_memoryBus);
+        freePointers = new List<IntPtr>();
     }
     
     public void SetFixedDeltaTime(float fixedDeltaTime) {
@@ -80,6 +87,7 @@ public class JiggleJobs {
         if (hasHandleSceneColliderRead) handleSceneColliderRead.Complete();
         if (hasHandleBroadPhase) handleBroadPhase.Complete();
         if (hasHandleBroadPhaseClear) handleBroadPhaseClear.Complete();
+        Free();
         _memoryBus.Dispose();
     }
 
@@ -132,6 +140,20 @@ public class JiggleJobs {
         }
     }
 
+    public void FreeOnComplete(IntPtr pointer) {
+        freePointers.Add(pointer);
+    }
+
+    private void Free() {
+        var freePointerCount = freePointers.Count;
+        for (int i = 0; i < freePointerCount; i++) {
+            unsafe {
+                UnsafeUtility.Free((void*)freePointers[i], Allocator.Persistent);
+            }
+        }
+        freePointers.Clear();
+    }
+
     public void Simulate(double simulateTime, double realTime) {
         if (_memoryBus.transformCount == 0) {
             _memoryBus.CommitTrees();
@@ -152,6 +174,7 @@ public class JiggleJobs {
         var gravity = Physics.gravity;
         if (hasHandleSimulate) {
             handleSimulate.Complete();
+            Free();
         }
 
         jobInterpolation.previousTimeStamp = jobInterpolation.timeStamp;

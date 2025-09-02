@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -89,11 +90,11 @@ public unsafe struct JiggleTreeJobData {
 
     public void Dispose() {
         if (points != null) {
-            UnsafeUtility.Free(points, Allocator.Persistent);
+            JigglePhysics.FreeOnComplete((IntPtr)points);
             points = null;
         }
         if (parameters != null) {
-            UnsafeUtility.Free(parameters, Allocator.Persistent);
+            JigglePhysics.FreeOnComplete((IntPtr)parameters);
             parameters = null;
         }
     }

@@ -77,6 +77,9 @@ public static class JigglePhysics {
     public static void RemoveJiggleCollider(JiggleColliderSerializable collider) {
         jobs?.Remove(collider);
     }
+    public static void FreeOnComplete(IntPtr pointer) {
+        jobs.FreeOnComplete(pointer);
+    }
     
     public static void AddJiggleTreeSegment(JiggleTreeSegment jiggleTreeSegment) {
         if (!jiggleRootLookup.TryAdd(jiggleTreeSegment.transform, jiggleTreeSegment)) {

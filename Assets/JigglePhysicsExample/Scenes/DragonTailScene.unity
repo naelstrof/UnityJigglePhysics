@@ -119,11 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!4 &1123605 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 1131640144713714205, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
-  m_PrefabInstance: {fileID: 5186486032966483342}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &26753670
 GameObject:
   m_ObjectHideFlags: 0
@@ -556,11 +551,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 507296871}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
---- !u!4 &116546014 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6036496497453789132, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
-  m_PrefabInstance: {fileID: 5186486032966483342}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &283800176
 GameObject:
   m_ObjectHideFlags: 0
@@ -605,474 +595,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c0a4f4d3c2ac554d8db0f45e0db71a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1 &322001234 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3784360438423282512, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
-  m_PrefabInstance: {fileID: 5186486032966483342}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &322001237 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4598016237722843626, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
   m_PrefabInstance: {fileID: 5186486032966483342}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &322001238
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 322001234}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c222ab56bf694d74096e6d709752b25f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  jiggleRigData:
-    hasSerializedData: 1
-    serializedVersion: v0.0.0
-    rootBone: {fileID: 1881370752}
-    excludeRoot: 0
-    jiggleTreeInputParameters:
-      advancedToggle: 1
-      collisionToggle: 1
-      angleLimitToggle: 0
-      stiffness:
-        value: 0.348
-        curveEnabled: 0
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      soften: 0.416
-      angleLimit:
-        value: 0.5
-        curveEnabled: 0
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      angleLimitSoften: 0
-      rootStretch: 0
-      stretch:
-        value: 0.1
-        curveEnabled: 0
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      drag:
-        value: 0.248
-        curveEnabled: 0
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      airDrag:
-        value: 0.098
-        curveEnabled: 0
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      gravity:
-        value: 0.5
-        curveEnabled: 0
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      collisionRadius:
-        value: 0.1
-        curveEnabled: 0
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      blend: 0
-    excludedTransforms: []
-    transformCachedData:
-    - bone: {fileID: 1881370752}
-      normalizedDistanceFromRoot: 0
-      lossyScale: 0.99999994
-    - bone: {fileID: 1033138350}
-      normalizedDistanceFromRoot: 0.35038608
-      lossyScale: 0.99999994
-    - bone: {fileID: 529562521}
-      normalizedDistanceFromRoot: 0.6679554
-      lossyScale: 1.0000001
-    - bone: {fileID: 116546014}
-      normalizedDistanceFromRoot: 1
-      lossyScale: 0.99999994
-    jiggleColliders: []
---- !u!114 &322001239
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 322001234}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c222ab56bf694d74096e6d709752b25f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  jiggleRigData:
-    hasSerializedData: 1
-    serializedVersion: v0.0.0
-    rootBone: {fileID: 1417948200}
-    excludeRoot: 0
-    jiggleTreeInputParameters:
-      advancedToggle: 0
-      collisionToggle: 0
-      angleLimitToggle: 0
-      stiffness:
-        value: 0.4659
-        curveEnabled: 0
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      soften: 0
-      angleLimit:
-        value: 0.5
-        curveEnabled: 0
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      angleLimitSoften: 0
-      rootStretch: 0
-      stretch:
-        value: 0.1
-        curveEnabled: 0
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      drag:
-        value: 0.1
-        curveEnabled: 0
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      airDrag:
-        value: 0
-        curveEnabled: 0
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      gravity:
-        value: 0
-        curveEnabled: 0
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      collisionRadius:
-        value: 0.1
-        curveEnabled: 0
-        curve:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-      blend: 0
-    excludedTransforms: []
-    transformCachedData:
-    - bone: {fileID: 1417948200}
-      normalizedDistanceFromRoot: 0
-      lossyScale: 1.0000004
-    - bone: {fileID: 1123605}
-      normalizedDistanceFromRoot: 0.4509842
-      lossyScale: 1.0000004
-    - bone: {fileID: 348916763}
-      normalizedDistanceFromRoot: 0.45099032
-      lossyScale: 1.0000004
-    - bone: {fileID: 0}
-      normalizedDistanceFromRoot: 1
-      lossyScale: 1.0000004
-    jiggleColliders: []
 --- !u!1 &341553838
 GameObject:
   m_ObjectHideFlags: 0
@@ -1181,11 +708,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 507296871}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
---- !u!4 &348916763 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5830815783102482904, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
-  m_PrefabInstance: {fileID: 5186486032966483342}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &388184547
 GameObject:
   m_ObjectHideFlags: 0
@@ -1452,11 +974,6 @@ Transform:
   - {fileID: 809552489}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &529562521 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4187289905487704972, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
-  m_PrefabInstance: {fileID: 5186486032966483342}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &594754709
 GameObject:
   m_ObjectHideFlags: 0
@@ -2039,7 +1556,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8343c89047352f4d97b4fac918908aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mode: 1
   targetLookat: {fileID: 847139013}
   distance: 3
 --- !u!114 &963194230
@@ -2194,11 +1710,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 507296871}
   m_LocalEulerAnglesHint: {x: 0, y: 77.377, z: 0}
---- !u!4 &1033138350 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2208735163087883891, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
-  m_PrefabInstance: {fileID: 5186486032966483342}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1090886235
 GameObject:
   m_ObjectHideFlags: 0
@@ -2415,11 +1926,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 507296871}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
---- !u!4 &1417948200 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6811347148463954992, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
-  m_PrefabInstance: {fileID: 5186486032966483342}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1536716530
 GameObject:
   m_ObjectHideFlags: 0
@@ -2852,11 +2358,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 507296871}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
---- !u!4 &1881370752 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3332194056887855151, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
-  m_PrefabInstance: {fileID: 5186486032966483342}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2121510143
 GameObject:
   m_ObjectHideFlags: 0
@@ -3081,6 +2582,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1430493378268709814, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
+      propertyPath: jiggleRigData.transformCachedData.Array.data[2].lossyScale
+      value: 1.0000001
+      objectReference: {fileID: 0}
+    - target: {fileID: 1430493378268709814, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
+      propertyPath: jiggleRigData.transformCachedData.Array.data[3].lossyScale
+      value: 0.99999994
+      objectReference: {fileID: 0}
+    - target: {fileID: 1430493378268709814, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
+      propertyPath: jiggleRigData.transformCachedData.Array.data[2].normalizedDistanceFromRoot
+      value: 0.6679554
+      objectReference: {fileID: 0}
     - target: {fileID: 1820556219838184642, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
       propertyPath: debugDraw
       value: 1
@@ -3132,6 +2645,14 @@ PrefabInstance:
     - target: {fileID: 1820556219838184642, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
       propertyPath: jiggleRigs.Array.data[0].radiusCurve.m_Curve.Array.data[1].tangentMode
       value: 34
+      objectReference: {fileID: 0}
+    - target: {fileID: 2119493910768559692, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
+      propertyPath: jiggleRigData.transformCachedData.Array.data[2].lossyScale
+      value: 1.0000004
+      objectReference: {fileID: 0}
+    - target: {fileID: 2119493910768559692, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
+      propertyPath: jiggleRigData.transformCachedData.Array.data[1].normalizedDistanceFromRoot
+      value: 0.99998647
       objectReference: {fileID: 0}
     - target: {fileID: 3784360438423282512, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
       propertyPath: m_Name
@@ -3197,13 +2718,7 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 4598016237722843626, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 847139013}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3784360438423282512, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 322001238}
-    - targetCorrespondingSourceObject: {fileID: 3784360438423282512, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 322001239}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

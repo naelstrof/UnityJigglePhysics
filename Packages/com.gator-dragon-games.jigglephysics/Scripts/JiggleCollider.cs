@@ -10,7 +10,7 @@ public struct JiggleColliderSerializable {
     public Transform transform;
     public JiggleCollider collider;
 
-    public void OnDrawGizmos() {
+    public void OnDrawGizmosSelected() {
         if (transform == null) {
             return;
         }

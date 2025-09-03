@@ -61,11 +61,16 @@ public static class JigglePhysics {
 
     public static void Dispose() {
         jobs?.Dispose();
+        JiggleRenderer.Dispose();
         rootJiggleTreeSegments = new List<JiggleTreeSegment>();
         jiggleRootLookup = new Dictionary<Transform, JiggleTreeSegment>();
         jiggleTrees = new HashSet<JiggleTree>();
         _globalDirty = true;
         jobs = null;
+    }
+
+    public static void Render(Material proceduralMaterial, Mesh sphere) {
+        JiggleRenderer.Render(jobs, proceduralMaterial, sphere);
     }
     
     public static void SetGlobalDirty() => _globalDirty = true;

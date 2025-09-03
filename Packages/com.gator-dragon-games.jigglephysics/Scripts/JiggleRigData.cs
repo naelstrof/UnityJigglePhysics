@@ -229,11 +229,11 @@ public struct JiggleRigData {
         };
     }
 
-    public void OnDrawGizmos() {
+    public void OnDrawGizmosSelected() {
         if (jiggleColliders != null) {
             var count = jiggleColliders.Length;
             for(int i=0;i<count;i++) {
-                jiggleColliders[i].OnDrawGizmos();
+                jiggleColliders[i].OnDrawGizmosSelected();
             }
         }
         

@@ -81,6 +81,8 @@ public class JiggleMemoryBus {
     
     private List<JiggleColliderSerializable> pendingSceneColliderAdd;
     private List<JiggleColliderSerializable> pendingSceneColliderRemove;
+
+    private bool hasWrittenData = false;
     
     private int preTransformCount;
 
@@ -112,12 +114,26 @@ public class JiggleMemoryBus {
         }
     }
 
+    public void GetColliders(out JiggleCollider[] personalColliders, out JiggleCollider[] sceneColliders, out int personalColliderCount, out int sceneColliderCount) {
+        if (commitSceneColliderState == CommitState.Idle) { // FIXME: dont reuse arrays here
+            ReadIn(this.personalColliders, personalColliderArray, this.personalColliderCount);
+            ReadIn(this.sceneColliders, sceneColliderArray, this.sceneColliderCount);
+        }
+        personalColliders = personalColliderArray;
+        sceneColliders = sceneColliderArray;
+        personalColliderCount = this.personalColliderCount;
+        sceneColliderCount = this.sceneColliderCount;
+    }
+
     public void GetResults(JobHandle interpolationJobHandle, JobHandle simulateJobHandle, out JiggleTransform[] poses, out JiggleTreeJobData[] treeJobData, out int poseCount, out int treeCount) {
         interpolationJobHandle.Complete();
         simulateJobHandle.Complete();
-        
-        ReadIn(interpolationOutputPoses, interpolationOutputPosesArray, transformCount);
-        ReadIn(jiggleTreeStructs, jiggleTreeStructsArray, this.treeCount);
+
+        if (commitTreeState == CommitState.Idle) { // FIXME: don't reuse Arrays here, 
+            ReadIn(interpolationOutputPoses, interpolationOutputPosesArray, transformCount);
+            ReadIn(jiggleTreeStructs, jiggleTreeStructsArray, this.treeCount);
+        }
+
         poseCount = transformCount;
         treeCount = this.treeCount;
         poses = interpolationOutputPosesArray;
@@ -291,6 +307,8 @@ public class JiggleMemoryBus {
 
         transformCount = 0;
         treeCount = 0;
+        sceneColliderCount = 0;
+        personalColliderCount = 0;
         broadPhaseMap = new NativeHashMap<int2, JiggleGridCell>(128, Allocator.Persistent);
     }
 
@@ -315,6 +333,7 @@ public class JiggleMemoryBus {
         ReadIn(simulationOutputPoseData, simulationOutputPoseDataArray, transformCount);
         ReadIn(interpolationCurrentPoseData, interpolationCurrentPoseDataArray, transformCount);
         ReadIn(interpolationPreviousPoseData, interpolationPreviousPoseDataArray, transformCount);
+        ReadIn(personalColliders, personalColliderArray, personalColliderCount);
         Profiler.EndSample();
     }
 

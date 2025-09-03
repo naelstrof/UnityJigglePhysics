@@ -228,6 +228,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c0a4f4d3c2ac554d8db0f45e0db71a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  proceduralMaterial: {fileID: 2100000, guid: 4fe20975baa16b1d4986440508067f23, type: 2}
+  sphereMesh: {fileID: -2691282190475973994, guid: 9a8a836b4c693e1e8b39eed45e660050, type: 3}
 --- !u!1 &441989834
 GameObject:
   m_ObjectHideFlags: 0

@@ -69,7 +69,7 @@ public struct JiggleJobBroadPhaseClear : IJob {
 [BurstCompile]
 public struct JiggleJobBroadPhase : IJob {
     public NativeHashMap<int2, JiggleGridCell> broadPhaseMap;
-    public NativeArray<JiggleCollider> jiggleColliders;
+    [ReadOnly] public NativeArray<JiggleCollider> jiggleColliders;
     public int jiggleColliderCount;
 
     public JiggleJobBroadPhase(JiggleMemoryBus bus) {

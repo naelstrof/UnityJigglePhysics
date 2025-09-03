@@ -99,7 +99,7 @@ public unsafe struct JiggleTreeJobData {
         }
     }
 
-    public void OnGizmoDraw() {
+    public void OnDrawGizmosSelected() {
         for (int i = 0; i < pointCount; i++) {
             var point = points[i];
             if (point.hasTransform) {

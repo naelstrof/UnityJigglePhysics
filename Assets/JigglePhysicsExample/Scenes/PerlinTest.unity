@@ -961,6 +961,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c0a4f4d3c2ac554d8db0f45e0db71a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  debugDraw: 0
+  proceduralMaterial: {fileID: 2100000, guid: 4fe20975baa16b1d4986440508067f23, type: 2}
+  sphereMesh: {fileID: 289301614986012343, guid: 9e1c97fc44f9a8744b61b58f72c56de4, type: 3}
 --- !u!4 &1703460869
 Transform:
   m_ObjectHideFlags: 0

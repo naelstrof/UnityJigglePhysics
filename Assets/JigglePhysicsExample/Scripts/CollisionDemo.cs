@@ -14,6 +14,7 @@ public class CollisionDemo : MonoBehaviour {
     void Start() {
         colliders = new List<GameObject>();
         StartCoroutine(SpawnColliders());
+        StartCoroutine(DestroyColliders());
         StartCoroutine(MoveColliders());
         StartCoroutine(TestCollider());
     }
@@ -32,6 +33,19 @@ public class CollisionDemo : MonoBehaviour {
         }
     }
 
+    IEnumerator DestroyColliders() {
+        while (isActiveAndEnabled) {
+            if (colliders.Count == 0) {
+                yield return null;
+                continue;
+            }
+            var selectedCollider = colliders[UnityEngine.Random.Range(0, colliders.Count)];
+            colliders.Remove(selectedCollider);
+            Destroy(selectedCollider);
+            yield return new WaitForSeconds(2f);
+        }
+    }
+
     IEnumerator MoveColliders() {
         while (isActiveAndEnabled) {
             foreach (var collider in colliders) {
@@ -45,6 +59,7 @@ public class CollisionDemo : MonoBehaviour {
         while (isActiveAndEnabled) {
             if (colliders.Count == 0) {
                 yield return null;
+                continue;
             }
             var selectedCollider = colliders[UnityEngine.Random.Range(0, colliders.Count)];
             testObject.transform.position = selectedCollider.transform.position +Vector3.forward*0.25f;

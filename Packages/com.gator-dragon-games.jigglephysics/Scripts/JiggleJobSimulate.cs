@@ -498,7 +498,7 @@ public struct JiggleJobSimulate : IJobFor {
 
     private bool Validate(JiggleTreeJobData tree) {
         if (!tree.GetIsValid(out string failReason)) {
-            throw new Exception(failReason);
+            throw new UnityException(failReason);
         }
 
         return true;

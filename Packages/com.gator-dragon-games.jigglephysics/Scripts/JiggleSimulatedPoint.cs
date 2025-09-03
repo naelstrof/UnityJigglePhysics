@@ -43,7 +43,7 @@ public unsafe struct JiggleSimulatedPoint {
             return false;
         }
         if (!GetIsValid(position)) {
-            failReason = $"position is invalid: {lastPosition}";
+            failReason = $"position is invalid: {position}";
             return false;
         }
         if (!GetIsValid(workingPosition)) {

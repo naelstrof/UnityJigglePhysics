@@ -539,17 +539,19 @@ public class JiggleMemoryBus {
             unsafe {
                 var point = jiggleTreeJobData.points[o];
                 var bone = jiggleTree.bones[o];
-                if (!bone) {
+                bool hasBone = bone;
+                var hasTransform = hasBone && point.hasTransform;
+                if (!hasBone) {
                     bone = GetDummyTransform(index + o);
                 }
                 bone.GetPositionAndRotation(out var pos, out var rot);
                 var pose = new JiggleTransform() {
-                    isVirtual = !point.hasTransform,
+                    isVirtual = !hasTransform,
                     position = pos,
                     rotation = rot,
                 };
                 var localPose = new JiggleTransform() {
-                    isVirtual = !point.hasTransform,
+                    isVirtual = !hasTransform,
                     position = jiggleTree.restPositions[o],
                     rotation = jiggleTree.restRotations[o],
                 };

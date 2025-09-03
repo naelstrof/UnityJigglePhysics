@@ -56,11 +56,11 @@ public class JiggleRig : MonoBehaviour {
         jiggleRigData.UpdateParameters(parametersCache);
     }
 
-    private void OnDrawGizmos() {
+    private void OnDrawGizmosSelected() {
         if (!isActiveAndEnabled) {
             return;
         }
-        jiggleRigData.OnDrawGizmos();
+        jiggleRigData.OnDrawGizmosSelected();
     }
 
 }

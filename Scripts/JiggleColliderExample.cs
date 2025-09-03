@@ -13,6 +13,6 @@ public class JiggleColliderExample : MonoBehaviour {
     }
 
     private void OnDrawGizmos() {
-        jiggleCollider.OnDrawGizmos();
+        jiggleCollider.OnDrawGizmosSelected();
     }
 }

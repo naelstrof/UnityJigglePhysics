@@ -55,6 +55,7 @@ public class JiggleJobs {
 
     public List<IntPtr> freePointers;
 
+    public JiggleMemoryBus GetMemoryBus() => _memoryBus;
 
     public JiggleJobs(double timeAsDouble, float fixedDeltaTime) {
         _memoryBus = new JiggleMemoryBus();
@@ -193,8 +194,14 @@ public class JiggleJobs {
         jobBroadPhase.UpdateArrays(_memoryBus);
         jobBroadPhaseClear.UpdateArrays(_memoryBus);
 
-        handlePersonalColliderRead = jobBulkPersonalColliderTransformRead.ScheduleReadOnly( _memoryBus.GetPersonalColliderTransformAccessArray(), 128);
-        handleSceneColliderRead = jobBulkSceneColliderTransformRead.ScheduleReadOnly(_memoryBus.GetSceneColliderTransformAccessArray(), 128);
+        if (hasHandleSimulate) {
+            handlePersonalColliderRead = jobBulkPersonalColliderTransformRead.ScheduleReadOnly( _memoryBus.GetPersonalColliderTransformAccessArray(), 128, handleSimulate);
+            handleSceneColliderRead = jobBulkSceneColliderTransformRead.ScheduleReadOnly(_memoryBus.GetSceneColliderTransformAccessArray(), 128, handleSimulate);
+        } else {
+            handlePersonalColliderRead = jobBulkPersonalColliderTransformRead.ScheduleReadOnly( _memoryBus.GetPersonalColliderTransformAccessArray(), 128);
+            handleSceneColliderRead = jobBulkSceneColliderTransformRead.ScheduleReadOnly(_memoryBus.GetSceneColliderTransformAccessArray(), 128);
+        }
+
         hasHandlePersonalColliderRead = true;
         hasHandleSceneColliderRead = true;
         
@@ -231,6 +238,10 @@ public class JiggleJobs {
 
     public void Remove(JiggleColliderSerializable collider) {
         _memoryBus.Remove(collider);
+    }
+
+    public void GetColliders(out JiggleCollider[] personalColliders, out JiggleCollider[] sceneColliders, out int personalColliderCount, out int sceneColliderCount) {
+        _memoryBus.GetColliders(out personalColliders, out sceneColliders, out personalColliderCount, out sceneColliderCount);
     }
 
     public void OnDrawGizmos() {

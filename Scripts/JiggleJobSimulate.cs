@@ -19,8 +19,8 @@ public struct JiggleJobSimulate : IJobFor {
     public NativeArray<JiggleTransform> inputPoses;
 
     [NativeDisableParallelForRestriction] public NativeArray<PoseData> outputPoses;
-    [NativeDisableParallelForRestriction] public NativeArray<JiggleCollider> personalColliders;
-    [NativeDisableParallelForRestriction] public NativeArray<JiggleCollider> sceneColliders;
+    [ReadOnly,NativeDisableParallelForRestriction] public NativeArray<JiggleCollider> personalColliders;
+    [ReadOnly,NativeDisableParallelForRestriction] public NativeArray<JiggleCollider> sceneColliders;
     
     [ReadOnly]
     public NativeHashMap<int2,JiggleGridCell> broadPhaseMap;

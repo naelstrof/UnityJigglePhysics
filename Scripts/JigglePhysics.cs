@@ -91,11 +91,11 @@ public static class JigglePhysics {
     public static void SetGlobalDirty() => _globalDirty = true;
 
     public static void AddJiggleCollider(JiggleColliderSerializable collider) {
-        jobs.Add(collider);
+        jobs.ScheduleAdd(collider);
     }
 
     public static void RemoveJiggleCollider(JiggleColliderSerializable collider) {
-        jobs?.Remove(collider);
+        jobs?.ScheduleRemove(collider);
     }
     public static void FreeOnComplete(IntPtr pointer) {
         jobs.FreeOnComplete(pointer);
@@ -178,7 +178,7 @@ public static class JigglePhysics {
                 CreateJiggleTree(rootJiggleTreeSegment.rig, rootJiggleTreeSegment);
             }
             jiggleTrees.Add(rootJiggleTreeSegment.jiggleTree);
-            jobs.Add(rootJiggleTreeSegment.jiggleTree);
+            jobs.ScheduleAdd(rootJiggleTreeSegment.jiggleTree);
         }
         Profiler.EndSample();
     }
@@ -357,6 +357,13 @@ public static class JigglePhysics {
         point.childenCount++;
     }
     
+    public static void ScheduleRemoveJiggleTree(JiggleTree jiggleTree) {
+        if (jiggleTrees.Contains(jiggleTree)) {
+            jiggleTrees.Remove(jiggleTree);
+            jobs.ScheduleRemove(jiggleTree);
+        }
+    }
+    
     public static void RemoveJiggleTreeSegment(JiggleTreeSegment jiggleTreeSegment) {
         if (rootJiggleTreeSegments.Contains(jiggleTreeSegment)) {
             rootJiggleTreeSegments.Remove(jiggleTreeSegment);
@@ -367,7 +374,7 @@ public static class JigglePhysics {
         if (jiggleTreeSegment.jiggleTree != null) {
             if (jiggleTrees.Contains(jiggleTreeSegment.jiggleTree)) {
                 jiggleTrees.Remove(jiggleTreeSegment.jiggleTree);
-                jobs.Remove(jiggleTreeSegment.jiggleTree);
+                jobs.ScheduleRemove(jiggleTreeSegment.jiggleTree);
             }
         }
 

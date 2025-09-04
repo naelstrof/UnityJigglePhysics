@@ -72,8 +72,15 @@ public class JiggleMemoryBus {
     public JiggleDoubleBufferTransformAccessArray doubleBufferPersonalColliderTransformAccessArray;
     public JiggleDoubleBufferTransformAccessArray doubleBufferSceneColliderTransformAccessArray;
 
-    private List<JiggleTree> pendingAddTrees;
-    private List<JiggleTree> pendingRemoveTrees;
+    private struct AddRemoveCommand {
+        public enum CommandType {
+            Add,
+            Remove
+        }
+        public CommandType commandType;
+        public JiggleTree tree;
+    }
+    private List<AddRemoveCommand> pendingCommands;
 
     private List<JiggleTree> pendingProcessingAdds;
     private List<JiggleTree> pendingProcessingRemoves;
@@ -302,8 +309,7 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
     }
 
     public JiggleMemoryBus() {
-        pendingAddTrees = new();
-        pendingRemoveTrees = new();
+        pendingCommands = new();
         pendingProcessingRemoves = new();
         pendingProcessingAdds = new();
         pendingSceneColliderAdd = new();
@@ -755,7 +761,7 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
         }
     }
 
-    public void Add(JiggleColliderSerializable jiggleCollider) {
+    public void ScheduleAdd(JiggleColliderSerializable jiggleCollider) {
         var count = pendingSceneColliderAdd.Count;
         for (int i = 0; i < count; i++) {
             if (pendingSceneColliderAdd[i].transform == jiggleCollider.transform) {
@@ -765,7 +771,7 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
         pendingSceneColliderAdd.Add(jiggleCollider);
     }
 
-    public void Remove(JiggleColliderSerializable jiggleCollider) {
+    public void ScheduleRemove(JiggleColliderSerializable jiggleCollider) {
         var count = pendingSceneColliderAdd.Count;
         for (int i = 0; i < count; i++) {
             if (pendingSceneColliderAdd[i].transform == jiggleCollider.transform) {
@@ -777,27 +783,27 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
         pendingSceneColliderRemove.Add(jiggleCollider);
     }
 
-    public void Add(JiggleTree jiggleTree) {
-        var count = pendingAddTrees.Count;
-        for (int i = 0; i < count; i++) {
-            if (pendingAddTrees[i].rootID == jiggleTree.rootID) {
-                return;
-            }
-        }
-
-        pendingAddTrees.Add(jiggleTree);
+    public void ScheduleAdd(JiggleTree jiggleTree) {
+        pendingCommands.Add(new AddRemoveCommand() {
+            commandType = AddRemoveCommand.CommandType.Add,
+            tree = jiggleTree,
+        });
     }
 
-    public void Remove(JiggleTree jiggleTree) {
-        var count = pendingAddTrees.Count;
-        for (int i = 0; i < count; i++) {
-            if (pendingAddTrees[i].rootID == jiggleTree.rootID) {
-                pendingAddTrees.RemoveAt(i);
+    public void ScheduleRemove(JiggleTree jiggleTree) {
+        int commandCount = pendingCommands.Count;
+        for (int i = 0; i < commandCount; i++) {
+            var pendingCommand = pendingCommands[i];
+            if (pendingCommand.commandType == AddRemoveCommand.CommandType.Add && pendingCommand.tree == jiggleTree) {
+                pendingCommands.RemoveAt(i);
                 return;
             }
         }
-
-        pendingRemoveTrees.Add(jiggleTree);
+        
+        pendingCommands.Add(new AddRemoveCommand() {
+            commandType = AddRemoveCommand.CommandType.Remove,
+            tree = jiggleTree,
+        });
     }
 
     public void Dispose() {

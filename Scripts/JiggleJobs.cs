@@ -55,7 +55,8 @@ public class JiggleJobs {
 
     public List<IntPtr> freePointers;
 
-    public JiggleMemoryBus GetMemoryBus() => _memoryBus;
+    public delegate void JiggleFinishSimulateAction(JiggleJobs job, double currentTime, double simulatedTime);
+    public event JiggleFinishSimulateAction OnFinishSimulate;
 
     public JiggleJobs(double timeAsDouble, float fixedDeltaTime) {
         _memoryBus = new JiggleMemoryBus();
@@ -176,6 +177,7 @@ public class JiggleJobs {
         if (hasHandleSimulate) {
             handleSimulate.Complete();
             Free();
+            OnFinishSimulate?.Invoke(this, realTime, simulateTime);
         }
 
         jobInterpolation.previousTimeStamp = jobInterpolation.timeStamp;
@@ -239,9 +241,35 @@ public class JiggleJobs {
     public void Remove(JiggleColliderSerializable collider) {
         _memoryBus.Remove(collider);
     }
-
+    
     public void GetColliders(out JiggleCollider[] personalColliders, out JiggleCollider[] sceneColliders, out int personalColliderCount, out int sceneColliderCount) {
         _memoryBus.GetColliders(out personalColliders, out sceneColliders, out personalColliderCount, out sceneColliderCount);
+    }
+    
+    public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] trees, out int poseCount, out int treeCount) {
+        if (hasHandleSimulate) {
+            handleSimulate.Complete();
+        }
+
+        if (hasHandleInterpolate) {
+            handleInterpolate.Complete();
+        }
+        _memoryBus.GetResults(out poses, out trees, out poseCount, out treeCount);
+    }
+    
+    public int GetTransformCapcity() {
+        return _memoryBus.transformCapacity;
+    }
+    public int GetTransformCount() {
+        return _memoryBus.transformCount;
+    }
+
+    public int GetPersonalColliderCapacity() {
+        return _memoryBus.personalColliderCapacity;
+    }
+    
+    public int GetSceneColliderCapacity() {
+        return _memoryBus.personalColliderCapacity;
     }
 
     public void OnDrawGizmos() {
@@ -249,7 +277,9 @@ public class JiggleJobs {
             return;
         }
 
-        _memoryBus.GetResults(handleInterpolate, handleSimulate, out var poses, out var trees, out var poseCount, out var treeCount);
+        handleInterpolate.Complete();
+        handleSimulate.Complete();
+        _memoryBus.GetResults(out var poses, out var trees, out var poseCount, out var treeCount);
         for (int i = 0; i < treeCount; i++) {
             var tree = trees[i];
             for (int o = 0; o < tree.pointCount; o++) {

@@ -41,7 +41,7 @@ public class JiggleMemoryBus {
     private PoseData[] interpolationPreviousPoseDataArray;
     private JiggleCollider[] personalColliderArray;
     private JiggleCollider[] sceneColliderArray;
-    
+
     private JiggleCollider[] personalColliderArrayOutput;
     private JiggleCollider[] sceneColliderArrayOutput;
     private JiggleTransform[] interpolationOutputPosesArrayOutput;
@@ -57,9 +57,9 @@ public class JiggleMemoryBus {
     public NativeArray<PoseData> interpolationCurrentPoseData;
     public NativeArray<PoseData> interpolationPreviousPoseData;
     public NativeHashMap<int2, JiggleGridCell> broadPhaseMap;
-    
+
     public NativeArray<JiggleCollider> personalColliders;
-    
+
     public NativeArray<JiggleCollider> sceneColliders;
 
     private List<Transform> transformAccessList;
@@ -80,23 +80,23 @@ public class JiggleMemoryBus {
 
     private JiggleMemoryFragmenter preMemoryFragmenter;
     private JiggleMemoryFragmenter memoryFragmenter;
-    
+
     private JiggleMemoryFragmenter personalColliderMemoryFragmenter;
     private JiggleMemoryFragmenter sceneColliderMemoryFragmenter;
-    
+
     private List<JiggleColliderSerializable> pendingSceneColliderAdd;
     private List<JiggleColliderSerializable> pendingSceneColliderRemove;
 
     private bool hasWrittenData = false;
-    
+
     private int preTransformCount;
 
     public int transformCount;
     public int treeCount;
-    
+
     public int personalColliderCount;
     public int personalColliderCapacity;
-    
+
     public int sceneColliderCount;
     public int sceneColliderCapacity;
 
@@ -104,7 +104,7 @@ public class JiggleMemoryBus {
     private int currentRootTransformAccessIndex = 0;
     private int currentPersonalColliderTransformAccessIndex = 0;
     private int currentSceneColliderTransformAccessIndex = 0;
-    
+
     private static List<Transform> dummyTransforms;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -113,13 +113,15 @@ public class JiggleMemoryBus {
             foreach (Transform t in dummyTransforms) {
                 Object.Destroy(t.gameObject);
             }
+
             dummyTransforms.Clear();
         } else {
             dummyTransforms = new List<Transform>();
         }
     }
 
-    public void GetColliders(out JiggleCollider[] personalColliders, out JiggleCollider[] sceneColliders, out int personalColliderCount, out int sceneColliderCount) {
+    public void GetColliders(out JiggleCollider[] personalColliders, out JiggleCollider[] sceneColliders,
+        out int personalColliderCount, out int sceneColliderCount) {
         ReadIn(this.personalColliders, personalColliderArrayOutput, this.personalColliderCount);
         ReadIn(this.sceneColliders, sceneColliderArrayOutput, this.sceneColliderCount);
         personalColliders = personalColliderArrayOutput;
@@ -128,7 +130,27 @@ public class JiggleMemoryBus {
         sceneColliderCount = this.sceneColliderCount;
     }
 
-    public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] treeJobData, out int poseCount, out int treeCount) {
+    public NativeArray<JiggleCollider> GetPersonalColliders(out int personalColliderCount) {
+        personalColliderCount = this.personalColliderCount;
+        return personalColliders;
+    }
+
+    public NativeArray<JiggleCollider> GetSceneColliders(out int sceneColliderCount) {
+        sceneColliderCount = this.sceneColliderCount;
+        return sceneColliders;
+    }
+
+    public NativeArray<JiggleTransform> GetInterpolatedOutputPoses(out int poseCount) {
+        poseCount = transformCount;
+        return interpolationOutputPoses;
+    }
+
+    public NativeArray<JiggleTreeJobData> GetTrees(out int treeCount) {
+        treeCount = this.treeCount;
+        return jiggleTreeStructs;
+    }
+
+public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] treeJobData, out int poseCount, out int treeCount) {
         ReadIn(interpolationOutputPoses, interpolationOutputPosesArrayOutput, transformCount);
         ReadIn(jiggleTreeStructs, jiggleTreeStructsArrayOutput, this.treeCount);
 

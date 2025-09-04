@@ -1,15 +1,20 @@
 using System;
 using System.Runtime.InteropServices;
 using GatorDragonGames.JigglePhysics;
+using Unity.Collections;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 
 namespace GatorDragonGames.JigglePhysics {
 public static class JiggleRenderer {
-    private static JiggleRenderInstancer.GPUChunk[] sphereChunks;
+    private static NativeArray<JiggleRenderInstancer.GPUChunk> sphereChunks;
     private static Bounds colliderBounds;
     private static int colliderCount;
-    
+
+    private static bool hasHandleRender;
+    private static JobHandle handleRender;
+    private static JiggleJobPrepareRender jobPrepareRender;
     private static JiggleRenderInstancer sphereInstancer;
     private static JiggleRenderInstancer planeInstancer;
 
@@ -17,6 +22,15 @@ public static class JiggleRenderer {
         sphereInstancer = new JiggleRenderInstancer();
         planeInstancer = new JiggleRenderInstancer();
         job.OnFinishSimulate += FlipData;
+        jobPrepareRender = new JiggleJobPrepareRender() {
+            personalColliders = job.GetPersonalColliders(out var _),
+            sceneColliders = job.GetSceneColliders(out var _),
+            outputPoses = job.GetInterpolatedOutputPoses(out var _),
+            trees = job.GetTrees(out var _),
+            sphereChunks = sphereChunks,
+            sphereBounds = new NativeReference<Bounds>(Allocator.Persistent),
+            sphereCount = new NativeReference<int>(Allocator.Persistent),
+        };
     }
     
     private static float4 ColorToFloat4(Color color) {
@@ -33,84 +47,38 @@ public static class JiggleRenderer {
             return;
         }
 
-        job.GetColliders(out var personalColliders, out var sceneColliders, out var personalColliderCount, out var sceneColliderCount);
-        if (sphereChunks == null || sphereChunks.Length != desiredChunkCount) {
-            var newSphereChunks = new JiggleRenderInstancer.GPUChunk[desiredChunkCount];
-            if (sphereChunks != null) {
+        if (!sphereChunks.IsCreated || sphereChunks.Length != desiredChunkCount) {
+            var newSphereChunks = new NativeArray<JiggleRenderInstancer.GPUChunk>(desiredChunkCount, Allocator.Persistent);
+            if (sphereChunks.IsCreated) {
                 var oldLength = sphereChunks.Length;
-                Array.Copy(sphereChunks, newSphereChunks, oldLength);
+                sphereChunks.Dispose();
+                NativeArray<JiggleRenderInstancer.GPUChunk>.Copy(sphereChunks, newSphereChunks, oldLength);
             }
             sphereChunks = newSphereChunks;
         }
-
-        colliderCount = personalColliderCount + sceneColliderCount;
-        
-        Vector3 min = Vector3.one * 10000f;
-        Vector3 max = Vector3.one * -10000f;
-
-        for (int i = 0; i < personalColliderCount; i++) {
-            var collider = personalColliders[i];
-            min = Vector3.Min(min, collider.localToWorldMatrix.c3.xyz - new float3(1f)*collider.worldRadius);
-            max = Vector3.Max(max, collider.localToWorldMatrix.c3.xyz + new float3(1f)*collider.worldRadius);
-            var matrix = collider.localToWorldMatrix;
-            var scaleAdjust = float4x4.Scale(collider.radius*2f);
-            JiggleRenderInstancer.GPUChunk chunk = new() {
-                matrix = math.mul(matrix,scaleAdjust),
-                color = ColorToFloat4(Color.darkOrange)
-            };
-            sphereChunks[i] = chunk;
-        }
-
-        for (int i = 0; i < sceneColliderCount; i++) {
-            var collider = sceneColliders[i];
-            min = Vector3.Min(min, collider.localToWorldMatrix.c3.xyz - new float3(1f)*collider.worldRadius);
-            max = Vector3.Max(max, collider.localToWorldMatrix.c3.xyz + new float3(1f)*collider.worldRadius);
-            var matrix = collider.localToWorldMatrix;
-            var scaleAdjust = float4x4.Scale(2f*collider.radius);
-            JiggleRenderInstancer.GPUChunk chunk = new JiggleRenderInstancer.GPUChunk() {
-                matrix = math.mul(matrix, scaleAdjust),
-                color = ColorToFloat4(Color.darkRed)
-            };
-            sphereChunks[i + personalColliderCount] = chunk;
-        }
-        colliderBounds = new Bounds(Vector3.zero, math.max(math.abs(max), math.abs(min))*2f);
     }
 
-    public static void Render(JiggleJobs job, Material gpuInstanceMaterial, Mesh sphere, double time, float fixedDeltaTime) {
-        if (sphereChunks == null) {
+    public static void PrepareRender(JiggleJobs job) {
+        if (!sphereChunks.IsCreated) {
             return;
         }
+        jobPrepareRender.sphereChunks = sphereChunks;
+        jobPrepareRender.personalColliders = job.GetPersonalColliders(out jobPrepareRender.personalColliderCount);
+        jobPrepareRender.sceneColliders = job.GetSceneColliders(out jobPrepareRender.sceneColliderCount);
+        jobPrepareRender.outputPoses = job.GetInterpolatedOutputPoses(out jobPrepareRender.transformCount);
+        jobPrepareRender.trees = job.GetTrees(out jobPrepareRender.treeCount);
+        if (job.hasHandleSimulate && job.hasHandleInterpolate) {
+            handleRender = jobPrepareRender.Schedule(JobHandle.CombineDependencies(job.handleSimulate, job.handleInterpolate));
+            hasHandleRender = true;
+        }
+    }
 
-        Vector3 min = colliderBounds.min;
-        Vector3 max = colliderBounds.max;
-        job.GetResults(out var poses, out var trees, out var poseCount, out var treeCount);
-        int currentCount = colliderCount;
-        for (int i = 0; i < treeCount; i++) {
-            var tree = trees[i];
-            for(int o=0;o<tree.pointCount;o++) {
-                unsafe {
-                    var point = tree.points[o];
-                    var pose = poses[o + tree.transformIndexOffset];
-                    if (pose.isVirtual) {
-                        continue;
-                    }
-                    var radius = point.worldRadius;
-                    JiggleRenderInstancer.GPUChunk chunk = new JiggleRenderInstancer.GPUChunk() {
-                        matrix = float4x4.TRS(pose.position, pose.rotation, new float3(1f*radius*2f)),
-                        color = ColorToFloat4(Color.lightSkyBlue),
-                    };
-                    min = Vector3.Min(min, pose.position - new float3(1f)*radius);
-                    max = Vector3.Max(max, pose.position + new float3(1f)*radius);
-                    sphereChunks[currentCount] = chunk;
-                    currentCount++;
-                }
-            }
-        }
-        if (currentCount == 0) {
+    public static void FinishRender(Material gpuInstanceMaterial, Mesh sphere) {
+        if (!sphereChunks.IsCreated || !hasHandleRender) {
             return;
         }
-        var newBounds = new Bounds(Vector3.zero, math.max(math.abs(max), math.abs(min))*2f);
-        sphereInstancer.Render(newBounds, sphere, gpuInstanceMaterial, sphereChunks, currentCount);
+        handleRender.Complete();
+        sphereInstancer.Render(jobPrepareRender.sphereBounds.Value, sphere, gpuInstanceMaterial, sphereChunks, jobPrepareRender.sphereCount.Value);
     }
 
     public static void Dispose() {
@@ -118,6 +86,10 @@ public static class JiggleRenderer {
         sphereInstancer = null;
         planeInstancer?.Dispose();
         planeInstancer = null;
+        jobPrepareRender.Dispose();
+        if (sphereChunks.IsCreated) {
+            sphereChunks.Dispose();
+        }
     }
 }
 

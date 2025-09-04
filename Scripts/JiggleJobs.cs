@@ -257,6 +257,22 @@ public class JiggleJobs {
         _memoryBus.GetResults(out poses, out trees, out poseCount, out treeCount);
     }
     
+    public NativeArray<JiggleCollider> GetPersonalColliders(out int personalColliderCount) {
+        return _memoryBus.GetPersonalColliders(out personalColliderCount);
+    }
+
+    public NativeArray<JiggleCollider> GetSceneColliders(out int sceneColliderCount) {
+        return _memoryBus.GetSceneColliders(out sceneColliderCount);
+    }
+
+    public NativeArray<JiggleTransform> GetInterpolatedOutputPoses(out int poseCount) {
+        return _memoryBus.GetInterpolatedOutputPoses(out poseCount);
+    }
+
+    public NativeArray<JiggleTreeJobData> GetTrees(out int treeCount) {
+        return _memoryBus.GetTrees(out treeCount);
+    }
+    
     public int GetTransformCapcity() {
         return _memoryBus.transformCapacity;
     }
@@ -270,6 +286,14 @@ public class JiggleJobs {
     
     public int GetSceneColliderCapacity() {
         return _memoryBus.personalColliderCapacity;
+    }
+    
+    public int GetPersonalColliderCount() {
+        return _memoryBus.personalColliderCount;
+    }
+    
+    public int GetSceneColliderCount() {
+        return _memoryBus.personalColliderCount;
     }
 
     public void OnDrawGizmos() {

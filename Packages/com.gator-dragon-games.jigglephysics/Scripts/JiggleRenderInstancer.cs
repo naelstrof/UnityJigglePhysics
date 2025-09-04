@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using GatorDragonGames.JigglePhysics;
+using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -15,7 +16,7 @@ public class JiggleRenderInstancer {
     private int bufferCount;
     private MaterialPropertyBlock materialPropertyBlock;
     
-    private void GenerateChunks(GPUChunk[] chunks, int count) {
+    private void GenerateChunks(NativeArray<GPUChunk> chunks, int count) {
         int desiredChunkCount = chunks.Length;
         if (desiredChunkCount == 0) {
             return;
@@ -29,7 +30,7 @@ public class JiggleRenderInstancer {
         chunkBuffer.SetData(chunks, 0, 0, count);
     }
     
-    public void Render(Bounds bounds, Mesh mesh, Material material, GPUChunk[] chunks, int count) {
+    public void Render(Bounds bounds, Mesh mesh, Material material, NativeArray<GPUChunk> chunks, int count) {
         GenerateChunks(chunks, count);
         if (chunkBuffer == null) {
             return;

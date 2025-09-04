@@ -17,9 +17,13 @@ public class JiggleUpdateExample : MonoBehaviour {
         var fixedTime = Time.fixedDeltaTime;
         
         JigglePhysics.SchedulePose(time);
+        if (debugDraw) {
+            JigglePhysics.ScheduleRender();
+        }
+        
         JigglePhysics.CompletePose();
         if (debugDraw) {
-            JigglePhysics.Render(proceduralMaterial, sphereMesh, time, fixedTime);
+            JigglePhysics.CompleteRender(proceduralMaterial, sphereMesh);
         }
     }
 

@@ -71,13 +71,21 @@ public static class JigglePhysics {
         jobs = null;
     }
 
-    public static void Render(Material proceduralMaterial, Mesh sphere, double time, float fixedDeltaTime) {
+    public static void ScheduleRender() {
+        if (!initializedRendering) {
+            JiggleRenderer.OnEnable(jobs);
+            initializedRendering = true;
+        }
+        JiggleRenderer.PrepareRender(jobs);
+    }
+
+    public static void CompleteRender(Material proceduralMaterial, Mesh sphere) {
         if (!initializedRendering) {
             JiggleRenderer.OnEnable(jobs);
             initializedRendering = true;
         }
 
-        JiggleRenderer.Render(jobs,proceduralMaterial, sphere, time, fixedDeltaTime);
+        JiggleRenderer.FinishRender(proceduralMaterial, sphere);
     }
     
     public static void SetGlobalDirty() => _globalDirty = true;

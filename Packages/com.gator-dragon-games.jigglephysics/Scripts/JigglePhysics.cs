@@ -15,6 +15,7 @@ public static class JigglePhysics {
     private static readonly List<JiggleCollider> tempColliders = new List<JiggleCollider>();
     private static readonly List<Transform> tempColliderTransforms = new List<Transform>();
     private static List<JiggleTreeSegment> rootJiggleTreeSegments;
+    private static bool initializedRendering = false;
 
     private static double lastFixedCurrentTime = 0f;
     public const float MERGE_DISTANCE = 0.001f;
@@ -54,6 +55,7 @@ public static class JigglePhysics {
         rootJiggleTreeSegments = new List<JiggleTreeSegment>();
         jiggleRootLookup = new Dictionary<Transform, JiggleTreeSegment>();
         jiggleTrees = new HashSet<JiggleTree>();
+        initializedRendering = false;
         _globalDirty = true;
         jobs?.Dispose();
         jobs = new JiggleJobs(Time.timeAsDouble, Time.fixedDeltaTime);
@@ -69,8 +71,13 @@ public static class JigglePhysics {
         jobs = null;
     }
 
-    public static void Render(Material proceduralMaterial, Mesh sphere) {
-        JiggleRenderer.Render(jobs, proceduralMaterial, sphere);
+    public static void Render(Material proceduralMaterial, Mesh sphere, double time, float fixedDeltaTime) {
+        if (!initializedRendering) {
+            JiggleRenderer.OnEnable(jobs);
+            initializedRendering = true;
+        }
+
+        JiggleRenderer.Render(jobs,proceduralMaterial, sphere, time, fixedDeltaTime);
     }
     
     public static void SetGlobalDirty() => _globalDirty = true;

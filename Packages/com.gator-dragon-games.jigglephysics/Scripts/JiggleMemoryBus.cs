@@ -28,8 +28,8 @@ public struct PoseData {
 
 public class JiggleMemoryBus {
     // : IContainer<JiggleTreeStruct> {
-    private int treeCapacity = 0;
-    private int transformCapacity = 0;
+    public int treeCapacity { get; private set; }
+    public int transformCapacity { get; private set; }
     private JiggleTreeJobData[] jiggleTreeStructsArray;
     private JiggleTransform[] simulateInputPosesArray;
     private JiggleTransform[] restPoseTransformsArray;
@@ -41,6 +41,11 @@ public class JiggleMemoryBus {
     private PoseData[] interpolationPreviousPoseDataArray;
     private JiggleCollider[] personalColliderArray;
     private JiggleCollider[] sceneColliderArray;
+    
+    private JiggleCollider[] personalColliderArrayOutput;
+    private JiggleCollider[] sceneColliderArrayOutput;
+    private JiggleTransform[] interpolationOutputPosesArrayOutput;
+    private JiggleTreeJobData[] jiggleTreeStructsArrayOutput;
 
     public NativeArray<JiggleTreeJobData> jiggleTreeStructs;
     public NativeArray<JiggleTransform> simulateInputPoses;
@@ -115,29 +120,22 @@ public class JiggleMemoryBus {
     }
 
     public void GetColliders(out JiggleCollider[] personalColliders, out JiggleCollider[] sceneColliders, out int personalColliderCount, out int sceneColliderCount) {
-        if (commitSceneColliderState == CommitState.Idle) { // FIXME: dont reuse arrays here
-            ReadIn(this.personalColliders, personalColliderArray, this.personalColliderCount);
-            ReadIn(this.sceneColliders, sceneColliderArray, this.sceneColliderCount);
-        }
-        personalColliders = personalColliderArray;
-        sceneColliders = sceneColliderArray;
+        ReadIn(this.personalColliders, personalColliderArrayOutput, this.personalColliderCount);
+        ReadIn(this.sceneColliders, sceneColliderArrayOutput, this.sceneColliderCount);
+        personalColliders = personalColliderArrayOutput;
+        sceneColliders = sceneColliderArrayOutput;
         personalColliderCount = this.personalColliderCount;
         sceneColliderCount = this.sceneColliderCount;
     }
 
-    public void GetResults(JobHandle interpolationJobHandle, JobHandle simulateJobHandle, out JiggleTransform[] poses, out JiggleTreeJobData[] treeJobData, out int poseCount, out int treeCount) {
-        interpolationJobHandle.Complete();
-        simulateJobHandle.Complete();
-
-        if (commitTreeState == CommitState.Idle) { // FIXME: don't reuse Arrays here, 
-            ReadIn(interpolationOutputPoses, interpolationOutputPosesArray, transformCount);
-            ReadIn(jiggleTreeStructs, jiggleTreeStructsArray, this.treeCount);
-        }
+    public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] treeJobData, out int poseCount, out int treeCount) {
+        ReadIn(interpolationOutputPoses, interpolationOutputPosesArrayOutput, transformCount);
+        ReadIn(jiggleTreeStructs, jiggleTreeStructsArrayOutput, this.treeCount);
 
         poseCount = transformCount;
         treeCount = this.treeCount;
-        poses = interpolationOutputPosesArray;
-        treeJobData = jiggleTreeStructsArray;
+        poses = interpolationOutputPosesArrayOutput;
+        treeJobData = jiggleTreeStructsArrayOutput;
     }
 
     public static Transform GetDummyTransform(int index) {
@@ -165,6 +163,7 @@ public class JiggleMemoryBus {
     private void ResizeSceneColliderCapacity(int newColliderCapacity) {
         sceneColliderMemoryFragmenter.Resize(newColliderCapacity);
         var newColliders = new JiggleCollider[newColliderCapacity];
+        sceneColliderArrayOutput = new JiggleCollider[newColliderCapacity];
         if (sceneColliderArray != null) {
             System.Array.Copy(sceneColliderArray, newColliders,
                 System.Math.Min(sceneColliderCount, newColliderCapacity));
@@ -180,6 +179,7 @@ public class JiggleMemoryBus {
     private void ResizePersonalColliderCapacity(int newColliderCapacity) {
         personalColliderMemoryFragmenter.Resize(newColliderCapacity);
         var newColliders = new JiggleCollider[newColliderCapacity];
+        personalColliderArrayOutput = new JiggleCollider[newColliderCapacity];
         if (personalColliderArray != null) {
             System.Array.Copy(personalColliderArray, newColliders,
                 System.Math.Min(personalColliderCount, newColliderCapacity));
@@ -203,6 +203,7 @@ public class JiggleMemoryBus {
         var newSimulationOutputPoseDataArray = new PoseData[newTransformCapacity];
         var newInterpolationCurrentPoseDataArray = new PoseData[newTransformCapacity];
         var newInterpolationPreviousPoseDataArray = new PoseData[newTransformCapacity];
+        interpolationOutputPosesArrayOutput = new JiggleTransform[newTransformCapacity];
 
         if (jiggleTreeStructsArray != null) {
             System.Array.Copy(simulateInputPosesArray, newSimulateInputPosesArray,
@@ -261,6 +262,7 @@ public class JiggleMemoryBus {
 
     private void ResizeTreeCapacity(int newTreeCapacity) {
         var newJiggleTreeStructsArray = new JiggleTreeJobData[newTreeCapacity];
+        jiggleTreeStructsArrayOutput = new JiggleTreeJobData[newTreeCapacity];
 
         if (jiggleTreeStructsArray != null) {
             System.Array.Copy(jiggleTreeStructsArray, newJiggleTreeStructsArray,

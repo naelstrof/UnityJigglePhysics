@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Unity.Mathematics;
+using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace GatorDragonGames.JigglePhysics {
@@ -60,6 +62,18 @@ public class JiggleMemoryFragmenter {
 
     public void Free(int startIndex, int size) {
         var fragmentCount = fragments.Count;
+        #if UNITY_EDITOR
+        for (int i = 0; i < fragmentCount; i++) {
+            var fragment = fragments[i];
+            var smallRange = math.min(fragment.count, size);
+            var larger = math.max(fragment.startIndex, startIndex);
+            var smaller = math.min(fragment.startIndex, startIndex);
+            if (larger - smaller < smallRange) {
+                throw new UnityException("Double free detected, not allowed!");
+            }
+        }
+        #endif
+
         for (int i = 0; i < fragmentCount; i++) {
             var fragment = fragments[i];
             if (fragment.startIndex + fragment.count == startIndex) {

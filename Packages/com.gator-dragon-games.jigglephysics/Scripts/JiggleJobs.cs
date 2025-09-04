@@ -226,20 +226,20 @@ public class JiggleJobs {
         hasHandleSimulate = true;
     }
 
-    public void Add(JiggleTree tree) {
-        _memoryBus.Add(tree);
+    public void ScheduleAdd(JiggleTree tree) {
+        _memoryBus.ScheduleAdd(tree);
     }
 
-    public void Remove(JiggleTree tree) {
-        _memoryBus.Remove(tree);
+    public void ScheduleRemove(JiggleTree tree) {
+        _memoryBus.ScheduleRemove(tree);
     }
     
-    public void Add(JiggleColliderSerializable collider) {
-        _memoryBus.Add(collider);
+    public void ScheduleAdd(JiggleColliderSerializable collider) {
+        _memoryBus.ScheduleAdd(collider);
     }
 
-    public void Remove(JiggleColliderSerializable collider) {
-        _memoryBus.Remove(collider);
+    public void ScheduleRemove(JiggleColliderSerializable collider) {
+        _memoryBus.ScheduleRemove(collider);
     }
     
     public void GetColliders(out JiggleCollider[] personalColliders, out JiggleCollider[] sceneColliders, out int personalColliderCount, out int sceneColliderCount) {

@@ -81,11 +81,12 @@ public class JiggleMemoryBus {
         public JiggleTree tree;
     }
     private List<AddRemoveCommand> pendingCommands;
+    private List<JiggleTree> pendingRemoveTrees;
+    private List<JiggleTree> pendingAddTrees;
 
     private List<JiggleTree> pendingProcessingAdds;
     private List<JiggleTree> pendingProcessingRemoves;
 
-    private JiggleMemoryFragmenter preMemoryFragmenter;
     private JiggleMemoryFragmenter memoryFragmenter;
 
     private JiggleMemoryFragmenter personalColliderMemoryFragmenter;
@@ -222,7 +223,6 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
     }
 
     private void ResizeTransformCapacity(int newTransformCapacity) {
-        preMemoryFragmenter.Resize(newTransformCapacity);
         memoryFragmenter.Resize(newTransformCapacity);
         var newSimulateInputPosesArray = new JiggleTransform[newTransformCapacity];
         var newRestPoseTransformsArray = new JiggleTransform[newTransformCapacity];
@@ -314,7 +314,9 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
         pendingProcessingAdds = new();
         pendingSceneColliderAdd = new();
         pendingSceneColliderRemove = new();
-        preMemoryFragmenter = new JiggleMemoryFragmenter(4096);
+        pendingAddTrees = new();
+        pendingRemoveTrees = new();
+        
         memoryFragmenter = new JiggleMemoryFragmenter(4096);
         personalColliderMemoryFragmenter = new JiggleMemoryFragmenter(2048);
         sceneColliderMemoryFragmenter = new JiggleMemoryFragmenter(2048);
@@ -430,7 +432,7 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
         for (int i = 0; i < treeCount; i++) {
             var removedTree = jiggleTreeStructsArray[i];
             if (removedTree.rootID != id) continue;
-            preMemoryFragmenter.Free((int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            memoryFragmenter.Free((int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
             break;
         }
     }
@@ -469,8 +471,7 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
             for (int j = (int)removedTree.colliderIndexOffset; j < removedTree.colliderIndexOffset + removedTree.colliderCount; j++) {
                 personalColliderTransformAccessList[j] = GetDummyTransform(j);
             }
-
-            memoryFragmenter.Free((int)removedTree.transformIndexOffset, (int)removedTree.pointCount);
+            tree.SetTransformIndexOffset(0);
             break;
         }
 
@@ -493,6 +494,8 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
             Debug.LogError($"JigglePhysics: Cannot add tree with null bone at index {o} to memory bus.");
             return false;
         }
+        
+        jiggleTree.SetTransformIndexOffset(index);
 
         if (treeCount + 1 > treeCapacity) {
             ResizeTreeCapacity(treeCapacity * 2);
@@ -662,6 +665,36 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
             doubleBufferTransformAccessArray.ClearIfNeeded();
             doubleBufferTransformRootAccessArray.ClearIfNeeded();
             doubleBufferPersonalColliderTransformAccessArray.ClearIfNeeded();
+
+            var commandCount = pendingCommands.Count;
+            if (commandCount == 0) {
+                return;
+            }
+            
+            for (int i = 0; i < commandCount; i++) {
+                var command = pendingCommands[i];
+                if (command.commandType == AddRemoveCommand.CommandType.Add) {
+                    var found = false;
+                    for (int o = i+1; o < commandCount; o++) {
+                        var otherCommand = pendingCommands[o];
+                        if (otherCommand.commandType == AddRemoveCommand.CommandType.Remove && otherCommand.tree.rootID == command.tree.rootID) {
+                            Debug.Log("SKIPPED ADD");
+                            pendingCommands.RemoveAt(o);
+                            commandCount -= 1;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        pendingAddTrees.Add(command.tree);
+                    }
+                } else if (command.commandType == AddRemoveCommand.CommandType.Remove) {
+                    pendingRemoveTrees.Add(command.tree);
+                } else {
+                    throw new System.ArgumentException("Unexpected command type: " + command.commandType);
+                }
+            }
+            pendingCommands.Clear();
             
             var pendingRemoveCount = pendingRemoveTrees.Count;
             var pendingAddCount = pendingAddTrees.Count;
@@ -670,7 +703,6 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
                 return;
             }
 
-            preMemoryFragmenter.CopyFrom(memoryFragmenter);
             preTransformCount = transformCount;
 
             for (int i = 0; i < pendingRemoveCount; i++) {
@@ -686,14 +718,14 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
                 var jiggleTreeStruct = pendingAddTrees[i].GetStruct();
                 var pointCount = (int)jiggleTreeStruct.pointCount;
 
-                var found = preMemoryFragmenter.TryAllocate(pointCount, out var startIndex);
+                var found = memoryFragmenter.TryAllocate(pointCount, out var startIndex);
                 if (!found) {
                     ResizeTransformCapacity(transformCapacity * 2);
-                    preMemoryFragmenter.TryAllocate(pointCount, out startIndex);
+                    memoryFragmenter.TryAllocate(pointCount, out startIndex);
                 }
 
                 if (!TryAddTransformsToSlice(startIndex, jiggleTree, jiggleTreeStruct)) {
-                    preMemoryFragmenter.Free(startIndex, pointCount);
+                    memoryFragmenter.Free(startIndex, pointCount);
                     pendingAddTrees.RemoveAt(i);
                     i=Mathf.Max(i-1,0);
                 }
@@ -722,6 +754,7 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
             Profiler.BeginSample("JiggleMemoryBus.Commit.Remove");
             for (int i = 0; i < processingPendingRemoveCount; i++) {
                 var tree = pendingProcessingRemoves[i];
+                Debug.Log("REMOVED TREE REAL");
                 RemoveTree(tree);
                 tree.Dispose();
             }
@@ -737,15 +770,8 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
             for (int i = 0; i < processingPendingAddCount; i++) {
                 var jiggleTree = pendingProcessingAdds[i];
                 var jiggleTreeStruct = jiggleTree.GetStruct();
-                int pointCount = (int)jiggleTreeStruct.pointCount;
-
-                var found = memoryFragmenter.TryAllocate(pointCount, out var startIndex);
-                if (!found) {
-                    ResizeTransformCapacity(transformCapacity * 2);
-                    memoryFragmenter.TryAllocate(pointCount, out startIndex);
-                }
-
-                AddTreeToSlice(startIndex, jiggleTree, jiggleTreeStruct);
+                AddTreeToSlice((int)jiggleTreeStruct.transformIndexOffset, jiggleTree, jiggleTreeStruct);
+                Debug.Log("ADD TREE REAL");
             }
 
             pendingProcessingAdds.Clear();
@@ -791,15 +817,6 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
     }
 
     public void ScheduleRemove(JiggleTree jiggleTree) {
-        int commandCount = pendingCommands.Count;
-        for (int i = 0; i < commandCount; i++) {
-            var pendingCommand = pendingCommands[i];
-            if (pendingCommand.commandType == AddRemoveCommand.CommandType.Add && pendingCommand.tree == jiggleTree) {
-                pendingCommands.RemoveAt(i);
-                return;
-            }
-        }
-        
         pendingCommands.Add(new AddRemoveCommand() {
             commandType = AddRemoveCommand.CommandType.Remove,
             tree = jiggleTree,

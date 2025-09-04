@@ -7,7 +7,6 @@ using UnityEngine;
 
 namespace GatorDragonGames.JigglePhysics {
 
-[BurstCompile]
 public struct JiggleJobSimulate : IJobFor {
     // TODO: doubles are strictly a bad way to track time, probably should be ints or longs.
     public double timeStamp;

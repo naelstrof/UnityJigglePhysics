@@ -6,6 +6,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 
 namespace GatorDragonGames.JigglePhysics {
+[BurstCompile]
 public unsafe struct JiggleGridCell {
     public static int2 GetKey(float3 position) {
         return (int2)position.xz;
@@ -33,8 +34,8 @@ public unsafe struct JiggleGridCell {
     }
 }
 
-[BurstCompile]
 // TODO: I don't actually know what a broadphase is, might need to be labelled something different?
+[BurstCompile]
 public struct JiggleJobBroadPhaseClear : IJob {
     public NativeHashMap<int2, JiggleGridCell> broadPhaseMap;
 
@@ -96,14 +97,16 @@ public struct JiggleJobBroadPhase : IJob {
                     if (!broadPhaseMap.ContainsKey(grid)) {
                         broadPhaseMap.Add(grid, new JiggleGridCell(255));
                     }
-                    var gridCell = broadPhaseMap[gridPosition];
-                    gridCell.staleness = 0;
-                    unsafe {
-                        gridCell.colliderIndices[gridCell.count] = i;
-                        gridCell.count = math.min(gridCell.count + 1, 255);
+
+                    if (broadPhaseMap.TryGetValue(grid, out JiggleGridCell gridCell)) {
+                        gridCell.staleness = 0;
+                        unsafe {
+                            gridCell.colliderIndices[gridCell.count] = i;
+                            gridCell.count = math.min(gridCell.count + 1, 255);
+                        }
+                        broadPhaseMap[grid] = gridCell;
                     }
 
-                    broadPhaseMap[gridPosition] = gridCell;
                 }
             }
 

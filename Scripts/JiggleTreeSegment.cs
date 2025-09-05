@@ -9,8 +9,6 @@ public class JiggleTreeSegment {
     public JiggleTreeSegment parent { get; private set; }
     public JiggleRigData rig { get; private set; }
 
-    public void SetJiggleTree(JiggleTree jiggleTree) => this.jiggleTree = jiggleTree;
-
     public void SetParent(JiggleTreeSegment jiggleTree) {
         parent?.SetDirty();
         parent = jiggleTree;
@@ -21,6 +19,13 @@ public class JiggleTreeSegment {
     public JiggleTreeSegment(Transform transform, JiggleRigData rig) {
         this.transform = transform;
         this.rig = rig;
+        jiggleTree = JigglePhysics.CreateJiggleTree(rig, null);
+    }
+    
+    public void RegenerateJiggleTreeIfNeeded() {
+        if (jiggleTree.dirty) {
+            jiggleTree = JigglePhysics.CreateJiggleTree(rig, jiggleTree);
+        }
     }
 
     public void SetDirty() {

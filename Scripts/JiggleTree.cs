@@ -57,7 +57,8 @@ public class JiggleTree {
     /// Not used normally because 0 scale bones get merged, and aren't part of the tree. So we typically want to regenerate the entire tree in that case.
     /// </summary>
     public void ResampleRestPose() {
-        for(int i=0;i<bones.Length;i++) {
+        var bonesLength = bones.Length;
+        for(int i=0;i<bonesLength;i++) {
             bones[i].GetLocalPositionAndRotation(out var pos, out var rot);
             restPositions[i] = pos;
             restRotations[i] = rot;
@@ -102,6 +103,37 @@ public class JiggleTree {
         var bonesCount = bones.Count;
         var pointsCount = points.Count;
         if (bonesCount == this.bones.Length && pointsCount == this.points.Length) {
+            var oldRestPositions = restPositions;
+            var oldRestRotations = restRotations;
+            restPositions = new Vector3[this.bones.Length];
+            restRotations = new Quaternion[this.bones.Length];
+            for (int i = 0; i < bones.Count; i++) {
+                var boneA = bones[i];
+                if (!boneA) {
+                    continue;
+                }
+
+                bool found = false;
+                for (int o = 0; o < this.bones.Length; o++) {
+                    var boneB = this.bones[o];
+                    if (!boneB) {
+                        continue;
+                    }
+
+                    if (boneA == boneB) {
+                        restPositions[i] = oldRestPositions[o];
+                        restRotations[i] = oldRestRotations[o];
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    boneA.GetLocalPositionAndRotation(out var pos, out var rot);
+                    restPositions[i] = pos;
+                    restRotations[i] = rot;
+                }
+            }
             for (int i = 0; i < bonesCount; i++) {
                 this.bones[i] = bones[i];
             }
@@ -111,21 +143,39 @@ public class JiggleTree {
             for (int i = 0; i < pointsCount; i++) {
                 this.parameters[i] = parameters[i];
             }
-            for(int i=0;i<this.bones.Length;i++) {
-                bones[i].GetLocalPositionAndRotation(out var pos, out var rot);
-                restPositions[i] = pos;
-                restRotations[i] = rot;
-            }
         } else {
+            var oldBones = this.bones;
+            var oldRestPositions = restPositions;
+            var oldRestRotations = restRotations;
             this.bones = bones.ToArray();
             this.points = points.ToArray();
             this.parameters = parameters.ToArray();
             restPositions = new Vector3[this.bones.Length];
             restRotations = new Quaternion[this.bones.Length];
-            for(int i=0;i<this.bones.Length;i++) {
-                bones[i].GetLocalPositionAndRotation(out var pos, out var rot);
-                restPositions[i] = pos;
-                restRotations[i] = rot;
+            for (int i = 0; i < this.bones.Length; i++) {
+                var boneA = this.bones[i];
+                if (!boneA) {
+                    continue;
+                }
+
+                bool found = false;
+                for (int o = 0; o < oldBones.Length; o++) {
+                    var boneB = oldBones[o];
+                    if (!boneB) {
+                        continue;
+                    }
+                    if (boneA == boneB) {
+                        restPositions[i] = oldRestPositions[o];
+                        restRotations[i] = oldRestRotations[o];
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    boneA.GetLocalPositionAndRotation(out var pos, out var rot);
+                    restPositions[i] = pos;
+                    restRotations[i] = rot;
+                }
             }
         }
         

@@ -168,18 +168,16 @@ public static class JigglePhysics {
         // TODO: Cleanup previous trees, or reuse them.
         foreach (var rootJiggleTreeSegment in rootJiggleTreeSegments) {
             var currentTree = rootJiggleTreeSegment.jiggleTree;
-            if (currentTree != null && !currentTree.dirty) {
+            if (currentTree is { dirty: false }) {
                 continue;
             }
-            if (currentTree == null || currentTree.dirty) {
-                CreateJiggleTree(rootJiggleTreeSegment.rig, rootJiggleTreeSegment);
-            }
+            rootJiggleTreeSegment.RegenerateJiggleTreeIfNeeded();
             jobs.ScheduleAdd(rootJiggleTreeSegment.jiggleTree);
         }
         Profiler.EndSample();
     }
 
-    public static JiggleTree CreateJiggleTree(JiggleRigData jiggleRig, JiggleTreeSegment segment) {
+    public static JiggleTree CreateJiggleTree(JiggleRigData jiggleRig, JiggleTree tree) {
         Profiler.BeginSample("JiggleTreeUtility.CreateJiggleTree");
         tempTransforms.Clear();
         tempPoints.Clear();
@@ -217,13 +215,9 @@ public static class JigglePhysics {
         }
 
         Profiler.EndSample();
-        bool hasSegment = segment != null;
-        if (hasSegment && segment.jiggleTree != null) {
-            segment.jiggleTree.Set(tempTransforms, tempPoints, tempParameters, tempColliderTransforms, tempColliders);
-            return segment.jiggleTree;
-        } else if (hasSegment) {
-            segment.SetJiggleTree(new JiggleTree(tempTransforms, tempPoints, tempParameters, tempColliderTransforms, tempColliders));
-            return segment.jiggleTree;
+        if (tree != null) {
+            tree.Set(tempTransforms, tempPoints, tempParameters, tempColliderTransforms, tempColliders);
+            return tree;
         } else {
             return new JiggleTree(tempTransforms, tempPoints, tempParameters, tempColliderTransforms, tempColliders);
         }

@@ -20,11 +20,23 @@ public class JiggleRig : MonoBehaviour {
         parametersCache = new();
     }
 
+    #if !JIGGLEPHYSICS_DISABLE_ON_ENABLE
     private void OnEnable() {
         jiggleRigData.OnEnable();
     }
+    #endif
     
+    #if !JIGGLEPHYSICS_DISABLE_ON_DISABLE
     private void OnDisable() {
+        jiggleRigData.OnDisable();
+    }
+    #endif
+
+    public void OnInitialize() {
+        jiggleRigData.OnEnable();
+    }
+
+    public void OnRemove() {
         jiggleRigData.OnDisable();
     }
 

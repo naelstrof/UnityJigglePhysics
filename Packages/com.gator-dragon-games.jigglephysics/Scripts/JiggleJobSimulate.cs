@@ -7,6 +7,7 @@ using UnityEngine;
 
 namespace GatorDragonGames.JigglePhysics {
 
+[BurstCompile]
 public struct JiggleJobSimulate : IJobFor {
     // TODO: doubles are strictly a bad way to track time, probably should be ints or longs.
     public double timeStamp;
@@ -81,6 +82,7 @@ public struct JiggleJobSimulate : IJobFor {
                     point.desiredLengthToParent = math.length(diff);
                 }
 
+                point.worldRadius = 0f;
                 point.workingPosition = point.pose;
             } else if (point.hasTransform) {
                 // "real" particles
@@ -98,6 +100,7 @@ public struct JiggleJobSimulate : IJobFor {
                 point.pose = (parent.pose * 2f - parent.parentPose);
                 point.parentPose = parent.pose;
                 point.desiredLengthToParent = math.distance(point.pose, point.parentPose);
+                point.worldRadius = 0f;
             }
             lengthAccumulation += point.desiredLengthToParent;
             tree.points[i] = point;

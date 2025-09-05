@@ -27,16 +27,12 @@ public struct JiggleRigData {
     [SerializeField] public Transform[] excludedTransforms;
     [SerializeField, HideInInspector] public JiggleTransformCachedData[] transformCachedData;
     [SerializeField] public JiggleColliderSerializable[] jiggleColliders;
-
+    
     [NonSerialized]
     private JiggleTreeSegment segment;
     
-    /// <summary>
-    /// Immediately resamples the rest pose of the bones in the tree. This can be useful if you have modified the bones' transforms on initialization and want to control when the rest pose is sampled.
-    /// </summary>
     public void ResampleRestPose() {
-        OnDisable();
-        OnEnable();
+        segment.jiggleTree.ResampleRestPose();
     }
 
     public void OnEnable() {
@@ -111,6 +107,7 @@ public struct JiggleRigData {
         var validChildrenCount = GetValidChildrenCount(t);
         var scale = t.lossyScale;
         currentLength += Vector3.Distance(lastPosition, t.position);
+        t.GetLocalPositionAndRotation(out var pos, out var rot);
         data.Add(new JiggleTransformCachedData() {
             bone = t,
             normalizedDistanceFromRoot = currentLength / totalLength,

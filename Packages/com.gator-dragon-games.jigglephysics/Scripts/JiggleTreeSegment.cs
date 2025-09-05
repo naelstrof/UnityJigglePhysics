@@ -24,9 +24,9 @@ public class JiggleTreeSegment {
     }
 
     public void SetDirty() {
-        if (jiggleTree != null) {
+        if (jiggleTree is { dirty: false }) {
             JigglePhysics.ScheduleRemoveJiggleTree(jiggleTree);
-            jiggleTree?.SetDirty();
+            jiggleTree.SetDirty();
         }
         parent?.SetDirty();
         JigglePhysics.SetGlobalDirty();

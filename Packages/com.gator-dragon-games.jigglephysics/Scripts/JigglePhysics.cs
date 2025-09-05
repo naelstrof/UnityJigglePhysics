@@ -8,7 +8,6 @@ namespace GatorDragonGames.JigglePhysics {
 public static class JigglePhysics {
     private static Dictionary<Transform, JiggleTreeSegment> jiggleRootLookup;
     private static bool _globalDirty = true;
-    private static HashSet<JiggleTree> jiggleTrees;
     private static readonly List<Transform> tempTransforms = new List<Transform>();
     private static readonly List<JiggleSimulatedPoint> tempPoints = new List<JiggleSimulatedPoint>();
     private static readonly List<JigglePointParameters> tempParameters = new List<JigglePointParameters>();
@@ -54,7 +53,6 @@ public static class JigglePhysics {
     private static void Initialize() {
         rootJiggleTreeSegments = new List<JiggleTreeSegment>();
         jiggleRootLookup = new Dictionary<Transform, JiggleTreeSegment>();
-        jiggleTrees = new HashSet<JiggleTree>();
         initializedRendering = false;
         _globalDirty = true;
         jobs?.Dispose();
@@ -66,7 +64,6 @@ public static class JigglePhysics {
         JiggleRenderer.Dispose();
         rootJiggleTreeSegments = new List<JiggleTreeSegment>();
         jiggleRootLookup = new Dictionary<Transform, JiggleTreeSegment>();
-        jiggleTrees = new HashSet<JiggleTree>();
         _globalDirty = true;
         jobs = null;
     }
@@ -171,13 +168,12 @@ public static class JigglePhysics {
         // TODO: Cleanup previous trees, or reuse them.
         foreach (var rootJiggleTreeSegment in rootJiggleTreeSegments) {
             var currentTree = rootJiggleTreeSegment.jiggleTree;
-            if (currentTree != null && jiggleTrees.Contains(currentTree) && !currentTree.dirty) {
+            if (currentTree != null && !currentTree.dirty) {
                 continue;
             }
             if (currentTree == null || currentTree.dirty) {
                 CreateJiggleTree(rootJiggleTreeSegment.rig, rootJiggleTreeSegment);
             }
-            jiggleTrees.Add(rootJiggleTreeSegment.jiggleTree);
             jobs.ScheduleAdd(rootJiggleTreeSegment.jiggleTree);
         }
         Profiler.EndSample();
@@ -358,10 +354,7 @@ public static class JigglePhysics {
     }
     
     public static void ScheduleRemoveJiggleTree(JiggleTree jiggleTree) {
-        if (jiggleTrees.Contains(jiggleTree)) {
-            jiggleTrees.Remove(jiggleTree);
-            jobs.ScheduleRemove(jiggleTree);
-        }
+        jobs?.ScheduleRemove(jiggleTree);
     }
     
     public static void RemoveJiggleTreeSegment(JiggleTreeSegment jiggleTreeSegment) {
@@ -370,14 +363,9 @@ public static class JigglePhysics {
         }
 
         jiggleRootLookup.Remove(jiggleTreeSegment.transform);
-
-        if (jiggleTreeSegment.jiggleTree != null) {
-            if (jiggleTrees.Contains(jiggleTreeSegment.jiggleTree)) {
-                jiggleTrees.Remove(jiggleTreeSegment.jiggleTree);
-                jobs.ScheduleRemove(jiggleTreeSegment.jiggleTree);
-            }
-        }
-
+        
+        jiggleTreeSegment.SetDirty();
+        
         if (jiggleTreeSegment.parent != null) {
             jiggleTreeSegment.parent.SetDirty();
             jiggleTreeSegment.SetParent(null);

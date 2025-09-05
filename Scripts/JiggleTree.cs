@@ -29,12 +29,12 @@ public class JiggleTree {
             return jiggleTreeJobData;
         }
 
-        jiggleTreeJobData = new JiggleTreeJobData(rootID, 0, 0, personalColliders.Length, points, parameters);
+        jiggleTreeJobData = new JiggleTreeJobData(rootID, -1, 0, personalColliders.Length, points, parameters);
         hasJiggleTreeStruct = true;
         return jiggleTreeJobData;
     }
 
-    public void Dispose() {
+    public void ResetTransformsToRest() {
         for(int i=0;i<points.Length;i++) {
             var bone = bones[i];
             if (bone) {
@@ -42,6 +42,10 @@ public class JiggleTree {
                 bone.localRotation = restRotations[i];
             }
         }
+    }
+
+    public void Dispose() {
+        ResetTransformsToRest();
         if (hasJiggleTreeStruct) {
             jiggleTreeJobData.Dispose();
             hasJiggleTreeStruct = false;
@@ -68,6 +72,9 @@ public class JiggleTree {
     }
     
     public void SetTransformIndexOffset(int offset) {
+        if (offset < 0) {
+            throw new UnityException("JiggleTree.SetTransformIndexOffset: offset must be non-negative");
+        }
         if (!hasJiggleTreeStruct) {
             GetStruct();
         }

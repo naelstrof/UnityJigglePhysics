@@ -69,7 +69,7 @@ public class JiggleMemoryFragmenter {
             var larger = math.max(fragment.startIndex, startIndex);
             var smaller = math.min(fragment.startIndex, startIndex);
             if (larger - smaller < smallRange) {
-                throw new UnityException("Double free detected, not allowed!");
+                throw new UnityException($"Double free detected at index {startIndex}, count {size}, not allowed! (overlaps with fragment at index {fragment.startIndex}, count {fragment.count})");
             }
         }
         #endif

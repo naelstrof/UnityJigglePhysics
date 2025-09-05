@@ -44,16 +44,13 @@ public struct JiggleRigData {
             throw new UnityException("Jiggle Rig enabled without a root bone assigned!");
         }
 
-        if (segment == null) {
-            segment = new JiggleTreeSegment(rootBone, this);
-            segment.SetDirty();
-            JigglePhysics.AddJiggleTreeSegment(segment);
-        }
+        segment ??= new JiggleTreeSegment(rootBone, this);
+        segment.SetDirty();
+        JigglePhysics.AddJiggleTreeSegment(segment);
     }
     public void OnDisable() {
         if (segment != null) {
             JigglePhysics.RemoveJiggleTreeSegment(segment);
-            segment = null;
         }
     }
 

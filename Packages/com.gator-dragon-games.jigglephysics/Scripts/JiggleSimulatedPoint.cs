@@ -67,7 +67,7 @@ public unsafe struct JiggleSimulatedPoint {
             return false;
         }
         if (!GetIsValid(distanceFromRoot)) {
-            failReason = $"worldRadius is invalid: {distanceFromRoot}";
+            failReason = $"distanceFromRoot is invalid: {distanceFromRoot}";
             return false;
         }
         if (childenCount < 0 || childenCount > MAX_CHILDREN) {

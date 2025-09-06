@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/JigglePhysicsExample/DemoScene.unity
+    guid: 5f2c18e91ac7db0afb9328af286ce9c2
+  - enabled: 1
     path: Assets/JigglePhysicsExample/Scenes/RelativisticCarDemo.unity
     guid: fb5e31e6ef8cf3145a1e8a835044af65
   - enabled: 1

@@ -13,7 +13,7 @@ public class Elevator : MonoBehaviour {
         body = GetComponent<Rigidbody>();
     }
     void FixedUpdate() {
-        float vel = curve.Differentiate(Mathf.Repeat(Time.time*0.25f, 1f));
+        float vel = curve.Differentiate(Mathf.Repeat(Time.timeSinceLevelLoad*0.25f, 1f));
         body.linearVelocity = -Vector3.up*vel*multiplier;
     }
     void OnValidate() {

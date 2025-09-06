@@ -527,7 +527,7 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
                 personalColliderTransformAccessList[colliderStartIndex + i] = jiggleTree.personalColliderTransforms[i];
             }
 
-            personalColliderCount = math.max(personalColliderCount, colliderStartIndex + (int)jiggleTreeJobData.colliderCount);
+            personalColliderCount = personalColliderMemoryFragmenter.GetHighestAllocatedIndex()+1;
         }
 
         #endregion
@@ -546,7 +546,7 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
             transformRootAccessList[index + o] = rootBone;
         }
 
-        preTransformCount = math.max(index + (int)jiggleTreeJobData.pointCount, preTransformCount);
+        preTransformCount = memoryFragmenter.GetHighestAllocatedIndex()+1;
         return true;
     }
 
@@ -609,7 +609,7 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
         }
 
         treeCount++;
-        transformCount = math.max((int)(index + jiggleTreeJobData.pointCount), transformCount);
+        transformCount = memoryFragmenter.GetHighestAllocatedIndex() + 1;
     }
 
     public void CommitColliders() {

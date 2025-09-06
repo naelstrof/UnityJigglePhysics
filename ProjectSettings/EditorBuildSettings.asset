@@ -6,10 +6,31 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/JigglePhysicsExample/Scenes/RelativisticCarDemo.unity
+    guid: fb5e31e6ef8cf3145a1e8a835044af65
+  - enabled: 1
+    path: Assets/JigglePhysicsExample/Scenes/BreastDemo.unity
+    guid: 62389c893537bbd47b9d1867be30722e
+  - enabled: 1
+    path: Assets/JigglePhysicsExample/Scenes/ElevatorDemo.unity
+    guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/JigglePhysicsExample/Scenes/DragonTailScene.unity
+    guid: 6f7defffc2abe2a4e9e16ae9169862b3
+  - enabled: 1
+    path: Assets/JigglePhysicsExample/Scenes/PlayerMovementDemo.unity
+    guid: a59e286c2120bfd02bf9db9debb6d97d
+  - enabled: 1
+    path: Assets/JigglePhysicsExample/Scenes/PerlinTest.unity
+    guid: de1e16c3a89f1214b9b922d882fcaf6a
+  - enabled: 1
+    path: Assets/JigglePhysicsExample/Scenes/SpeedyKoboldTest.unity
+    guid: 6abcb448f0300404186235c9899d8cb7
+  - enabled: 1
     path: Assets/JigglePhysicsExample/Scenes/LifetimeStressTest.unity
     guid: b9f2b7f1296fc36b0b34123b75438ce9
-  - enabled: 0
-    path: Assets/JiggleJob/BasisAvatarTesting/BasisTesting.unity
-    guid: 615c9273dd43c714cb019d01378d0c4e
+  - enabled: 1
+    path: Assets/JigglePhysicsExample/Scenes/AnemoneDemo.unity
+    guid: 50de898cc68ae9840a5b063318e0346e
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

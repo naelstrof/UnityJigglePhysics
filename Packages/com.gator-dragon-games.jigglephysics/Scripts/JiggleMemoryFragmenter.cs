@@ -23,6 +23,14 @@ public class JiggleMemoryFragmenter {
         };
         currentSize = size;
     }
+    
+    public int GetHighestAllocatedIndex() {
+        if (fragments.Count <= 0) {
+            return currentSize;
+        }
+        var lastFragment = fragments[^1];
+        return lastFragment.startIndex - 1;
+    }
 
     public bool TryAllocate(int size, out int startIndex) {
         var fragmentCount = fragments.Count;
@@ -76,12 +84,24 @@ public class JiggleMemoryFragmenter {
 
         for (int i = 0; i < fragmentCount; i++) {
             var fragment = fragments[i];
+            if (i + 1 < fragmentCount) {
+                var nextFragment = fragments[i + 1];
+                if (fragment.startIndex + fragment.count == startIndex && startIndex + size == nextFragment.startIndex) {
+                    // Merge with previous and next fragment
+                    fragment.count += size + nextFragment.count;
+                    fragments[i] = fragment;
+                    fragments.RemoveAt(i + 1);
+                    return;
+                }
+            }
+
             if (fragment.startIndex + fragment.count == startIndex) {
                 // Merge with previous fragment
                 fragment.count += size;
                 fragments[i] = fragment;
                 return;
-            } else if (startIndex + size == fragment.startIndex) {
+            }
+            if (startIndex + size == fragment.startIndex) {
                 // Merge with next fragment
                 fragment.startIndex -= size;
                 fragment.count += size;

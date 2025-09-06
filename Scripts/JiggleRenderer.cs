@@ -51,8 +51,8 @@ public static class JiggleRenderer {
             var newSphereChunks = new NativeArray<JiggleRenderInstancer.GPUChunk>(desiredChunkCount, Allocator.Persistent);
             if (sphereChunks.IsCreated) {
                 var oldLength = sphereChunks.Length;
-                sphereChunks.Dispose();
                 NativeArray<JiggleRenderInstancer.GPUChunk>.Copy(sphereChunks, newSphereChunks, oldLength);
+                sphereChunks.Dispose();
             }
             sphereChunks = newSphereChunks;
         }

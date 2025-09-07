@@ -921,7 +921,7 @@ Transform:
   m_GameObject: {fileID: 389744037}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.7392621, z: -0, w: 0.67341787}
-  m_LocalPosition: {x: -19.64057, y: -0.31, z: -0.5330999}
+  m_LocalPosition: {x: -19.14, y: -0.31, z: 4.86}
   m_LocalScale: {x: 5.9572296, y: 5.957229, z: 5.9572296}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2656,6 +2656,18 @@ PrefabInstance:
     - target: {fileID: 2119493910768559692, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
       propertyPath: jiggleRigData.transformCachedData.Array.data[1].normalizedDistanceFromRoot
       value: 0.99998647
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332194056887855151, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.9999999
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332194056887855151, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.000001
+      objectReference: {fileID: 0}
+    - target: {fileID: 3378941577987162963, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
+      propertyPath: m_BlendShapeWeights.Array.size
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 3784360438423282512, guid: a63b7e175fdc6674db12e09508994de0, type: 3}
       propertyPath: m_Name

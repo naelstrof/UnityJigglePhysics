@@ -482,10 +482,8 @@ MonoBehaviour:
     - bone: {fileID: 2803820707807236778}
       normalizedDistanceFromRoot: 0
       lossyScale: 0.1610028
-    - bone: {fileID: 7182903544804234367}
-      normalizedDistanceFromRoot: 1
-      lossyScale: 0.1610028
     jiggleColliders: []
+  animatedParameters: 0
 --- !u!114 &6673574359432952319
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -710,6 +708,7 @@ MonoBehaviour:
       normalizedDistanceFromRoot: 1
       lossyScale: 0.9999999
     jiggleColliders: []
+  animatedParameters: 0
 --- !u!114 &8903628737045606395
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -934,6 +933,7 @@ MonoBehaviour:
       normalizedDistanceFromRoot: 1
       lossyScale: 1.0000001
     jiggleColliders: []
+  animatedParameters: 0
 --- !u!114 &387208860334316861
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1068,7 +1068,7 @@ MonoBehaviour:
           m_PostInfinity: 2
           m_RotationOrder: 4
       airDrag:
-        value: 0.099
+        value: 0.04
         curveEnabled: 0
         curve:
           serializedVersion: 2
@@ -1164,6 +1164,7 @@ MonoBehaviour:
       normalizedDistanceFromRoot: 1
       lossyScale: 1.0000004
     jiggleColliders: []
+  animatedParameters: 0
 --- !u!4 &4525457624220928152 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8464083210854588500, guid: edb77dd2fc9e7004d8bda98d7fa43864, type: 3}
@@ -1264,11 +1265,6 @@ PrefabInstance:
 --- !u!4 &2803820707807236778 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -2639638324218457063, guid: 75ce5c012cac3fa4a9558859dfb89163, type: 3}
-  m_PrefabInstance: {fileID: 9058765224329316019}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &7182903544804234367 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -7054327729260539188, guid: 75ce5c012cac3fa4a9558859dfb89163, type: 3}
   m_PrefabInstance: {fileID: 9058765224329316019}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &8808349847900053848 stripped

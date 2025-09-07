@@ -14,7 +14,6 @@ public class JiggleUpdateExample : MonoBehaviour {
 
     private void LateUpdate() {
         var time = Time.timeAsDouble;
-        var fixedTime = Time.fixedDeltaTime;
         
         JigglePhysics.SchedulePose(time);
         if (debugDraw) {

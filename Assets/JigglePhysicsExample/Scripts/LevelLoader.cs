@@ -11,7 +11,7 @@ public class LevelLoader : MonoBehaviour {
             while (handle != null && !handle.isDone) {
                 yield return null;
             }
-            yield return new WaitForSeconds(15f);
+            yield return new WaitForSeconds(20f);
         }
     }
 }

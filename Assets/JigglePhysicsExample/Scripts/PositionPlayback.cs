@@ -18,6 +18,6 @@ public class PositionPlayback : MonoBehaviour {
         length = max - min;
     }
     private void Update() {
-        transform.position = recording.GetPosition(Mathf.Repeat(Time.time, length)+startTime);
+        transform.position = recording.GetPosition(Mathf.Repeat(Time.timeSinceLevelLoad, length)+startTime);
     }
 }

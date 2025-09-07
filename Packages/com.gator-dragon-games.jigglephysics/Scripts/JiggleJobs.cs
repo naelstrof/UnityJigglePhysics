@@ -125,9 +125,9 @@ public class JiggleJobs {
         handleInterpolate = jobInterpolation.ScheduleParallel(_memoryBus.transformCount, 128, handleRootRead);
         hasHandleInterpolate = true;
 
-        if (hasHandleBulkRead) {
+        if (hasHandleBulkReset) {
             handleTransformWrite = jobTransformWrite.Schedule(_memoryBus.GetTransformAccessArray(),
-                JobHandle.CombineDependencies(handleInterpolate, handleBulkRead));
+                JobHandle.CombineDependencies(handleInterpolate, handleBulkReset));
         } else {
             handleTransformWrite = jobTransformWrite.Schedule(_memoryBus.GetTransformAccessArray(), handleInterpolate);
         }

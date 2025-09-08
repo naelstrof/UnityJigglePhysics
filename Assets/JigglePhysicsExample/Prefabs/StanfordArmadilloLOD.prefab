@@ -248,7 +248,7 @@ MonoBehaviour:
       collisionToggle: 1
       angleLimitToggle: 0
       stiffness:
-        value: 0.8
+        value: 0.469
         curveEnabled: 0
         curve:
           serializedVersion: 2
@@ -274,7 +274,7 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-      soften: 0
+      soften: 0.161
       angleLimit:
         value: 0.5
         curveEnabled: 0
@@ -304,6 +304,7 @@ MonoBehaviour:
           m_RotationOrder: 4
       angleLimitSoften: 0
       rootStretch: 0.1
+      ignoreRootMotion: 0
       stretch:
         value: 0.1
         curveEnabled: 0
@@ -332,7 +333,7 @@ MonoBehaviour:
           m_PostInfinity: 2
           m_RotationOrder: 4
       drag:
-        value: 0.1
+        value: 0.194
         curveEnabled: 0
         curve:
           serializedVersion: 2
@@ -524,6 +525,7 @@ MonoBehaviour:
       normalizedDistanceFromRoot: 0.9533156
       lossyScale: 0.9999999
     jiggleColliders: []
+  animatedParameters: 0
 --- !u!114 &3650729183413028533
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -546,7 +548,7 @@ MonoBehaviour:
       collisionToggle: 1
       angleLimitToggle: 1
       stiffness:
-        value: 0.8
+        value: 0.502
         curveEnabled: 0
         curve:
           serializedVersion: 2
@@ -572,7 +574,7 @@ MonoBehaviour:
           m_PreInfinity: 2
           m_PostInfinity: 2
           m_RotationOrder: 4
-      soften: 0
+      soften: 0.174
       angleLimit:
         value: 0.5
         curveEnabled: 0
@@ -602,6 +604,7 @@ MonoBehaviour:
           m_RotationOrder: 4
       angleLimitSoften: 0
       rootStretch: 0
+      ignoreRootMotion: 0
       stretch:
         value: 0.1
         curveEnabled: 0
@@ -630,7 +633,7 @@ MonoBehaviour:
           m_PostInfinity: 2
           m_RotationOrder: 4
       drag:
-        value: 0.1
+        value: 0.23
         curveEnabled: 0
         curve:
           serializedVersion: 2
@@ -752,6 +755,7 @@ MonoBehaviour:
       normalizedDistanceFromRoot: 1
       lossyScale: 1.0000001
     jiggleColliders: []
+  animatedParameters: 0
 --- !u!23 &2311527194450025130 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 3555944776404967675, guid: b3597ac7aa88cc9f1a29dcd872559945, type: 3}

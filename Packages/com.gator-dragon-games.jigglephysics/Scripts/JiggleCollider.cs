@@ -16,7 +16,11 @@ public struct JiggleColliderSerializable {
         }
         var position = transform.position;
         collider.Read(transform);
+#if UNITY_6000_0_OR_NEWER
         Gizmos.color = Color.goldenRod;
+#else
+        Gizmos.color = Color.yellow;
+#endif
         switch (collider.type) {
             case JiggleCollider.JiggleColliderType.Sphere:
                 Gizmos.DrawWireSphere(position, collider.worldRadius);

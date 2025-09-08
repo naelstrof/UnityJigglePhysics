@@ -1533,6 +1533,18 @@ PrefabInstance:
     m_TransformParent: {fileID: 604535701}
     m_Modifications:
     - target: {fileID: 3650729183413028533, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: jiggleRigData.jiggleTreeInputParameters.soften
+      value: 0.21
+      objectReference: {fileID: 0}
+    - target: {fileID: 3650729183413028533, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: jiggleRigData.jiggleTreeInputParameters.drag.value
+      value: 0.152
+      objectReference: {fileID: 0}
+    - target: {fileID: 3650729183413028533, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: jiggleRigData.jiggleTreeInputParameters.stiffness.value
+      value: 0.492
+      objectReference: {fileID: 0}
+    - target: {fileID: 3650729183413028533, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
       propertyPath: jiggleRigData.transformCachedData.Array.data[1].normalizedDistanceFromRoot
       value: 0.4421512
       objectReference: {fileID: 0}
@@ -1583,6 +1595,18 @@ PrefabInstance:
     - target: {fileID: 5285643494549829687, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
       propertyPath: m_Name
       value: StanfordArmadilloLOD
+      objectReference: {fileID: 0}
+    - target: {fileID: 6652782501014897230, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: jiggleRigData.jiggleTreeInputParameters.soften
+      value: 0.179
+      objectReference: {fileID: 0}
+    - target: {fileID: 6652782501014897230, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: jiggleRigData.jiggleTreeInputParameters.drag.value
+      value: 0.142
+      objectReference: {fileID: 0}
+    - target: {fileID: 6652782501014897230, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
+      propertyPath: jiggleRigData.jiggleTreeInputParameters.stiffness.value
+      value: 0.472
       objectReference: {fileID: 0}
     - target: {fileID: 6652782501014897230, guid: caace2289bb0d64eca7a8b1054c17b0e, type: 3}
       propertyPath: jiggleRigData.transformCachedData.Array.data[1].normalizedDistanceFromRoot

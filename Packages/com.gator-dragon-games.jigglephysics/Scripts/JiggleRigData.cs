@@ -232,7 +232,7 @@ public struct JiggleRigData {
         }
         
         if (!rootBone) return;
-#if UNITY_6000_OR_NEWER
+#if UNITY_6000_0_OR_NEWER
         Gizmos.color = Color.whiteSmoke;
 #else
         Gizmos.color = Color.white;

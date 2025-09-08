@@ -7,7 +7,8 @@ public class JiggleTreeSegment {
     public Transform transform { get; private set; }
     public JiggleTree jiggleTree { get; private set; }
     public JiggleTreeSegment parent { get; private set; }
-    public JiggleRigData rig { get; private set; }
+    public JiggleRig behavior;
+    public JiggleRigData jiggleRigData => behavior.GetJiggleRigData();
 
     public void SetParent(JiggleTreeSegment jiggleTree) {
         parent?.SetDirty();
@@ -16,15 +17,23 @@ public class JiggleTreeSegment {
         JigglePhysics.SetGlobalDirty();
     }
 
-    public JiggleTreeSegment(Transform transform, JiggleRigData rig) {
-        this.transform = transform;
-        this.rig = rig;
+    public JiggleTreeSegment(JiggleRig behavior) {
+        this.behavior = behavior;
+        var rig = behavior.GetJiggleRigData();
+        transform = rig.rootBone;
         jiggleTree = JigglePhysics.CreateJiggleTree(rig, null);
     }
+
+    public void UpdateParametersIfNeeded() {
+        if (behavior.GetHasAnimatedParameters()) {
+            behavior.UpdateParameters();
+        }
+    }
     
+
     public void RegenerateJiggleTreeIfNeeded() {
         if (jiggleTree.dirty) {
-            jiggleTree = JigglePhysics.CreateJiggleTree(rig, jiggleTree);
+            jiggleTree = JigglePhysics.CreateJiggleTree(jiggleRigData, jiggleTree);
         }
     }
 

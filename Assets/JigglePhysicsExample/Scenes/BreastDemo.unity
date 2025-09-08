@@ -718,8 +718,32 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6004667993667853227, guid: c7707f583298aad4280de3f0b5512f2e, type: 3}
+      propertyPath: jiggleRigData.jiggleTreeInputParameters.drag.value
+      value: 0.014
+      objectReference: {fileID: 0}
+    - target: {fileID: 6004667993667853227, guid: c7707f583298aad4280de3f0b5512f2e, type: 3}
+      propertyPath: jiggleRigData.jiggleTreeInputParameters.gravity.value
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6004667993667853227, guid: c7707f583298aad4280de3f0b5512f2e, type: 3}
       propertyPath: jiggleRigData.jiggleTreeInputParameters.stretch.value
       value: 0.757
+      objectReference: {fileID: 0}
+    - target: {fileID: 6004667993667853227, guid: c7707f583298aad4280de3f0b5512f2e, type: 3}
+      propertyPath: jiggleRigData.jiggleTreeInputParameters.stiffness.value
+      value: 0.623
+      objectReference: {fileID: 0}
+    - target: {fileID: 8962648818818075399, guid: c7707f583298aad4280de3f0b5512f2e, type: 3}
+      propertyPath: jiggleRigData.jiggleTreeInputParameters.drag.value
+      value: 0.014
+      objectReference: {fileID: 0}
+    - target: {fileID: 8962648818818075399, guid: c7707f583298aad4280de3f0b5512f2e, type: 3}
+      propertyPath: jiggleRigData.jiggleTreeInputParameters.gravity.value
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8962648818818075399, guid: c7707f583298aad4280de3f0b5512f2e, type: 3}
+      propertyPath: jiggleRigData.jiggleTreeInputParameters.stiffness.value
+      value: 0.623
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

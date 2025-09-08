@@ -5,6 +5,7 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine; 
 
+namespace GatorDragonGames.JigglePhysics {
 [BurstCompile]
 public struct JiggleJobPrepareRender : IJob {
     [NativeDisableParallelForRestriction,ReadOnly]
@@ -97,4 +98,5 @@ public struct JiggleJobPrepareRender : IJob {
             sphereBounds.Dispose();
         }
     }
+}
 }

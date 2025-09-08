@@ -319,8 +319,8 @@ public class JiggleJobs {
                     }
 
 
-                    if (point.childenCount != 0) {
-                        for (int j = 0; j < point.childenCount; j++) {
+                    if (point.childrenCount != 0) {
+                        for (int j = 0; j < point.childrenCount; j++) {
                             var childPoint = tree.points[point.childrenIndices[j]];
                             var childPose = poses[point.childrenIndices[j] + tree.transformIndexOffset];
                             if (!childPose.isVirtual) {

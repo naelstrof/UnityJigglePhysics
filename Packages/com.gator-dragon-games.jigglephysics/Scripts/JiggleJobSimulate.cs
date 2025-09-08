@@ -239,7 +239,7 @@ public struct JiggleJobSimulate : IJobFor {
         var collisionDepenetration = new float3(0f, 0f, 0f);
         collisionDepenetration = DoDepenetration(point, parent, parentParameters, collider);
         var maxDepenetrationMagnitude = math.length(collisionDepenetration);
-        for (int childIndex = 0; childIndex < point->childenCount; childIndex++) {
+        for (int childIndex = 0; childIndex < point->childrenCount; childIndex++) {
             var child = tree.points + point->childrenIndices[childIndex];
             var newCollisionDepenetration = DoDepenetration(point, child, pointParameters, collider);
             maxDepenetrationMagnitude = math.max(maxDepenetrationMagnitude, math.length(newCollisionDepenetration));
@@ -303,7 +303,7 @@ public struct JiggleJobSimulate : IJobFor {
 
             #region Back-propagated motion for collisions
 
-            if (point->childenCount > 0) {
+            if (point->childrenCount > 0) {
                 // Back-propagated motion specifically for collision enabled chains
                 var child = tree.points+point->childrenIndices[0];
                 if (child->hasTransform) {
@@ -449,7 +449,7 @@ public struct JiggleJobSimulate : IJobFor {
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points+i;
             var parameters = tree.parameters + i;
-            if (point->childenCount <= 0) {
+            if (point->childrenCount <= 0) {
                 continue;
             }
 
@@ -467,13 +467,13 @@ public struct JiggleJobSimulate : IJobFor {
             float3 cachedAnimatedVector = new float3(0f);
             float3 simulatedVector = cachedAnimatedVector;
 
-            if (point->childenCount <= 1) {
+            if (point->childrenCount <= 1) {
                 cachedAnimatedVector = math.normalizesafe(local_child_pose - local_pose, new float3(0,0,1));
                 simulatedVector = math.normalizesafe(local_child_working_position - local_working_position, new float3(0,0,1));
             } else {
                 var cachedAnimatedVectorSum = new float3(0f);
                 var simulatedVectorSum = cachedAnimatedVectorSum;
-                for (var j = 0; j < point->childenCount; j++) {
+                for (var j = 0; j < point->childrenCount; j++) {
                     var child_also = tree.points[point->childrenIndices[j]];
                     var local_child_pose_also = child_also.pose;
                     var local_child_working_position_also = child_also.workingPosition;
@@ -482,8 +482,8 @@ public struct JiggleJobSimulate : IJobFor {
                         math.normalizesafe(local_child_working_position_also - local_working_position, new float3(0,0,1));
                 }
 
-                cachedAnimatedVector = math.normalizesafe(cachedAnimatedVectorSum * (1f / point->childenCount), new float3(0,0,1));
-                simulatedVector = math.normalizesafe(simulatedVectorSum * (1f / point->childenCount), new float3(0,0,1));
+                cachedAnimatedVector = math.normalizesafe(cachedAnimatedVectorSum * (1f / point->childrenCount), new float3(0,0,1));
+                simulatedVector = math.normalizesafe(simulatedVectorSum * (1f / point->childrenCount), new float3(0,0,1));
             }
 
             var animPoseToPhysicsPose = math.slerp(quaternion.identity,
@@ -500,7 +500,7 @@ public struct JiggleJobSimulate : IJobFor {
 
     private bool Validate(JiggleTreeJobData tree) {
         if (!tree.GetIsValid(out string failReason)) {
-            throw new UnityException(failReason);
+            throw new InvalidOperationException(failReason);
         }
 
         return true;
@@ -518,6 +518,7 @@ public struct JiggleJobSimulate : IJobFor {
         Constrain(tree);
         FinishStep(tree);
         ApplyPose(tree);
+        jiggleTrees[index].Sanitize();
     }
 }
 

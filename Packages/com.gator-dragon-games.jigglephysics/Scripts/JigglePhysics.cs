@@ -200,7 +200,7 @@ public static class JigglePhysics {
         tempPoints.Add(new JiggleSimulatedPoint() { // Back projected virtual root
             position = backProjection,
             lastPosition = backProjection,
-            childenCount = 0,
+            childrenCount = 0,
             parentIndex = -1,
             hasTransform = false,
             animated = false,
@@ -265,7 +265,7 @@ public static class JigglePhysics {
                     points.Add(new JiggleSimulatedPoint() { // virtual projected tip
                         position = currentPosition + (currentPosition - lastPosition),
                         lastPosition = currentPosition + (currentPosition - lastPosition),
-                        childenCount = 0,
+                        childrenCount = 0,
                         distanceFromRoot = currentLength,
                         parentIndex = parentIndex,
                         hasTransform = false,
@@ -298,7 +298,7 @@ public static class JigglePhysics {
             points.Add(new JiggleSimulatedPoint() { // Regular point
                 position = currentPosition,
                 lastPosition = currentPosition,
-                childenCount = 0,
+                childrenCount = 0,
                 distanceFromRoot = currentLength,
                 parentIndex = parentIndex,
                 hasTransform = true,
@@ -312,7 +312,7 @@ public static class JigglePhysics {
                 points.Add(new JiggleSimulatedPoint() { // virtual projected tip
                     position = currentPosition + (currentPosition - lastPosition),
                     lastPosition = currentPosition + (currentPosition - lastPosition),
-                    childenCount = 0,
+                    childrenCount = 0,
                     distanceFromRoot = currentLength,
                     parentIndex = newIndex,
                     hasTransform = false,
@@ -340,11 +340,11 @@ public static class JigglePhysics {
     }
 
     public static unsafe void AddChildToPoint(ref JiggleSimulatedPoint point, int childIndex) {
-        if (point.childenCount>=JiggleSimulatedPoint.MAX_CHILDREN) {
+        if (point.childrenCount>=JiggleSimulatedPoint.MAX_CHILDREN) {
             return;
         }
-        point.childrenIndices[point.childenCount] = childIndex;
-        point.childenCount++;
+        point.childrenIndices[point.childrenCount] = childIndex;
+        point.childrenCount++;
     }
     
     public static void ScheduleRemoveJiggleTree(JiggleTree jiggleTree) {

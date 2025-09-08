@@ -21,67 +21,61 @@ public unsafe struct JiggleSimulatedPoint {
     public float distanceFromRoot;
     public int parentIndex;
     public fixed int childrenIndices[MAX_CHILDREN];
-    public int childenCount;
+    public int childrenCount;
     public bool hasTransform;
 
     private static bool GetIsValid(float3 vector) {
-        bool valid = true;
-        valid &= !float.IsNaN(vector.x);
-        valid &= !float.IsNaN(vector.y);
-        valid &= !float.IsNaN(vector.z);
-        return valid;
+        return !float.IsNaN(vector.x) && !float.IsNaN(vector.y) && !float.IsNaN(vector.z);
     }
     private static bool GetIsValid(float value) {
-        bool valid = true;
-        valid &= !float.IsNaN(value);
-        return valid;
+        return !float.IsNaN(value);
     }
 
     public bool GetIsValid(int pointCount, out string failReason) {
         if (!GetIsValid(lastPosition)) {
-            failReason = $"lastPosition is invalid: {lastPosition}";
+            failReason = "lastPosition is NaN";
             return false;
         }
         if (!GetIsValid(position)) {
-            failReason = $"position is invalid: {position}";
+            failReason = "position is NaN";
             return false;
         }
         if (!GetIsValid(workingPosition)) {
-            failReason = $"workingPosition is invalid: {workingPosition}";
+            failReason = "workingPosition is NaN";
             return false;
         }
         if (!GetIsValid(pose)) {
-            failReason = $"pose is invalid: {pose}";
+            failReason = "pose is NaN";
             return false;
         }
         if (!GetIsValid(parentPose)) {
-            failReason = $"parentPose is invalid: {parentPose}";
+            failReason = "parentPose is NaN";
             return false;
         }
         if (!GetIsValid(desiredLengthToParent)) {
-            failReason = $"desiredLengthToParent is invalid: {desiredLengthToParent}";
+            failReason = "desiredLengthToParent is NaN";
             return false;
         }
         if (!GetIsValid(worldRadius)) {
-            failReason = $"worldRadius is invalid: {worldRadius}";
+            failReason = "worldRadius is NaN";
             return false;
         }
         if (!GetIsValid(distanceFromRoot)) {
-            failReason = $"distanceFromRoot is invalid: {distanceFromRoot}";
+            failReason = "distanceFromRoot is NaN";
             return false;
         }
-        if (childenCount < 0 || childenCount > MAX_CHILDREN) {
-            failReason = $"childenCount is invalid: {childenCount}";
+        if (childrenCount < 0 || childrenCount > MAX_CHILDREN) {
+            failReason = "childrenCount is outside range";
             return false;
         }
         if (parentIndex < -1 || parentIndex >= pointCount) {
-            failReason = $"parentIndex is invalid: {parentIndex}";
+            failReason = "parentIndex is outside range";
             return false;
         }
-        for (int i = 0; i < childenCount; i++) {
+        for (int i = 0; i < childrenCount; i++) {
             int childIndex = childrenIndices[i];
             if (childIndex < 0 || childIndex >= pointCount) {
-                failReason = $"childrenIndices[{i}] is invalid: {childIndex}";
+                failReason = "childrenIndices is outside range";
                 return false;
             }
         }
@@ -94,7 +88,34 @@ public unsafe struct JiggleSimulatedPoint {
                $"workingPosition: {workingPosition},\n" +
                $"parentPose: {parentPose},\npose: {pose},\ndesiredLengthToParent:{desiredLengthToParent},\n" +
                $"animated: {animated},\n parentIndex: {parentIndex},\n " +
-               $"children: [{childrenIndices[0]}, ...],\n childenCount: {childenCount},\n hasTransform: {hasTransform})";
+               $"children: [{childrenIndices[0]}, ...],\n childenCount: {childrenCount},\n hasTransform: {hasTransform})";
+    }
+
+    public void Sanitize() {
+        if (!GetIsValid(lastPosition)) {
+            lastPosition = float3.zero;
+        }
+        if (!GetIsValid(position)) {
+            position = float3.zero;
+        }
+        if (!GetIsValid(workingPosition)) {
+            workingPosition = float3.zero;
+        }
+        if (!GetIsValid(pose)) {
+            pose = float3.zero;
+        }
+        if (!GetIsValid(parentPose)) {
+            pose = float3.zero;
+        }
+        if (!GetIsValid(desiredLengthToParent)) {
+            desiredLengthToParent = 0.1f;
+        }
+        if (!GetIsValid(worldRadius)) {
+            worldRadius = 0.1f;
+        }
+        if (!GetIsValid(distanceFromRoot)) {
+            distanceFromRoot = 0.1f;
+        }
     }
 }
 

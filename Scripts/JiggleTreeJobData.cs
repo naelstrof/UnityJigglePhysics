@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -113,11 +114,17 @@ public unsafe struct JiggleTreeJobData {
                     Gizmos.DrawWireSphere(point.position, 0.05f);
                 }
             }
-            if (point.childenCount != 0) {
+            if (point.childrenCount != 0) {
                 var child = points[point.childrenIndices[0]];
                 Gizmos.color = Color.cyan;
                 Gizmos.DrawLine(point.position, child.position);
             }
+        }
+    }
+
+    public void Sanitize() {
+        for (int i = 0; i < pointCount; i++) {
+            points[i].Sanitize();
         }
     }
 

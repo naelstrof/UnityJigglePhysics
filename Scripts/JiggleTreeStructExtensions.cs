@@ -10,16 +10,39 @@ public static class JiggleTreeStructExtensions {
         return inputPoses[index + (int)self.transformIndexOffset];
     }
 
+    private static float3 SanitizeOutput(float3 v) {
+        if (float.IsNaN(v.x) || float.IsNaN(v.y) || float.IsNaN(v.z)) {
+            return float3.zero;
+        }
+        return v;
+    }
+    
+    private static bool IsNormalized(quaternion q, float epsilon = 1e-5f) {
+        return math.abs(math.length(q.value) - 1f) < epsilon;
+    }
+    
+    private static quaternion SanitizeOutput(quaternion v) {
+        if (float.IsNaN(v.value.x) || float.IsNaN(v.value.y) || float.IsNaN(v.value.z) || float.IsNaN(v.value.w)) {
+            return quaternion.identity;
+        }
+        return v;
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void WriteOutputPose(this JiggleTreeJobData self, NativeArray<PoseData> outputPoses, int index, JiggleTransform pose, float3 rootOffset, float3 rootPosition) {
         var old = outputPoses[index + (int)self.transformIndexOffset];
         if (old.pose.isVirtual) {
             return;
         }
-        pose.isVirtual = old.pose.isVirtual;
+
+        pose.isVirtual = false;
+        pose.position = SanitizeOutput(pose.position);
+        pose.scale = SanitizeOutput(pose.scale);
+        pose.rotation = SanitizeOutput(pose.rotation);
+        
         old.pose = pose;
-        old.rootOffset = rootOffset;
-        old.rootPosition = rootPosition;
+        old.rootOffset = SanitizeOutput(rootOffset);
+        old.rootPosition = SanitizeOutput(rootPosition);
 
         outputPoses[index + (int)self.transformIndexOffset] = old;
     }

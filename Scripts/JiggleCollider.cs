@@ -25,7 +25,7 @@ public struct JiggleColliderSerializable {
     }
 }
 
-[System.Serializable]
+[Serializable]
 public struct JiggleCollider {
     public enum JiggleColliderType {
         Sphere,

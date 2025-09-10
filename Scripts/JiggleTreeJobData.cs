@@ -34,7 +34,6 @@ public unsafe struct JiggleTreeJobData {
     
     public JiggleSimulatedPoint* points;
     public JigglePointParameters* parameters;
-    public fixed int colliderIndices[JiggleJobBroadPhase.MAX_COLLIDERS];
     private const int MAX_POINTS = 10000;
 
     public JiggleTreeJobData(int rootID, int transformIndexOffset, int colliderIndexOffset, int colliderCount, JiggleSimulatedPoint[] inputPoints, JigglePointParameters[] inputParameters) {

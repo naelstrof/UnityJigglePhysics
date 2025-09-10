@@ -20,8 +20,12 @@ public static class JigglePhysics {
     public const float MERGE_DISTANCE = 0.001f;
 
     private static JiggleJobs jobs;
+    private static bool hasRunThisFrame;
 
     public static void ScheduleSimulate(double currentTime, double fixedCurrentTime, float fixedDeltaTime) {
+        if (hasRunThisFrame) {
+            return;
+        }
         if (Math.Abs(lastFixedCurrentTime - fixedCurrentTime) < 0.0001f) {
             return;
         }
@@ -36,9 +40,11 @@ public static class JigglePhysics {
 
         jobs = GetJiggleJobs(currentTime, fixedDeltaTime);
         jobs.Simulate(fixedCurrentTime, currentTime);
+        hasRunThisFrame = true;
     }
 
     public static void SchedulePose(double currentTime) {
+        hasRunThisFrame = false;
         jobs?.SchedulePoses(currentTime);
     }
 

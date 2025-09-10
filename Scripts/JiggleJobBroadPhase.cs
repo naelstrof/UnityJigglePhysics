@@ -95,14 +95,14 @@ public struct JiggleJobBroadPhase : IJob {
                 for (int y = -boundingRange; y <= boundingRange; y++) {
                     int2 grid = gridPosition + new int2(x, y);
                     if (!broadPhaseMap.ContainsKey(grid)) {
-                        broadPhaseMap.Add(grid, new JiggleGridCell(255));
+                        broadPhaseMap.Add(grid, new JiggleGridCell(32));
                     }
 
                     if (broadPhaseMap.TryGetValue(grid, out JiggleGridCell gridCell)) {
                         gridCell.staleness = 0;
                         unsafe {
                             gridCell.colliderIndices[gridCell.count] = i;
-                            gridCell.count = math.min(gridCell.count + 1, 255);
+                            gridCell.count = math.min(gridCell.count + 1, 32);
                         }
                         broadPhaseMap[grid] = gridCell;
                     }

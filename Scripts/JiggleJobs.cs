@@ -285,7 +285,7 @@ public class JiggleJobs {
     }
     
     public int GetSceneColliderCapacity() {
-        return _memoryBus.personalColliderCapacity;
+        return _memoryBus.sceneColliderCapacity;
     }
     
     public int GetPersonalColliderCount() {

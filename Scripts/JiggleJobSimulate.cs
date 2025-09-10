@@ -1,4 +1,5 @@
 using System;
+using Codice.CM.Common.Checkin.Partial;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
@@ -58,8 +59,8 @@ public struct JiggleJobSimulate : IJobFor {
 
 
     private unsafe void Cache(JiggleTreeJobData tree) {
-        var lengthAccumulation = 0f;
-        var maxColliderRadius = 0f;
+        float3 min = new float3(float.MaxValue);
+        float3 max = new float3(float.MinValue);
         
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points[i];
@@ -84,6 +85,8 @@ public struct JiggleJobSimulate : IJobFor {
 
                 point.worldRadius = 0f;
                 point.workingPosition = point.pose;
+                min = math.min(min, point.position);
+                max = math.max(max, point.position);
             } else if (point.hasTransform) {
                 // "real" particles
                 var inputPose = tree.GetInputPose(inputPoses, i);
@@ -93,7 +96,8 @@ public struct JiggleJobSimulate : IJobFor {
                 point.desiredLengthToParent = math.distance(point.pose, parent.pose);
                 var averagePointScale = (inputPose.scale.x + inputPose.scale.y + inputPose.scale.z) / 3f;
                 point.worldRadius = parameters.collisionRadius * averagePointScale;
-                maxColliderRadius = math.max(maxColliderRadius, point.worldRadius);
+                min = math.min(min, point.position-new float3(point.worldRadius));
+                max = math.max(max, point.position+new float3(point.worldRadius));
             } else {
                 // virtual end particles
                 var parent = tree.points[point.parentIndex];
@@ -101,13 +105,14 @@ public struct JiggleJobSimulate : IJobFor {
                 point.parentPose = parent.pose;
                 point.desiredLengthToParent = math.distance(point.pose, point.parentPose);
                 point.worldRadius = 0f;
+                min = math.min(min, point.position);
+                max = math.max(max, point.position);
             }
-            lengthAccumulation += point.desiredLengthToParent;
             tree.points[i] = point;
         }
 
-        const float extentsBuffer = 1.3f;
-        tree.extents = (lengthAccumulation + maxColliderRadius)*extentsBuffer;
+        tree.minExtentPosition = JiggleGridCell.GetKeyForPosition(min);
+        tree.maxExtentPosition = JiggleGridCell.GetKeyForPosition(max);
     }
 
     private unsafe void VerletIntegrate(JiggleTreeJobData tree) {
@@ -249,6 +254,14 @@ public struct JiggleJobSimulate : IJobFor {
         point->workingPosition += collisionDepenetration;
     }
 
+    private unsafe bool ContainsIndex(int* array, int arrayCount, int index) {
+        for (int i = 0; i < arrayCount; i++) {
+            if (array[i] == index) {
+                return true;
+            }
+        }
+        return false;
+    }
     private unsafe void Constrain(JiggleTreeJobData tree) {
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points+i;
@@ -262,21 +275,27 @@ public struct JiggleJobSimulate : IJobFor {
             var parentParameters = tree.parameters + point->parentIndex;
 
             #region Collisions
-            
+
+            int tempColliderCount = 0;
             // TODO: to convert a float to a grid location we just cast, but this always rounds towards zero. Probably should be a math.round()
-            int extentRange = (int)tree.extents;
-            for (int x = -extentRange; x < extentRange; x++) {
-                for (int y = -extentRange; y < extentRange; y++) {
-                    if (broadPhaseMap.TryGetValue(
-                            JiggleGridCell.GetKey(tree.points[0].position)+new int2(x,y), 
-                            out var gridCell
-                            )) {
+            int2 min = tree.minExtentPosition;
+            int2 max = tree.maxExtentPosition;
+            for (int x = min.x; x <= max.x; x++) {
+                for (int y = min.y; y <= max.y; y++) {
+                    int2 grid = new int2(x, y);
+                    if (broadPhaseMap.TryGetValue(grid, out var gridCell )) {
                         for (int index = 0; index < gridCell.count; index++) {
-                            var sceneCollider = sceneColliders[gridCell.colliderIndices[index]];
-                            DepenetrateCollider(tree, point, parent, pointParameters, parentParameters, sceneCollider);
+                            if (!ContainsIndex(tree.colliderIndices, tempColliderCount, gridCell.colliderIndices[index])) {
+                                tree.colliderIndices[tempColliderCount] = index;
+                                tempColliderCount = math.min(tempColliderCount+1, JiggleJobBroadPhase.MAX_COLLIDERS-1);
+                            }
                         }
                     }
                 }
+            }
+            for (int o=0;o<tempColliderCount;o++) {
+                var sceneCollider = sceneColliders[tree.colliderIndices[o]];
+                DepenetrateCollider(tree, point, parent, pointParameters, parentParameters, sceneCollider);
             }
 
             var endIndex = tree.colliderIndexOffset + tree.colliderCount;

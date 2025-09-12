@@ -22,8 +22,8 @@ public struct JiggleJobSimulate : IJobFor {
     [ReadOnly,NativeDisableParallelForRestriction] public NativeArray<JiggleCollider> personalColliders;
     [ReadOnly,NativeDisableParallelForRestriction] public NativeArray<JiggleCollider> sceneColliders;
     
-    [ReadOnly]
-    public NativeHashMap<int2,JiggleGridCell> broadPhaseMap;
+    [ReadOnly] public NativeHashMap<int2,JiggleGridCell> broadPhaseMap;
+    [ReadOnly] public NativeReference<JiggleGridCell> globalCell;
 
     public NativeArray<JiggleTreeJobData> jiggleTrees;
 
@@ -37,6 +37,7 @@ public struct JiggleJobSimulate : IJobFor {
         sceneColliders = bus.sceneColliders;
         timeStamp = Time.timeAsDouble;
         broadPhaseMap = bus.broadPhaseMap;
+        globalCell = bus.globalCell;
         gravity = Physics.gravity;
         sceneColliderCount = 0;
         deltaTimeSquared = fixedDeltaTime * fixedDeltaTime;
@@ -50,6 +51,7 @@ public struct JiggleJobSimulate : IJobFor {
         sceneColliders = bus.sceneColliders;
         sceneColliderCount = bus.sceneColliderCount;
         broadPhaseMap = bus.broadPhaseMap;
+        globalCell = bus.globalCell;
     }
     
     public void SetFixedDeltaTime(float fixedDeltaTime) {
@@ -271,27 +273,22 @@ public struct JiggleJobSimulate : IJobFor {
 
             #region Collisions
 
+            var global = globalCell.Value;
+            for (int index = 0; index < global.count; index++) {
+                var sceneCollider = sceneColliders[global.colliderIndices[index]];
+                DepenetrateCollider(tree, point, parent, pointParameters, parentParameters, sceneCollider);
+            }
+
             // TODO: to convert a float to a grid location we just cast, but this always rounds towards zero. Probably should be a math.round()
-            int tempColliderCount = 0;
             int2 min = tree.minExtentPosition;
             int2 max = tree.maxExtentPosition;
             for (int x = min.x; x <= max.x; x++) {
-                if (tempColliderCount > JiggleJobBroadPhase.MAX_COLLIDERS) {
-                    break;
-                }
                 for (int y = min.y; y <= max.y; y++) {
-                    if (tempColliderCount > JiggleJobBroadPhase.MAX_COLLIDERS) {
-                        break;
-                    }
                     int2 grid = new int2(x, y);
                     if (broadPhaseMap.TryGetValue(grid, out var gridCell)) {
                         for (int index = 0; index < gridCell.count; index++) {
-                            if (tempColliderCount > JiggleJobBroadPhase.MAX_COLLIDERS) {
-                                break;
-                            }
                             var sceneCollider = sceneColliders[gridCell.colliderIndices[index]];
                             DepenetrateCollider(tree, point, parent, pointParameters, parentParameters, sceneCollider);
-                            tempColliderCount++;
                         }
                     }
                 }

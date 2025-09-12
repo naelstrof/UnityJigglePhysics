@@ -40,13 +40,16 @@ public unsafe struct JiggleGridCell {
 [BurstCompile]
 public struct JiggleJobBroadPhaseClear : IJob {
     public NativeHashMap<int2, JiggleGridCell> broadPhaseMap;
+    public NativeReference<JiggleGridCell> globalCell;
 
     public JiggleJobBroadPhaseClear(JiggleMemoryBus bus) {
         broadPhaseMap = bus.broadPhaseMap;
+        globalCell = bus.globalCell;
     }
 
     public void UpdateArrays(JiggleMemoryBus bus) {
         broadPhaseMap = bus.broadPhaseMap;
+        globalCell = bus.globalCell;
     }
 
     public void Execute() {
@@ -64,7 +67,11 @@ public struct JiggleJobBroadPhaseClear : IJob {
                 broadPhaseMap[key] = gridCell;
             }
         }
-
+        
+        var global = globalCell.Value;
+        global.count = 0;
+        globalCell.Value = global;
+        
         keyArray.Dispose();
     }
 }
@@ -72,20 +79,23 @@ public struct JiggleJobBroadPhaseClear : IJob {
 [BurstCompile]
 public struct JiggleJobBroadPhase : IJob {
     public NativeHashMap<int2, JiggleGridCell> broadPhaseMap;
+    public NativeReference<JiggleGridCell> globalCell;
     [ReadOnly] public NativeArray<JiggleCollider> jiggleColliders;
     public int jiggleColliderCount;
-    public const int MAX_COLLIDERS = 32;
+    public const int MAX_COLLIDERS = 128;
 
     public JiggleJobBroadPhase(JiggleMemoryBus bus) {
         broadPhaseMap = bus.broadPhaseMap;
         jiggleColliders = bus.sceneColliders;
         jiggleColliderCount = bus.sceneColliderCount;
+        globalCell = bus.globalCell;
     }
 
     public void UpdateArrays(JiggleMemoryBus bus) {
         broadPhaseMap = bus.broadPhaseMap;
         jiggleColliders = bus.sceneColliders;
         jiggleColliderCount = bus.sceneColliderCount;
+        globalCell = bus.globalCell;
     }
 
     public void Execute() {
@@ -94,6 +104,15 @@ public struct JiggleJobBroadPhase : IJob {
             float3 position = collider.localToWorldMatrix.c3.xyz;
             int2 min = JiggleGridCell.GetKeyForPosition(position-new float3(collider.worldRadius));
             int2 max = JiggleGridCell.GetKeyForPosition(position+new float3(collider.worldRadius));
+            if ((max.x - min.x) * (max.y - min.y) > 32) {
+                var global = globalCell.Value;
+                unsafe {
+                    global.colliderIndices[global.count] = i;
+                    global.count = math.min(global.count + 1, MAX_COLLIDERS-1);
+                }
+                globalCell.Value = global;
+                continue;
+            }
             for (int x = min.x; x <= max.x; x++) {
                 for (int y = min.y; y <= max.y; y++) {
                     int2 grid = new int2(x, y);

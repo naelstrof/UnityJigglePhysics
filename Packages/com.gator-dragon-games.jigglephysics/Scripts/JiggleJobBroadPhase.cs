@@ -83,6 +83,8 @@ public struct JiggleJobBroadPhase : IJob {
     [ReadOnly] public NativeArray<JiggleCollider> jiggleColliders;
     public int jiggleColliderCount;
     public const int MAX_COLLIDERS = 128;
+    public const int GLOBAL_COLLIDER_EDGE_LENGTH = 10;
+    private const int GLOBAL_COLLIDER_CELLS = GLOBAL_COLLIDER_EDGE_LENGTH*GLOBAL_COLLIDER_EDGE_LENGTH;
 
     public JiggleJobBroadPhase(JiggleMemoryBus bus) {
         broadPhaseMap = bus.broadPhaseMap;
@@ -104,7 +106,7 @@ public struct JiggleJobBroadPhase : IJob {
             float3 position = collider.localToWorldMatrix.c3.xyz;
             int2 min = JiggleGridCell.GetKeyForPosition(position-new float3(collider.worldRadius));
             int2 max = JiggleGridCell.GetKeyForPosition(position+new float3(collider.worldRadius));
-            if ((max.x - min.x) * (max.y - min.y) > 32) {
+            if ((max.x - min.x) * (max.y - min.y) > GLOBAL_COLLIDER_CELLS) {
                 var global = globalCell.Value;
                 unsafe {
                     global.colliderIndices[global.count] = i;

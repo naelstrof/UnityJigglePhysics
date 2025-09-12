@@ -57,6 +57,7 @@ public class JiggleMemoryBus {
     public NativeArray<PoseData> interpolationCurrentPoseData;
     public NativeArray<PoseData> interpolationPreviousPoseData;
     public NativeHashMap<int2, JiggleGridCell> broadPhaseMap;
+    public NativeReference<JiggleGridCell> globalCell;
 
     public NativeArray<JiggleCollider> personalColliders;
 
@@ -342,6 +343,8 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
         sceneColliderCount = 0;
         personalColliderCount = 0;
         broadPhaseMap = new NativeHashMap<int2, JiggleGridCell>(128, Allocator.Persistent);
+        globalCell = new NativeReference<JiggleGridCell>(Allocator.Persistent);
+        globalCell.Value = new JiggleGridCell(JiggleJobBroadPhase.MAX_COLLIDERS);
     }
 
     private void ReadIn<T>(NativeArray<T> native, T[] array, int count) where T : struct {
@@ -857,6 +860,7 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
             gridCells[i].Dispose();
         }
         broadPhaseMap.Dispose();
+        globalCell.Dispose();
 
         doubleBufferTransformAccessArray?.Dispose();
         doubleBufferTransformRootAccessArray?.Dispose();

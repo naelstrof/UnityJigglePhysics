@@ -57,7 +57,7 @@ public struct JiggleJobSimulate : IJobFor {
     }
 
 
-    private unsafe void Cache(JiggleTreeJobData tree) {
+    private unsafe void Cache(ref JiggleTreeJobData tree) {
         float3 min = new float3(float.MaxValue);
         float3 max = new float3(float.MinValue);
         
@@ -84,8 +84,6 @@ public struct JiggleJobSimulate : IJobFor {
 
                 point.worldRadius = 0f;
                 point.workingPosition = point.pose;
-                min = math.min(min, point.position);
-                max = math.max(max, point.position);
             } else if (point.hasTransform) {
                 // "real" particles
                 var inputPose = tree.GetInputPose(inputPoses, i);
@@ -104,8 +102,6 @@ public struct JiggleJobSimulate : IJobFor {
                 point.parentPose = parent.pose;
                 point.desiredLengthToParent = math.distance(point.pose, point.parentPose);
                 point.worldRadius = 0f;
-                min = math.min(min, point.position);
-                max = math.max(max, point.position);
             }
             tree.points[i] = point;
         }
@@ -535,7 +531,7 @@ public struct JiggleJobSimulate : IJobFor {
             return;
         }
         #endif
-        Cache(tree);
+        Cache(ref tree);
         VerletIntegrate(tree);
         Constrain(tree);
         FinishStep(tree);

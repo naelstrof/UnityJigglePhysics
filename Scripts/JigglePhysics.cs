@@ -22,7 +22,7 @@ public static class JigglePhysics {
     private static JiggleJobs jobs;
     private static bool hasRunThisFrame;
 
-    public static void ScheduleSimulate(double fixedCurrentTime, float fixedDeltaTime) {
+    public static void ScheduleSimulate(double fixedCurrentTime, double realTime, float fixedDeltaTime) {
         if (hasRunThisFrame) {
             return;
         }
@@ -39,7 +39,7 @@ public static class JigglePhysics {
         lastFixedCurrentTime = fixedCurrentTime;
 
         jobs = GetJiggleJobs(fixedCurrentTime, fixedDeltaTime);
-        jobs.Simulate(fixedCurrentTime);
+        jobs.Simulate(fixedCurrentTime, realTime);
         hasRunThisFrame = true;
     }
 

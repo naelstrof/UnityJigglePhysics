@@ -1,12 +1,11 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace GatorDragonGames.JigglePhysics {
 
-//[BurstCompile]
+[BurstCompile]
 public struct JiggleJobInputInterpolation : IJobFor {
     [ReadOnly] public NativeArray<JiggleTransform> previousInputs;
     [ReadOnly] public NativeArray<JiggleTransform> currentInputs;

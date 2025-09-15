@@ -10,7 +10,6 @@ namespace GatorDragonGames.JigglePhysics {
 
 public class JiggleJobs {
     private JiggleMemoryBus _memoryBus;
-    private double lastPoseTime;
 
     private JobHandle handlePersonalColliderRead;
     private bool hasHandlePersonalColliderRead;
@@ -111,7 +110,6 @@ public class JiggleJobs {
     }
 
     public JobHandle SchedulePoses(double timeAsDouble) {
-        lastPoseTime = timeAsDouble;
         if (_memoryBus.transformCount == 0) {
             return default;
         }
@@ -169,7 +167,7 @@ public class JiggleJobs {
         freePointers.Clear();
     }
 
-    public void Simulate(double simulateTime) {
+    public void Simulate(double simulateTime, double realTime) {
         if (_memoryBus.transformCount == 0) {
             _memoryBus.CommitTrees();
             _memoryBus.CommitColliders();
@@ -199,7 +197,7 @@ public class JiggleJobs {
         jobInterpolation.previousTimeStamp = jobInterpolation.timeStamp;
         jobInterpolation.timeStamp = jobSimulate.timeStamp;
         jobInputInterpolation.previousTimeStamp = jobInputInterpolation.timeStamp;
-        jobInputInterpolation.timeStamp = lastPoseTime;
+        jobInputInterpolation.timeStamp = realTime;
         jobInputInterpolation.currentTime = simulateTime;
 
         _memoryBus.CommitTrees();

@@ -22,7 +22,7 @@ public struct JiggleJobBulkTransformReset : IJobParallelForTransform {
         previousLocalTransforms = bus.previousLocalRestPoseTransforms;
     }
 
-    public bool HasChanged(float3 oldPosition, Vector3 newPosition, quaternion oldRotation, Quaternion newRotation) {
+    public bool HasNotChanged(float3 oldPosition, Vector3 newPosition, quaternion oldRotation, Quaternion newRotation) {
         return newPosition == (Vector3)oldPosition && newRotation == (Quaternion)oldRotation;
     }
 
@@ -39,7 +39,7 @@ public struct JiggleJobBulkTransformReset : IJobParallelForTransform {
             return;
         }
         
-        if (HasChanged(localTransform.position, localPosition, localTransform.rotation, localRotation)) {
+        if (HasNotChanged(localTransform.position, localPosition, localTransform.rotation, localRotation)) {
             transform.SetLocalPositionAndRotation(restTransform.position, restTransform.rotation);
         } else {
             restTransform.position = localPosition;

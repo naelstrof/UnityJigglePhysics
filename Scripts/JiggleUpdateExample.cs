@@ -9,7 +9,8 @@ public class JiggleUpdateExample : MonoBehaviour {
     [SerializeField] private Mesh sphereMesh;
 
     private void FixedUpdate() {
-        JigglePhysics.ScheduleSimulate(Time.timeAsDouble, Time.fixedTimeAsDouble, Time.fixedDeltaTime);
+        var fixedTime = Time.fixedTimeAsDouble;
+        JigglePhysics.ScheduleSimulate(fixedTime, Time.fixedDeltaTime);
     }
 
     private void LateUpdate() {

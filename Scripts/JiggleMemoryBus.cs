@@ -31,6 +31,10 @@ public class JiggleMemoryBus {
     public int treeCapacity { get; private set; }
     public int transformCapacity { get; private set; }
     private JiggleTreeJobData[] jiggleTreeStructsArray;
+    
+    private JiggleTransform[] inputPosesPreviousArray;
+    private JiggleTransform[] inputPosesCurrentArray;
+    
     private JiggleTransform[] simulateInputPosesArray;
     private JiggleTransform[] restPoseTransformsArray;
     private JiggleTransform[] previousLocalRestPoseTransformsArray;
@@ -48,6 +52,10 @@ public class JiggleMemoryBus {
     private JiggleTreeJobData[] jiggleTreeStructsArrayOutput;
 
     public NativeArray<JiggleTreeJobData> jiggleTreeStructs;
+    
+    public NativeArray<JiggleTransform> inputPosesPrevious;
+    public NativeArray<JiggleTransform> inputPosesCurrent;
+    
     public NativeArray<JiggleTransform> simulateInputPoses;
     public NativeArray<JiggleTransform> restPoseTransforms;
     public NativeArray<JiggleTransform> previousLocalRestPoseTransforms;
@@ -189,6 +197,7 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
         interpolationPreviousPoseData = interpolationCurrentPoseData;
         interpolationCurrentPoseData = simulationOutputPoseData;
         simulationOutputPoseData = tempPoses;
+        (inputPosesPrevious, inputPosesCurrent) = (inputPosesCurrent, inputPosesPrevious);
     }
 
     private void ResizeSceneColliderCapacity(int newColliderCapacity) {
@@ -234,6 +243,8 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
         var newInterpolationCurrentPoseDataArray = new PoseData[newTransformCapacity];
         var newInterpolationPreviousPoseDataArray = new PoseData[newTransformCapacity];
         interpolationOutputPosesArrayOutput = new JiggleTransform[newTransformCapacity];
+        var newInputPosesPrevious = new JiggleTransform[newTransformCapacity];
+        var newInputPosesCurrent = new JiggleTransform[newTransformCapacity];
 
         if (jiggleTreeStructsArray != null) {
             System.Array.Copy(simulateInputPosesArray, newSimulateInputPosesArray,
@@ -252,8 +263,14 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
                 System.Math.Min(transformCount, newTransformCapacity));
             System.Array.Copy(interpolationPreviousPoseDataArray, newInterpolationPreviousPoseDataArray,
                 System.Math.Min(transformCount, newTransformCapacity));
+            System.Array.Copy(inputPosesCurrentArray, newInputPosesCurrent,
+                System.Math.Min(transformCount, newTransformCapacity));
+            System.Array.Copy(inputPosesPreviousArray, newInputPosesPrevious,
+                System.Math.Min(transformCount, newTransformCapacity));
         }
 
+        inputPosesCurrentArray = newInputPosesCurrent;
+        inputPosesPreviousArray = newInputPosesPrevious;
         simulateInputPosesArray = newSimulateInputPosesArray;
         restPoseTransformsArray = newRestPoseTransformsArray;
         previousLocalRestPoseTransformsArray = newPreviousLocalRestPoseTransformsArray;
@@ -264,6 +281,8 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
         interpolationPreviousPoseDataArray = newInterpolationPreviousPoseDataArray;
 
         if (jiggleTreeStructs.IsCreated) {
+            inputPosesPrevious.Dispose();
+            inputPosesCurrent.Dispose();
             simulateInputPoses.Dispose();
             restPoseTransforms.Dispose();
             previousLocalRestPoseTransforms.Dispose();
@@ -274,6 +293,9 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
             interpolationPreviousPoseData.Dispose();
         }
 
+        inputPosesPrevious = new NativeArray<JiggleTransform>(inputPosesPreviousArray, Allocator.Persistent);
+        inputPosesCurrent = new NativeArray<JiggleTransform>(inputPosesCurrentArray, Allocator.Persistent);
+        simulateInputPoses = new NativeArray<JiggleTransform>(simulateInputPosesArray, Allocator.Persistent);
         simulateInputPoses = new NativeArray<JiggleTransform>(simulateInputPosesArray, Allocator.Persistent);
         restPoseTransforms = new NativeArray<JiggleTransform>(restPoseTransformsArray, Allocator.Persistent);
         previousLocalRestPoseTransforms =
@@ -360,6 +382,8 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
 
         ReadIn(jiggleTreeStructs, jiggleTreeStructsArray, treeCount);
 
+        ReadIn(inputPosesCurrent, inputPosesCurrentArray, transformCount);
+        ReadIn(inputPosesPrevious, inputPosesPreviousArray, transformCount);
         ReadIn(simulateInputPoses, simulateInputPosesArray, transformCount);
         ReadIn(restPoseTransforms, restPoseTransformsArray, transformCount);
         ReadIn(previousLocalRestPoseTransforms, previousLocalRestPoseTransformsArray, transformCount);
@@ -418,6 +442,8 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
         #endif
         Profiler.BeginSample("JiggleMemoryBus.WriteOut");
         NativeArray<JiggleTreeJobData>.Copy(jiggleTreeStructsArray, jiggleTreeStructs, treeCount);
+        NativeArray<JiggleTransform>.Copy(inputPosesCurrentArray, inputPosesCurrent, transformCount);
+        NativeArray<JiggleTransform>.Copy(inputPosesPreviousArray, inputPosesPrevious, transformCount);
         NativeArray<JiggleTransform>.Copy(simulateInputPosesArray, simulateInputPoses, transformCount);
         NativeArray<JiggleTransform>.Copy(restPoseTransformsArray, restPoseTransforms, transformCount);
         NativeArray<JiggleTransform>.Copy(previousLocalRestPoseTransformsArray, previousLocalRestPoseTransforms,
@@ -850,6 +876,8 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
             interpolationPreviousPoseData.Dispose();
             personalColliders.Dispose();
             sceneColliders.Dispose();
+            inputPosesCurrent.Dispose();
+            inputPosesPrevious.Dispose();
         }
 
         var values = broadPhaseMap.GetValueArray(Allocator.Temp);

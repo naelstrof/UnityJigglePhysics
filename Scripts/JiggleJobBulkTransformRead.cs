@@ -11,11 +11,11 @@ public struct JiggleJobBulkTransformRead : IJobParallelForTransform {
     public NativeArray<JiggleTransform> simulateInputPoses;
 
     public JiggleJobBulkTransformRead(JiggleMemoryBus bus) {
-        simulateInputPoses = bus.simulateInputPoses;
+        simulateInputPoses = bus.inputPosesCurrent;
     }
 
     public void UpdateArrays(JiggleMemoryBus bus) {
-        simulateInputPoses = bus.simulateInputPoses;
+        simulateInputPoses = bus.inputPosesCurrent;
     }
     
     public void Execute(int index, TransformAccess transform) {

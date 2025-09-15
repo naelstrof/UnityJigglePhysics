@@ -34,7 +34,7 @@ public class JiggleMemoryFragmenter {
 
     public bool TryAllocate(int size, out int startIndex) {
         var fragmentCount = fragments.Count;
-        for (int i = 0; i < fragmentCount; i++) {
+        for (var i = 0; i < fragmentCount; i++) {
             var fragment = fragments[i];
             if (fragment.count >= size) {
                 startIndex = fragment.startIndex;
@@ -138,12 +138,6 @@ public class JiggleMemoryFragmenter {
             }
         }
         return true;
-    }
-
-    public void CopyFrom(JiggleMemoryFragmenter other) {
-        currentSize = other.currentSize;
-        fragments.Clear();
-        fragments.AddRange(other.fragments);
     }
 }
 

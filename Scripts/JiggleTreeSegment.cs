@@ -7,7 +7,7 @@ public class JiggleTreeSegment {
     public Transform transform { get; private set; }
     public JiggleTree jiggleTree { get; private set; }
     public JiggleTreeSegment parent { get; private set; }
-    public JiggleRig behavior;
+    private JiggleRig behavior;
     public JiggleRigData jiggleRigData => behavior.GetJiggleRigData();
 
     public void SetParent(JiggleTreeSegment jiggleTree) {

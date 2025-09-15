@@ -1,10 +1,9 @@
-using System;
 using UnityEngine;
 
 namespace GatorDragonGames.JigglePhysics {
 
 public class JiggleUpdateExample : MonoBehaviour {
-    [SerializeField] private bool debugDraw = false;
+    [SerializeField] private bool debugDraw;
     [SerializeField] private Material proceduralMaterial;
     [SerializeField] private Mesh sphereMesh;
 

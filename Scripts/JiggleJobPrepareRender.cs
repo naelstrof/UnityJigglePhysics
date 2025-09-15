@@ -55,7 +55,7 @@ public struct JiggleJobPrepareRender : IJob {
             max = math.max(max, collider.localToWorldMatrix.c3.xyz + new float3(1f)*collider.worldRadius);
             var matrix = collider.localToWorldMatrix;
             var scaleAdjust = float4x4.Scale(2f*collider.radius);
-            JiggleRenderInstancer.GPUChunk chunk = new JiggleRenderInstancer.GPUChunk() {
+            var chunk = new JiggleRenderInstancer.GPUChunk() {
                 matrix = math.mul(matrix, scaleAdjust),
                 color = new float4(0.5450981f, 0f, 0f, 1f)
             };
@@ -63,9 +63,9 @@ public struct JiggleJobPrepareRender : IJob {
         }
 
         int currentCount = personalColliderCount + sceneColliderCount;
-        for (int i = 0; i < treeCount; i++) {
+        for (var i = 0; i < treeCount; i++) {
             var tree = trees[i];
-            for(int o=0;o<tree.pointCount;o++) {
+            for(var o=0;o<tree.pointCount;o++) {
                 unsafe {
                     var point = tree.points[o];
                     var pose = outputPoses[o + (int)tree.transformIndexOffset];

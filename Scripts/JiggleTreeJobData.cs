@@ -8,18 +8,6 @@ using UnityEngine.Assertions;
 
 namespace GatorDragonGames.JigglePhysics {
 public unsafe struct JiggleTreeJobData {
-    public bool Equals(JiggleTreeJobData other) {
-        return GetHashCode() == other.GetHashCode();
-    }
-
-    public override bool Equals(object obj) {
-        return obj is JiggleTreeJobData other && Equals(other);
-    }
-
-    public override int GetHashCode() {
-        return unchecked((int)(long)points);
-    }
-
     public static bool operator ==(JiggleTreeJobData left, JiggleTreeJobData right) => left.Equals(right);
     public static bool operator !=(JiggleTreeJobData left, JiggleTreeJobData right) => !left.Equals(right);
 
@@ -34,7 +22,7 @@ public unsafe struct JiggleTreeJobData {
     
     public JiggleSimulatedPoint* points;
     public JigglePointParameters* parameters;
-    private const int MAX_POINTS = 10000;
+    public const int MAX_POINTS = 10000;
 
     public JiggleTreeJobData(int rootID, int transformIndexOffset, int colliderIndexOffset, int colliderCount, JiggleSimulatedPoint[] inputPoints, JigglePointParameters[] inputParameters) {
         this.rootID = rootID;
@@ -63,8 +51,8 @@ public unsafe struct JiggleTreeJobData {
         maxExtentPosition = new int2(0);
     }
 
-    public void Set(int rootID, JiggleSimulatedPoint[] inputPoints, JigglePointParameters[] inputParameters) {
-        this.rootID = rootID;
+    public void Set(int newRootID, JiggleSimulatedPoint[] inputPoints, JigglePointParameters[] inputParameters) {
+        rootID = newRootID;
         if (inputPoints.Length != pointCount) {
             Dispose();
             pointCount = (uint)inputPoints.Length;
@@ -134,7 +122,7 @@ public unsafe struct JiggleTreeJobData {
     }
 
     public bool GetIsValid(out string failReason) {
-        if (pointCount == 0 || pointCount > 10000) {
+        if (pointCount == 0 || pointCount > MAX_POINTS) {
             failReason = $"Invalid point count {pointCount}";
             return false;
         }

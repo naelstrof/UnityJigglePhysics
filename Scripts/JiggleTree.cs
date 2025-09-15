@@ -19,8 +19,6 @@ public class JiggleTree {
         dirty = true;
     }
 
-    public void ClearDirty() => dirty = false;
-
     private bool hasJiggleTreeStruct = false;
     private JiggleTreeJobData jiggleTreeJobData;
 
@@ -35,21 +33,19 @@ public class JiggleTree {
     }
 
     public void ResetTransformsToRest() {
-        for(int i=0;i<points.Length;i++) {
+        for(var i=0;i<points.Length;i++) {
             var bone = bones[i];
-            if (bone) {
-                bone.localPosition = restPositions[i];
-                bone.localRotation = restRotations[i];
-            }
+            if (!bone) continue;
+            bone.localPosition = restPositions[i];
+            bone.localRotation = restRotations[i];
         }
     }
 
     public void Dispose() {
         ResetTransformsToRest();
-        if (hasJiggleTreeStruct) {
-            jiggleTreeJobData.Dispose();
-            hasJiggleTreeStruct = false;
-        }
+        if (!hasJiggleTreeStruct) return;
+        jiggleTreeJobData.Dispose();
+        hasJiggleTreeStruct = false;
     }
 
     /// <summary>

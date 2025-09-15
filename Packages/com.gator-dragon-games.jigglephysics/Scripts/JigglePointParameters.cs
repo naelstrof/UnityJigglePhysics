@@ -58,10 +58,8 @@ public struct JiggleTreeInputParameters {
         return float.IsNaN(value) ? defaultValue : Mathf.Clamp01(value);
     }
 
-    public JigglePointParameters ToJigglePointParameters(float normalizedDistanceFromRoot, float lossyScaleCached, float lossyScaleReal) {
-        float scaleCorrection = lossyScaleCached*(1f/(lossyScaleReal*lossyScaleReal));
-
-        var collisionRadiusValue = (collisionToggle && advancedToggle) ? collisionRadius.Evaluate(normalizedDistanceFromRoot) * scaleCorrection : 0f;
+    public JigglePointParameters ToJigglePointParameters(float normalizedDistanceFromRoot) {
+        var collisionRadiusValue = (collisionToggle && advancedToggle) ? collisionRadius.Evaluate(normalizedDistanceFromRoot) : 0f;
         var gravityValue = gravity.Evaluate(normalizedDistanceFromRoot);
         return new JigglePointParameters {
             rootElasticity = ValidateFloat(advancedToggle ? 1f - rootStretch : 1f, 0f),

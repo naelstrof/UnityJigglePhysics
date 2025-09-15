@@ -208,10 +208,6 @@ public static class JigglePhysics {
         } else {
             backProjection = jiggleRig.rootBone.position + jiggleRig.rootBone.up * 0.25f;
         }
-        var lossyScaleSample = jiggleRig.rootBone.lossyScale;
-        var lossyScale = (lossyScaleSample.x + lossyScaleSample.y + lossyScaleSample.z)/3f;
-        var cache = jiggleRig.GetCache(jiggleRig.rootBone);
-        var cachedScale = cache.lossyScale;
         tempPoints.Add(new JiggleSimulatedPoint() { // Back projected virtual root
             position = backProjection,
             lastPosition = backProjection,
@@ -220,7 +216,7 @@ public static class JigglePhysics {
             hasTransform = false,
             animated = false,
         });
-        tempParameters.Add(jiggleRig.GetJiggleBoneParameter(0f, cachedScale, lossyScale));
+        tempParameters.Add(jiggleRig.GetJiggleBoneParameter(0f));
         tempTransforms.Add(jiggleRig.rootBone);
         Visit(jiggleRig.rootBone, tempTransforms, tempPoints, tempParameters, 0, jiggleRig, backProjection, 0f, out int childIndex);
         if (childIndex != -1) {
@@ -263,7 +259,6 @@ public static class JigglePhysics {
             var lossyScaleSample = t.lossyScale;
             var lossyScale = (lossyScaleSample.x + lossyScaleSample.y + lossyScaleSample.z) / 3f;
             var cache = lastJiggleRig.GetCache(t);
-            var cachedLossyScale = cache.lossyScale;
             if (Vector3.Distance(t.position, lastPosition) < MERGE_DISTANCE) {
                 if (validChildrenCount > 0) {
                     for (int i = 0; i < validChildrenCount; i++) {
@@ -287,7 +282,7 @@ public static class JigglePhysics {
                         hasTransform = false,
                         animated = false,
                     });
-                    parameters.Add(lastJiggleRig.GetJiggleBoneParameter(cache.normalizedDistanceFromRoot, cachedLossyScale, lossyScale));
+                    parameters.Add(lastJiggleRig.GetJiggleBoneParameter(cache.normalizedDistanceFromRoot));
                     var record = points[parentIndex];
                     AddChildToPoint(ref record, points.Count - 1);
                     points[parentIndex] = record;
@@ -296,7 +291,7 @@ public static class JigglePhysics {
                 return;
             }
             transforms.Add(t);
-            var parameter = lastJiggleRig.GetJiggleBoneParameter(cache.normalizedDistanceFromRoot, cachedLossyScale, lossyScale);
+            var parameter = lastJiggleRig.GetJiggleBoneParameter(cache.normalizedDistanceFromRoot);
             if ((lastJiggleRig.excludeRoot && t == lastJiggleRig.rootBone) || lastJiggleRig.GetIsExcluded(t)) {
                 parameter = new JigglePointParameters() {
                     angleElasticity = 1f,
@@ -334,7 +329,7 @@ public static class JigglePhysics {
                     hasTransform = false,
                     animated = false,
                 });
-                parameters.Add(lastJiggleRig.GetJiggleBoneParameter(cache.normalizedDistanceFromRoot, cachedLossyScale, lossyScale));
+                parameters.Add(lastJiggleRig.GetJiggleBoneParameter(cache.normalizedDistanceFromRoot));
                 var record = points[newIndex];
                 AddChildToPoint(ref record, points.Count - 1);
                 points[newIndex] = record;

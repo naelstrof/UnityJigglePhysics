@@ -22,7 +22,7 @@ public static class JigglePhysics {
     private static JiggleJobs jobs;
     private static bool hasRunThisFrame;
 
-    public static void ScheduleSimulate(double currentTime, double fixedCurrentTime, float fixedDeltaTime) {
+    public static void ScheduleSimulate(double fixedCurrentTime, float fixedDeltaTime) {
         if (hasRunThisFrame) {
             return;
         }
@@ -38,8 +38,8 @@ public static class JigglePhysics {
         
         lastFixedCurrentTime = fixedCurrentTime;
 
-        jobs = GetJiggleJobs(currentTime, fixedDeltaTime);
-        jobs.Simulate(fixedCurrentTime, currentTime);
+        jobs = GetJiggleJobs(fixedCurrentTime, fixedDeltaTime);
+        jobs.Simulate(fixedCurrentTime);
         hasRunThisFrame = true;
     }
 
@@ -70,7 +70,7 @@ public static class JigglePhysics {
         initializedRendering = false;
         _globalDirty = true;
         jobs?.Dispose();
-        jobs = new JiggleJobs(Time.timeAsDouble, Time.fixedDeltaTime);
+        jobs = new JiggleJobs(Time.fixedTimeAsDouble, Time.fixedDeltaTime);
     }
 
     public static void Dispose() {
@@ -166,11 +166,11 @@ public static class JigglePhysics {
         }
     }
     
-    private static JiggleJobs GetJiggleJobs(double currentTimeAsDouble, float fixedDeltaTime) {
+    private static JiggleJobs GetJiggleJobs(double fixedTime, float fixedDeltaTime) {
         if (!_globalDirty) {
             return jobs;
         }
-        jobs ??= new JiggleJobs(currentTimeAsDouble, fixedDeltaTime);
+        jobs ??= new JiggleJobs(fixedTime, fixedDeltaTime);
         jobs.SetFixedDeltaTime(fixedDeltaTime);
         GetJiggleTrees();
         _globalDirty = false;

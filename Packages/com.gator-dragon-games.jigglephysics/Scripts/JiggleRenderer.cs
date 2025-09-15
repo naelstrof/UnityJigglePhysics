@@ -37,7 +37,7 @@ public static class JiggleRenderer {
         return new float4(color.r, color.g, color.b, color.a);
     }
     
-    private static void FlipData(JiggleJobs job, double realTime, double simulatedTime) {
+    private static void FlipData(JiggleJobs job, double simulatedTime) {
         var sceneColliderCapacity = job.GetSceneColliderCapacity();
         var personalColliderCapacity = job.GetSceneColliderCapacity();
         var transformCapacity = job.GetTransformCapcity();

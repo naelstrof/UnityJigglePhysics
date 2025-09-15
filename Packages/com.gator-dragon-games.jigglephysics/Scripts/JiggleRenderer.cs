@@ -16,11 +16,11 @@ public static class JiggleRenderer {
     private static JobHandle handleRender;
     private static JiggleJobPrepareRender jobPrepareRender;
     private static JiggleRenderInstancer sphereInstancer;
-    private static JiggleRenderInstancer planeInstancer;
+    //private static JiggleRenderInstancer planeInstancer;
 
     public static void OnEnable(JiggleJobs job) {
         sphereInstancer = new JiggleRenderInstancer();
-        planeInstancer = new JiggleRenderInstancer();
+        //planeInstancer = new JiggleRenderInstancer();
         job.OnFinishSimulate += FlipData;
         jobPrepareRender = new JiggleJobPrepareRender() {
             personalColliders = job.GetPersonalColliders(out var _),
@@ -67,10 +67,11 @@ public static class JiggleRenderer {
         jobPrepareRender.sceneColliders = job.GetSceneColliders(out jobPrepareRender.sceneColliderCount);
         jobPrepareRender.outputPoses = job.GetInterpolatedOutputPoses(out jobPrepareRender.transformCount);
         jobPrepareRender.trees = job.GetTrees(out jobPrepareRender.treeCount);
-        if (job.hasHandleSimulate && job.hasHandleInterpolate) {
-            handleRender = jobPrepareRender.Schedule(JobHandle.CombineDependencies(job.handleSimulate, job.handleInterpolate));
-            hasHandleRender = true;
+        if (job.TryGetRenderDependencies(out var handle)) {
+            handleRender = jobPrepareRender.Schedule(handle);
         }
+
+        hasHandleRender = true;
     }
 
     public static void FinishRender(Material gpuInstanceMaterial, Mesh sphere) {
@@ -84,8 +85,8 @@ public static class JiggleRenderer {
     public static void Dispose() {
         sphereInstancer?.Dispose();
         sphereInstancer = null;
-        planeInstancer?.Dispose();
-        planeInstancer = null;
+        //planeInstancer?.Dispose();
+        //planeInstancer = null;
         jobPrepareRender.Dispose();
         if (sphereChunks.IsCreated) {
             sphereChunks.Dispose();

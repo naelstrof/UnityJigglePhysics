@@ -12,53 +12,53 @@ public class JiggleJobs {
     private JiggleMemoryBus _memoryBus;
     private double lastPoseTime;
 
-    public JobHandle handlePersonalColliderRead;
-    public bool hasHandlePersonalColliderRead;
+    private JobHandle handlePersonalColliderRead;
+    private bool hasHandlePersonalColliderRead;
     
-    public JobHandle handleSceneColliderRead;
-    public bool hasHandleSceneColliderRead;
+    private JobHandle handleSceneColliderRead;
+    private bool hasHandleSceneColliderRead;
 
-    public JobHandle handleBulkRead;
-    public bool hasHandleBulkRead;
+    private JobHandle handleBulkRead;
+    private bool hasHandleBulkRead;
     
-    public JobHandle handleBulkReset;
-    public bool hasHandleBulkReset;
+    private JobHandle handleBulkReset;
+    private bool hasHandleBulkReset;
 
-    public JobHandle handleSimulate;
-    public bool hasHandleSimulate;
+    private JobHandle handleSimulate;
+    private bool hasHandleSimulate;
 
-    public JobHandle handleTransformWrite;
-    public bool hasHandleTransformWrite;
+    private JobHandle handleTransformWrite;
+    private bool hasHandleTransformWrite;
 
-    public JobHandle handleRootRead;
-    public bool hasHandleRootRead;
+    private JobHandle handleRootRead;
+    private bool hasHandleRootRead;
 
-    public JobHandle handleInterpolate;
-    public bool hasHandleInterpolate;
+    private JobHandle handleInterpolate;
+    private bool hasHandleInterpolate;
     
-    public JobHandle handleBroadPhaseClear;
-    public bool hasHandleBroadPhaseClear;
+    private JobHandle handleBroadPhaseClear;
+    private bool hasHandleBroadPhaseClear;
     
-    public JobHandle handleBroadPhase;
-    public bool hasHandleBroadPhase;
+    private JobHandle handleBroadPhase;
+    private bool hasHandleBroadPhase;
     
-    public JobHandle handleInputInterpolate;
-    public bool hasHandleInputInterpolate;
+    private JobHandle handleInputInterpolate;
+    private bool hasHandleInputInterpolate;
 
-    public JiggleJobBulkColliderTransformRead jobBulkPersonalColliderTransformRead;
-    public JiggleJobBulkColliderTransformRead jobBulkSceneColliderTransformRead;
-    public JiggleJobBulkTransformRead jobBulkTransformRead;
-    public JiggleJobBulkTransformReset jobBulkTransformReset;
-    public JiggleJobSimulate jobSimulate;
-    public JiggleJobBulkReadRoots jobBulkReadRoots;
-    public JiggleJobInterpolation jobInterpolation;
-    public JiggleJobBroadPhaseClear jobBroadPhaseClear;
-    public JiggleJobBroadPhase jobBroadPhase;
-    public JiggleJobInputInterpolation jobInputInterpolation;
+    private JiggleJobBulkColliderTransformRead jobBulkPersonalColliderTransformRead;
+    private JiggleJobBulkColliderTransformRead jobBulkSceneColliderTransformRead;
+    private JiggleJobBulkTransformRead jobBulkTransformRead;
+    private JiggleJobBulkTransformReset jobBulkTransformReset;
+    private JiggleJobSimulate jobSimulate;
+    private JiggleJobBulkReadRoots jobBulkReadRoots;
+    private JiggleJobInterpolation jobInterpolation;
+    private JiggleJobBroadPhaseClear jobBroadPhaseClear;
+    private JiggleJobBroadPhase jobBroadPhase;
+    private JiggleJobInputInterpolation jobInputInterpolation;
 
-    public JiggleJobTransformWrite jobTransformWrite;
+    private JiggleJobTransformWrite jobTransformWrite;
 
-    public List<IntPtr> freePointers;
+    private List<IntPtr> freePointers;
 
     public delegate void JiggleFinishSimulateAction(JiggleJobs job, double simulatedTime);
     public event JiggleFinishSimulateAction OnFinishSimulate;
@@ -77,6 +77,15 @@ public class JiggleJobs {
         jobBroadPhaseClear = new JiggleJobBroadPhaseClear(_memoryBus);
         jobInputInterpolation = new JiggleJobInputInterpolation(_memoryBus, fixedTime, fixedDeltaTime);
         freePointers = new List<IntPtr>();
+    }
+
+    public bool TryGetRenderDependencies(out JobHandle handle) {
+        if (hasHandleSimulate && hasHandleInterpolate) {
+            handle = JobHandle.CombineDependencies(handleSimulate, handleInterpolate);
+            return true;
+        }
+        handle = default;
+        return false;
     }
     
     public void SetFixedDeltaTime(float fixedDeltaTime) {

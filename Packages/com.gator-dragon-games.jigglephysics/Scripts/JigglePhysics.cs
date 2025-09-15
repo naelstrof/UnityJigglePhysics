@@ -8,11 +8,11 @@ namespace GatorDragonGames.JigglePhysics {
 public static class JigglePhysics {
     private static Dictionary<Transform, JiggleTreeSegment> jiggleRootLookup;
     private static bool _globalDirty = true;
-    private static readonly List<Transform> tempTransforms = new List<Transform>();
-    private static readonly List<JiggleSimulatedPoint> tempPoints = new List<JiggleSimulatedPoint>();
-    private static readonly List<JigglePointParameters> tempParameters = new List<JigglePointParameters>();
-    private static readonly List<JiggleCollider> tempColliders = new List<JiggleCollider>();
-    private static readonly List<Transform> tempColliderTransforms = new List<Transform>();
+    private static readonly List<Transform> tempTransforms = new ();
+    private static readonly List<JiggleSimulatedPoint> tempPoints = new();
+    private static readonly List<JigglePointParameters> tempParameters = new ();
+    private static readonly List<JiggleCollider> tempColliders = new ();
+    private static readonly List<Transform> tempColliderTransforms = new ();
     private static List<JiggleTreeSegment> rootJiggleTreeSegments;
     private static bool initializedRendering = false;
 
@@ -177,7 +177,7 @@ public static class JigglePhysics {
         return jobs;
     }
 
-    public static void GetJiggleTrees() {
+    private static void GetJiggleTrees() {
         Profiler.BeginSample("JiggleRoot.GetJiggleTrees");
         // TODO: Cleanup previous trees, or reuse them.
         foreach (var rootJiggleTreeSegment in rootJiggleTreeSegments) {
@@ -350,7 +350,7 @@ public static class JigglePhysics {
 
     }
 
-    public static unsafe void AddChildToPoint(ref JiggleSimulatedPoint point, int childIndex) {
+    private static unsafe void AddChildToPoint(ref JiggleSimulatedPoint point, int childIndex) {
         if (point.childrenCount>=JiggleSimulatedPoint.MAX_CHILDREN) {
             return;
         }

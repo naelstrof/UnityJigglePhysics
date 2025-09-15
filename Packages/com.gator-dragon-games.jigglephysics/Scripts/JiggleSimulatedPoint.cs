@@ -88,7 +88,7 @@ public unsafe struct JiggleSimulatedPoint {
                $"workingPosition: {workingPosition},\n" +
                $"parentPose: {parentPose},\npose: {pose},\ndesiredLengthToParent:{desiredLengthToParent},\n" +
                $"animated: {animated},\n parentIndex: {parentIndex},\n " +
-               $"children: [{childrenIndices[0]}, ...],\n childenCount: {childrenCount},\n hasTransform: {hasTransform})";
+               $"children: [{childrenIndices[0]}, ...],\n childrenCount: {childrenCount},\n hasTransform: {hasTransform})";
     }
 
     public void Sanitize() {

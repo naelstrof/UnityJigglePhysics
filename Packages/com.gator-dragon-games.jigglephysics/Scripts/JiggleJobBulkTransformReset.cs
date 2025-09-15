@@ -22,7 +22,7 @@ public struct JiggleJobBulkTransformReset : IJobParallelForTransform {
         previousLocalTransforms = bus.previousLocalRestPoseTransforms;
     }
 
-    public bool HasNotChanged(float3 oldPosition, Vector3 newPosition, quaternion oldRotation, Quaternion newRotation) {
+    private static bool HasNotChanged(float3 oldPosition, Vector3 newPosition, quaternion oldRotation, Quaternion newRotation) {
         return newPosition == (Vector3)oldPosition && newRotation == (Quaternion)oldRotation;
     }
 

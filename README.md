@@ -40,6 +40,10 @@ Or if that doesn't work, add it to the manifest.json like so.
 
 ## Usage
 
+### Adding Jiggle Physics to your project
+
+Included in the package is a JiggleUpdateExample Monobehaviour, this should be included into your scene to make JiggleRigs work, you can also manually call the events yourself if you want precise control on when Jiggle Physics simulates or applies transforms.
+
 ### Adding Jiggle Physics to an asset
 
 Jiggle physics works best in tandem with the Unity Prefab system. This allows you to create settings specifically for a tail, hair, or breasts shared among assets. Using overrides and applying them to the whole set.
@@ -49,6 +53,10 @@ You can create some basic preconfigured prefabs with the right-click create menu
 <img width="729" height="790" alt="image" src="https://github.com/user-attachments/assets/e46e8557-701d-4f6a-af59-165897c0f8b1" />
 
 From which you can then add them to your asset and override the Root Transform slot.
+
+### Adding Jiggle Scene Colliders to your scene
+
+Included in the package is a JiggleColliderExample Monobehavior which shows how you would add and remove colliders from your scene. These will collide with all jiggle rigs!
 
 ## Settings
 

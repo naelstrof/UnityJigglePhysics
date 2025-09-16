@@ -5,7 +5,7 @@
 A jobs-based relativistic squash-and-stretch jiggle physics solution for transforms in Unity.
 
 
-https://github.com/user-attachments/assets/06cee2c7-e5b0-43d9-8de1-f565af7981c7
+https://github.com/user-attachments/assets/67fa567d-baa6-4ee8-8055-e2d306fe5e26
 
 
 ## Features

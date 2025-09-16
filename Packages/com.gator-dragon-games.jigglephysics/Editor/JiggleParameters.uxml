@@ -11,7 +11,7 @@
             <ui:Instance template="CurvableSlider" name="StretchControl" />
             <ui:Slider label="Soften" value="42" high-value="1" name="SoftenSlider" show-input-field="true" />
             <ui:VisualElement name="RootSection" style="flex-grow: 1;">
-                <ui:Slider label="Root Stretch" value="42" high-value="1" name="RootStretchSlider" show-input-field="true" />
+                <ui:Slider label="Root Stretch" value="42" high-value="0.9" name="RootStretchSlider" show-input-field="true" />
             </ui:VisualElement>
             <ui:VisualElement name="Spacer" class="spacer" />
             <ui:Toggle label="AngleLimit" name="AngleLimitToggle" />

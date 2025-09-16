@@ -460,6 +460,7 @@ public struct JiggleJobSimulate : IJobFor {
         var rootPoint = tree.points[1];
         var rootSimulationPosition = rootPoint.position;
         var rootPose = rootPoint.pose;
+        var rootParameterElasticity = tree.parameters[1].rootElasticity;
         
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points+i;
@@ -509,7 +510,7 @@ public struct JiggleJobSimulate : IJobFor {
                 position = point->workingPosition,
                 rotation = math.mul(animPoseToPhysicsPose, tree.GetInputPose(inputPoses, i).rotation),
             };
-            tree.WriteOutputPose(outputPoses, i, transform, rootSimulationPosition - rootPose, rootSimulationPosition);
+            tree.WriteOutputPose(outputPoses, i, transform, rootSimulationPosition - rootPose, rootSimulationPosition, rootParameterElasticity);
         }
     }
 

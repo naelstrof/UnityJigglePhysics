@@ -55,7 +55,7 @@ public struct JiggleJobInterpolation : IJobFor {
         var interPose = PoseData.Lerp(prevPose, newPose, (float)t);
 
         var snapToReal = realRootPositions[index] - interPose.rootPosition;
-        interPose.pose.position += snapToReal + interPose.rootOffset;
+        interPose.pose.position += (snapToReal + interPose.rootOffset) * interPose.rootSnapStrength;
         outputInterpolatedPoses[index] = interPose.pose;
     }
 }

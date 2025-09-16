@@ -62,7 +62,7 @@ public struct JiggleTreeInputParameters {
         var collisionRadiusValue = (collisionToggle && advancedToggle) ? collisionRadius.Evaluate(normalizedDistanceFromRoot) : 0f;
         var gravityValue = gravity.Evaluate(normalizedDistanceFromRoot);
         return new JigglePointParameters {
-            rootElasticity = ValidateFloat(advancedToggle ? 1f - rootStretch : 1f, 0f),
+            rootElasticity = Mathf.Clamp(ValidateFloat(advancedToggle ? 1f - rootStretch : 1f, 0f), 0f, 0.9f),
             angleElasticity = ValidateFloat(Mathf.Pow(stiffness.Evaluate(normalizedDistanceFromRoot), 2f), 0.8f),
             lengthElasticity = ValidateFloat(advancedToggle ? Mathf.Pow(1f - stretch.Evaluate(normalizedDistanceFromRoot), 2f) : 1f, 0f),
             elasticitySoften = ValidateFloat(advancedToggle ? Mathf.Pow(soften, 2f) : 0f, 0f),

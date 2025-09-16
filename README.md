@@ -8,16 +8,25 @@ A jobs-based relativistic squash-and-stretch jiggle physics solution for transfo
 
 ## Features
 
-- Utilizes the Unity Jobs system for performance, allowing for 600 jiggling Stanford Armadillos within 2-4ms.
+- Utilizes the Unity Jobs system for performance, allowing for 600 jiggling Stanford Armadillos within fractions of a milisecond.
   
 [600 Stanford Armadillo Dance](https://github.com/user-attachments/assets/2d7047a8-c386-468e-a495-4871334df38a)
 
-- Collisions
-- Relativistic, etc
+- Collisions with both "scene" colliders and "personal" colliders, where all jiggle physics collide with scene colliders.
+
+[Collision Demo](https://github.com/user-attachments/assets/ad5fd05c-bc7e-4aee-a6bd-359d8172bf24)
+
+- Separated mechanical drag and air drag, allowing elevators and vehicles to work as expected.
+
+[Relativity Demo](https://github.com/user-attachments/assets/f0248549-181f-4139-8407-7b37a7297b3b)
+
+- Simple verlet-based solve, keeping configuration parameters within 0 to 1. Designed to be authorable rather than physically accurate.
+
+<img width="807" height="591" alt="image" src="https://github.com/user-attachments/assets/4a46b74e-a2be-4916-a467-2f117ef0d4e7" />
 
 ## Installation
 
-Simply add `https://github.com/naelstrof/UnityJigglePhysics.git#upm` as a package using the package manager. Ideally you'd want to use a real version tag like `v13.0.0` in place of `upm` in a build system though!
+Simply add `https://github.com/naelstrof/UnityJigglePhysics.git#upm` as a package using the package manager. Ideally you'd want to use a real version tag like `v15.0.0` in place of `upm` in a build system though!
 
 Or if that doesn't work, add it to the manifest.json like so.
 
@@ -29,6 +38,17 @@ Or if that doesn't work, add it to the manifest.json like so.
 }
 ```
 
+## Usage
+
+### Adding Jiggle Physics to an asset
+
+Jiggle physics works best in tandem with the Unity Prefab system. This allows you to create settings specifically for a tail, hair, or breasts shared among assets. Using overrides and applying them to the whole set.
+
+You can create some basic preconfigured prefabs with the right-click create menu within the Project tab.
+
+<img width="729" height="790" alt="image" src="https://github.com/user-attachments/assets/e46e8557-701d-4f6a-af59-165897c0f8b1" />
+
+From which you can then add them to your asset and override the Root Transform slot.
 
 ## Settings
 
@@ -106,3 +126,7 @@ Angle limit corrections can be softened to reduce the hard bump at their limit
 0: Bones hit angle limits hard
 
 1: Bones are corrected only partially each simulation step, softening the limit
+
+## Special Thanks
+
+Thank you to our sponsors, BasisVR, Jinxxy, and Sidequest for making this possible!

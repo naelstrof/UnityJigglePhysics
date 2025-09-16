@@ -1,4 +1,4 @@
-# Unity JigglePhysics
+# Jiggle Physics for Unity
 
 This readme is a work in progress as we incorporate features and demos, check back later!
 
@@ -54,6 +54,15 @@ From which you can then add them to your asset and override the Root Transform s
 
 Jiggle Physics is parameterized to handle a wide variety of computed secondary motion needs. Described below are the parameters and their functions.
 
+### Motionless Root
+This setting ignores the root bone completely. This is useful for when multiple jiggled objects branch from the same root, but the root is not intended to move. Hair, breasts, and skirts often work this way for example.
+
+### Excluded Transforms
+Any transform in this list will be excluded, and its children ignored. Use this to exclude parts of the transform hierarchy that are not supposed to participate in the jiggle solve.
+
+### Jiggle Colliders
+Colliders detailed here will be personal to specifically this jiggle rig. These are collider details that are created just for this jiggle rig, and are not intended to be global colliders.
+
 ### Stiffness
 Stiffness is the core parameter to control the behavior of the motion. This controls how much force is applied to move the bones back to their target angle.
 
@@ -96,17 +105,6 @@ Root Stretch allows the root bone to move away from its pose position on a simpl
 
 0.5: Root bone may move freely and is pulled back to its rest position by a spring constraint
 
-### Drag
-Drag represents mechanical friction, slowing the motion of bones in local space
-
-![JiggleSettings_Drag](https://github.com/user-attachments/assets/d5cd22fe-cedd-4434-be63-177950dfa274)
-
-0: Bones may oscillate freely
-
-0.5: Bones are slowed as they oscillate toward their rest position
-
-1: Bone motion is greatly dampened
-
 ### Angle Limit
 In some circumstances, bones must never exceed a maximum angle offset. This parameter prevents that issue.
 
@@ -126,6 +124,32 @@ Angle limit corrections can be softened to reduce the hard bump at their limit
 0: Bones hit angle limits hard
 
 1: Bones are corrected only partially each simulation step, softening the limit
+
+### Drag
+Drag represents mechanical friction, slowing the motion of bones in local space
+
+![JiggleSettings_Drag](https://github.com/user-attachments/assets/d5cd22fe-cedd-4434-be63-177950dfa274)
+
+0: Bones may oscillate freely
+
+0.5: Bones are slowed as they oscillate toward their rest position
+
+1: Bone motion is greatly dampened
+
+### Air Drag
+Air drag represents specifically drag from moving through space. Use this to cause the transforms to be pulled behind world space motion. Hair and tails are examples of rigs that benifit from this effect.
+
+### Gravity
+This controls how much the transforms are pulled down.
+
+### Collision
+Turn this on to enable collisions for this rig.
+
+### Collision Radius
+the radius of the virtual collision capsule for the bone.
+
+### Animated Parameters
+This enables constant parameter checking during runtime for use with animations that change parameter values.
 
 ## Special Thanks
 

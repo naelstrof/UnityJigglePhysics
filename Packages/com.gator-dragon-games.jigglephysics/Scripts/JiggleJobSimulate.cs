@@ -174,7 +174,7 @@ public struct JiggleJobSimulate : IJobFor {
     
 
     private unsafe float3 DoDepenetration(JiggleSimulatedPoint* point, JiggleSimulatedPoint* otherPoint, JigglePointParameters* otherPointParameters, JiggleCollider collider) {
-        if (!collider.enabled || !point->hasTransform || !otherPoint->hasTransform) {
+        if (!collider.enabled || !point->hasTransform || !otherPoint->hasTransform || point->worldRadius == 0f || otherPoint->worldRadius == 0f) {
             return new float3(0f, 0f, 0f);
         }
         switch (collider.type) {

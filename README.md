@@ -1,10 +1,12 @@
 # Jiggle Physics for Unity
 
-This readme is a work in progress as we incorporate features and demos, check back later!
-
 [![openupm](https://img.shields.io/npm/v/com.gator-dragon-games.jigglephysics?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.gator-dragon-games.jigglephysics/)
 
 A jobs-based relativistic squash-and-stretch jiggle physics solution for transforms in Unity.
+
+
+https://github.com/user-attachments/assets/06cee2c7-e5b0-43d9-8de1-f565af7981c7
+
 
 ## Features
 

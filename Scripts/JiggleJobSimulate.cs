@@ -460,7 +460,8 @@ public struct JiggleJobSimulate : IJobFor {
         var rootPoint = tree.points[1];
         var rootSimulationPosition = rootPoint.position;
         var rootPose = rootPoint.pose;
-        var rootParameterElasticity = tree.parameters[1].rootElasticity;
+        var rootParameters = tree.parameters[1];
+        var rootParameterElasticity = 1f-(1f-rootParameters.rootElasticity) * rootParameters.airDrag;
         
         for (int i = 0; i < tree.pointCount; i++) {
             var point = tree.points+i;

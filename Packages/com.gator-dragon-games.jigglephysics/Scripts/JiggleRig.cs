@@ -81,6 +81,9 @@ public class JiggleRig : MonoBehaviour {
             jiggleRigData = JiggleRigData.Default();
         }
         jiggleRigData.OnValidate();
+        if (Application.isPlaying) {
+            UpdateParameters();
+        }
     }
 
     private void OnDrawGizmosSelected() {

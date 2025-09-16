@@ -256,8 +256,6 @@ public static class JigglePhysics {
         if (!lastJiggleRig.GetIsExcluded(t)) {
             var validChildrenCount = lastJiggleRig.GetValidChildrenCount(t);
             var currentPosition = t.position;
-            var lossyScaleSample = t.lossyScale;
-            var lossyScale = (lossyScaleSample.x + lossyScaleSample.y + lossyScaleSample.z) / 3f;
             var cache = lastJiggleRig.GetCache(t);
             if (Vector3.Distance(t.position, lastPosition) < MERGE_DISTANCE) {
                 if (validChildrenCount > 0) {

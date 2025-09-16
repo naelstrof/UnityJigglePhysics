@@ -634,6 +634,8 @@ public void GetResults(out JiggleTransform[] poses, out JiggleTreeJobData[] tree
                 simulationOutputPoseDataArray[index + o] = poseData;
                 interpolationCurrentPoseDataArray[index + o] = poseData;
                 interpolationPreviousPoseDataArray[index + o] = poseData;
+                inputPosesCurrentArray[index + o] = pose;
+                inputPosesPreviousArray[index + o] = pose;
             }
         }
 

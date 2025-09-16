@@ -31,12 +31,12 @@ public unsafe struct JiggleTreeJobData {
         this.transformIndexOffset = (uint)transformIndexOffset;
         this.colliderCount = (uint)colliderCount;
         points = (JiggleSimulatedPoint*)UnsafeUtility.Malloc(
-            Marshal.SizeOf<JiggleSimulatedPoint>() * pointCount,
+            sizeof(JiggleSimulatedPoint) * pointCount,
             UnsafeUtility.AlignOf<JiggleSimulatedPoint>(),
             Allocator.Persistent
         );
         parameters = (JigglePointParameters*)UnsafeUtility.Malloc(
-            Marshal.SizeOf<JigglePointParameters>() * pointCount,
+            sizeof(JigglePointParameters) * pointCount,
             UnsafeUtility.AlignOf<JigglePointParameters>(),
             Allocator.Persistent
         );
